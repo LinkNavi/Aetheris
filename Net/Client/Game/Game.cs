@@ -1,4 +1,3 @@
-// Complete Game.cs with State Machine
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +8,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using AetherisClient.Rendering;
-using Aetheris.UI;
 
 namespace Aetheris
 {
@@ -17,53 +15,43 @@ namespace Aetheris
     {
         public Renderer Renderer { get; private set; }
         private readonly Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks;
-        public Player player;
+        private readonly Player player;
         private readonly Client? client;
         private readonly ChunkManager chunkManager;
         public PlayerNetworkController? NetworkController { get; private set; }
-
         private int renderDistance = ClientConfig.RENDER_DISTANCE;
         private float chunkUpdateTimer = 0f;
         private const float CHUNK_UPDATE_INTERVAL = 0.5f;
 
-        // State Machine
-        private GameStateManager stateManager;
-
-        // Inventory System
-        private EnhancedInventoryUI? inventoryRenderer;
-        private Aetheris.Inventory? inventory;
-
         private MiningSystem? miningSystem;
-
         // Logging
         private const string LogFileName = "physics_debug.log";
         private StreamWriter? logWriter;
         private TextWriter? originalConsoleOut;
         private TextWriter? originalConsoleError;
         private TeeTextWriter? teeWriter;
-
         private EntityRenderer? entityRenderer;
-
+        private PlayerNetworkController? networkController;
         public Game(Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks, Client? client = null)
-            : base(GameWindowSettings.Default, new NativeWindowSettings()
-            {
-                ClientSize = new Vector2i(1920, 1080),
-                Title = "Aetheris Client"
-            })
+       : base(GameWindowSettings.Default, new NativeWindowSettings()
+       {
+           ClientSize = new Vector2i(1920, 1080),
+           Title = "Aetheris Client"
+       })
         {
             this.loadedChunks = loadedChunks ?? new Dictionary<(int, int, int), Aetheris.Chunk>();
             this.client = client;
 
-            chunkManager = new ChunkManager();
             SetupLogging();
-
-            // Initialize state machine
-            stateManager = new GameStateManager(GameStateType.Playing);
-            SetupStateCallbacks();
 
             // Initialize WorldGen FIRST (needed for player collision)
             WorldGen.Initialize();
             Console.WriteLine("[Game] WorldGen initialized");
+
+            // Create ChunkManager for collision detection
+            // chunkManager = new ChunkManager();
+            //chunkManager.GenerateCollisionMeshes = true;
+            //Console.WriteLine("[Game] ChunkManager initialized with collision support");
 
             // Create Renderer
             Renderer = new Renderer();
@@ -73,52 +61,21 @@ namespace Aetheris
             entityRenderer = new EntityRenderer();
             Console.WriteLine("[Game] EntityRenderer initialized");
 
-            // Create player
+            // Create player (MUST be after WorldGen.Initialize())
             player = new Player(new Vector3(16, 50, 16));
             Console.WriteLine("[Game] Player initialized at position: {0}", player.Position);
 
-            // Create network controller if connected
+            // Create network controller (MUST be after player is created)
             if (client != null)
             {
                 NetworkController = new PlayerNetworkController(player, client);
+                networkController = NetworkController; // Keep both references in sync
                 Console.WriteLine("[Game] Network controller initialized");
             }
             else
             {
                 Console.WriteLine("[Game] Running in single-player mode (no network)");
             }
-        }
-
-        private void SetupStateCallbacks()
-        {
-            // Register state change handlers
-            stateManager.OnStateEnter += (state) =>
-            {
-                Console.WriteLine($"[Game] Entering state: {state}");
-                
-                switch (state)
-                {
-                    case GameStateType.Playing:
-                        // Return to gameplay - grab cursor
-                        CursorState = CursorState.Grabbed;
-                        break;
-                        
-                    case GameStateType.Inventory:
-                        // Open inventory - show cursor
-                        CursorState = CursorState.Normal;
-                        break;
-                        
-                    case GameStateType.Paused:
-                        // Pause game - show cursor
-                        CursorState = CursorState.Normal;
-                        break;
-                }
-            };
-            
-            stateManager.OnStateExit += (state) =>
-            {
-                Console.WriteLine($"[Game] Exiting state: {state}");
-            };
         }
 
         private void SetupLogging()
@@ -155,21 +112,14 @@ namespace Aetheris
         protected override void OnLoad()
         {
             base.OnLoad();
-
-            // GL state
             GL.ClearColor(0.15f, 0.18f, 0.2f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(TriangleFace.Back);
             GL.FrontFace(FrontFaceDirection.Ccw);
-
-            // Start in playing state with grabbed cursor
             CursorState = CursorState.Grabbed;
-
-            // Mining system
             miningSystem = new MiningSystem(player, this, OnBlockMined);
-
             // Load atlas
             string[] atlasPaths = new[]
             {
@@ -182,7 +132,7 @@ namespace Aetheris
             bool atlasLoaded = false;
             foreach (var path in atlasPaths)
             {
-                if (File.Exists(path))
+                if (System.IO.File.Exists(path))
                 {
                     Console.WriteLine($"[Game] Found atlas at: {path}");
                     Renderer.LoadTextureAtlas(path);
@@ -197,50 +147,7 @@ namespace Aetheris
                 Renderer.CreateProceduralAtlas();
             }
 
-            // --- Simple Inventory Setup ---
-            int uiShader = CreateSimpleUIShader();
-            int uiVbo = GL.GenBuffer();
-            int uiVao = GL.GenVertexArray();
-
-            // Configure VAO properly
-            GL.BindVertexArray(uiVao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, uiVbo);
-
-            // Position (vec2) + Color (vec4) = 6 floats per vertex
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 6 * sizeof(float), 2 * sizeof(float));
-
-            GL.BindVertexArray(0);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-
-            Console.WriteLine($"[Game] Created UI shader={uiShader}, vao={uiVao}, vbo={uiVbo}");
-
-            // Create inventory and add test items
-            inventory = new Aetheris.Inventory();
-            inventory.AddItem(1, 32);  // Dirt
-            inventory.AddItem(2, 16);  // Stone
-            inventory.SelectedHotbarSlot = 0;
-
-            // Create simple inventory renderer
-            inventoryRenderer = new EnhancedInventoryUI(inventory, uiShader, uiVao, uiVbo);
-
-            // Set up text renderer
-            try
-            {
-                var fontRenderer = new FontRenderer("assets/font.ttf", 48);
-                inventoryRenderer.SetTextRenderer(fontRenderer);
-                Console.WriteLine("[Game] Inventory text renderer assigned");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Game] WARNING: Failed to initialize text renderer: {ex.Message}");
-            }
-
-            Console.WriteLine("[Game] Simple inventory system initialized");
-
-            // Load pre-fetched chunks
+            // Load pre-fetched chunks into both renderer and chunk manager
             foreach (var kv in loadedChunks)
             {
                 var coord = kv.Key;
@@ -253,6 +160,10 @@ namespace Aetheris
 
                 // Generate collision mesh for physics
                 chunk.GenerateCollisionMesh(meshFloats);
+
+                // Store chunk in manager for collision queries
+                // Note: You may need to add a method to add pre-generated chunks
+                // For now, the chunk will be generated on-demand when player collides
 
                 Console.WriteLine($"[Game] Loading chunk {coord} with {meshFloats.Length / 7} vertices");
                 Renderer.LoadMeshForChunk(coord.Item1, coord.Item2, coord.Item3, meshFloats);
@@ -277,7 +188,14 @@ namespace Aetheris
             {
                 _ = client.SendBlockBreakAsync(x, y, z);
             }
+
+            // REMOVE CLIENT-SIDE PREDICTION - Let server be authoritative
+            // WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f); // DELETE THIS LINE
+
+            // The server will broadcast the block break back to us via TCP
+            // and we'll reload chunks with the server's authoritative state
         }
+
 
         public void RegenerateMeshForBlock(Vector3 blockPos)
         {
@@ -285,9 +203,11 @@ namespace Aetheris
             int blockY = (int)blockPos.Y;
             int blockZ = (int)blockPos.Z;
 
+            // Calculate affected area based on mining radius
             float miningRadius = 5.0f;
             int affectRadius = (int)Math.Ceiling(miningRadius);
 
+            // Determine all chunks that need regeneration
             HashSet<(int, int, int)> chunksToUpdate = new HashSet<(int, int, int)>();
 
             for (int dx = -affectRadius; dx <= affectRadius; dx++)
@@ -311,9 +231,13 @@ namespace Aetheris
 
             Console.WriteLine($"[Client] Re-requesting {chunksToUpdate.Count} chunks from server after block break");
 
+            // Tell client to re-request these chunks from SERVER
             foreach (var (cx, cy, cz) in chunksToUpdate)
             {
+                // Remove from loaded so it gets re-requested
                 loadedChunks.Remove((cx, cy, cz));
+
+                // Force immediate re-request via client (gets server's authoritative data)
                 if (client != null)
                 {
                     client.ForceReloadChunk(cx, cy, cz);
@@ -321,10 +245,12 @@ namespace Aetheris
             }
         }
 
+
+       
+
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-
             lock (mainThreadLock)
             {
                 while (pendingMainThreadActions.Count > 0)
@@ -340,70 +266,32 @@ namespace Aetheris
                     }
                 }
             }
-
             float delta = (float)e.Time;
 
             // Process pending mesh uploads
             Renderer.ProcessPendingUploads();
 
-            // === GLOBAL INPUT (works in any state) ===
             if (IsKeyDown(Keys.Escape))
-            {
-                // ESC behavior depends on current state
-                if (stateManager.IsInState(GameStateType.Inventory))
-                {
-                    // Close inventory and return to game
-                    stateManager.TransitionTo(GameStateType.Playing);
-                }
-                else if (stateManager.IsInState(GameStateType.Playing))
-                {
-                    // Close game (could change to pause menu later)
-                    Close();
-                }
-            }
+                Close();
 
-            // Toggle inventory with I key (single-press)
-            if (KeyboardState.IsKeyPressed(Keys.I))
-            {
-                if (stateManager.IsInState(GameStateType.Playing))
-                {
-                    stateManager.TransitionTo(GameStateType.Inventory);
-                }
-                else if (stateManager.IsInState(GameStateType.Inventory))
-                {
-                    stateManager.TransitionTo(GameStateType.Playing);
-                }
-            }
-
-            // === STATE-SPECIFIC UPDATE ===
-            switch (stateManager.CurrentState)
-            {
-                case GameStateType.Playing:
-                    UpdatePlayingState(e, delta);
-                    break;
-                    
-                case GameStateType.Inventory:
-                    UpdateInventoryState(e, delta);
-                    break;
-                    
-                case GameStateType.Paused:
-                    UpdatePausedState(e, delta);
-                    break;
-            }
-        }
-
-        private void UpdatePlayingState(FrameEventArgs e, float delta)
-        {
-            // Player movement and controls
+            // Update player
             if (NetworkController != null)
+            {
                 NetworkController.Update(e, KeyboardState, MouseState);
+            }
             else
+            {
                 player.Update(e, KeyboardState, MouseState);
-
-            // Mining system
-            miningSystem?.Update(delta, MouseState, IsFocused);
-
-            // Chunk loading updates
+            }
+            if (networkController != null)
+            {
+                networkController.Update(e, KeyboardState, MouseState);
+            }
+            else
+            {
+                player.Update(e, KeyboardState, MouseState);
+            }
+            // Chunk loading
             if (chunkUpdateTimer == 0f)
             {
                 Vector3 playerChunk = player.GetPlayersChunk();
@@ -417,7 +305,10 @@ namespace Aetheris
                 Vector3 playerChunk = player.GetPlayersChunk();
                 client?.UpdateLoadedChunks(playerChunk, renderDistance);
             }
-
+            if (miningSystem != null)
+            {
+                miningSystem.Update((float)e.Time, MouseState, IsFocused);
+            }
             // Render distance controls
             if (KeyboardState.IsKeyPressed(Keys.Equal) || KeyboardState.IsKeyPressed(Keys.KeyPadAdd))
             {
@@ -431,57 +322,12 @@ namespace Aetheris
             }
         }
 
-        private void UpdateInventoryState(FrameEventArgs e, float delta)
-        {
-            // Update inventory UI with mouse input
-            if (inventoryRenderer != null)
-            {
-                inventoryRenderer.Update(MouseState, Size.X, Size.Y, delta);
-            }
-            
-            // Still update chunks in background (optional - you could disable this)
-            chunkUpdateTimer += delta;
-            if (chunkUpdateTimer >= CHUNK_UPDATE_INTERVAL)
-            {
-                chunkUpdateTimer = 0f;
-                Vector3 playerChunk = player.GetPlayersChunk();
-                client?.UpdateLoadedChunks(playerChunk, renderDistance);
-            }
-        }
-
-        private void UpdatePausedState(FrameEventArgs e, float delta)
-        {
-            // Future: Update pause menu
-        }
-
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            // === STATE-SPECIFIC RENDERING ===
-            switch (stateManager.CurrentState)
-            {
-                case GameStateType.Playing:
-                    RenderGameWorld();
-                    RenderPlayingUI();
-                    break;
-                    
-                case GameStateType.Inventory:
-                    RenderInventoryUI();
-                    break;
-                    
-                case GameStateType.Paused:
-                   // RenderPauseMenu();
-                    break;
-            }
-
-            SwapBuffers();
-        }
-        
-        private void RenderGameWorld()
-        {
-            // Debug raycast
+            // Debug: Raycast
             if (KeyboardState.IsKeyPressed(Keys.R))
             {
                 Vector3 forward = player.GetForward();
@@ -498,7 +344,7 @@ namespace Aetheris
                 }
             }
 
-            // Debug biome info
+            // Debug: Biome info
             if (KeyboardState.IsKeyPressed(Keys.B))
             {
                 int px = (int)player.Position.X;
@@ -506,25 +352,24 @@ namespace Aetheris
                 WorldGen.PrintBiomeAt(px, pz);
                 Console.WriteLine($"Player at: {player.Position}");
             }
-
             var projection = Matrix4.CreatePerspectiveFieldOfView(
-                MathHelper.DegreesToRadians(60f),
+                OpenTK.Mathematics.MathHelper.DegreesToRadians(60f),
                 Size.X / (float)Size.Y,
                 0.1f,
                 1000f);
             var view = player.GetViewMatrix();
 
-            // Render terrain
+            // === RENDER TERRAIN (sets up shader and keeps it active) ===
             Renderer.Render(projection, view, player.Position);
 
-            // Render other players
-            if (entityRenderer != null && NetworkController != null)
+            // === RENDER OTHER PLAYERS (shader still active) ===
+            if (entityRenderer != null && networkController != null)
             {
-                var remotePlayers = NetworkController.RemotePlayers;
+                var remotePlayers = networkController.RemotePlayers;
                 if (remotePlayers != null && remotePlayers.Count > 0)
                 {
                     entityRenderer.RenderPlayers(
-                        (Dictionary<string, RemotePlayer>)remotePlayers,
+                        remotePlayers as Dictionary<string, RemotePlayer>,
                         Renderer.psxEffects,
                         player.Position,
                         Renderer.UsePSXEffects
@@ -532,44 +377,11 @@ namespace Aetheris
                 }
             }
 
-            // Cleanup 3D rendering
+            // === CLEANUP ===
             GL.BindVertexArray(0);
             GL.UseProgram(0);
-        }
-        
-        private void RenderPlayingUI()
-        {
-            // Future: Render crosshair, health bar, hotbar, etc.
-        }
 
-        private void RenderInventoryUI()
-        {
-            // Disable depth test for UI overlay
-            GL.Disable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
-            // Render inventory
-            if (inventoryRenderer != null)
-            {
-                var ortho = Matrix4.CreateOrthographicOffCenter(0f, Size.X, Size.Y, 0f, -1f, 1f);
-                inventoryRenderer.Render(ortho, MouseState);
-            }
-
-            // Re-enable depth test
-            GL.Enable(EnableCap.DepthTest);
-        }
-
-        private void RenderPauseUI()
-        {
-            // Future: Render pause menu
-            GL.Disable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-            
-            // TODO: Add pause menu rendering here
-            
-            GL.Enable(EnableCap.DepthTest);
+            SwapBuffers();
         }
 
         protected override void OnUnload()
@@ -599,56 +411,6 @@ namespace Aetheris
 
         public void RunGame() => Run();
 
-        // UI Shader Creation
-        private int CreateSimpleUIShader()
-        {
-            string vs = @"#version 330 core
-            layout(location=0) in vec2 aPos;
-            layout(location=1) in vec4 aColor;
-            uniform mat4 projection;
-            out vec4 vColor;
-            void main() {
-                vColor = aColor;
-                gl_Position = projection * vec4(aPos, 0.0, 1.0);
-            }";
-
-            string fs = @"#version 330 core
-            in vec4 vColor;
-            out vec4 FragColor;
-            void main(){ FragColor = vColor; }";
-
-            int vsId = GL.CreateShader(ShaderType.VertexShader);
-            GL.ShaderSource(vsId, vs);
-            GL.CompileShader(vsId);
-            CheckShaderCompile(vsId, "UI vertex shader");
-
-            int fsId = GL.CreateShader(ShaderType.FragmentShader);
-            GL.ShaderSource(fsId, fs);
-            GL.CompileShader(fsId);
-            CheckShaderCompile(fsId, "UI fragment shader");
-
-            int program = GL.CreateProgram();
-            GL.AttachShader(program, vsId);
-            GL.AttachShader(program, fsId);
-            GL.LinkProgram(program);
-
-            GL.DeleteShader(vsId);
-            GL.DeleteShader(fsId);
-
-            return program;
-        }
-
-        private void CheckShaderCompile(int shader, string name)
-        {
-            GL.GetShader(shader, ShaderParameter.CompileStatus, out int status);
-            if (status == (int)All.False)
-            {
-                string log = GL.GetShaderInfoLog(shader);
-                Console.WriteLine($"[Shader] Error compiling {name}: {log}");
-            }
-        }
-
-        // Logging helper
         private class TeeTextWriter : TextWriter
         {
             private readonly TextWriter consoleWriter;
