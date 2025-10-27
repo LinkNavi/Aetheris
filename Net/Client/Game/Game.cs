@@ -1,5 +1,4 @@
-// Updated Game.cs with fixes: Assign TextRenderer, disable depth test for UI, improve contrast in InventoryPanel/Slot
-
+// Complete Game.cs with Simple Inventory System
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,15 +26,9 @@ namespace Aetheris
         private float chunkUpdateTimer = 0f;
         private const float CHUNK_UPDATE_INTERVAL = 0.5f;
 
-        // UI / Inventory
-        private UIManager? uiManager;
+        // Simple Inventory System
+        private SimpleInventoryRenderer? inventoryRenderer;
         private Aetheris.Inventory? inventory;
-        private InventoryPanel? inventoryPanel;
-        private bool inventoryVisible = false;
-
-        // simple held stack for pick/drop
-        private Aetheris.ItemStack heldStack;
-        private bool holdingItem = false;
 
         private MiningSystem? miningSystem;
 
@@ -47,7 +40,6 @@ namespace Aetheris
         private TeeTextWriter? teeWriter;
 
         private EntityRenderer? entityRenderer;
-        private PlayerNetworkController? networkController; // duplicate reference used by rendering code
 
         public Game(Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks, Client? client = null)
             : base(GameWindowSettings.Default, new NativeWindowSettings()
@@ -59,9 +51,7 @@ namespace Aetheris
             this.loadedChunks = loadedChunks ?? new Dictionary<(int, int, int), Aetheris.Chunk>();
             this.client = client;
 
-            // initialize chunk manager (was commented out previously)
             chunkManager = new ChunkManager();
-
             SetupLogging();
 
             // Initialize WorldGen FIRST (needed for player collision)
@@ -76,15 +66,14 @@ namespace Aetheris
             entityRenderer = new EntityRenderer();
             Console.WriteLine("[Game] EntityRenderer initialized");
 
-            // Create player (MUST be after WorldGen.Initialize())
+            // Create player
             player = new Player(new Vector3(16, 50, 16));
             Console.WriteLine("[Game] Player initialized at position: {0}", player.Position);
 
-            // Create network controller (MUST be after player is created)
+            // Create network controller if connected
             if (client != null)
             {
                 NetworkController = new PlayerNetworkController(player, client);
-                networkController = NetworkController; // Keep both references in sync
                 Console.WriteLine("[Game] Network controller initialized");
             }
             else
@@ -136,13 +125,13 @@ namespace Aetheris
             GL.CullFace(TriangleFace.Back);
             GL.FrontFace(FrontFaceDirection.Ccw);
 
-            // start grabbed by default
+            // Start grabbed by default
             CursorState = CursorState.Grabbed;
 
-            // mining system
+            // Mining system
             miningSystem = new MiningSystem(player, this, OnBlockMined);
 
-            // Load atlas (fallbacks)
+            // Load atlas
             string[] atlasPaths = new[]
             {
                 "textures/atlas.png",
@@ -169,14 +158,16 @@ namespace Aetheris
                 Renderer.CreateProceduralAtlas();
             }
 
-            // --- UI setup (minimal helper shaders/buffers created here if you don't already have them) ---
+            // --- Simple Inventory Setup ---
             int uiShader = CreateSimpleUIShader();
-            int uiVao = CreateQuadVao();
-            int uiVbo = CreateQuadVbo();
+            int uiVbo = GL.GenBuffer();
+            int uiVao = GL.GenVertexArray();
+
+            // Configure VAO properly
             GL.BindVertexArray(uiVao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, uiVbo);
 
-            // Re-set the attribute pointers while the VBO we will fill is bound
+            // Position (vec2) + Color (vec4) = 6 floats per vertex
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
             GL.EnableVertexAttribArray(1);
@@ -185,59 +176,32 @@ namespace Aetheris
             GL.BindVertexArray(0);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 
-            // --- Enable blending globally for UI (alpha used in many UI draws) ---
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            Console.WriteLine($"[Game] Created UI shader={uiShader}, vao={uiVao}, vbo={uiVbo}");
 
-            uiManager = new UIManager(this, uiShader, uiVao, uiVbo);
+            // Create inventory and add test items
+            inventory = new Aetheris.Inventory();
+            inventory.AddItem(1, 32);  // Dirt
+            inventory.AddItem(2, 16);  // Stone
+            inventory.SelectedHotbarSlot = 0;
 
-            // Assign text renderer
+            // Create simple inventory renderer
+            inventoryRenderer = new SimpleInventoryRenderer(inventory, uiShader, uiVao, uiVbo);
+
+            // Set up text renderer
             try
             {
-                Aetheris.UI.FontRenderer fontRenderer = new FontRenderer("assets/font.ttf", 48);
-                uiManager.TextRenderer = fontRenderer;  // Fixed: Assign to uiManager
-                Console.WriteLine("[Game] TextRenderer assigned successfully");
+                var fontRenderer = new FontRenderer("assets/font.ttf", 48);
+                inventoryRenderer.SetTextRenderer(fontRenderer);
+                Console.WriteLine("[Game] Inventory text renderer assigned");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Game] WARNING: Failed to initialize/assign TextRenderer: {ex.Message}");
+                Console.WriteLine($"[Game] WARNING: Failed to initialize text renderer: {ex.Message}");
             }
 
-            // create inventory and fill a bit for testing
-            inventory = new Aetheris.Inventory();
-            inventory.AddItem(1, 32);
-            inventory.AddItem(2, 16);
-            inventory.SelectedHotbarSlot = 0;
+            Console.WriteLine("[Game] Simple inventory system initialized");
 
-            var slotSize = new Vector2(72, 72);
-            float spacing = 8f;
-            inventoryPanel = new InventoryPanel(inventory, slotSize, spacing);
-
-            // center panel on screen
-            var panelPos = new Vector2((Size.X - inventoryPanel.Size.X) / 2f,
-                                       (Size.Y - inventoryPanel.Size.Y) / 2f);
-            inventoryPanel.LayoutSlots(panelPos, slotSize, spacing);
-
-            // assign Manager to panel and slots
-            inventoryPanel.Manager = uiManager;
-            foreach (var s in inventoryPanel.Slots)
-            {
-                s.Manager = uiManager;
-                s.OnSlotClicked = (idx) => OnInventorySlotClicked(idx);
-            }
-
-            // add to UIManager
-            uiManager.AddElement(inventoryPanel);
-            foreach (var s in inventoryPanel.Slots)
-                uiManager.AddElement(s);
-
-            // start hidden
-            inventoryPanel.Visible = false;
-            foreach (var s in inventoryPanel.Slots)
-                s.Visible = false;
-            inventoryVisible = false;
-
-            // Load pre-fetched chunks into renderer and chunkManager
+            // Load pre-fetched chunks
             foreach (var kv in loadedChunks)
             {
                 var coord = kv.Key;
@@ -274,9 +238,6 @@ namespace Aetheris
             {
                 _ = client.SendBlockBreakAsync(x, y, z);
             }
-
-            // The server will broadcast the block break back to us via TCP
-            // and we'll reload chunks with the server's authoritative state
         }
 
         public void RegenerateMeshForBlock(Vector3 blockPos)
@@ -352,14 +313,18 @@ namespace Aetheris
             // Toggle inventory (single-press)
             if (KeyboardState.IsKeyPressed(Keys.I))
             {
-                ToggleInventory();
+                inventoryRenderer?.Toggle();
+                CursorState = (inventoryRenderer?.IsVisible ?? false) ? CursorState.Normal : CursorState.Grabbed;
             }
 
-            // Update UI manager every frame so UI interactions work
-            uiManager?.Update(MouseState, KeyboardState, delta);
+            // Update inventory
+            if (inventoryRenderer != null && inventoryRenderer.IsVisible)
+            {
+                inventoryRenderer.Update(MouseState, Size.X, Size.Y);
+            }
 
-            // When inventory is open we skip player input/mining, but keep chunk/network updates running
-            if (!inventoryVisible)
+            // Only allow player movement when inventory is closed
+            if (inventoryRenderer?.IsVisible != true)
             {
                 if (NetworkController != null)
                     NetworkController.Update(e, KeyboardState, MouseState);
@@ -369,7 +334,7 @@ namespace Aetheris
                 miningSystem?.Update(delta, MouseState, IsFocused);
             }
 
-            // Chunk loading updates (kept running whether inventory is open or not)
+            // Chunk loading updates
             if (chunkUpdateTimer == 0f)
             {
                 Vector3 playerChunk = player.GetPlayersChunk();
@@ -435,14 +400,13 @@ namespace Aetheris
                 1000f);
             var view = player.GetViewMatrix();
 
-            // === RENDER TERRAIN (sets up shader and keeps it active) ===
+            // Render terrain
             Renderer.Render(projection, view, player.Position);
 
-            // === RENDER OTHER PLAYERS (shader still active) ===
-
-            if (entityRenderer != null && networkController != null)
+            // Render other players
+            if (entityRenderer != null && NetworkController != null)
             {
-                var remotePlayers = networkController.RemotePlayers;
+                var remotePlayers = NetworkController.RemotePlayers;
                 if (remotePlayers != null && remotePlayers.Count > 0)
                 {
                     entityRenderer.RenderPlayers(
@@ -454,50 +418,27 @@ namespace Aetheris
                 }
             }
 
-
-            // === CLEANUP 3D ===
-
-            // === CLEANUP 3D ===
+            // Cleanup 3D rendering
             GL.BindVertexArray(0);
             GL.UseProgram(0);
 
-            // Save depth/blend state (optional but nice)
-            bool depthEnabled = GL.IsEnabled(EnableCap.DepthTest);
-            bool blendEnabled = GL.IsEnabled(EnableCap.Blend);
-
-            // Disable depth test for UI and enable blending
+            // Disable depth test for UI overlay
             GL.Disable(EnableCap.DepthTest);
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-            // === RENDER UI (orthographic 2D overlay) ===
-            if (uiManager != null)
+            // Render inventory if open
+            if (inventoryRenderer != null)
             {
-
-GL.Disable(EnableCap.DepthTest);
-uiManager.DrawRect(100, 100, 300, 200, new Vector4(1f, 0f, 0f, 0.8f), 8f);
                 var ortho = Matrix4.CreateOrthographicOffCenter(0f, Size.X, Size.Y, 0f, -1f, 1f);
-                uiManager.Render(ortho);
-                if (holdingItem && uiManager.TextRenderer != null)
-                {
-                    var mp = MouseState.Position;
-                    string info = $"ID:{heldStack.ItemId} x{heldStack.Count}";
-                    uiManager.TextRenderer.DrawText(info, new Vector2(mp.X + 8, mp.Y + 8), 0.9f, new Vector4(1, 1, 1, 1));
-                }
+                inventoryRenderer.Render(ortho, MouseState);
             }
 
-            // Restore previous GL state
-            if (depthEnabled) GL.Enable(EnableCap.DepthTest); else GL.Disable(EnableCap.DepthTest);
-            if (!blendEnabled) GL.Disable(EnableCap.Blend);
+            // Re-enable depth test for next frame
+            GL.Enable(EnableCap.DepthTest);
 
-            // Now swap buffers like before
             SwapBuffers();
         }
-
-
-
-        private bool networkcontrollerExists() => networkController != null;
-        private object? networkcontrollerRemotePlayers() => networkController?.RemotePlayers;
 
         protected override void OnUnload()
         {
@@ -526,76 +467,7 @@ uiManager.DrawRect(100, 100, 300, 200, new Vector4(1f, 0f, 0f, 0.8f), 8f);
 
         public void RunGame() => Run();
 
-        // ---------------------------
-        // Inventory / UI helpers
-        // ---------------------------
-        private void ToggleInventory()
-        {
-            inventoryVisible = !inventoryVisible;
-            if (inventoryPanel != null)
-            {
-                inventoryPanel.Visible = inventoryVisible;
-                foreach (var s in inventoryPanel.Slots) s.Visible = inventoryVisible;
-            }
-
-            CursorState = inventoryVisible ? CursorState.Normal : CursorState.Grabbed;
-            Console.WriteLine(inventoryVisible ? "[Game] Inventory opened" : "[Game] Inventory closed");
-        }
-
-        private void OnInventorySlotClicked(int index)
-        {
-            if (inventory == null) return;
-
-            var slot = inventory.Slots[index];
-
-            // If not holding anything, pick up stack
-            if (!holdingItem)
-            {
-                if (slot.ItemId != 0)
-                {
-                    heldStack = slot;
-                    holdingItem = true;
-                    inventory.Slots[index] = default;
-                    Console.WriteLine($"Picked up ID:{heldStack.ItemId} x{heldStack.Count} from slot {index}");
-                }
-                return;
-            }
-
-            // Holding an item - try place / merge / swap
-            if (slot.ItemId == 0)
-            {
-                inventory.Slots[index] = heldStack;
-                holdingItem = false;
-                Console.WriteLine($"Placed ID:{inventory.Slots[index].ItemId} x{inventory.Slots[index].Count} into slot {index}");
-                return;
-            }
-
-            if (slot.ItemId == heldStack.ItemId)
-            {
-                // merge up to 64
-                int canTake = Math.Min(64 - slot.Count, heldStack.Count);
-                inventory.Slots[index].Count += canTake;
-                heldStack.Count -= canTake;
-                if (heldStack.Count <= 0)
-                {
-                    holdingItem = false;
-                    Console.WriteLine($"Merged into slot {index}; finished holding");
-                }
-                else
-                {
-                    Console.WriteLine($"Merged into slot {index}; remaining held: {heldStack.Count}");
-                }
-                return;
-            }
-
-            // swap
-            var tmp = slot;
-            inventory.Slots[index] = heldStack;
-            heldStack = tmp;
-            Console.WriteLine($"Swapped held with slot {index}");
-        }
-
-        // Minimal UI shader + buffer helpers (handy if you don't already have them)
+        // UI Shader Creation
         private int CreateSimpleUIShader()
         {
             string vs = @"#version 330 core
@@ -634,30 +506,6 @@ uiManager.DrawRect(100, 100, 300, 200, new Vector4(1f, 0f, 0f, 0.8f), 8f);
             return program;
         }
 
-        private int CreateQuadVao()
-        {
-            int vao = GL.GenVertexArray();
-            GL.BindVertexArray(vao);
-
-            // Setup attributes layout (pos: vec2, color: vec4)
-            int vbo = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(1);
-            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 6 * sizeof(float), 2 * sizeof(float));
-
-            GL.BindVertexArray(0);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            return vao;
-        }
-
-        private int CreateQuadVbo()
-        {
-            int vbo = GL.GenBuffer();
-            return vbo;
-        }
-
         private void CheckShaderCompile(int shader, string name)
         {
             GL.GetShader(shader, ShaderParameter.CompileStatus, out int status);
@@ -668,9 +516,7 @@ uiManager.DrawRect(100, 100, 300, 200, new Vector4(1f, 0f, 0f, 0.8f), 8f);
             }
         }
 
-        // ---------------------------
-        // Logging helper tee writer
-        // ---------------------------
+        // Logging helper
         private class TeeTextWriter : TextWriter
         {
             private readonly TextWriter consoleWriter;

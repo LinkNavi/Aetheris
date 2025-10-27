@@ -192,25 +192,27 @@ namespace Aetheris.UI
                 e.Update(dt);
         }
 
-        public void Render(Matrix4 projection)
+    public void Render(Matrix4 projection)
+{
+    currentProjection = projection;
+
+    // REMOVED: DrawRect(50,50,200,200, new Vector4(1,0,0,1)); // This was blocking UI rendering!
+    
+    GL.UseProgram(shaderProgram);
+    int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
+    GL.UniformMatrix4(projLoc, false, ref projection);
+
+    // Update text renderer projection if available
+    TextRenderer?.SetProjection(projection);
+
+    foreach (var e in elements)
+    {
+        if (e.Visible)
         {
-            currentProjection = projection;
-
-// temporary test inside UIManager.Render before drawing elements:
-DrawRect(50,50,200,200, new Vector4(1,0,0,1)); // should draw a red square
-            GL.UseProgram(shaderProgram);
-            int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
-            GL.UniformMatrix4(projLoc, false, ref projection);
-
-            // Update text renderer projection if available
-            TextRenderer?.SetProjection(projection);
-
-            foreach (var e in elements)
-            {
-                if (e.Visible)
-                    e.Render();
-            }
+            e.Render();
         }
+    }
+}
 
         // Enhanced rectangle drawing with optional rounding
         public void DrawRect(float x, float y, float w, float h, Vector4 color, float cornerRadius = 0f)
