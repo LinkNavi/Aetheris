@@ -49,7 +49,7 @@ namespace Aetheris
             Console.WriteLine("[Game] WorldGen initialized");
 
             // Create ChunkManager for collision detection
-           // chunkManager = new ChunkManager();
+            // chunkManager = new ChunkManager();
             //chunkManager.GenerateCollisionMeshes = true;
             //Console.WriteLine("[Game] ChunkManager initialized with collision support");
 
@@ -189,15 +189,13 @@ namespace Aetheris
                 _ = client.SendBlockBreakAsync(x, y, z);
             }
 
-            // Client-side prediction: reduce density in the area (SMOOTH REMOVAL)
-             WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f);
+            // REMOVE CLIENT-SIDE PREDICTION - Let server be authoritative
+            // WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f); // DELETE THIS LINE
 
-            // Queue regeneration for next frame to ensure modifications complete
-            lock (mainThreadLock)
-            {
-                pendingMainThreadActions.Enqueue(() => RegenerateMeshForBlock(blockPos));
-            }
+            // The server will broadcast the block break back to us via TCP
+            // and we'll reload chunks with the server's authoritative state
         }
+
 
         public void RegenerateMeshForBlock(Vector3 blockPos)
         {
@@ -233,13 +231,13 @@ namespace Aetheris
 
             Console.WriteLine($"[Client] Re-requesting {chunksToUpdate.Count} chunks from server after block break");
 
-            // Tell client to re-request these chunks
+            // Tell client to re-request these chunks from SERVER
             foreach (var (cx, cy, cz) in chunksToUpdate)
             {
                 // Remove from loaded so it gets re-requested
                 loadedChunks.Remove((cx, cy, cz));
 
-                // Force immediate re-request via client
+                // Force immediate re-request via client (gets server's authoritative data)
                 if (client != null)
                 {
                     client.ForceReloadChunk(cx, cy, cz);
@@ -247,21 +245,8 @@ namespace Aetheris
             }
         }
 
-        private void RegenerateChunkMesh(int cx, int cy, int cz)
-        {
-            var coord = new ChunkCoord(cx, cy, cz);
 
-            // Get existing chunk or generate new one
-            var chunk = chunkManager.GetOrGenerateChunk(coord);
-
-            // Generate new mesh with updated density field (WorldGen.SampleDensity now applies modifications)
-            var meshFloats = MarchingCubes.GenerateMesh(chunk, coord, chunkManager, 0.5f);
-
-            // Update renderer immediately
-            Renderer.LoadMeshForChunk(cx, cy, cz, meshFloats);
-
-            Console.WriteLine($"[Client] Regenerated chunk ({cx}, {cy}, {cz}) - {meshFloats.Length / 7} vertices");
-        }
+       
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {

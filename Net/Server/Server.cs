@@ -265,8 +265,9 @@ namespace Aetheris
             EntityUpdate = 3,
             KeepAlive = 4,
             PositionAck = 5,
-            BlockBreak = 6  // NEW
+            //BlockBreak = 6  // NEW
         }
+
 
 
 
@@ -286,18 +287,19 @@ namespace Aetheris
             int y = BitConverter.ToInt32(buf, 4);
             int z = BitConverter.ToInt32(buf, 8);
 
-            Console.WriteLine($"[Server] Block broken at ({x}, {y}, {z}) via TCP");
+            Log($"[Server] Block broken at ({x}, {y}, {z}) - applying to world");
 
-            // Use density-based removal for smoother terrain modification
+            // CRITICAL: Apply to WorldGen (server's authoritative state)
             WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f);
 
-            // Invalidate affected chunk meshes
+            // Invalidate server's mesh cache for affected chunks
             InvalidateChunksAroundBlock(x, y, z, radius: 5.0f);
 
-            // Broadcast to all clients via UDP instead of TCP
-            await BroadcastBlockBreak(x, y, z); // Use existing UDP method
-        }
+            // Broadcast to ALL clients (including the one who mined it)
+            await BroadcastBlockBreakTcp(x, y, z);
 
+            Log($"[Server] Block break processed and broadcasted to {activeClientStreams.Count} clients");
+        }
         // Store active client streams for broadcasting
         private readonly ConcurrentDictionary<string, NetworkStream> activeClientStreams = new();
 
@@ -473,42 +475,7 @@ namespace Aetheris
             }
         }
 
-        // Add this method to Server.cs
 
-        private async Task BroadcastBlockBreak(int x, int y, int z)
-        {
-            if (udpServer == null) return;
-
-            // Packet format:
-            // [0] = PacketType (6 = BlockBreak)
-            // [1-4] = Block X
-            // [5-8] = Block Y
-            // [9-12] = Block Z
-            byte[] packet = new byte[13];
-            packet[0] = (byte)UdpPacketType.BlockBreak;
-
-            BitConverter.TryWriteBytes(packet.AsSpan(1, 4), x);
-            BitConverter.TryWriteBytes(packet.AsSpan(5, 4), y);
-            BitConverter.TryWriteBytes(packet.AsSpan(9, 4), z);
-
-            // Broadcast to all connected players
-            foreach (var player in playerStates.Values)
-            {
-                if (player.EndPoint != null)
-                {
-                    try
-                    {
-                        await udpServer.SendAsync(packet, packet.Length, player.EndPoint);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log($"[UDP] Error broadcasting block break to {player.PlayerId}: {ex.Message}");
-                    }
-                }
-            }
-
-            Log($"[Server] Broadcasted block break at ({x}, {y}, {z}) to {playerStates.Count} players");
-        }
 
         private void InvalidateChunkAt(int x, int y, int z)
         {
@@ -764,6 +731,8 @@ namespace Aetheris
                         HandleKeepAlivePacket(data, remoteEndPoint);
                         break;
 
+                    // REMOVED: BlockBreak case (now TCP only)
+
                     default:
                         Log($"[[UDP]] Unknown packet type: {packetType}");
                         break;
@@ -774,7 +743,6 @@ namespace Aetheris
                 Log($"[[UDP]] Error handling packet: {ex.Message}");
             }
         }
-
 
         // New method to send both meshes:
         private async Task SendBothMeshesAsync(

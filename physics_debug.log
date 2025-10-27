@@ -1,154 +1,278 @@
-﻿[2025-10-27 09:44:10.915] [Logging] Started logging to 'physics_debug.log'
-[2025-10-27 09:44:10.931] [Game] WorldGen initialized
-[2025-10-27 09:44:10.940] [PSX Effects] Shaders compiled successfully
-[2025-10-27 09:44:10.940] [Game] Renderer initialized
-[2025-10-27 09:44:10.947] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2025-10-27 09:44:10.947] [Game] EntityRenderer initialized
-[2025-10-27 09:44:10.960] [Player] Spawned at (16, 37.1, 16)
-[2025-10-27 09:44:10.961] [Game] Player initialized at position: (16, 37.1, 16)
-[2025-10-27 09:44:10.961] [Game] Network controller initialized
-[2025-10-27 09:44:10.964] [Game] Found atlas at: textures/atlas.png
-[2025-10-27 09:44:11.026] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2025-10-27 09:44:11.026] [AtlasManager] Using preferred tile size: 64
-[2025-10-27 09:44:11.026] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2025-10-27 09:44:11.030] [AtlasManager] Successfully uploaded to GL texture 1
-[2025-10-27 09:44:11.030] [AtlasManager] Verified texture dimensions: 256x256
-[2025-10-27 09:44:11.031] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1)
-[2025-10-27 09:44:11.032] [Game] Loaded 0 chunks
-[2025-10-27 09:44:11.463] [Client] Chunk update loop starting...
-[2025-10-27 09:44:11.766] [Renderer] Uploaded chunk (0,0,0): VAO=2, VBO=2, 17802 vertices
-[2025-10-27 09:44:11.771] [Renderer] Uploaded chunk (1,0,0): VAO=3, VBO=3, 13323 vertices
-[2025-10-27 09:44:13.381] [Prediction] Error: 28.0cm - reconciling
-[2025-10-27 09:44:13.386] [Prediction] Replayed 5 inputs
-[2025-10-27 09:44:13.387] [Prediction] Error: 11.5cm - reconciling
-[2025-10-27 09:44:13.387] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:13.433] [Prediction] Error: 21.7cm - reconciling
-[2025-10-27 09:44:13.434] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:13.487] [Prediction] Error: 10.9cm - reconciling
-[2025-10-27 09:44:13.488] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:13.718] [Client] Mined Air at (16, 36, 19)
-[2025-10-27 09:44:13.726] [Client] Re-requesting 1 chunks from server after block break
-[2025-10-27 09:44:13.729] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-10-27 09:44:13.732] [Client]   - Was loaded: True, was requested: True
-[2025-10-27 09:44:13.733] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-10-27 09:44:13.734] [Renderer]   Deleted GPU: VAO=2, VBO=2
-[2025-10-27 09:44:13.734] [Renderer]   Cleared mesh cache
-[2025-10-27 09:44:13.734] [Client]   - Queued for immediate reload (queue size: 274)
-[2025-10-27 09:44:14.650] [Prediction] Error: 66.8cm - reconciling
-[2025-10-27 09:44:14.651] [Prediction] Replayed 8 inputs
-[2025-10-27 09:44:14.651] [Prediction] Error: 32.1cm - reconciling
-[2025-10-27 09:44:14.652] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:14.720] [Prediction] Error: 39.1cm - reconciling
-[2025-10-27 09:44:14.721] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:14.786] [Prediction] Error: 19.3cm - reconciling
-[2025-10-27 09:44:14.786] [Prediction] Replayed 2 inputs
-[2025-10-27 09:44:14.844] [Prediction] Error: 32.7cm - reconciling
-[2025-10-27 09:44:14.845] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:14.895] [Prediction] Error: 21.8cm - reconciling
-[2025-10-27 09:44:14.896] [Prediction] Replayed 2 inputs
-[2025-10-27 09:44:15.039] [Prediction] Error: 40.0cm - reconciling
-[2025-10-27 09:44:15.039] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:15.091] [Prediction] Error: 33.3cm - reconciling
-[2025-10-27 09:44:15.093] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:15.200] [Prediction] Error: 33.5cm - reconciling
-[2025-10-27 09:44:15.201] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:15.290] [Prediction] Error: 24.3cm - reconciling
-[2025-10-27 09:44:15.291] [Prediction] Replayed 3 inputs
-[2025-10-27 09:44:15.294] [Prediction] Error: 10.3cm - reconciling
-[2025-10-27 09:44:15.294] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:15.330] [Prediction] Error: 39.4cm - reconciling
-[2025-10-27 09:44:15.331] [Prediction] Replayed 5 inputs
-[2025-10-27 09:44:15.380] [Prediction] Error: 16.8cm - reconciling
-[2025-10-27 09:44:15.381] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:15.818] [Prediction] Error: 34.3cm - reconciling
-[2025-10-27 09:44:15.818] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:15.871] [Prediction] Error: 35.6cm - reconciling
-[2025-10-27 09:44:15.871] [Prediction] Replayed 3 inputs
-[2025-10-27 09:44:15.895] [Prediction] Error: 12.1cm - reconciling
-[2025-10-27 09:44:15.895] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:15.927] [Prediction] Error: 36.0cm - reconciling
-[2025-10-27 09:44:15.928] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:15.970] [Prediction] Error: 41.3cm - reconciling
-[2025-10-27 09:44:15.970] [Prediction] Replayed 4 inputs
-[2025-10-27 09:44:15.996] [Prediction] Error: 11.8cm - reconciling
-[2025-10-27 09:44:15.996] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:16.018] [Prediction] Error: 11.6cm - reconciling
-[2025-10-27 09:44:16.018] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:16.030] [Prediction] Error: 10.5cm - reconciling
-[2025-10-27 09:44:16.030] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:16.451] [Client] Sent block break at (16, 36, 19) via TCP
-[2025-10-27 09:44:16.453] [Client] Received block break at (16, 36, 19)
-[2025-10-27 09:44:16.453] [Client] Force-reloading 1 chunks
-[2025-10-27 09:44:16.453] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-10-27 09:44:16.453] [Client]   - Was loaded: False, was requested: True
-[2025-10-27 09:44:16.453] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-10-27 09:44:16.453] [Client]   - Queued for immediate reload (queue size: 242)
-[2025-10-27 09:44:16.769] [Client] Mined Air at (34, 41, 30)
-[2025-10-27 09:44:16.774] [Client] Re-requesting 4 chunks from server after block break
-[2025-10-27 09:44:16.775] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-10-27 09:44:16.775] [Client]   - Was loaded: False, was requested: True
-[2025-10-27 09:44:16.775] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-10-27 09:44:16.775] [Client]   - Queued for immediate reload (queue size: 238)
-[2025-10-27 09:44:16.775] [Client] ForceReloadChunk called for (0, 0, 1)
-[2025-10-27 09:44:16.775] [Client]   - Was loaded: True, was requested: True
-[2025-10-27 09:44:16.775] [Renderer] ClearChunkMesh: (0, 0, 1)
-[2025-10-27 09:44:16.775] [Renderer]   Deleted GPU: VAO=4, VBO=4
-[2025-10-27 09:44:16.775] [Renderer]   Cleared mesh cache
-[2025-10-27 09:44:16.775] [Client]   - Queued for immediate reload (queue size: 239)
-[2025-10-27 09:44:16.775] [Client] ForceReloadChunk called for (1, 0, 0)
-[2025-10-27 09:44:16.775] [Client]   - Was loaded: True, was requested: True
-[2025-10-27 09:44:16.775] [Renderer] ClearChunkMesh: (1, 0, 0)
-[2025-10-27 09:44:16.775] [Renderer]   Deleted GPU: VAO=3, VBO=3
-[2025-10-27 09:44:16.775] [Renderer]   Cleared mesh cache
-[2025-10-27 09:44:16.775] [Client]   - Queued for immediate reload (queue size: 240)
-[2025-10-27 09:44:16.775] [Client] ForceReloadChunk called for (1, 0, 1)
-[2025-10-27 09:44:16.775] [Client]   - Was loaded: True, was requested: True
-[2025-10-27 09:44:16.775] [Renderer] ClearChunkMesh: (1, 0, 1)
-[2025-10-27 09:44:16.775] [Renderer]   Deleted GPU: VAO=7, VBO=7
-[2025-10-27 09:44:16.775] [Renderer]   Cleared mesh cache
-[2025-10-27 09:44:16.775] [Client]   - Queued for immediate reload (queue size: 241)
-[2025-10-27 09:44:17.611] [Prediction] Error: 12.2cm - reconciling
-[2025-10-27 09:44:17.611] [Prediction] Replayed 2 inputs
-[2025-10-27 09:44:17.660] [Prediction] Error: 10.4cm - reconciling
-[2025-10-27 09:44:17.660] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:17.680] [Prediction] Error: 12.1cm - reconciling
-[2025-10-27 09:44:17.681] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:17.719] [Prediction] Error: 10.8cm - reconciling
-[2025-10-27 09:44:17.719] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:17.784] [Prediction] Error: 15.6cm - reconciling
-[2025-10-27 09:44:17.784] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:17.807] [Prediction] Error: 15.3cm - reconciling
-[2025-10-27 09:44:17.807] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:17.867] [Prediction] Error: 47.3cm - reconciling
-[2025-10-27 09:44:17.867] [Prediction] Replayed 3 inputs
-[2025-10-27 09:44:17.904] [Prediction] Error: 24.5cm - reconciling
-[2025-10-27 09:44:17.904] [Prediction] Replayed 3 inputs
-[2025-10-27 09:44:17.954] [Prediction] Error: 12.8cm - reconciling
-[2025-10-27 09:44:17.954] [Prediction] Replayed 2 inputs
-[2025-10-27 09:44:18.029] [Prediction] Error: 44.1cm - reconciling
-[2025-10-27 09:44:18.030] [Prediction] Replayed 5 inputs
-[2025-10-27 09:44:18.030] [Prediction] Error: 10.9cm - reconciling
-[2025-10-27 09:44:18.030] [Prediction] Replayed 1 inputs
-[2025-10-27 09:44:18.443] [Prediction] Error: 10.5cm - reconciling
-[2025-10-27 09:44:18.443] [Prediction] Replayed 2 inputs
-[2025-10-27 09:44:18.622] [Prediction] Error: 11.8cm - reconciling
-[2025-10-27 09:44:18.622] [Prediction] Replayed 3 inputs
-[2025-10-27 09:44:19.075] [Client] Sent block break at (34, 41, 30) via TCP
-[2025-10-27 09:44:19.078] [Client] Received block break at (34, 41, 30)
-[2025-10-27 09:44:19.078] [Client] Force-reloading 4 chunks
-[2025-10-27 09:44:19.078] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-10-27 09:44:19.078] [Client]   - Was loaded: False, was requested: True
-[2025-10-27 09:44:19.078] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-10-27 09:44:19.078] [Client]   - Queued for immediate reload (queue size: 209)
-[2025-10-27 09:44:19.078] [Client] ForceReloadChunk called for (0, 0, 1)
-[2025-10-27 09:44:19.078] [Client]   - Was loaded: False, was requested: True
-[2025-10-27 09:44:19.078] [Renderer] ClearChunkMesh: (0, 0, 1)
-[2025-10-27 09:44:19.078] [Client]   - Queued for immediate reload (queue size: 209)
-[2025-10-27 09:44:19.078] [Client] ForceReloadChunk called for (1, 0, 0)
-[2025-10-27 09:44:19.078] [Client]   - Was loaded: False, was requested: True
-[2025-10-27 09:44:19.078] [Renderer] ClearChunkMesh: (1, 0, 0)
-[2025-10-27 09:44:19.078] [Client]   - Queued for immediate reload (queue size: 209)
-[2025-10-27 09:44:19.078] [Client] ForceReloadChunk called for (1, 0, 1)
-[2025-10-27 09:44:19.078] [Client]   - Was loaded: False, was requested: True
-[2025-10-27 09:44:19.078] [Renderer] ClearChunkMesh: (1, 0, 1)
-[2025-10-27 09:44:19.078] [Client]   - Queued for immediate reload (queue size: 209)
+﻿[2025-10-27 10:05:11.512] [Logging] Started logging to 'physics_debug.log'
+[2025-10-27 10:05:11.528] [Game] WorldGen initialized
+[2025-10-27 10:05:11.536] [PSX Effects] Shaders compiled successfully
+[2025-10-27 10:05:11.537] [Game] Renderer initialized
+[2025-10-27 10:05:11.544] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2025-10-27 10:05:11.544] [Game] EntityRenderer initialized
+[2025-10-27 10:05:11.556] [Player] Spawned at (16, 37.1, 16)
+[2025-10-27 10:05:11.556] [Game] Player initialized at position: (16, 37.1, 16)
+[2025-10-27 10:05:11.557] [Game] Network controller initialized
+[2025-10-27 10:05:11.558] [Client] TCP broadcast listener started
+[2025-10-27 10:05:11.560] [Game] Found atlas at: textures/atlas.png
+[2025-10-27 10:05:11.618] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2025-10-27 10:05:11.619] [AtlasManager] Using preferred tile size: 64
+[2025-10-27 10:05:11.619] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2025-10-27 10:05:11.622] [AtlasManager] Successfully uploaded to GL texture 1
+[2025-10-27 10:05:11.622] [AtlasManager] Verified texture dimensions: 256x256
+[2025-10-27 10:05:11.624] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1)
+[2025-10-27 10:05:11.624] [Game] Loaded 0 chunks
+[2025-10-27 10:05:12.058] [Client] Chunk update loop starting...
+[2025-10-27 10:05:12.376] [Renderer] Uploaded chunk (0,0,0): VAO=2, VBO=2, 16506 vertices
+[2025-10-27 10:05:12.478] [Renderer] Uploaded chunk (1,0,0): VAO=3, VBO=3, 13323 vertices
+[2025-10-27 10:05:21.120] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.133] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.150] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.166] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.181] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.196] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.210] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.225] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.240] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.255] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.270] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.283] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.301] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.315] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.330] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.345] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.359] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.374] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.389] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.402] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.423] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.436] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.451] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.466] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.482] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.497] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.511] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.525] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.525] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.526] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.535] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.536] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.537] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.539] [Client]   - Was loaded: True, was requested: True
+[2025-10-27 10:05:21.540] [Client] Mined Air at (14, 35, 18)
+[2025-10-27 10:05:21.540] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.541] [Renderer]   Deleted GPU: VAO=2, VBO=2
+[2025-10-27 10:05:21.541] [Renderer]   Cleared mesh cache
+[2025-10-27 10:05:21.541] [Client]   - Queued for immediate reload (queue size: 48)
+[2025-10-27 10:05:21.541] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.542] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.542] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.542] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.542] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.542] [Client]   - Queued for immediate reload (queue size: 48)
+[2025-10-27 10:05:21.628] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.628] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.628] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.628] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.629] [Client] Error loading (1,0,4): Arithmetic operation resulted in an overflow.
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.629] [Client]   - Queued for immediate reload (queue size: 47)
+[2025-10-27 10:05:21.629] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.629] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.629] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.629] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.629] [Client]   - Queued for immediate reload (queue size: 47)
+[2025-10-27 10:05:21.629] [Client] Error loading (-4,0,1): Invalid payload length: 2147442747
+[2025-10-27 10:05:21.629] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.629] [Client] Error loading (1,0,-4): Offset and length were out of bounds for the array or count is greater than the number of elements from index to the end of the source collection.
+[2025-10-27 10:05:21.629] [Client] Error loading (-2,1,3): Invalid payload length: 2101305919
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.629] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.629] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.629] [Client]   - Queued for immediate reload (queue size: 44)
+[2025-10-27 10:05:21.629] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Error loading (-4,0,-1): Invalid payload length: -2147483461
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.630] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.630] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.630] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.630] [Client]   - Queued for immediate reload (queue size: 43)
+[2025-10-27 10:05:21.630] [Client] Error loading (-2,-1,3): Arithmetic operation resulted in an overflow.
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.630] [Client] Error loading (-2,-1,-3): Invalid payload length: 2147461690
+[2025-10-27 10:05:21.630] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.630] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client]   - Queued for immediate reload (queue size: 41)
+[2025-10-27 10:05:21.630] [Client] Error loading (-1,0,4): Invalid payload length: 859817023
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Sent block break at (14, 35, 18) via TCP
+[2025-10-27 10:05:21.630] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.630] [Client] Error loading (-2,1,-3): Invalid payload length: -2147483461
+[2025-10-27 10:05:21.630] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.630] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.630] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.630] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.630] [Client]   - Queued for immediate reload (queue size: 39)
+[2025-10-27 10:05:21.630] [Client] Error loading (-1,0,-4): Arithmetic operation resulted in an overflow.
+[2025-10-27 10:05:21.630] [Client] Error loading (3,0,-3): Invalid payload length: 1124067522
+[2025-10-27 10:05:21.630] [Client] Error loading (-3,0,-3): Invalid payload length: 2147475514
+[2025-10-27 10:05:21.630] [Client] Error loading (3,0,3): Invalid payload length: -285220289
+[2025-10-27 10:05:21.630] [Client] Error loading (-3,0,3): Invalid payload length: -2147483462
+[2025-10-27 10:05:21.631] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.631] [Client] Error loading (0,-1,-4): Arithmetic operation resulted in an overflow.
+[2025-10-27 10:05:21.631] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.631] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.631] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.631] [Client] Error loading (-2,0,4): Invalid payload length: 838849986
+[2025-10-27 10:05:21.631] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.631] [Client]   - Queued for immediate reload (queue size: 32)
+[2025-10-27 10:05:21.631] [Client] Error loading (2,0,-4): Invalid payload length: 2147467959
+[2025-10-27 10:05:21.631] [Client] Error loading (-2,0,-4): Invalid payload length: 847041983
+[2025-10-27 10:05:21.631] [Client] Error loading (0,1,4): Invalid payload length: -2147483589
+[2025-10-27 10:05:21.631] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.631] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.631] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.631] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.631] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.631] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.631] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.632] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.632] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.632] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.632] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.632] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.632] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.632] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.632] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.632] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.632] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.632] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.633] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.633] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.633] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.633] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.633] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.633] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.633] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.633] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.633] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.633] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.633] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.633] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.633] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.633] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.634] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.634] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.634] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.634] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.634] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.634] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.634] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.634] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.634] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.634] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.634] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.634] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.634] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.634] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.634] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.635] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.635] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.635] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.635] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.635] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.635] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.635] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.635] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.635] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.635] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.635] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.635] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.635] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.635] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.635] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.635] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.635] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.635] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.636] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.636] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.636] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.636] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.636] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.636] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.636] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.636] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.636] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.636] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.636] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.636] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.636] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.636] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.636] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.636] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.636] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.636] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.636] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.637] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.637] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.637] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.637] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.637] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.637] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.637] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.637] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.637] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.637] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.637] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.637] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.637] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.637] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.637] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.637] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.637] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.637] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.637] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.637] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.637] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.638] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.638] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:21.638] [Client] Received block break broadcast at (14, 35, 18)
+[2025-10-27 10:05:21.638] [Client] Force-reloading 1 chunks from broadcast
+[2025-10-27 10:05:21.638] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-10-27 10:05:21.638] [Client]   - Was loaded: False, was requested: True
+[2025-10-27 10:05:21.638] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-10-27 10:05:21.638] [Client]   - Queued for immediate reload (queue size: 29)
+[2025-10-27 10:05:55.624] [Prediction] Error: 125.2cm - reconciling
+[2025-10-27 10:05:55.626] [Prediction] Replayed 1 inputs
+[2025-10-27 10:05:56.276] [Prediction] Error: 125.1cm - reconciling
+[2025-10-27 10:05:56.276] [Prediction] Replayed 1 inputs

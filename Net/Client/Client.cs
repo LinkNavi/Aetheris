@@ -16,7 +16,10 @@ namespace Aetheris
         private readonly Dictionary<int, TaskCompletionSource<byte[]>> pendingChunkRequests = new();
         private int nextRequestId = 0;
         private Game? game;
-        private TcpClient? tcp;
+        private TcpClient? tcpRequest;      // For chunk requests only
+        private TcpClient? tcpBroadcast;    // For server broadcasts only
+        private NetworkStream? streamRequest;
+        private NetworkStream? streamBroadcast;
         private UdpClient? udp;
         private IPEndPoint? serverUdpEndpoint;
         private NetworkStream? stream;
@@ -59,10 +62,12 @@ namespace Aetheris
             Task.Run(async () => await ConnectToServerAsync("127.0.0.1", ClientConfig.SERVER_PORT)).Wait();
 
             game = new Game(new Dictionary<(int, int, int), Aetheris.Chunk>(loadedChunks), this);
-            // WorldGen.SetModificationsEnabled(false);
             loaderTask = Task.Run(() => ChunkLoaderLoopAsync(cts.Token));
             updateTask = Task.Run(() => ChunkUpdateLoopAsync(cts.Token));
-            //tcpListenerTask = Task.Run(() => TcpBroadcastListenerAsync(cts.Token));
+
+            // ENABLE TCP broadcast listener for block breaks
+            tcpListenerTask = Task.Run(() => TcpBroadcastListenerAsync(cts.Token));
+
             _ = Task.Run(() => ListenForUdpAsync(cts.Token));
 
             game.RunGame();
@@ -106,23 +111,33 @@ namespace Aetheris
                             $"{MaxConcurrentLoads} concurrent, {ChunksPerUpdateBatch} batch size");
         }
 
+
         private async Task ConnectToServerAsync(string host, int port)
         {
             Console.WriteLine($"[Client] Connecting to {host}:{port}...");
-            tcp = new TcpClient();
+
+            // Connection 1: For chunk requests
+            tcpRequest = new TcpClient();
+            await tcpRequest.ConnectAsync(host, port);
+            streamRequest = tcpRequest.GetStream();
+            tcpRequest.NoDelay = true;
+            tcpRequest.SendTimeout = 5000;
+            tcpRequest.ReceiveTimeout = 5000;
+
+            // Connection 2: For broadcasts
+            tcpBroadcast = new TcpClient();
+            await tcpBroadcast.ConnectAsync(host, port);
+            streamBroadcast = tcpBroadcast.GetStream();
+            tcpBroadcast.NoDelay = true;
+
+            // UDP
             udp = new UdpClient();
-
-            await tcp.ConnectAsync(host, port);
-
             serverUdpEndpoint = new IPEndPoint(IPAddress.Parse(host), udpPort);
             udp.Connect(serverUdpEndpoint);
 
-            stream = tcp.GetStream();
-            tcp.NoDelay = true;
-            tcp.SendTimeout = 5000;
-            tcp.ReceiveTimeout = 5000;
-            Console.WriteLine("[Client] Connected to server.");
+            Console.WriteLine("[Client] Connected to server (2 TCP connections).");
         }
+
 
         // TCP Broadcast Listener - listens for server-initiated messages
         private async Task TcpBroadcastListenerAsync(CancellationToken token)
@@ -133,7 +148,7 @@ namespace Aetheris
             {
                 while (!token.IsCancellationRequested)
                 {
-                    if (stream == null || tcp == null || !tcp.Connected)
+                    if (streamBroadcast == null || tcpBroadcast == null || !tcpBroadcast.Connected)
                     {
                         await Task.Delay(100, token);
                         continue;
@@ -141,36 +156,25 @@ namespace Aetheris
 
                     try
                     {
-                        // Peek to see if data is available without blocking chunk requests
-                        if (tcp.Available > 0)
+                        // Read packet type (blocking is OK here)
+                        var packetTypeBuf = new byte[1];
+                        int bytesRead = await streamBroadcast.ReadAsync(packetTypeBuf, 0, 1, token);
+
+                        if (bytesRead == 0)
                         {
-                            // Read packet type (1 byte)
-                            var packetTypeBuf = new byte[1];
-                            int bytesRead = await stream.ReadAsync(packetTypeBuf, 0, 1, token);
+                            Console.WriteLine("[Client] Server closed broadcast connection");
+                            break;
+                        }
 
-                            if (bytesRead == 0)
-                            {
-                                Console.WriteLine("[Client] Server closed connection");
-                                break;
-                            }
+                        TcpPacketType packetType = (TcpPacketType)packetTypeBuf[0];
 
-                            TcpPacketType packetType = (TcpPacketType)packetTypeBuf[0];
-
-                            switch (packetType)
-                            {
-                                case TcpPacketType.BlockBreak:
-                                    await HandleBlockBreakBroadcastAsync(token);
-                                    break;
-
-                                default:
-                                    Console.WriteLine($"[Client] Unknown TCP broadcast packet type: {packetType}");
-                                    break;
-                            }
+                        if (packetType == TcpPacketType.BlockBreak)
+                        {
+                            await HandleBlockBreakBroadcastAsync(token);
                         }
                         else
                         {
-                            // No data available, small delay
-                            await Task.Delay(10, token);
+                            Console.WriteLine($"[Client] Unknown broadcast packet type: {packetType}");
                         }
                     }
                     catch (Exception ex) when (!(ex is OperationCanceledException))
@@ -185,52 +189,50 @@ namespace Aetheris
                 Console.WriteLine("[Client] TCP broadcast listener cancelled");
             }
         }
-
-       
-public void ForceReloadChunk(int cx, int cy, int cz)
-{
-    var coord = (cx, cy, cz);
-
-    Console.WriteLine($"[Client] ForceReloadChunk called for ({cx}, {cy}, {cz})");
-
-    // Step 1: Remove from all client-side caches
-    bool wasLoaded = loadedChunks.TryRemove(coord, out _);
-    bool wasRequested = requestedChunks.TryRemove(coord, out _);
-    
-    Console.WriteLine($"[Client]   - Was loaded: {wasLoaded}, was requested: {wasRequested}");
-
-    // Step 2: Clear GPU mesh and cache
-    game?.Renderer.ClearChunkMesh(cx, cy, cz);
-
-    // Step 3: CRITICAL - Force re-request even if chunk exists in queue
-    // Remove any existing requests for this chunk
-    var tempQueue = new List<(int cx, int cy, int cz, float priority)>();
-    while (requestQueue.TryDequeue(out var item))
-    {
-        if (item.cx != cx || item.cy != cy || item.cz != cz)
+        public void ForceReloadChunk(int cx, int cy, int cz)
         {
-            tempQueue.Add(item);
-        }
-    }
-    
-    // Re-add all other requests
-    foreach (var item in tempQueue)
-    {
-        requestQueue.Enqueue(item);
-    }
+            var coord = (cx, cy, cz);
 
-    // Step 4: Queue with highest priority (0.0 = load first)
-    requestQueue.Enqueue((cx, cy, cz, 0.0f));
-    requestedChunks[coord] = 0;
-    
-    Console.WriteLine($"[Client]   - Queued for immediate reload (queue size: {requestQueue.Count})");
-}
+            Console.WriteLine($"[Client] ForceReloadChunk called for ({cx}, {cy}, {cz})");
+
+            // Step 1: Remove from all client-side caches
+            bool wasLoaded = loadedChunks.TryRemove(coord, out _);
+            bool wasRequested = requestedChunks.TryRemove(coord, out _);
+
+            Console.WriteLine($"[Client]   - Was loaded: {wasLoaded}, was requested: {wasRequested}");
+
+            // Step 2: Clear GPU mesh and cache
+            game?.Renderer.ClearChunkMesh(cx, cy, cz);
+
+            // Step 3: CRITICAL - Force re-request even if chunk exists in queue
+            // Remove any existing requests for this chunk
+            var tempQueue = new List<(int cx, int cy, int cz, float priority)>();
+            while (requestQueue.TryDequeue(out var item))
+            {
+                if (item.cx != cx || item.cy != cy || item.cz != cz)
+                {
+                    tempQueue.Add(item);
+                }
+            }
+
+            // Re-add all other requests
+            foreach (var item in tempQueue)
+            {
+                requestQueue.Enqueue(item);
+            }
+
+            // Step 4: Queue with highest priority (0.0 = load first)
+            requestQueue.Enqueue((cx, cy, cz, 0.0f));
+            requestedChunks[coord] = 0;
+
+            Console.WriteLine($"[Client]   - Queued for immediate reload (queue size: {requestQueue.Count})");
+        }
 
 
         private async Task HandleBlockBreakBroadcastAsync(CancellationToken token)
         {
             var buf = new byte[12];
-            await ReadFullAsync(stream!, buf, 0, 12, token);
+            await ReadFullAsync(streamBroadcast!, buf, 0, 12, token);
 
             int x = BitConverter.ToInt32(buf, 0);
             int y = BitConverter.ToInt32(buf, 4);
@@ -238,14 +240,36 @@ public void ForceReloadChunk(int cx, int cy, int cz)
 
             Console.WriteLine($"[Client] Received block break broadcast at ({x}, {y}, {z})");
 
-            // Use the same logic as UDP handler
-            HandleBlockBreakUdp(new byte[]
+            // Calculate affected chunks
+            float miningRadius = 5.0f;
+            int affectRadius = (int)Math.Ceiling(miningRadius);
+            var chunksToReload = new HashSet<(int, int, int)>();
+
+            for (int dx = -affectRadius; dx <= affectRadius; dx++)
             {
-        6, // PacketType
-        buf[0], buf[1], buf[2], buf[3],
-        buf[4], buf[5], buf[6], buf[7],
-        buf[8], buf[9], buf[10], buf[11]
-            });
+                for (int dy = -affectRadius; dy <= affectRadius; dy++)
+                {
+                    for (int dz = -affectRadius; dz <= affectRadius; dz++)
+                    {
+                        int worldX = x + dx;
+                        int worldY = y + dy;
+                        int worldZ = z + dz;
+
+                        int chunkX = worldX / ClientConfig.CHUNK_SIZE;
+                        int chunkY = worldY / ClientConfig.CHUNK_SIZE_Y;
+                        int chunkZ = worldZ / ClientConfig.CHUNK_SIZE;
+
+                        chunksToReload.Add((chunkX, chunkY, chunkZ));
+                    }
+                }
+            }
+
+            Console.WriteLine($"[Client] Force-reloading {chunksToReload.Count} chunks from broadcast");
+
+            foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
+            {
+                ForceReloadChunk(chunkX, chunkY, chunkZ);
+            }
         }
 
         private void InvalidateChunksAroundBlock(int x, int y, int z)
@@ -272,7 +296,7 @@ public void ForceReloadChunk(int cx, int cy, int cz)
         // Send block break to server via TCP
         public async Task SendBlockBreakAsync(int x, int y, int z)
         {
-            if (stream == null || tcp == null || !tcp.Connected)
+            if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
             {
                 Console.WriteLine("[Client] Cannot send block break - not connected");
                 return;
@@ -288,8 +312,8 @@ public void ForceReloadChunk(int cx, int cy, int cz)
                 BitConverter.TryWriteBytes(packet.AsSpan(5, 4), y);
                 BitConverter.TryWriteBytes(packet.AsSpan(9, 4), z);
 
-                await stream.WriteAsync(packet, 0, packet.Length);
-                await stream.FlushAsync();
+                await streamRequest.WriteAsync(packet, 0, packet.Length);
+                await streamRequest.FlushAsync();
 
                 Console.WriteLine($"[Client] Sent block break at ({x}, {y}, {z}) via TCP");
             }
@@ -302,7 +326,6 @@ public void ForceReloadChunk(int cx, int cy, int cz)
                 networkSemaphore.Release();
             }
         }
-
         private void HandleUdpPacket(byte[] data)
         {
             if (data.Length < 1) return;
@@ -323,9 +346,7 @@ public void ForceReloadChunk(int cx, int cy, int cz)
                     HandleServerPositionUpdate(data);
                     break;
 
-                case 6: // BlockBreak - NEW
-                    HandleBlockBreakUdp(data);
-                    break;
+                // REMOVED case 6 (BlockBreak) - now handled via TCP
 
                 default:
                     Console.WriteLine($"[Client] Unknown UDP packet type: {packetType}");
@@ -333,50 +354,7 @@ public void ForceReloadChunk(int cx, int cy, int cz)
             }
         }
 
-        private void HandleBlockBreakUdp(byte[] data)
-        {
-            if (data.Length < 13) return;
 
-            int x = BitConverter.ToInt32(data, 1);
-            int y = BitConverter.ToInt32(data, 5);
-            int z = BitConverter.ToInt32(data, 9);
-
-            Console.WriteLine($"[Client] Received block break at ({x}, {y}, {z})");
-
-            // Calculate which chunks are affected by the mining sphere
-            float miningRadius = 5.0f; // Must match server's radius
-            int affectRadius = (int)Math.Ceiling(miningRadius);
-
-            var chunksToReload = new HashSet<(int, int, int)>();
-
-            // Find all chunks within the mining sphere
-            for (int dx = -affectRadius; dx <= affectRadius; dx++)
-            {
-                for (int dy = -affectRadius; dy <= affectRadius; dy++)
-                {
-                    for (int dz = -affectRadius; dz <= affectRadius; dz++)
-                    {
-                        int worldX = x + dx;
-                        int worldY = y + dy;
-                        int worldZ = z + dz;
-
-                        int chunkX = worldX / ClientConfig.CHUNK_SIZE;
-                        int chunkY = worldY / ClientConfig.CHUNK_SIZE_Y;
-                        int chunkZ = worldZ / ClientConfig.CHUNK_SIZE;
-
-                        chunksToReload.Add((chunkX, chunkY, chunkZ));
-                    }
-                }
-            }
-
-            Console.WriteLine($"[Client] Force-reloading {chunksToReload.Count} chunks");
-
-            // Force reload all affected chunks from server
-            foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
-            {
-                ForceReloadChunk(chunkX, chunkY, chunkZ);
-            }
-        }
 
         private void HandleServerPositionUpdate(byte[] data)
         {
@@ -648,14 +626,14 @@ public void ForceReloadChunk(int cx, int cy, int cz)
         }
 
         private async Task<(float[] renderMesh, CollisionMesh collisionMesh)> RequestChunkMeshAsync(
-            int cx, int cy, int cz, CancellationToken token)
+        int cx, int cy, int cz, CancellationToken token)
         {
-            if (stream == null || tcp == null || !tcp.Connected)
+            if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
             {
                 await connectionSemaphore.WaitAsync(token);
                 try
                 {
-                    if (stream == null || tcp == null || !tcp.Connected)
+                    if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
                     {
                         await ConnectToServerAsync("127.0.0.1", ClientConfig.SERVER_PORT);
                     }
@@ -670,10 +648,8 @@ public void ForceReloadChunk(int cx, int cy, int cz)
             try
             {
                 await SendChunkRequestAsync(cx, cy, cz, token);
-
                 float[] renderMesh = await ReceiveRenderMeshAsync(token);
                 CollisionMesh collisionMesh = await ReceiveCollisionMeshAsync(token);
-
                 return (renderMesh, collisionMesh);
             }
             finally
@@ -681,7 +657,6 @@ public void ForceReloadChunk(int cx, int cy, int cz)
                 networkSemaphore.Release();
             }
         }
-
         private async Task SendChunkRequestAsync(int cx, int cy, int cz, CancellationToken token)
         {
             var req = new byte[13];
@@ -690,27 +665,24 @@ public void ForceReloadChunk(int cx, int cy, int cz)
             BitConverter.TryWriteBytes(req.AsSpan(5, 4), cy);
             BitConverter.TryWriteBytes(req.AsSpan(9, 4), cz);
 
-            await stream!.WriteAsync(req, token);
-            await stream.FlushAsync(token);
+            await streamRequest!.WriteAsync(req, token);
+            await streamRequest.FlushAsync(token);
         }
 
         private async Task<float[]> ReceiveRenderMeshAsync(CancellationToken token)
         {
             var lenBuf = new byte[4];
-            await ReadFullAsync(stream!, lenBuf, 0, 4, token);
+            await ReadFullAsync(streamRequest!, lenBuf, 0, 4, token);
             int payloadLen = BitConverter.ToInt32(lenBuf, 0);
 
             if (payloadLen < 0 || payloadLen > 100_000_000)
                 throw new Exception($"Invalid payload length: {payloadLen}");
 
             if (payloadLen == 0)
-            {
-                Console.WriteLine("[Client] Received empty render mesh");
                 return Array.Empty<float>();
-            }
 
             var payload = new byte[payloadLen];
-            await ReadFullAsync(stream!, payload, 0, payloadLen, token);
+            await ReadFullAsync(streamRequest!, payload, 0, payloadLen, token);
 
             int vertexCount = BitConverter.ToInt32(payload, 0);
             const int floatsPerVertex = 7;
@@ -725,7 +697,7 @@ public void ForceReloadChunk(int cx, int cy, int cz)
         private async Task<CollisionMesh> ReceiveCollisionMeshAsync(CancellationToken token)
         {
             var lenBuf = new byte[4];
-            await ReadFullAsync(stream!, lenBuf, 0, 4, token);
+            await ReadFullAsync(streamRequest!, lenBuf, 0, 4, token);
             int payloadLen = BitConverter.ToInt32(lenBuf, 0);
 
             if (payloadLen < 0 || payloadLen > 100_000_000)
@@ -733,7 +705,6 @@ public void ForceReloadChunk(int cx, int cy, int cz)
 
             if (payloadLen == 0)
             {
-                Console.WriteLine("[Client] Received empty collision mesh");
                 return new CollisionMesh
                 {
                     Vertices = new List<Vector3>(),
@@ -742,7 +713,7 @@ public void ForceReloadChunk(int cx, int cy, int cz)
             }
 
             var payload = new byte[payloadLen];
-            await ReadFullAsync(stream!, payload, 0, payloadLen, token);
+            await ReadFullAsync(streamRequest!, payload, 0, payloadLen, token);
 
             int offset = 0;
             int vertexCount = BitConverter.ToInt32(payload, offset);
@@ -759,7 +730,6 @@ public void ForceReloadChunk(int cx, int cy, int cz)
                 offset += sizeof(float);
                 float z = BitConverter.ToSingle(payload, offset);
                 offset += sizeof(float);
-
                 vertices.Add(new Vector3(x, y, z));
             }
 
@@ -772,7 +742,6 @@ public void ForceReloadChunk(int cx, int cy, int cz)
 
             return new CollisionMesh { Vertices = vertices, Indices = indices };
         }
-
         private static async Task ReadFullAsync(NetworkStream stream, byte[] buf, int off, int count, CancellationToken token)
         {
             int read = 0;
@@ -794,8 +763,10 @@ public void ForceReloadChunk(int cx, int cy, int cz)
             updateTask?.Wait(TimeSpan.FromSeconds(1));
             tcpListenerTask?.Wait(TimeSpan.FromSeconds(1));
 
-            stream?.Dispose();
-            tcp?.Close();
+            streamRequest?.Dispose();
+            streamBroadcast?.Dispose();
+            tcpRequest?.Close();
+            tcpBroadcast?.Close();
             udp?.Close();
             networkSemaphore?.Dispose();
             connectionSemaphore?.Dispose();
