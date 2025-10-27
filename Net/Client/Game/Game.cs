@@ -1,3 +1,5 @@
+// Updated Game.cs with fixes: Assign TextRenderer, disable depth test for UI, improve contrast in InventoryPanel/Slot
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -171,21 +173,34 @@ namespace Aetheris
             int uiShader = CreateSimpleUIShader();
             int uiVao = CreateQuadVao();
             int uiVbo = CreateQuadVbo();
+            GL.BindVertexArray(uiVao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, uiVbo);
+
+            // Re-set the attribute pointers while the VBO we will fill is bound
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 6 * sizeof(float), 2 * sizeof(float));
+
+            GL.BindVertexArray(0);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            // --- Enable blending globally for UI (alpha used in many UI draws) ---
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             uiManager = new UIManager(this, uiShader, uiVao, uiVbo);
 
-            // assign text renderer if Renderer exposes one
-            if (Renderer != null)
+            // Assign text renderer
+            try
             {
-                try
-                {
-                    // If Renderer provides a TextRenderer instance, use it; otherwise user must set it later.
-                    Aetheris.UI.FontRenderer fontRenderer = new FontRenderer("assets/font.ttf", 48);
-                }
-                catch
-                {
-                    Console.WriteLine("[Game] WARNING: Renderer.TextRenderer not found; UI text will be missing.");
-                }
+                Aetheris.UI.FontRenderer fontRenderer = new FontRenderer("assets/font.ttf", 48);
+                uiManager.TextRenderer = fontRenderer;  // Fixed: Assign to uiManager
+                Console.WriteLine("[Game] TextRenderer assigned successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Game] WARNING: Failed to initialize/assign TextRenderer: {ex.Message}");
             }
 
             // create inventory and fill a bit for testing
@@ -194,26 +209,32 @@ namespace Aetheris
             inventory.AddItem(2, 16);
             inventory.SelectedHotbarSlot = 0;
 
-            // panel + layout
             var slotSize = new Vector2(72, 72);
             float spacing = 8f;
             inventoryPanel = new InventoryPanel(inventory, slotSize, spacing);
 
-            // center the panel on screen
-            var panelPos = new Vector2((Size.X - inventoryPanel.Size.X) / 2f, (Size.Y - inventoryPanel.Size.Y) / 2f);
+            // center panel on screen
+            var panelPos = new Vector2((Size.X - inventoryPanel.Size.X) / 2f,
+                                       (Size.Y - inventoryPanel.Size.Y) / 2f);
             inventoryPanel.LayoutSlots(panelPos, slotSize, spacing);
 
-            // add panel + slots to UI manager (panel renders itself; slots receive input)
-            uiManager.AddElement(inventoryPanel);
+            // assign Manager to panel and slots
+            inventoryPanel.Manager = uiManager;
             foreach (var s in inventoryPanel.Slots)
             {
+                s.Manager = uiManager;
                 s.OnSlotClicked = (idx) => OnInventorySlotClicked(idx);
-                uiManager.AddElement(s);
             }
+
+            // add to UIManager
+            uiManager.AddElement(inventoryPanel);
+            foreach (var s in inventoryPanel.Slots)
+                uiManager.AddElement(s);
 
             // start hidden
             inventoryPanel.Visible = false;
-            foreach (var s in inventoryPanel.Slots) s.Visible = false;
+            foreach (var s in inventoryPanel.Slots)
+                s.Visible = false;
             inventoryVisible = false;
 
             // Load pre-fetched chunks into renderer and chunkManager
@@ -435,16 +456,28 @@ namespace Aetheris
 
 
             // === CLEANUP 3D ===
+
+            // === CLEANUP 3D ===
             GL.BindVertexArray(0);
             GL.UseProgram(0);
+
+            // Save depth/blend state (optional but nice)
+            bool depthEnabled = GL.IsEnabled(EnableCap.DepthTest);
+            bool blendEnabled = GL.IsEnabled(EnableCap.Blend);
+
+            // Disable depth test for UI and enable blending
+            GL.Disable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             // === RENDER UI (orthographic 2D overlay) ===
             if (uiManager != null)
             {
+
+GL.Disable(EnableCap.DepthTest);
+uiManager.DrawRect(100, 100, 300, 200, new Vector4(1f, 0f, 0f, 0.8f), 8f);
                 var ortho = Matrix4.CreateOrthographicOffCenter(0f, Size.X, Size.Y, 0f, -1f, 1f);
                 uiManager.Render(ortho);
-
-                // Held-item ghost (text fallback)
                 if (holdingItem && uiManager.TextRenderer != null)
                 {
                     var mp = MouseState.Position;
@@ -453,8 +486,15 @@ namespace Aetheris
                 }
             }
 
+            // Restore previous GL state
+            if (depthEnabled) GL.Enable(EnableCap.DepthTest); else GL.Disable(EnableCap.DepthTest);
+            if (!blendEnabled) GL.Disable(EnableCap.Blend);
+
+            // Now swap buffers like before
             SwapBuffers();
         }
+
+
 
         private bool networkcontrollerExists() => networkController != null;
         private object? networkcontrollerRemotePlayers() => networkController?.RemotePlayers;

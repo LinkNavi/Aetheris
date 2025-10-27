@@ -1,3 +1,5 @@
+// Updated InventorySlot.cs with improved contrast (lighter bg) and optional debug log in Render
+
 using System;
 using OpenTK.Mathematics;
 
@@ -20,7 +22,10 @@ namespace Aetheris.UI
         {
             if (Manager == null) return;
 
-            var bg = new Vector4(0.06f, 0.06f, 0.08f, 0.95f);
+            // Optional debug (can remove later)
+            // Console.WriteLine($"[Debug] Rendering InventorySlot {Index} at pos={Position}, size={Size}, visible={Visible}");
+
+            var bg = new Vector4(0.2f, 0.2f, 0.25f, 0.95f);  // Fixed: Lighter slot background for better visibility
             var border = IsHovered ? new Vector4(0.75f, 0.85f, 1f, 1f) : new Vector4(0.25f, 0.28f, 0.33f, 1f);
             Manager.DrawRect(Position.X, Position.Y, Size.X, Size.Y, bg, 6f);
             Manager.DrawBorder(Position.X, Position.Y, Size.X, Size.Y, 2f, border);

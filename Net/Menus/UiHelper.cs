@@ -196,6 +196,8 @@ namespace Aetheris.UI
         {
             currentProjection = projection;
 
+// temporary test inside UIManager.Render before drawing elements:
+DrawRect(50,50,200,200, new Vector4(1,0,0,1)); // should draw a red square
             GL.UseProgram(shaderProgram);
             int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
             GL.UniformMatrix4(projLoc, false, ref projection);
