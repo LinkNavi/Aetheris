@@ -190,7 +190,7 @@ namespace Aetheris
             }
 
             // Client-side prediction: reduce density in the area (SMOOTH REMOVAL)
-            // WorldGen.RemoveBlock(x, y, z, radius: 1.5f, strength: 3.0f);
+             WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f);
 
             // Queue regeneration for next frame to ensure modifications complete
             lock (mainThreadLock)
@@ -206,7 +206,7 @@ namespace Aetheris
             int blockZ = (int)blockPos.Z;
 
             // Calculate affected area based on mining radius
-            float miningRadius = 1.5f;
+            float miningRadius = 5.0f;
             int affectRadius = (int)Math.Ceiling(miningRadius);
 
             // Determine all chunks that need regeneration
