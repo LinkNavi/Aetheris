@@ -1,4 +1,4 @@
-// Complete Game.cs with Simple Inventory System
+// Complete Game.cs with State Machine
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +26,10 @@ namespace Aetheris
         private float chunkUpdateTimer = 0f;
         private const float CHUNK_UPDATE_INTERVAL = 0.5f;
 
-        // Simple Inventory System
+        // State Machine
+        private GameStateManager stateManager;
+
+        // Inventory System
         private SimpleInventoryRenderer? inventoryRenderer;
         private Aetheris.Inventory? inventory;
 
@@ -54,6 +57,10 @@ namespace Aetheris
             chunkManager = new ChunkManager();
             SetupLogging();
 
+            // Initialize state machine
+            stateManager = new GameStateManager(GameStateType.Playing);
+            SetupStateCallbacks();
+
             // Initialize WorldGen FIRST (needed for player collision)
             WorldGen.Initialize();
             Console.WriteLine("[Game] WorldGen initialized");
@@ -80,6 +87,38 @@ namespace Aetheris
             {
                 Console.WriteLine("[Game] Running in single-player mode (no network)");
             }
+        }
+
+        private void SetupStateCallbacks()
+        {
+            // Register state change handlers
+            stateManager.OnStateEnter += (state) =>
+            {
+                Console.WriteLine($"[Game] Entering state: {state}");
+                
+                switch (state)
+                {
+                    case GameStateType.Playing:
+                        // Return to gameplay - grab cursor
+                        CursorState = CursorState.Grabbed;
+                        break;
+                        
+                    case GameStateType.Inventory:
+                        // Open inventory - show cursor
+                        CursorState = CursorState.Normal;
+                        break;
+                        
+                    case GameStateType.Paused:
+                        // Pause game - show cursor
+                        CursorState = CursorState.Normal;
+                        break;
+                }
+            };
+            
+            stateManager.OnStateExit += (state) =>
+            {
+                Console.WriteLine($"[Game] Exiting state: {state}");
+            };
         }
 
         private void SetupLogging()
@@ -125,7 +164,7 @@ namespace Aetheris
             GL.CullFace(TriangleFace.Back);
             GL.FrontFace(FrontFaceDirection.Ccw);
 
-            // Start grabbed by default
+            // Start in playing state with grabbed cursor
             CursorState = CursorState.Grabbed;
 
             // Mining system
@@ -307,32 +346,62 @@ namespace Aetheris
             // Process pending mesh uploads
             Renderer.ProcessPendingUploads();
 
+            // === GLOBAL INPUT (works in any state) ===
             if (IsKeyDown(Keys.Escape))
-                Close();
+            {
+                // ESC behavior depends on current state
+                if (stateManager.IsInState(GameStateType.Inventory))
+                {
+                    // Close inventory and return to game
+                    stateManager.TransitionTo(GameStateType.Playing);
+                }
+                else if (stateManager.IsInState(GameStateType.Playing))
+                {
+                    // Close game (could change to pause menu later)
+                    Close();
+                }
+            }
 
-            // Toggle inventory (single-press)
+            // Toggle inventory with I key (single-press)
             if (KeyboardState.IsKeyPressed(Keys.I))
             {
-                inventoryRenderer?.Toggle();
-                CursorState = (inventoryRenderer?.IsVisible ?? false) ? CursorState.Normal : CursorState.Grabbed;
+                if (stateManager.IsInState(GameStateType.Playing))
+                {
+                    stateManager.TransitionTo(GameStateType.Inventory);
+                }
+                else if (stateManager.IsInState(GameStateType.Inventory))
+                {
+                    stateManager.TransitionTo(GameStateType.Playing);
+                }
             }
 
-            // Update inventory
-            if (inventoryRenderer != null && inventoryRenderer.IsVisible)
+            // === STATE-SPECIFIC UPDATE ===
+            switch (stateManager.CurrentState)
             {
-                inventoryRenderer.Update(MouseState, Size.X, Size.Y);
+                case GameStateType.Playing:
+                    UpdatePlayingState(e, delta);
+                    break;
+                    
+                case GameStateType.Inventory:
+                    UpdateInventoryState(e, delta);
+                    break;
+                    
+                case GameStateType.Paused:
+                    UpdatePausedState(e, delta);
+                    break;
             }
+        }
 
-            // Only allow player movement when inventory is closed
-            if (inventoryRenderer?.IsVisible != true)
-            {
-                if (NetworkController != null)
-                    NetworkController.Update(e, KeyboardState, MouseState);
-                else
-                    player.Update(e, KeyboardState, MouseState);
+        private void UpdatePlayingState(FrameEventArgs e, float delta)
+        {
+            // Player movement and controls
+            if (NetworkController != null)
+                NetworkController.Update(e, KeyboardState, MouseState);
+            else
+                player.Update(e, KeyboardState, MouseState);
 
-                miningSystem?.Update(delta, MouseState, IsFocused);
-            }
+            // Mining system
+            miningSystem?.Update(delta, MouseState, IsFocused);
 
             // Chunk loading updates
             if (chunkUpdateTimer == 0f)
@@ -362,12 +431,57 @@ namespace Aetheris
             }
         }
 
+        private void UpdateInventoryState(FrameEventArgs e, float delta)
+        {
+            // Update inventory UI with mouse input
+            if (inventoryRenderer != null)
+            {
+                inventoryRenderer.Update(MouseState, Size.X, Size.Y);
+            }
+            
+            // Still update chunks in background (optional - you could disable this)
+            chunkUpdateTimer += delta;
+            if (chunkUpdateTimer >= CHUNK_UPDATE_INTERVAL)
+            {
+                chunkUpdateTimer = 0f;
+                Vector3 playerChunk = player.GetPlayersChunk();
+                client?.UpdateLoadedChunks(playerChunk, renderDistance);
+            }
+        }
+
+        private void UpdatePausedState(FrameEventArgs e, float delta)
+        {
+            // Future: Update pause menu
+        }
+
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            // Debug: Raycast
+            // === STATE-SPECIFIC RENDERING ===
+            switch (stateManager.CurrentState)
+            {
+                case GameStateType.Playing:
+                    RenderGameWorld();
+                    RenderPlayingUI();
+                    break;
+                    
+                case GameStateType.Inventory:
+                    RenderInventoryUI();
+                    break;
+                    
+                case GameStateType.Paused:
+                   // RenderPauseMenu();
+                    break;
+            }
+
+            SwapBuffers();
+        }
+        
+        private void RenderGameWorld()
+        {
+            // Debug raycast
             if (KeyboardState.IsKeyPressed(Keys.R))
             {
                 Vector3 forward = player.GetForward();
@@ -384,7 +498,7 @@ namespace Aetheris
                 }
             }
 
-            // Debug: Biome info
+            // Debug biome info
             if (KeyboardState.IsKeyPressed(Keys.B))
             {
                 int px = (int)player.Position.X;
@@ -421,23 +535,41 @@ namespace Aetheris
             // Cleanup 3D rendering
             GL.BindVertexArray(0);
             GL.UseProgram(0);
+        }
+        
+        private void RenderPlayingUI()
+        {
+            // Future: Render crosshair, health bar, hotbar, etc.
+        }
 
+        private void RenderInventoryUI()
+        {
             // Disable depth test for UI overlay
             GL.Disable(EnableCap.DepthTest);
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-            // Render inventory if open
+            // Render inventory
             if (inventoryRenderer != null)
             {
                 var ortho = Matrix4.CreateOrthographicOffCenter(0f, Size.X, Size.Y, 0f, -1f, 1f);
                 inventoryRenderer.Render(ortho, MouseState);
             }
 
-            // Re-enable depth test for next frame
+            // Re-enable depth test
             GL.Enable(EnableCap.DepthTest);
+        }
 
-            SwapBuffers();
+        private void RenderPauseUI()
+        {
+            // Future: Render pause menu
+            GL.Disable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.Blend);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            
+            // TODO: Add pause menu rendering here
+            
+            GL.Enable(EnableCap.DepthTest);
         }
 
         protected override void OnUnload()

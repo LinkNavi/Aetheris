@@ -1,38 +1,33 @@
-﻿[2025-10-27 15:06:04.001] [Logging] Started logging to 'physics_debug.log'
-[2025-10-27 15:06:04.030] [Game] WorldGen initialized
-[2025-10-27 15:06:04.046] [PSX Effects] Shaders compiled successfully
-[2025-10-27 15:06:04.047] [Game] Renderer initialized
-[2025-10-27 15:06:04.060] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2025-10-27 15:06:04.060] [Game] EntityRenderer initialized
-[2025-10-27 15:06:04.083] [Player] Spawned at (16, 37.1, 16)
-[2025-10-27 15:06:04.083] [Game] Player initialized at position: (16, 37.1, 16)
-[2025-10-27 15:06:04.084] [Game] Network controller initialized
-[2025-10-27 15:06:04.087] [Client] TCP broadcast listener started
-[2025-10-27 15:06:04.095] [Game] Found atlas at: textures/atlas.png
-[2025-10-27 15:06:04.211] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2025-10-27 15:06:04.212] [AtlasManager] Using preferred tile size: 64
-[2025-10-27 15:06:04.212] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2025-10-27 15:06:04.218] [AtlasManager] Successfully uploaded to GL texture 1
-[2025-10-27 15:06:04.218] [AtlasManager] Verified texture dimensions: 256x256
-[2025-10-27 15:06:04.221] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1)
-[2025-10-27 15:06:04.222] [Game] Created UI shader=4, vao=2, vbo=2
-[2025-10-27 15:06:04.223] [InventoryRenderer] Created with shader=4, vao=2, vbo=2
-[2025-10-27 15:06:04.223] [InventoryRenderer] Panel size: (752, 352)
-[2025-10-27 15:06:04.587] [Client] Chunk update loop starting...
-[2025-10-27 15:06:05.693] [Game] Inventory text renderer assigned
-[2025-10-27 15:06:05.693] [Game] Simple inventory system initialized
-[2025-10-27 15:06:05.694] [Game] Loaded 0 chunks
-[2025-10-27 15:06:05.773] [Renderer] Uploaded chunk (0,0,0): VAO=4, VBO=4, 16506 vertices
-[2025-10-27 15:06:05.777] [Renderer] Uploaded chunk (1,0,0): VAO=5, VBO=5, 13323 vertices
-[2025-10-27 15:06:07.469] [SimpleInventory] Toggled to: True
-[2025-10-27 15:06:07.470] [InventoryRenderer] Projection matrix:
-[2025-10-27 15:06:07.472]   [0.0010660981, 0, 0, 0]
-[2025-10-27 15:06:07.472]   [0, -0.002020202, 0, 0]
-[2025-10-27 15:06:07.472]   [0, 0, -1, 0]
-[2025-10-27 15:06:07.473]   [-1, 1, -0, 1]
-[2025-10-27 15:06:07.473] [InventoryRenderer] Drawing TEST RECTANGLE at (100, 100, 300, 300) - should be BRIGHT RED
-[2025-10-27 15:06:07.954] [SimpleInventory] Toggled to: False
-[2025-10-27 15:07:30.643] [SimpleInventory] Toggled to: True
-[2025-10-27 15:07:31.270] [SimpleInventory] Toggled to: False
-[2025-10-27 15:07:31.418] [SimpleInventory] Toggled to: True
-[2025-10-27 15:07:31.553] [SimpleInventory] Toggled to: False
+﻿[2025-10-27 15:19:29.214] [Logging] Started logging to 'physics_debug.log'
+[2025-10-27 15:19:29.247] [GameStateManager] Initialized in state: Playing
+[2025-10-27 15:19:29.252] [Game] WorldGen initialized
+[2025-10-27 15:19:29.269] [PSX Effects] Shaders compiled successfully
+[2025-10-27 15:19:29.270] [Game] Renderer initialized
+[2025-10-27 15:19:29.283] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2025-10-27 15:19:29.283] [Game] EntityRenderer initialized
+[2025-10-27 15:19:29.307] [Player] Spawned at (16, 37.1, 16)
+[2025-10-27 15:19:29.307] [Game] Player initialized at position: (16, 37.1, 16)
+[2025-10-27 15:19:29.308] [Game] Network controller initialized
+[2025-10-27 15:19:29.311] [Client] TCP broadcast listener started
+[2025-10-27 15:19:29.317] [Game] Found atlas at: textures/atlas.png
+[2025-10-27 15:19:29.422] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2025-10-27 15:19:29.422] [AtlasManager] Using preferred tile size: 64
+[2025-10-27 15:19:29.423] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2025-10-27 15:19:29.428] [AtlasManager] Successfully uploaded to GL texture 1
+[2025-10-27 15:19:29.428] [AtlasManager] Verified texture dimensions: 256x256
+[2025-10-27 15:19:29.431] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1)
+[2025-10-27 15:19:29.432] [Game] Created UI shader=4, vao=2, vbo=2
+[2025-10-27 15:19:29.432] [InventoryRenderer] Created with shader=4, vao=2, vbo=2
+[2025-10-27 15:19:29.433] [InventoryRenderer] Panel size: (752, 352)
+[2025-10-27 15:19:29.810] [Client] Chunk update loop starting...
+[2025-10-27 15:19:30.725] [Game] Inventory text renderer assigned
+[2025-10-27 15:19:30.725] [Game] Simple inventory system initialized
+[2025-10-27 15:19:30.725] [Game] Loaded 0 chunks
+[2025-10-27 15:19:30.876] [Renderer] Uploaded chunk (0,0,0): VAO=4, VBO=4, 16506 vertices
+[2025-10-27 15:19:30.880] [Renderer] Uploaded chunk (1,0,0): VAO=5, VBO=5, 13323 vertices
+[2025-10-27 15:19:31.344] [GameStateManager] Transitioning: Playing -> Inventory
+[2025-10-27 15:19:31.344] [Game] Exiting state: Playing
+[2025-10-27 15:19:31.344] [Game] Entering state: Inventory
+[2025-10-27 15:19:37.217] [GameStateManager] Transitioning: Inventory -> Playing
+[2025-10-27 15:19:37.218] [Game] Exiting state: Inventory
+[2025-10-27 15:19:37.218] [Game] Entering state: Playing
