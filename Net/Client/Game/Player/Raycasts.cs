@@ -36,6 +36,8 @@ namespace Aetheris
         /// If raycastAll == false -> returns array with 0 or 1 RaycastHit (closest)
         /// If raycastAll == true -> returns all RaycastHit results sorted by distance
         /// </summary>
+
+
         public RaycastHit[] Raycast(Vector3 start, Vector3 end, bool raycastAll = false)
         {
             Vector3 rayVec = end - start;
@@ -50,32 +52,26 @@ namespace Aetheris
             int iy = (int)MathF.Floor(start.Y);
             int iz = (int)MathF.Floor(start.Z);
 
-            int stepX = dir.X > 0 ? 1 : -1;
-            int stepY = dir.Y > 0 ? 1 : -1;
-            int stepZ = dir.Z > 0 ? 1 : -1;
+            int stepX = dir.X > 0 ? 1 : (dir.X < 0 ? -1 : 0);
+            int stepY = dir.Y > 0 ? 1 : (dir.Y < 0 ? -1 : 0);
+            int stepZ = dir.Z > 0 ? 1 : (dir.Z < 0 ? -1 : 0);
 
             float tDeltaX = dir.X == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.X);
             float tDeltaY = dir.Y == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.Y);
             float tDeltaZ = dir.Z == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.Z);
 
-            float tMaxX = dir.X > 0
-                ? ((ix + 1.0f) - start.X) * tDeltaX
-                : (start.X - ix) * tDeltaX;
-            float tMaxY = dir.Y > 0
-                ? ((iy + 1.0f) - start.Y) * tDeltaY
-                : (start.Y - iy) * tDeltaY;
-            float tMaxZ = dir.Z > 0
-                ? ((iz + 1.0f) - start.Z) * tDeltaZ
-                : (start.Z - iz) * tDeltaZ;
+            float tMaxX = (stepX == 0) ? float.MaxValue
+                : (stepX > 0 ? ((ix + 1.0f) - start.X) * tDeltaX : (start.X - ix) * tDeltaX);
+            float tMaxY = (stepY == 0) ? float.MaxValue
+                : (stepY > 0 ? ((iy + 1.0f) - start.Y) * tDeltaY : (start.Y - iy) * tDeltaY);
+            float tMaxZ = (stepZ == 0) ? float.MaxValue
+                : (stepZ > 0 ? ((iz + 1.0f) - start.Z) * tDeltaZ : (start.Z - iz) * tDeltaZ);
 
-            // Limit the number of voxel steps to avoid pathological loops
-            int maxSteps = (int)(maxDistance / 0.5f) + 8; // half-voxel step safety
+            int maxSteps = (int)(maxDistance * 2f) + 16; // safe upper bound
             var hits = new List<RaycastHit>();
 
-            // Walk voxels along ray
             for (int step = 0; step < maxSteps; step++)
             {
-                // Query the chunk that contains voxel (ix,iy,iz)
                 try
                 {
                     int chunkX = (int)MathF.Floor((float)ix / ClientConfig.CHUNK_SIZE);
@@ -85,7 +81,6 @@ namespace Aetheris
                     var meshData = game?.Renderer.GetMeshData(chunkX, chunkY, chunkZ);
                     if (meshData != null && meshData.Length >= 21)
                     {
-                        // Mesh data format assumed: 7 floats per vertex (x,y,z,nx,ny,nz,blockType) * 3 = 21 per triangle
                         for (int i = 0; i + 20 < meshData.Length; i += 21)
                         {
                             Vector3 v0 = new Vector3(meshData[i + 0], meshData[i + 1], meshData[i + 2]);
@@ -104,7 +99,6 @@ namespace Aetheris
                                         Distance = t,
                                         BlockType = (BlockType)(int)meshData[i + 6]
                                     };
-
                                     hits.Add(hit);
                                 }
                             }
@@ -113,22 +107,20 @@ namespace Aetheris
                 }
                 catch
                 {
-                    // ignore chunk access errors and continue stepping
+                    // ignore chunk access errors
                 }
 
-                // Advance DDA to next voxel
+                // advance DDA
                 if (tMaxX < tMaxY)
                 {
                     if (tMaxX < tMaxZ)
                     {
-                        // X is smallest
-                        if (tMaxX * 1.0001f > maxDistance) break; // next boundary past maxDistance
+                        if (tMaxX * 1.0001f > maxDistance) break;
                         ix += stepX;
                         tMaxX += tDeltaX;
                     }
                     else
                     {
-                        // Z is smallest
                         if (tMaxZ * 1.0001f > maxDistance) break;
                         iz += stepZ;
                         tMaxZ += tDeltaZ;
@@ -138,14 +130,12 @@ namespace Aetheris
                 {
                     if (tMaxY < tMaxZ)
                     {
-                        // Y is smallest
                         if (tMaxY * 1.0001f > maxDistance) break;
                         iy += stepY;
                         tMaxY += tDeltaY;
                     }
                     else
                     {
-                        // Z is smallest (or tie)
                         if (tMaxZ * 1.0001f > maxDistance) break;
                         iz += stepZ;
                         tMaxZ += tDeltaZ;
@@ -153,26 +143,24 @@ namespace Aetheris
                 }
             }
 
-            if (hits.Count == 0)
-                return Array.Empty<RaycastHit>();
+            if (hits.Count == 0) return Array.Empty<RaycastHit>();
 
-            // Deduplicate hits that are very close (same triangle found multiple times across voxels)
-            hits = hits
-                .OrderBy(h => h.Distance)
-                .Where((h, idx) =>
-                {
-                    // keep if it's the first, or far enough from the previous kept hit
-                    if (idx == 0) return true;
-                    return h.Distance - hits[idx - 1].Distance > 0.001f;
-                })
-                .ToList();
+            // robust dedupe: sort then keep hits separated by a small delta
+            hits = hits.OrderBy(h => h.Distance).ToList();
+            var kept = new List<RaycastHit>();
+            const float KEEP_EPS = 0.0005f;
+            foreach (var h in hits)
+            {
+                if (kept.Count == 0 || h.Distance - kept[kept.Count - 1].Distance > KEEP_EPS)
+                    kept.Add(h);
+            }
 
             if (!raycastAll)
             {
-                return new[] { hits[0] };
+                return new[] { kept[0] };
             }
 
-            return hits.ToArray();
+            return kept.ToArray();
         }
 
         /// <summary>

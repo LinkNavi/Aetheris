@@ -8,6 +8,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using AetherisClient.Rendering;
+using Aetheris.UI;
 
 namespace Aetheris
 {
@@ -15,43 +16,55 @@ namespace Aetheris
     {
         public Renderer Renderer { get; private set; }
         private readonly Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks;
-        private readonly Player player;
+        public Player player;
         private readonly Client? client;
         private readonly ChunkManager chunkManager;
         public PlayerNetworkController? NetworkController { get; private set; }
+
         private int renderDistance = ClientConfig.RENDER_DISTANCE;
         private float chunkUpdateTimer = 0f;
         private const float CHUNK_UPDATE_INTERVAL = 0.5f;
 
+        // UI / Inventory
+        private UIManager? uiManager;
+        private Aetheris.Inventory? inventory;
+        private InventoryPanel? inventoryPanel;
+        private bool inventoryVisible = false;
+
+        // simple held stack for pick/drop
+        private Aetheris.ItemStack heldStack;
+        private bool holdingItem = false;
+
         private MiningSystem? miningSystem;
+
         // Logging
         private const string LogFileName = "physics_debug.log";
         private StreamWriter? logWriter;
         private TextWriter? originalConsoleOut;
         private TextWriter? originalConsoleError;
         private TeeTextWriter? teeWriter;
+
         private EntityRenderer? entityRenderer;
-        private PlayerNetworkController? networkController;
+        private PlayerNetworkController? networkController; // duplicate reference used by rendering code
+
         public Game(Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks, Client? client = null)
-       : base(GameWindowSettings.Default, new NativeWindowSettings()
-       {
-           ClientSize = new Vector2i(1920, 1080),
-           Title = "Aetheris Client"
-       })
+            : base(GameWindowSettings.Default, new NativeWindowSettings()
+            {
+                ClientSize = new Vector2i(1920, 1080),
+                Title = "Aetheris Client"
+            })
         {
             this.loadedChunks = loadedChunks ?? new Dictionary<(int, int, int), Aetheris.Chunk>();
             this.client = client;
+
+            // initialize chunk manager (was commented out previously)
+            chunkManager = new ChunkManager();
 
             SetupLogging();
 
             // Initialize WorldGen FIRST (needed for player collision)
             WorldGen.Initialize();
             Console.WriteLine("[Game] WorldGen initialized");
-
-            // Create ChunkManager for collision detection
-            // chunkManager = new ChunkManager();
-            //chunkManager.GenerateCollisionMeshes = true;
-            //Console.WriteLine("[Game] ChunkManager initialized with collision support");
 
             // Create Renderer
             Renderer = new Renderer();
@@ -112,15 +125,22 @@ namespace Aetheris
         protected override void OnLoad()
         {
             base.OnLoad();
+
+            // GL state
             GL.ClearColor(0.15f, 0.18f, 0.2f, 1.0f);
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Less);
             GL.Enable(EnableCap.CullFace);
             GL.CullFace(TriangleFace.Back);
             GL.FrontFace(FrontFaceDirection.Ccw);
+
+            // start grabbed by default
             CursorState = CursorState.Grabbed;
+
+            // mining system
             miningSystem = new MiningSystem(player, this, OnBlockMined);
-            // Load atlas
+
+            // Load atlas (fallbacks)
             string[] atlasPaths = new[]
             {
                 "textures/atlas.png",
@@ -132,7 +152,7 @@ namespace Aetheris
             bool atlasLoaded = false;
             foreach (var path in atlasPaths)
             {
-                if (System.IO.File.Exists(path))
+                if (File.Exists(path))
                 {
                     Console.WriteLine($"[Game] Found atlas at: {path}");
                     Renderer.LoadTextureAtlas(path);
@@ -147,7 +167,56 @@ namespace Aetheris
                 Renderer.CreateProceduralAtlas();
             }
 
-            // Load pre-fetched chunks into both renderer and chunk manager
+            // --- UI setup (minimal helper shaders/buffers created here if you don't already have them) ---
+            int uiShader = CreateSimpleUIShader();
+            int uiVao = CreateQuadVao();
+            int uiVbo = CreateQuadVbo();
+
+            uiManager = new UIManager(this, uiShader, uiVao, uiVbo);
+
+            // assign text renderer if Renderer exposes one
+            if (Renderer != null)
+            {
+                try
+                {
+                    // If Renderer provides a TextRenderer instance, use it; otherwise user must set it later.
+                    Aetheris.UI.FontRenderer fontRenderer = new FontRenderer("assets/font.ttf", 48);
+                }
+                catch
+                {
+                    Console.WriteLine("[Game] WARNING: Renderer.TextRenderer not found; UI text will be missing.");
+                }
+            }
+
+            // create inventory and fill a bit for testing
+            inventory = new Aetheris.Inventory();
+            inventory.AddItem(1, 32);
+            inventory.AddItem(2, 16);
+            inventory.SelectedHotbarSlot = 0;
+
+            // panel + layout
+            var slotSize = new Vector2(72, 72);
+            float spacing = 8f;
+            inventoryPanel = new InventoryPanel(inventory, slotSize, spacing);
+
+            // center the panel on screen
+            var panelPos = new Vector2((Size.X - inventoryPanel.Size.X) / 2f, (Size.Y - inventoryPanel.Size.Y) / 2f);
+            inventoryPanel.LayoutSlots(panelPos, slotSize, spacing);
+
+            // add panel + slots to UI manager (panel renders itself; slots receive input)
+            uiManager.AddElement(inventoryPanel);
+            foreach (var s in inventoryPanel.Slots)
+            {
+                s.OnSlotClicked = (idx) => OnInventorySlotClicked(idx);
+                uiManager.AddElement(s);
+            }
+
+            // start hidden
+            inventoryPanel.Visible = false;
+            foreach (var s in inventoryPanel.Slots) s.Visible = false;
+            inventoryVisible = false;
+
+            // Load pre-fetched chunks into renderer and chunkManager
             foreach (var kv in loadedChunks)
             {
                 var coord = kv.Key;
@@ -160,10 +229,6 @@ namespace Aetheris
 
                 // Generate collision mesh for physics
                 chunk.GenerateCollisionMesh(meshFloats);
-
-                // Store chunk in manager for collision queries
-                // Note: You may need to add a method to add pre-generated chunks
-                // For now, the chunk will be generated on-demand when player collides
 
                 Console.WriteLine($"[Game] Loading chunk {coord} with {meshFloats.Length / 7} vertices");
                 Renderer.LoadMeshForChunk(coord.Item1, coord.Item2, coord.Item3, meshFloats);
@@ -189,13 +254,9 @@ namespace Aetheris
                 _ = client.SendBlockBreakAsync(x, y, z);
             }
 
-            // REMOVE CLIENT-SIDE PREDICTION - Let server be authoritative
-            // WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f); // DELETE THIS LINE
-
             // The server will broadcast the block break back to us via TCP
             // and we'll reload chunks with the server's authoritative state
         }
-
 
         public void RegenerateMeshForBlock(Vector3 blockPos)
         {
@@ -203,11 +264,9 @@ namespace Aetheris
             int blockY = (int)blockPos.Y;
             int blockZ = (int)blockPos.Z;
 
-            // Calculate affected area based on mining radius
             float miningRadius = 5.0f;
             int affectRadius = (int)Math.Ceiling(miningRadius);
 
-            // Determine all chunks that need regeneration
             HashSet<(int, int, int)> chunksToUpdate = new HashSet<(int, int, int)>();
 
             for (int dx = -affectRadius; dx <= affectRadius; dx++)
@@ -231,13 +290,9 @@ namespace Aetheris
 
             Console.WriteLine($"[Client] Re-requesting {chunksToUpdate.Count} chunks from server after block break");
 
-            // Tell client to re-request these chunks from SERVER
             foreach (var (cx, cy, cz) in chunksToUpdate)
             {
-                // Remove from loaded so it gets re-requested
                 loadedChunks.Remove((cx, cy, cz));
-
-                // Force immediate re-request via client (gets server's authoritative data)
                 if (client != null)
                 {
                     client.ForceReloadChunk(cx, cy, cz);
@@ -245,12 +300,10 @@ namespace Aetheris
             }
         }
 
-
-       
-
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
+
             lock (mainThreadLock)
             {
                 while (pendingMainThreadActions.Count > 0)
@@ -266,6 +319,7 @@ namespace Aetheris
                     }
                 }
             }
+
             float delta = (float)e.Time;
 
             // Process pending mesh uploads
@@ -274,24 +328,27 @@ namespace Aetheris
             if (IsKeyDown(Keys.Escape))
                 Close();
 
-            // Update player
-            if (NetworkController != null)
+            // Toggle inventory (single-press)
+            if (KeyboardState.IsKeyPressed(Keys.I))
             {
-                NetworkController.Update(e, KeyboardState, MouseState);
+                ToggleInventory();
             }
-            else
+
+            // Update UI manager every frame so UI interactions work
+            uiManager?.Update(MouseState, KeyboardState, delta);
+
+            // When inventory is open we skip player input/mining, but keep chunk/network updates running
+            if (!inventoryVisible)
             {
-                player.Update(e, KeyboardState, MouseState);
+                if (NetworkController != null)
+                    NetworkController.Update(e, KeyboardState, MouseState);
+                else
+                    player.Update(e, KeyboardState, MouseState);
+
+                miningSystem?.Update(delta, MouseState, IsFocused);
             }
-            if (networkController != null)
-            {
-                networkController.Update(e, KeyboardState, MouseState);
-            }
-            else
-            {
-                player.Update(e, KeyboardState, MouseState);
-            }
-            // Chunk loading
+
+            // Chunk loading updates (kept running whether inventory is open or not)
             if (chunkUpdateTimer == 0f)
             {
                 Vector3 playerChunk = player.GetPlayersChunk();
@@ -305,10 +362,7 @@ namespace Aetheris
                 Vector3 playerChunk = player.GetPlayersChunk();
                 client?.UpdateLoadedChunks(playerChunk, renderDistance);
             }
-            if (miningSystem != null)
-            {
-                miningSystem.Update((float)e.Time, MouseState, IsFocused);
-            }
+
             // Render distance controls
             if (KeyboardState.IsKeyPressed(Keys.Equal) || KeyboardState.IsKeyPressed(Keys.KeyPadAdd))
             {
@@ -352,8 +406,9 @@ namespace Aetheris
                 WorldGen.PrintBiomeAt(px, pz);
                 Console.WriteLine($"Player at: {player.Position}");
             }
+
             var projection = Matrix4.CreatePerspectiveFieldOfView(
-                OpenTK.Mathematics.MathHelper.DegreesToRadians(60f),
+                MathHelper.DegreesToRadians(60f),
                 Size.X / (float)Size.Y,
                 0.1f,
                 1000f);
@@ -363,13 +418,14 @@ namespace Aetheris
             Renderer.Render(projection, view, player.Position);
 
             // === RENDER OTHER PLAYERS (shader still active) ===
+
             if (entityRenderer != null && networkController != null)
             {
                 var remotePlayers = networkController.RemotePlayers;
                 if (remotePlayers != null && remotePlayers.Count > 0)
                 {
                     entityRenderer.RenderPlayers(
-                        remotePlayers as Dictionary<string, RemotePlayer>,
+                        (Dictionary<string, RemotePlayer>)remotePlayers,
                         Renderer.psxEffects,
                         player.Position,
                         Renderer.UsePSXEffects
@@ -377,12 +433,31 @@ namespace Aetheris
                 }
             }
 
-            // === CLEANUP ===
+
+            // === CLEANUP 3D ===
             GL.BindVertexArray(0);
             GL.UseProgram(0);
 
+            // === RENDER UI (orthographic 2D overlay) ===
+            if (uiManager != null)
+            {
+                var ortho = Matrix4.CreateOrthographicOffCenter(0f, Size.X, Size.Y, 0f, -1f, 1f);
+                uiManager.Render(ortho);
+
+                // Held-item ghost (text fallback)
+                if (holdingItem && uiManager.TextRenderer != null)
+                {
+                    var mp = MouseState.Position;
+                    string info = $"ID:{heldStack.ItemId} x{heldStack.Count}";
+                    uiManager.TextRenderer.DrawText(info, new Vector2(mp.X + 8, mp.Y + 8), 0.9f, new Vector4(1, 1, 1, 1));
+                }
+            }
+
             SwapBuffers();
         }
+
+        private bool networkcontrollerExists() => networkController != null;
+        private object? networkcontrollerRemotePlayers() => networkController?.RemotePlayers;
 
         protected override void OnUnload()
         {
@@ -411,6 +486,151 @@ namespace Aetheris
 
         public void RunGame() => Run();
 
+        // ---------------------------
+        // Inventory / UI helpers
+        // ---------------------------
+        private void ToggleInventory()
+        {
+            inventoryVisible = !inventoryVisible;
+            if (inventoryPanel != null)
+            {
+                inventoryPanel.Visible = inventoryVisible;
+                foreach (var s in inventoryPanel.Slots) s.Visible = inventoryVisible;
+            }
+
+            CursorState = inventoryVisible ? CursorState.Normal : CursorState.Grabbed;
+            Console.WriteLine(inventoryVisible ? "[Game] Inventory opened" : "[Game] Inventory closed");
+        }
+
+        private void OnInventorySlotClicked(int index)
+        {
+            if (inventory == null) return;
+
+            var slot = inventory.Slots[index];
+
+            // If not holding anything, pick up stack
+            if (!holdingItem)
+            {
+                if (slot.ItemId != 0)
+                {
+                    heldStack = slot;
+                    holdingItem = true;
+                    inventory.Slots[index] = default;
+                    Console.WriteLine($"Picked up ID:{heldStack.ItemId} x{heldStack.Count} from slot {index}");
+                }
+                return;
+            }
+
+            // Holding an item - try place / merge / swap
+            if (slot.ItemId == 0)
+            {
+                inventory.Slots[index] = heldStack;
+                holdingItem = false;
+                Console.WriteLine($"Placed ID:{inventory.Slots[index].ItemId} x{inventory.Slots[index].Count} into slot {index}");
+                return;
+            }
+
+            if (slot.ItemId == heldStack.ItemId)
+            {
+                // merge up to 64
+                int canTake = Math.Min(64 - slot.Count, heldStack.Count);
+                inventory.Slots[index].Count += canTake;
+                heldStack.Count -= canTake;
+                if (heldStack.Count <= 0)
+                {
+                    holdingItem = false;
+                    Console.WriteLine($"Merged into slot {index}; finished holding");
+                }
+                else
+                {
+                    Console.WriteLine($"Merged into slot {index}; remaining held: {heldStack.Count}");
+                }
+                return;
+            }
+
+            // swap
+            var tmp = slot;
+            inventory.Slots[index] = heldStack;
+            heldStack = tmp;
+            Console.WriteLine($"Swapped held with slot {index}");
+        }
+
+        // Minimal UI shader + buffer helpers (handy if you don't already have them)
+        private int CreateSimpleUIShader()
+        {
+            string vs = @"#version 330 core
+            layout(location=0) in vec2 aPos;
+            layout(location=1) in vec4 aColor;
+            uniform mat4 projection;
+            out vec4 vColor;
+            void main() {
+                vColor = aColor;
+                gl_Position = projection * vec4(aPos, 0.0, 1.0);
+            }";
+
+            string fs = @"#version 330 core
+            in vec4 vColor;
+            out vec4 FragColor;
+            void main(){ FragColor = vColor; }";
+
+            int vsId = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(vsId, vs);
+            GL.CompileShader(vsId);
+            CheckShaderCompile(vsId, "UI vertex shader");
+
+            int fsId = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(fsId, fs);
+            GL.CompileShader(fsId);
+            CheckShaderCompile(fsId, "UI fragment shader");
+
+            int program = GL.CreateProgram();
+            GL.AttachShader(program, vsId);
+            GL.AttachShader(program, fsId);
+            GL.LinkProgram(program);
+
+            GL.DeleteShader(vsId);
+            GL.DeleteShader(fsId);
+
+            return program;
+        }
+
+        private int CreateQuadVao()
+        {
+            int vao = GL.GenVertexArray();
+            GL.BindVertexArray(vao);
+
+            // Setup attributes layout (pos: vec2, color: vec4)
+            int vbo = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 6 * sizeof(float), 2 * sizeof(float));
+
+            GL.BindVertexArray(0);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            return vao;
+        }
+
+        private int CreateQuadVbo()
+        {
+            int vbo = GL.GenBuffer();
+            return vbo;
+        }
+
+        private void CheckShaderCompile(int shader, string name)
+        {
+            GL.GetShader(shader, ShaderParameter.CompileStatus, out int status);
+            if (status == (int)All.False)
+            {
+                string log = GL.GetShaderInfoLog(shader);
+                Console.WriteLine($"[Shader] Error compiling {name}: {log}");
+            }
+        }
+
+        // ---------------------------
+        // Logging helper tee writer
+        // ---------------------------
         private class TeeTextWriter : TextWriter
         {
             private readonly TextWriter consoleWriter;

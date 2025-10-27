@@ -19,7 +19,7 @@ namespace Aetheris
         private readonly ChunkManager chunkManager = new();
 
         // Mesh cache with LRU eviction
-
+private ServerInventoryManager inventoryManager;
         private readonly ConcurrentDictionary<ChunkCoord, (float[] renderMesh, CollisionMesh collisionMesh)> meshCache = new();
 
         private readonly ConcurrentDictionary<ChunkCoord, SemaphoreSlim> generationLocks = new();
@@ -36,7 +36,10 @@ namespace Aetheris
         private enum TcpPacketType : byte
         {
             ChunkRequest = 0,
-            BlockBreak = 1
+            BlockBreak = 1,
+            InventorySync = 2,      // NEW: Full inventory sync
+            InventoryUpdate = 3,    // NEW: Single slot update
+            ItemPickup = 4          // NEW: Pick up dropped item
         }
         private class PlayerState
         {
@@ -290,10 +293,10 @@ namespace Aetheris
             Log($"[Server] Block broken at ({x}, {y}, {z}) - applying to world");
 
             // CRITICAL: Apply to WorldGen (server's authoritative state)
-            WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f);
+            WorldGen.RemoveBlock(x, y, z, radius: 5f, strength: 3.0f);
 
             // Invalidate server's mesh cache for affected chunks
-            InvalidateChunksAroundBlock(x, y, z, radius: 5.0f);
+            InvalidateChunksAroundBlock(x, y, z, radius: 5f);
 
             // Broadcast to ALL clients (including the one who mined it)
             await BroadcastBlockBreakTcp(x, y, z);
@@ -311,21 +314,50 @@ namespace Aetheris
                 var stream = client.GetStream();
                 string clientId = client.Client.RemoteEndPoint?.ToString() ?? Guid.NewGuid().ToString();
 
-                // Register this client's stream
-                activeClientStreams[clientId] = stream;
                 Log($"[[Server]] Client connected: {clientId}");
+
+                // CRITICAL: First byte determines stream purpose
+                // 0xFF = Broadcast listener, anything else = normal request
+                var firstByte = new byte[1];
+                int read = await stream.ReadAsync(firstByte, 0, 1, token);
+
+                if (read == 0)
+                {
+                    Log($"[[Server]] Client {clientId} disconnected immediately");
+                    return;
+                }
+
+                // If first byte is 0xFF, this is a broadcast listener
+                if (firstByte[0] == 0xFF)
+                {
+                    Log($"[[Server]] Client {clientId} registered as broadcast listener");
+                    activeClientStreams[clientId] = stream;
+
+                    // Keep connection alive for broadcasts only
+                    try
+                    {
+                        while (!token.IsCancellationRequested && client.Connected)
+                        {
+                            // Just keep alive, server will push broadcasts
+                            await Task.Delay(1000, token);
+                        }
+                    }
+                    finally
+                    {
+                        activeClientStreams.TryRemove(clientId, out _);
+                        Log($"[[Server]] Broadcast listener {clientId} disconnected");
+                    }
+                    return;
+                }
+
+                // Otherwise, process as normal request/response stream
+                // Put the first byte back into processing
+                TcpPacketType packetType = (TcpPacketType)firstByte[0];
 
                 try
                 {
                     while (!token.IsCancellationRequested && client.Connected)
                     {
-                        // Read packet type first (1 byte)
-                        var packetTypeBuf = new byte[1];
-                        int bytesRead = await stream.ReadAsync(packetTypeBuf, 0, 1, token);
-                        if (bytesRead == 0) break;
-
-                        TcpPacketType packetType = (TcpPacketType)packetTypeBuf[0];
-
                         switch (packetType)
                         {
                             case TcpPacketType.ChunkRequest:
@@ -335,11 +367,27 @@ namespace Aetheris
                             case TcpPacketType.BlockBreak:
                                 await HandleBlockBreakTcpAsync(stream, token);
                                 break;
+                            case TcpPacketType.InventorySync:
+                                {
+                                    var playerInv = inventoryManager.GetOrCreateInventory(clientId);
+                                    byte[] invData = inventoryManager.SerializeInventory(playerInv);
 
+                                    var lengthBytes = BitConverter.GetBytes(invData.Length);
+                                    await stream.WriteAsync(lengthBytes, 0, 4);
+                                    await stream.WriteAsync(invData, 0, invData.Length);
+                                    await stream.FlushAsync();
+                                    break;
+                                }
                             default:
                                 Log($"[[Server]] Unknown TCP packet type: {packetType} from {clientId}");
                                 break;
                         }
+
+                        // Read next packet type
+                        int bytesRead = await stream.ReadAsync(firstByte, 0, 1, token);
+
+                        if (bytesRead == 0) break;
+                        packetType = (TcpPacketType)firstByte[0];
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException))
@@ -348,20 +396,12 @@ namespace Aetheris
                 }
                 finally
                 {
-                    // Unregister client stream
-                    activeClientStreams.TryRemove(clientId, out _);
                     Log($"[[Server]] Client disconnected: {clientId}");
                 }
             }
         }
-
         private async Task BroadcastBlockBreakTcp(int x, int y, int z)
         {
-            // Packet format:
-            // [0] = PacketType (1 = BlockBreak)
-            // [1-4] = Block X
-            // [5-8] = Block Y
-            // [9-12] = Block Z
             byte[] packet = new byte[13];
             packet[0] = (byte)TcpPacketType.BlockBreak;
 
@@ -370,31 +410,30 @@ namespace Aetheris
             BitConverter.TryWriteBytes(packet.AsSpan(9, 4), z);
 
             var deadStreams = new List<string>();
+            int successCount = 0;
 
-            // Broadcast to all connected clients
             foreach (var kvp in activeClientStreams)
             {
                 try
                 {
                     await kvp.Value.WriteAsync(packet, 0, packet.Length);
                     await kvp.Value.FlushAsync();
+                    successCount++;
                 }
                 catch (Exception ex)
                 {
-                    Log($"[Server] Error broadcasting block break to {kvp.Key}: {ex.Message}");
+                    Log($"[Server] Error broadcasting to {kvp.Key}: {ex.Message}");
                     deadStreams.Add(kvp.Key);
                 }
             }
 
-            // Clean up dead streams
             foreach (var id in deadStreams)
             {
                 activeClientStreams.TryRemove(id, out _);
             }
 
-            Log($"[Server] Broadcasted block break at ({x}, {y}, {z}) to {activeClientStreams.Count} clients");
+            Log($"[Server] Broadcasted block break at ({x},{y},{z}) to {successCount}/{activeClientStreams.Count + deadStreams.Count} clients");
         }
-
 
         private async Task HandleChunkRequestAsync(NetworkStream stream, string clientId, CancellationToken token)
         {

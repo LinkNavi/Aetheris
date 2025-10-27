@@ -23,7 +23,7 @@ namespace Aetheris
         private UdpClient? udp;
         private IPEndPoint? serverUdpEndpoint;
         private NetworkStream? stream;
-
+private ServerInventoryManager inventoryManager;
         private readonly ConcurrentDictionary<(int, int, int), Aetheris.Chunk> loadedChunks = new();
         private readonly ConcurrentQueue<(int cx, int cy, int cz, float priority)> requestQueue = new();
         private readonly ConcurrentDictionary<(int, int, int), byte> requestedChunks = new();
@@ -40,10 +40,14 @@ namespace Aetheris
         private readonly int udpPort = ClientConfig.SERVER_PORT + 1;
 
         // TCP Packet Types
+        // Add to Server.cs
         private enum TcpPacketType : byte
         {
             ChunkRequest = 0,
-            BlockBreak = 1
+            BlockBreak = 1,
+            InventorySync = 2,      // NEW: Full inventory sync
+            InventoryUpdate = 3,    // NEW: Single slot update
+            ItemPickup = 4          // NEW: Pick up dropped item
         }
 
         // Auto-tuned parameters
@@ -116,7 +120,7 @@ namespace Aetheris
         {
             Console.WriteLine($"[Client] Connecting to {host}:{port}...");
 
-            // Connection 1: For chunk requests
+            // Connection 1: For chunk requests (request/response)
             tcpRequest = new TcpClient();
             await tcpRequest.ConnectAsync(host, port);
             streamRequest = tcpRequest.GetStream();
@@ -124,20 +128,28 @@ namespace Aetheris
             tcpRequest.SendTimeout = 5000;
             tcpRequest.ReceiveTimeout = 5000;
 
-            // Connection 2: For broadcasts
+            Console.WriteLine("[Client] Request stream connected");
+
+            // Connection 2: For broadcasts (receive-only)
             tcpBroadcast = new TcpClient();
             await tcpBroadcast.ConnectAsync(host, port);
             streamBroadcast = tcpBroadcast.GetStream();
             tcpBroadcast.NoDelay = true;
+
+            // CRITICAL: Send 0xFF to identify as broadcast listener
+            byte[] broadcastMarker = new byte[] { 0xFF };
+            await streamBroadcast.WriteAsync(broadcastMarker, 0, 1);
+            await streamBroadcast.FlushAsync();
+
+            Console.WriteLine("[Client] Broadcast stream connected and registered");
 
             // UDP
             udp = new UdpClient();
             serverUdpEndpoint = new IPEndPoint(IPAddress.Parse(host), udpPort);
             udp.Connect(serverUdpEndpoint);
 
-            Console.WriteLine("[Client] Connected to server (2 TCP connections).");
+            Console.WriteLine("[Client] Connected to server (TCP request + TCP broadcast + UDP)");
         }
-
 
         // TCP Broadcast Listener - listens for server-initiated messages
         private async Task TcpBroadcastListenerAsync(CancellationToken token)
@@ -227,51 +239,94 @@ namespace Aetheris
 
             Console.WriteLine($"[Client]   - Queued for immediate reload (queue size: {requestQueue.Count})");
         }
-
-
-        private async Task HandleBlockBreakBroadcastAsync(CancellationToken token)
+        public async Task RequestInventorySyncAsync()
         {
-            var buf = new byte[12];
-            await ReadFullAsync(streamBroadcast!, buf, 0, 12, token);
+            if (stream == null || tcpRequest == null || !tcpRequest.Connected) return;
 
-            int x = BitConverter.ToInt32(buf, 0);
-            int y = BitConverter.ToInt32(buf, 4);
-            int z = BitConverter.ToInt32(buf, 8);
-
-            Console.WriteLine($"[Client] Received block break broadcast at ({x}, {y}, {z})");
-
-            // Calculate affected chunks
-            float miningRadius = 5.0f;
-            int affectRadius = (int)Math.Ceiling(miningRadius);
-            var chunksToReload = new HashSet<(int, int, int)>();
-
-            for (int dx = -affectRadius; dx <= affectRadius; dx++)
+            await networkSemaphore.WaitAsync();
+            try
             {
-                for (int dy = -affectRadius; dy <= affectRadius; dy++)
-                {
-                    for (int dz = -affectRadius; dz <= affectRadius; dz++)
-                    {
-                        int worldX = x + dx;
-                        int worldY = y + dy;
-                        int worldZ = z + dz;
+                byte[] packet = new byte[1];
+                packet[0] = (byte)TcpPacketType.InventorySync;
 
-                        int chunkX = worldX / ClientConfig.CHUNK_SIZE;
-                        int chunkY = worldY / ClientConfig.CHUNK_SIZE_Y;
-                        int chunkZ = worldZ / ClientConfig.CHUNK_SIZE;
+                await stream.WriteAsync(packet, 0, packet.Length);
+                await stream.FlushAsync();
 
-                        chunksToReload.Add((chunkX, chunkY, chunkZ));
-                    }
-                }
+                // Receive inventory data
+                var lengthBuf = new byte[4];
+                await ReadFullAsync(stream, lengthBuf, 0, 4, CancellationToken.None);
+                int dataLength = BitConverter.ToInt32(lengthBuf, 0);
+
+                var inventoryData = new byte[dataLength];
+                await ReadFullAsync(stream, inventoryData, 0, dataLength, CancellationToken.None);
+
+                // Deserialize and update local inventory
+               
+
+if (game?.player is { } p)
+    p.Inventory = inventoryManager.DeserializeInventory(inventoryData);
+
             }
-
-            Console.WriteLine($"[Client] Force-reloading {chunksToReload.Count} chunks from broadcast");
-
-            foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
+            finally
             {
-                ForceReloadChunk(chunkX, chunkY, chunkZ);
+                networkSemaphore.Release();
             }
         }
 
+        private async Task HandleBlockBreakBroadcastAsync(CancellationToken token)
+        {
+            try
+            {
+                // Read exactly 12 bytes for coordinates
+                var buf = new byte[12];
+                await ReadFullAsync(streamBroadcast!, buf, 0, 12, token);
+
+                int x = BitConverter.ToInt32(buf, 0);
+                int y = BitConverter.ToInt32(buf, 4);
+                int z = BitConverter.ToInt32(buf, 8);
+
+                Console.WriteLine($"[Client] Received block break broadcast at ({x}, {y}, {z})");
+
+                // Calculate affected chunks
+                float miningRadius = 5.0f;
+                int affectRadius = (int)Math.Ceiling(miningRadius);
+                var chunksToReload = new HashSet<(int, int, int)>();
+
+                for (int dx = -affectRadius; dx <= affectRadius; dx++)
+                {
+                    for (int dy = -affectRadius; dy <= affectRadius; dy++)
+                    {
+                        for (int dz = -affectRadius; dz <= affectRadius; dz++)
+                        {
+                            int worldX = x + dx;
+                            int worldY = y + dy;
+                            int worldZ = z + dz;
+
+                            int chunkX = worldX / ClientConfig.CHUNK_SIZE;
+                            int chunkY = worldY / ClientConfig.CHUNK_SIZE_Y;
+                            int chunkZ = worldZ / ClientConfig.CHUNK_SIZE;
+
+                            chunksToReload.Add((chunkX, chunkY, chunkZ));
+                        }
+                    }
+                }
+
+                Console.WriteLine($"[Client] Force-reloading {chunksToReload.Count} chunks from broadcast");
+
+                // Small delay to let any in-flight chunk requests complete
+                await Task.Delay(50, token);
+
+                foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
+                {
+                    ForceReloadChunk(chunkX, chunkY, chunkZ);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Client] Error in HandleBlockBreakBroadcastAsync: {ex.Message}");
+                throw;
+            }
+        }
         private void InvalidateChunksAroundBlock(int x, int y, int z)
         {
             int cx = x / ClientConfig.CHUNK_SIZE;
@@ -626,36 +681,71 @@ namespace Aetheris
         }
 
         private async Task<(float[] renderMesh, CollisionMesh collisionMesh)> RequestChunkMeshAsync(
-        int cx, int cy, int cz, CancellationToken token)
+     int cx, int cy, int cz, CancellationToken token)
         {
-            if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
+            const int MAX_RETRIES = 3;
+            int retryCount = 0;
+
+            while (retryCount < MAX_RETRIES)
             {
-                await connectionSemaphore.WaitAsync(token);
+                if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
+                {
+                    await connectionSemaphore.WaitAsync(token);
+                    try
+                    {
+                        if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
+                        {
+                            await ConnectToServerAsync("127.0.0.1", ClientConfig.SERVER_PORT);
+                        }
+                    }
+                    finally
+                    {
+                        connectionSemaphore.Release();
+                    }
+                }
+
+                await networkSemaphore.WaitAsync(token);
                 try
                 {
-                    if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
+                    await SendChunkRequestAsync(cx, cy, cz, token);
+                    float[] renderMesh = await ReceiveRenderMeshAsync(token);
+                    CollisionMesh collisionMesh = await ReceiveCollisionMeshAsync(token);
+
+                    // Success!
+                    return (renderMesh, collisionMesh);
+                }
+                catch (Exception ex) when (ex.Message.Contains("Invalid payload length") ||
+                                           ex.Message.Contains("corruption") ||
+                                           ex.Message.Contains("mismatch"))
+                {
+                    retryCount++;
+                    Console.WriteLine($"[Client] Chunk request failed (attempt {retryCount}/{MAX_RETRIES}): {ex.Message}");
+
+                    if (retryCount < MAX_RETRIES)
                     {
-                        await ConnectToServerAsync("127.0.0.1", ClientConfig.SERVER_PORT);
+                        // Try to recover the TCP stream
+                        networkSemaphore.Release(); // Release before recovery attempt
+
+                        bool recovered = await TryRecoverTcpStreamAsync(token);
+                        if (!recovered)
+                        {
+                            throw new Exception($"Failed to recover TCP stream after {retryCount} attempts", ex);
+                        }
+
+                        await Task.Delay(100 * retryCount, token); // Exponential backoff
+                        continue;
                     }
+
+                    throw;
                 }
                 finally
                 {
-                    connectionSemaphore.Release();
+                    if (networkSemaphore.CurrentCount == 0)
+                        networkSemaphore.Release();
                 }
             }
 
-            await networkSemaphore.WaitAsync(token);
-            try
-            {
-                await SendChunkRequestAsync(cx, cy, cz, token);
-                float[] renderMesh = await ReceiveRenderMeshAsync(token);
-                CollisionMesh collisionMesh = await ReceiveCollisionMeshAsync(token);
-                return (renderMesh, collisionMesh);
-            }
-            finally
-            {
-                networkSemaphore.Release();
-            }
+            throw new Exception($"Failed to request chunk ({cx},{cy},{cz}) after {MAX_RETRIES} attempts");
         }
         private async Task SendChunkRequestAsync(int cx, int cy, int cz, CancellationToken token)
         {
@@ -675,8 +765,19 @@ namespace Aetheris
             await ReadFullAsync(streamRequest!, lenBuf, 0, 4, token);
             int payloadLen = BitConverter.ToInt32(lenBuf, 0);
 
-            if (payloadLen < 0 || payloadLen > 100_000_000)
-                throw new Exception($"Invalid payload length: {payloadLen}");
+            // ENHANCED VALIDATION
+            if (payloadLen < 0)
+            {
+                Console.WriteLine($"[Client] ERROR: Negative payload length {payloadLen} - TCP stream corrupted!");
+                Console.WriteLine($"[Client] This usually means broadcast packets leaked into request stream");
+                throw new Exception($"TCP stream corruption detected - negative length: {payloadLen}");
+            }
+
+            if (payloadLen > 50_000_000) // 50MB safety limit
+            {
+                Console.WriteLine($"[Client] ERROR: Payload length {payloadLen} exceeds safety limit");
+                throw new Exception($"Invalid payload length: {payloadLen} (too large - possible corruption)");
+            }
 
             if (payloadLen == 0)
                 return Array.Empty<float>();
@@ -684,14 +785,58 @@ namespace Aetheris
             var payload = new byte[payloadLen];
             await ReadFullAsync(streamRequest!, payload, 0, payloadLen, token);
 
+            // Validate payload structure before parsing
+            if (payloadLen < 4)
+            {
+                throw new Exception($"Payload too small: {payloadLen} bytes (need at least 4 for vertex count)");
+            }
+
             int vertexCount = BitConverter.ToInt32(payload, 0);
             const int floatsPerVertex = 7;
-            int floatsCount = vertexCount * floatsPerVertex;
+            int expectedFloatCount = vertexCount * floatsPerVertex;
+            int expectedByteCount = 4 + (expectedFloatCount * sizeof(float)); // +4 for vertex count header
 
+            if (payloadLen != expectedByteCount)
+            {
+                Console.WriteLine($"[Client] WARNING: Payload size mismatch!");
+                Console.WriteLine($"  Expected: {expectedByteCount} bytes ({vertexCount} vertices)");
+                Console.WriteLine($"  Received: {payloadLen} bytes");
+                throw new Exception($"Payload size mismatch: expected {expectedByteCount}, got {payloadLen}");
+            }
+
+            int floatsCount = vertexCount * floatsPerVertex;
             var floats = new float[floatsCount];
             Buffer.BlockCopy(payload, 4, floats, 0, floatsCount * sizeof(float));
 
             return floats;
+        }
+
+        private async Task<bool> TryRecoverTcpStreamAsync(CancellationToken token)
+        {
+            Console.WriteLine("[Client] Attempting TCP stream recovery...");
+
+            try
+            {
+                // Close corrupted connections
+                streamRequest?.Dispose();
+                streamBroadcast?.Dispose();
+                tcpRequest?.Close();
+                tcpBroadcast?.Close();
+
+                // Wait a moment
+                await Task.Delay(100, token);
+
+                // Reconnect
+                await ConnectToServerAsync("127.0.0.1", ClientConfig.SERVER_PORT);
+
+                Console.WriteLine("[Client] TCP stream recovery successful");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Client] TCP recovery failed: {ex.Message}");
+                return false;
+            }
         }
 
         private async Task<CollisionMesh> ReceiveCollisionMeshAsync(CancellationToken token)

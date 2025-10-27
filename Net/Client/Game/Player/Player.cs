@@ -41,6 +41,9 @@ namespace Aetheris
         private const float STEP_HEIGHT = 1.25f;    // how high the player can step up
         private const float DROP_SNAP = 0.4f;       // slope follow/drop snap distance
 
+
+        public Inventory Inventory { get; set; }
+
         // Mouse
         private float mouseSensitivity = 0.2f;
         private Vector2 lastMousePos;
@@ -49,6 +52,7 @@ namespace Aetheris
         public Player(Vector3 startPosition)
         {
             Position = FindSafeSpawn(startPosition);
+            Inventory = new Inventory(); // Initialize inventory
             Console.WriteLine($"[Player] Spawned at {Position}");
         }
 
@@ -74,7 +78,11 @@ namespace Aetheris
             }
             return false;
         }
-
+        public Vector3 GetEyePosition()
+        {
+            // uses the existing private EYE_HEIGHT constant
+            return Position + Vector3.UnitY * EYE_HEIGHT;
+        }
         public Matrix4 GetViewMatrix()
         {
             Vector3 eyePos = Position + Vector3.UnitY * EYE_HEIGHT;
