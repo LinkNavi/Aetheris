@@ -1,33 +1,65 @@
-﻿[2025-10-27 15:19:29.214] [Logging] Started logging to 'physics_debug.log'
-[2025-10-27 15:19:29.247] [GameStateManager] Initialized in state: Playing
-[2025-10-27 15:19:29.252] [Game] WorldGen initialized
-[2025-10-27 15:19:29.269] [PSX Effects] Shaders compiled successfully
-[2025-10-27 15:19:29.270] [Game] Renderer initialized
-[2025-10-27 15:19:29.283] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2025-10-27 15:19:29.283] [Game] EntityRenderer initialized
-[2025-10-27 15:19:29.307] [Player] Spawned at (16, 37.1, 16)
-[2025-10-27 15:19:29.307] [Game] Player initialized at position: (16, 37.1, 16)
-[2025-10-27 15:19:29.308] [Game] Network controller initialized
-[2025-10-27 15:19:29.311] [Client] TCP broadcast listener started
-[2025-10-27 15:19:29.317] [Game] Found atlas at: textures/atlas.png
-[2025-10-27 15:19:29.422] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2025-10-27 15:19:29.422] [AtlasManager] Using preferred tile size: 64
-[2025-10-27 15:19:29.423] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2025-10-27 15:19:29.428] [AtlasManager] Successfully uploaded to GL texture 1
-[2025-10-27 15:19:29.428] [AtlasManager] Verified texture dimensions: 256x256
-[2025-10-27 15:19:29.431] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1)
-[2025-10-27 15:19:29.432] [Game] Created UI shader=4, vao=2, vbo=2
-[2025-10-27 15:19:29.432] [InventoryRenderer] Created with shader=4, vao=2, vbo=2
-[2025-10-27 15:19:29.433] [InventoryRenderer] Panel size: (752, 352)
-[2025-10-27 15:19:29.810] [Client] Chunk update loop starting...
-[2025-10-27 15:19:30.725] [Game] Inventory text renderer assigned
-[2025-10-27 15:19:30.725] [Game] Simple inventory system initialized
-[2025-10-27 15:19:30.725] [Game] Loaded 0 chunks
-[2025-10-27 15:19:30.876] [Renderer] Uploaded chunk (0,0,0): VAO=4, VBO=4, 16506 vertices
-[2025-10-27 15:19:30.880] [Renderer] Uploaded chunk (1,0,0): VAO=5, VBO=5, 13323 vertices
-[2025-10-27 15:19:31.344] [GameStateManager] Transitioning: Playing -> Inventory
-[2025-10-27 15:19:31.344] [Game] Exiting state: Playing
-[2025-10-27 15:19:31.344] [Game] Entering state: Inventory
-[2025-10-27 15:19:37.217] [GameStateManager] Transitioning: Inventory -> Playing
-[2025-10-27 15:19:37.218] [Game] Exiting state: Inventory
-[2025-10-27 15:19:37.218] [Game] Entering state: Playing
+﻿[2025-10-27 15:27:18.872] [Logging] Started logging to 'physics_debug.log'
+[2025-10-27 15:27:18.898] [GameStateManager] Initialized in state: Playing
+[2025-10-27 15:27:18.902] [Game] WorldGen initialized
+[2025-10-27 15:27:18.924] [PSX Effects] Shaders compiled successfully
+[2025-10-27 15:27:18.924] [Game] Renderer initialized
+[2025-10-27 15:27:18.937] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2025-10-27 15:27:18.937] [Game] EntityRenderer initialized
+[2025-10-27 15:27:18.958] [Player] Spawned at (16, 37.1, 16)
+[2025-10-27 15:27:18.958] [Game] Player initialized at position: (16, 37.1, 16)
+[2025-10-27 15:27:18.959] [Game] Network controller initialized
+[2025-10-27 15:27:18.962] [Client] TCP broadcast listener started
+[2025-10-27 15:27:18.967] [Game] Found atlas at: textures/atlas.png
+[2025-10-27 15:27:19.084] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2025-10-27 15:27:19.085] [AtlasManager] Using preferred tile size: 64
+[2025-10-27 15:27:19.085] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2025-10-27 15:27:19.091] [AtlasManager] Successfully uploaded to GL texture 1
+[2025-10-27 15:27:19.092] [AtlasManager] Verified texture dimensions: 256x256
+[2025-10-27 15:27:19.095] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1)
+[2025-10-27 15:27:19.096] [Game] Created UI shader=4, vao=2, vbo=2
+[2025-10-27 15:27:19.098] [EnhancedInventoryUI] Panel size: (656, 392)
+[2025-10-27 15:27:19.463] [Client] Chunk update loop starting...
+[2025-10-27 15:27:20.428] [Game] Inventory text renderer assigned
+[2025-10-27 15:27:20.428] [Game] Simple inventory system initialized
+[2025-10-27 15:27:20.429] [Game] Loaded 0 chunks
+[2025-10-27 15:27:20.517] [Renderer] Uploaded chunk (0,0,0): VAO=4, VBO=4, 16506 vertices
+[2025-10-27 15:27:20.521] [Renderer] Uploaded chunk (1,0,0): VAO=5, VBO=5, 13323 vertices
+[2025-10-27 15:27:21.084] [GameStateManager] Transitioning: Playing -> Inventory
+[2025-10-27 15:27:21.084] [Game] Exiting state: Playing
+[2025-10-27 15:27:21.084] [Game] Entering state: Inventory
+[2025-10-27 15:27:23.154] [Inventory] Left click at slot 
+[2025-10-27 15:27:24.036] [Inventory] Left click at slot 
+[2025-10-27 15:27:25.024] [Inventory] Left click at slot 
+[2025-10-27 15:27:25.903] [Inventory] Left click at slot 
+[2025-10-27 15:27:26.902] [Inventory] Left click at slot 
+[2025-10-27 15:27:27.138] [Inventory] Left click at slot 
+[2025-10-27 15:27:28.149] [Inventory] Left click at slot 20
+[2025-10-27 15:27:28.701] [GameStateManager] Transitioning: Inventory -> Playing
+[2025-10-27 15:27:28.702] [Game] Exiting state: Inventory
+[2025-10-27 15:27:28.702] [Game] Entering state: Playing
+[2025-10-27 15:27:30.918] [GameStateManager] Transitioning: Playing -> Inventory
+[2025-10-27 15:27:30.918] [Game] Exiting state: Playing
+[2025-10-27 15:27:30.918] [Game] Entering state: Inventory
+[2025-10-27 15:27:31.980] [GameStateManager] Transitioning: Inventory -> Playing
+[2025-10-27 15:27:31.981] [Game] Exiting state: Inventory
+[2025-10-27 15:27:31.981] [Game] Entering state: Playing
+[2025-10-27 15:27:34.361] [GameStateManager] Transitioning: Playing -> Inventory
+[2025-10-27 15:27:34.361] [Game] Exiting state: Playing
+[2025-10-27 15:27:34.361] [Game] Entering state: Inventory
+[2025-10-27 15:27:35.669] [Inventory] Left click at slot 
+[2025-10-27 15:27:36.453] [Inventory] Left click at slot 
+[2025-10-27 15:27:36.919] [GameStateManager] Transitioning: Inventory -> Playing
+[2025-10-27 15:27:36.919] [Game] Exiting state: Inventory
+[2025-10-27 15:27:36.919] [Game] Entering state: Playing
+[2025-10-27 15:27:40.171] [GameStateManager] Transitioning: Playing -> Inventory
+[2025-10-27 15:27:40.171] [Game] Exiting state: Playing
+[2025-10-27 15:27:40.171] [Game] Entering state: Inventory
+[2025-10-27 15:27:40.549] [GameStateManager] Transitioning: Inventory -> Playing
+[2025-10-27 15:27:40.549] [Game] Exiting state: Inventory
+[2025-10-27 15:27:40.549] [Game] Entering state: Playing
+[2025-10-27 15:27:40.935] [GameStateManager] Transitioning: Playing -> Inventory
+[2025-10-27 15:27:40.935] [Game] Exiting state: Playing
+[2025-10-27 15:27:40.935] [Game] Entering state: Inventory
+[2025-10-27 15:27:41.984] [GameStateManager] Transitioning: Inventory -> Playing
+[2025-10-27 15:27:41.985] [Game] Exiting state: Inventory
+[2025-10-27 15:27:41.985] [Game] Entering state: Playing

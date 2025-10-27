@@ -30,7 +30,7 @@ namespace Aetheris
         private GameStateManager stateManager;
 
         // Inventory System
-        private SimpleInventoryRenderer? inventoryRenderer;
+        private EnhancedInventoryUI? inventoryRenderer;
         private Aetheris.Inventory? inventory;
 
         private MiningSystem? miningSystem;
@@ -224,7 +224,7 @@ namespace Aetheris
             inventory.SelectedHotbarSlot = 0;
 
             // Create simple inventory renderer
-            inventoryRenderer = new SimpleInventoryRenderer(inventory, uiShader, uiVao, uiVbo);
+            inventoryRenderer = new EnhancedInventoryUI(inventory, uiShader, uiVao, uiVbo);
 
             // Set up text renderer
             try
@@ -436,7 +436,7 @@ namespace Aetheris
             // Update inventory UI with mouse input
             if (inventoryRenderer != null)
             {
-                inventoryRenderer.Update(MouseState, Size.X, Size.Y);
+                inventoryRenderer.Update(MouseState, Size.X, Size.Y, delta);
             }
             
             // Still update chunks in background (optional - you could disable this)
