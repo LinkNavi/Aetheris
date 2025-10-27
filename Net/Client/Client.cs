@@ -344,7 +344,7 @@ public void ForceReloadChunk(int cx, int cy, int cz)
             Console.WriteLine($"[Client] Received block break at ({x}, {y}, {z})");
 
             // Calculate which chunks are affected by the mining sphere
-            float miningRadius = 1.5f; // Must match server's radius
+            float miningRadius = 5.0f; // Must match server's radius
             int affectRadius = (int)Math.Ceiling(miningRadius);
 
             var chunksToReload = new HashSet<(int, int, int)>();

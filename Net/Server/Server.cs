@@ -292,7 +292,7 @@ namespace Aetheris
             WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f);
 
             // Invalidate affected chunk meshes
-            InvalidateChunksAroundBlock(x, y, z, radius: 1.5f);
+            InvalidateChunksAroundBlock(x, y, z, radius: 5.0f);
 
             // Broadcast to all clients via UDP instead of TCP
             await BroadcastBlockBreak(x, y, z); // Use existing UDP method
@@ -625,7 +625,10 @@ namespace Aetheris
 
         public async Task RunServerAsync()
         {
-            string logPath = $"server_log_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+            string logDir = Path.Combine(AppContext.BaseDirectory, "logs");
+            Directory.CreateDirectory(logDir);
+
+            string logPath = Path.Combine(logDir, $"server_log_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
             try
             {
                 logWriter = new StreamWriter(logPath, append: false) { AutoFlush = true };
