@@ -24,7 +24,7 @@ namespace Aetheris
         private BlockType targetBlockType = BlockType.Air;
 
         // Mining config
-        private const float MAX_REACH = 50.0f;          // blocks
+        private const float MAX_REACH = 10.0f;          // blocks
         private const float MINING_SPEED_MULT = 1f;     // global multiplier
         private const float STICKY_ANGLE_DEGREES = 15f; // how far you can look away and still continue
         private const float STICKY_POSITION_EPS = 0.6f; // how far center can differ and still be same block

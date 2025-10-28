@@ -15,7 +15,7 @@ namespace Aetheris
     {
         public Renderer Renderer { get; private set; }
         private readonly Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks;
-        private readonly Player player;
+        public Player player;
         private readonly Client? client;
         private readonly ChunkManager chunkManager;
         public PlayerNetworkController? NetworkController { get; private set; }
@@ -24,6 +24,8 @@ namespace Aetheris
         private const float CHUNK_UPDATE_INTERVAL = 0.5f;
 
         private MiningSystem? miningSystem;
+        private InventoryUI? inventoryUI;
+        
         // Logging
         private const string LogFileName = "physics_debug.log";
         private StreamWriter? logWriter;
@@ -32,6 +34,7 @@ namespace Aetheris
         private TeeTextWriter? teeWriter;
         private EntityRenderer? entityRenderer;
         private PlayerNetworkController? networkController;
+        
         public Game(Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks, Client? client = null)
        : base(GameWindowSettings.Default, new NativeWindowSettings()
        {
@@ -47,11 +50,6 @@ namespace Aetheris
             // Initialize WorldGen FIRST (needed for player collision)
             WorldGen.Initialize();
             Console.WriteLine("[Game] WorldGen initialized");
-
-            // Create ChunkManager for collision detection
-            // chunkManager = new ChunkManager();
-            //chunkManager.GenerateCollisionMeshes = true;
-            //Console.WriteLine("[Game] ChunkManager initialized with collision support");
 
             // Create Renderer
             Renderer = new Renderer();
@@ -76,6 +74,10 @@ namespace Aetheris
             {
                 Console.WriteLine("[Game] Running in single-player mode (no network)");
             }
+
+            // Initialize inventory UI
+            inventoryUI = new InventoryUI(player.Inventory);
+            Console.WriteLine("[Game] Inventory UI initialized");
         }
 
         private void SetupLogging()
@@ -120,6 +122,12 @@ namespace Aetheris
             GL.FrontFace(FrontFaceDirection.Ccw);
             CursorState = CursorState.Grabbed;
             miningSystem = new MiningSystem(player, this, OnBlockMined);
+            
+            // Add some test items to inventory
+            player.Inventory.AddItem(1, 10); // Stone
+            player.Inventory.AddItem(2, 15); // Dirt
+            player.Inventory.AddItem(3, 8);  // Grass
+            
             // Load atlas
             string[] atlasPaths = new[]
             {
@@ -161,10 +169,6 @@ namespace Aetheris
                 // Generate collision mesh for physics
                 chunk.GenerateCollisionMesh(meshFloats);
 
-                // Store chunk in manager for collision queries
-                // Note: You may need to add a method to add pre-generated chunks
-                // For now, the chunk will be generated on-demand when player collides
-
                 Console.WriteLine($"[Game] Loading chunk {coord} with {meshFloats.Length / 7} vertices");
                 Renderer.LoadMeshForChunk(coord.Item1, coord.Item2, coord.Item3, meshFloats);
             }
@@ -183,19 +187,44 @@ namespace Aetheris
             int y = (int)blockPos.Y;
             int z = (int)blockPos.Z;
 
+            // Add block to inventory
+            int itemId = BlockTypeToItemId(blockType);
+            if (itemId > 0)
+            {
+                bool added = player.Inventory.AddItem(itemId, 1);
+                if (added)
+                {
+                    Console.WriteLine($"[Client] Added {blockType} to inventory");
+                }
+                else
+                {
+                    Console.WriteLine($"[Client] Inventory full, couldn't add {blockType}");
+                }
+            }
+
             // Send to server via TCP (reliable)
             if (client != null)
             {
                 _ = client.SendBlockBreakAsync(x, y, z);
             }
-
-            // REMOVE CLIENT-SIDE PREDICTION - Let server be authoritative
-            // WorldGen.RemoveBlock(x, y, z, radius: 5.0f, strength: 3.0f); // DELETE THIS LINE
-
-            // The server will broadcast the block break back to us via TCP
-            // and we'll reload chunks with the server's authoritative state
         }
 
+        private int BlockTypeToItemId(BlockType blockType)
+        {
+            // Map block types to item IDs
+            return blockType switch
+            {
+                BlockType.Stone => 1,
+                BlockType.Dirt => 2,
+                BlockType.Grass => 3,
+                BlockType.Sand => 4,
+                BlockType.Snow => 5,
+                BlockType.Gravel => 6,
+                BlockType.Wood => 7,
+                BlockType.Leaves => 8,
+                _ => 0
+            };
+        }
 
         public void RegenerateMeshForBlock(Vector3 blockPos)
         {
@@ -245,9 +274,6 @@ namespace Aetheris
             }
         }
 
-
-       
-
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
@@ -274,24 +300,56 @@ namespace Aetheris
             if (IsKeyDown(Keys.Escape))
                 Close();
 
-            // Update player
-            if (NetworkController != null)
+            // Update inventory UI first to check if it's open
+            if (inventoryUI != null)
             {
-                NetworkController.Update(e, KeyboardState, MouseState);
+                inventoryUI.Update(KeyboardState, MouseState, Size);
+            }
+
+            // Only update player movement if inventory is closed
+            bool inventoryOpen = inventoryUI?.IsInventoryOpen() ?? false;
+            if (!inventoryOpen)
+            {
+                // Restore grabbed cursor when inventory closes
+                if (CursorState != CursorState.Grabbed)
+                {
+                    CursorState = CursorState.Grabbed;
+                }
+
+                // Update player
+                if (NetworkController != null)
+                {
+                    NetworkController.Update(e, KeyboardState, MouseState);
+                }
+                else
+                {
+                    player.Update(e, KeyboardState, MouseState);
+                }
+                if (networkController != null)
+                {
+                    networkController.Update(e, KeyboardState, MouseState);
+                }
+                else
+                {
+                    player.Update(e, KeyboardState, MouseState);
+                }
+
+                // Mining system
+                if (miningSystem != null)
+                {
+                    miningSystem.Update((float)e.Time, MouseState, IsFocused);
+                }
             }
             else
             {
-                player.Update(e, KeyboardState, MouseState);
+                // Inventory is open - show cursor
+                if (CursorState != CursorState.Normal)
+                {
+                    CursorState = CursorState.Normal;
+                }
             }
-            if (networkController != null)
-            {
-                networkController.Update(e, KeyboardState, MouseState);
-            }
-            else
-            {
-                player.Update(e, KeyboardState, MouseState);
-            }
-            // Chunk loading
+            
+            // Chunk loading (always runs)
             if (chunkUpdateTimer == 0f)
             {
                 Vector3 playerChunk = player.GetPlayersChunk();
@@ -305,10 +363,7 @@ namespace Aetheris
                 Vector3 playerChunk = player.GetPlayersChunk();
                 client?.UpdateLoadedChunks(playerChunk, renderDistance);
             }
-            if (miningSystem != null)
-            {
-                miningSystem.Update((float)e.Time, MouseState, IsFocused);
-            }
+
             // Render distance controls
             if (KeyboardState.IsKeyPressed(Keys.Equal) || KeyboardState.IsKeyPressed(Keys.KeyPadAdd))
             {
@@ -352,6 +407,7 @@ namespace Aetheris
                 WorldGen.PrintBiomeAt(px, pz);
                 Console.WriteLine($"Player at: {player.Position}");
             }
+            
             var projection = Matrix4.CreatePerspectiveFieldOfView(
                 OpenTK.Mathematics.MathHelper.DegreesToRadians(60f),
                 Size.X / (float)Size.Y,
@@ -377,9 +433,15 @@ namespace Aetheris
                 }
             }
 
-            // === CLEANUP ===
+            // === CLEANUP 3D RENDERING ===
             GL.BindVertexArray(0);
             GL.UseProgram(0);
+
+            // === RENDER UI (2D overlay) ===
+            if (inventoryUI != null)
+            {
+                inventoryUI.Render(Size);
+            }
 
             SwapBuffers();
         }
@@ -389,6 +451,7 @@ namespace Aetheris
             base.OnUnload();
 
             Renderer.Dispose();
+            inventoryUI?.Dispose();
 
             // Restore console
             try

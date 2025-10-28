@@ -656,19 +656,19 @@
     ]
   },
   "packageFolders": {
-    "/home/link/.nuget/packages/": {}
+    "/home/kirby/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/link/Programming/Aetheris/Aetheris.csproj",
+      "projectUniqueName": "/home/kirby/Programming/Aetheris/Aetheris.csproj",
       "projectName": "Aetheris",
-      "projectPath": "/home/link/Programming/Aetheris/Aetheris.csproj",
-      "packagesPath": "/home/link/.nuget/packages/",
-      "outputPath": "/home/link/Programming/Aetheris/obj/",
+      "projectPath": "/home/kirby/Programming/Aetheris/Aetheris.csproj",
+      "packagesPath": "/home/kirby/.nuget/packages/",
+      "outputPath": "/home/kirby/Programming/Aetheris/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/link/.nuget/NuGet/NuGet.Config"
+        "/home/kirby/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
