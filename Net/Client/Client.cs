@@ -221,11 +221,11 @@ namespace Aetheris
         }
         // Client.cs - REPLACE HandleBlockPlaceBroadcastAsync method
 
+
         private async Task HandleBlockPlaceBroadcastAsync(CancellationToken token)
         {
             try
             {
-                // Read 13 bytes (12 for coordinates + 1 for block type)
                 var buf = new byte[13];
                 await ReadFullAsync(streamBroadcast!, buf, 0, 13, token);
 
@@ -238,43 +238,13 @@ namespace Aetheris
                 Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType: {blockType}");
 
                 // Convert byte to BlockType
-                BlockType serverBlockType = ConvertByteToBlockType(blockType);
+                AetherisClient.Rendering.BlockType clientBlockType =
+                    (AetherisClient.Rendering.BlockType)blockType;
 
-                // FIXED: Place SINGLE solid block (not a cube)
-                WorldGen.PlaceSolidBlock(x, y, z, serverBlockType);
+                // Place block in game's PlacedBlockManager
+                game?.PlacedBlocks.PlaceBlock(x, y, z, clientBlockType);
 
-                // Calculate affected chunks (only immediate neighbors)
-                var chunksToReload = new HashSet<(int, int, int)>();
-
-                for (int dx = -1; dx <= 1; dx++)
-                {
-                    for (int dy = -1; dy <= 1; dy++)
-                    {
-                        for (int dz = -1; dz <= 1; dz++)
-                        {
-                            int worldX = x + dx;
-                            int worldY = y + dy;
-                            int worldZ = z + dz;
-
-                            int chunkX = worldX / ClientConfig.CHUNK_SIZE;
-                            int chunkY = worldY / ClientConfig.CHUNK_SIZE_Y;
-                            int chunkZ = worldZ / ClientConfig.CHUNK_SIZE;
-
-                            chunksToReload.Add((chunkX, chunkY, chunkZ));
-                        }
-                    }
-                }
-
-                Console.WriteLine($"[Client] Need to reload {chunksToReload.Count} chunks for single block");
-
-                await Task.Delay(100, token);
-
-                foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
-                {
-                    ForceReloadChunk(chunkX, chunkY, chunkZ);
-                }
-
-                Console.WriteLine($"[Client] Finished processing block place broadcast");
+                Console.WriteLine($"[Client] Placed {clientBlockType} block model");
             }
             catch (Exception ex)
             {
@@ -444,7 +414,7 @@ namespace Aetheris
                         }
                     }
                 }
-
+                game?.PlacedBlocks.RemoveBlock(x, y, z);
                 Console.WriteLine($"[Client] Need to reload {chunksToReload.Count} chunks");
 
                 // Small delay to let any in-flight chunk requests complete

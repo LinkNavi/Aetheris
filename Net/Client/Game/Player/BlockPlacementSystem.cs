@@ -1,4 +1,4 @@
-// Net/Client/Game/Player/BlockPlacementSystem.cs - Block placement for marching cubes terrain
+// Net/Client/Game/Player/BlockPlacementSystem.cs - Block placement for 3D block models
 using System;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -14,8 +14,6 @@ namespace Aetheris
         private readonly RaycastHelper raycaster;
         
         private const float MAX_REACH = 10f;
-        private const float BLOCK_PLACE_RADIUS = 0.5f; // Smaller radius for single block
-        private const float BLOCK_PLACE_STRENGTH = 100f; // Much higher for solid collision
         
         private float placeCooldown = 0f;
         private const float PLACE_COOLDOWN_TIME = 0.15f;
@@ -51,9 +49,7 @@ namespace Aetheris
             var itemDef = ItemRegistry.Get(selectedItem.ItemId);
             if (itemDef == null || !itemDef.PlacesBlock.HasValue) return;
             
-            // CRITICAL FIX: Store block type from ITEM before raycasting
-            // Don't use the block type from the raycast hit - that's what you're looking at,
-            // not what you're holding!
+            // Store block type from ITEM
             var blockTypeToPlace = itemDef.PlacesBlock.Value;
             
             // Raycast to find placement position
@@ -82,7 +78,14 @@ namespace Aetheris
                 return;
             }
             
-            // Place block with type from INVENTORY (not raycast!)
+            // Check if block already exists at this position
+            if (game.PlacedBlocks.HasBlockAt(x, y, z))
+            {
+                Console.WriteLine("[BlockPlace] Block already exists at this position");
+                return;
+            }
+            
+            // Place block model
             PlaceBlockAt(x, y, z, blockTypeToPlace);
             
             // Consume item
@@ -121,11 +124,14 @@ namespace Aetheris
         
         private void PlaceBlockAt(int x, int y, int z, AetherisClient.Rendering.BlockType clientBlockType)
         {
-            // Convert client block type to server block type
-            BlockType serverBlockType = (BlockType)((int)clientBlockType);
+            // CHANGED: Place actual 3D block model instead of modifying WorldGen
+            bool placed = game.PlacedBlocks.PlaceBlock(x, y, z, clientBlockType);
             
-            // CRITICAL: Place SINGLE solid block with high density
-            WorldGen.PlaceSolidBlock(x, y, z, serverBlockType);
+            if (!placed)
+            {
+                Console.WriteLine($"[BlockPlace] Block already exists at ({x}, {y}, {z})");
+                return;
+            }
             
             // Convert block type to byte for network protocol
             byte blockTypeByte = (byte)clientBlockType;
@@ -136,8 +142,7 @@ namespace Aetheris
                 _ = SendBlockPlacement(x, y, z, blockTypeByte);
             }
             
-            // Invalidate affected chunks on client
-            game.RegenerateMeshForBlock(new Vector3(x, y, z));
+            Console.WriteLine($"[BlockPlace] Placed {clientBlockType} block model at ({x}, {y}, {z})");
         }
         
         private async System.Threading.Tasks.Task SendBlockPlacement(int x, int y, int z, byte blockTypeByte)
@@ -166,7 +171,7 @@ namespace Aetheris
             int y = (int)Math.Round(placePos.Y);
             int z = (int)Math.Round(placePos.Z);
             
-            bool canPlace = !WouldIntersectPlayer(x, y, z);
+            bool canPlace = !WouldIntersectPlayer(x, y, z) && !game.PlacedBlocks.HasBlockAt(x, y, z);
             
             return (canPlace, new Vector3(x, y, z), hit.Normal);
         }

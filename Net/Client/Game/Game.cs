@@ -36,6 +36,8 @@ namespace Aetheris
         private CrosshairRenderer? crosshair;
         private EnhancedHotbarRenderer? enhancedHotbar;
 
+        public PlacedBlockManager PlacedBlocks { get; private set; }
+        private BlockRenderer? blockRenderer;
         private PlayerStats playerStats;
         private RespawnSystem? respawnSystem;
         private FallDamageTracker? fallDamageTracker;
@@ -77,6 +79,8 @@ namespace Aetheris
             playerStats = new PlayerStats();
             Console.WriteLine("[Game] Player stats initialized");
 
+            PlacedBlocks = new PlacedBlockManager();
+            Console.WriteLine("[Game] PlacedBlockManager initialized");
             if (client != null)
             {
                 NetworkController = new PlayerNetworkController(player, client);
@@ -94,8 +98,8 @@ namespace Aetheris
             hudRenderer = new HUDRenderer();
             Console.WriteLine("[Game] HUD renderer initialized");
 
-fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 12);
-fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
+            fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 12);
+            fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
 
             chatSystem = new ChatSystem(fontRenderer);
             Console.WriteLine("[Game] Chat system initialized");
@@ -164,6 +168,8 @@ fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y
             fallDamageTracker = new FallDamageTracker();
             totemManager = new TotemManager(player.Inventory, playerStats);
 
+            blockRenderer = new BlockRenderer();
+            Console.WriteLine("[Game] BlockRenderer initialized");
             player.Inventory.AddItem(1, 10);
             player.Inventory.AddItem(2, 15);
             player.Inventory.AddItem(3, 8);
@@ -221,6 +227,7 @@ fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y
         private readonly Queue<Action> pendingMainThreadActions = new Queue<Action>();
         private readonly object mainThreadLock = new object();
 
+
         private void OnBlockMined(Vector3 blockPos, BlockType blockType)
         {
             Console.WriteLine($"[Client] Mined {blockType} at {blockPos}");
@@ -228,6 +235,21 @@ fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y
             int x = (int)blockPos.X;
             int y = (int)blockPos.Y;
             int z = (int)blockPos.Z;
+
+            // Check if this is a placed block
+            if (PlacedBlocks.HasBlockAt(x, y, z))
+            {
+                // Remove the placed block
+                PlacedBlocks.RemoveBlock(x, y, z);
+                Console.WriteLine($"[Client] Removed placed block at ({x}, {y}, {z})");
+
+                // Get the block type for inventory
+                var placedBlock = PlacedBlocks.GetBlockAt(x, y, z);
+                if (placedBlock != null)
+                {
+                    blockType = (BlockType)((int)placedBlock.BlockType);
+                }
+            }
 
             int itemId = BlockTypeToItemId(blockType);
             if (itemId > 0)
@@ -250,6 +272,8 @@ fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y
                 _ = client.SendBlockBreakAsync(x, y, z);
             }
         }
+
+
 
         private int BlockTypeToItemId(BlockType blockType)
         {
@@ -490,7 +514,24 @@ fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y
                 0.1f,
                 1000f);
             var view = player.GetViewMatrix();
+            if (blockRenderer != null)
+            {
+                int atlasTexture = AetherisClient.Rendering.AtlasManager.IsLoaded
+                    ? AetherisClient.Rendering.AtlasManager.AtlasTextureId
+                    : 0;
 
+                float maxRenderDistance = renderDistance * ClientConfig.CHUNK_SIZE * 1.5f;
+
+                blockRenderer.RenderBlocks(
+                    PlacedBlocks,
+                    player.Position,
+                    view,
+                    projection,
+                    atlasTexture,
+                    Renderer.FogDecay,
+                    maxRenderDistance
+                );
+            }
             Renderer.Render(projection, view, player.Position);
 
             if (entityRenderer != null && networkController != null)
@@ -579,6 +620,8 @@ fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y
             chatSystem?.Dispose();
             entityRenderer?.Dispose();
 
+            blockRenderer?.Dispose();
+            PlacedBlocks?.Clear();
             try
             {
                 if (originalConsoleOut != null)
