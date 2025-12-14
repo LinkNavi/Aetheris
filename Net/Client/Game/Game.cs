@@ -131,13 +131,7 @@ fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y
                 catch { }
             }
         }
- public void OnBlockPlaceBroadcast(int x, int y, int z, byte blockType)
-        {
-            // Add to voxel placer
-            Player.VoxelPlacer.AddCube(x, y, z, (AetherisClient.Rendering.BlockType)blockType);
-            
-            Console.WriteLine($"[Game] Received block placement: ({x},{y},{z}) type={blockType}");
-        }
+
         protected override void OnLoad()
         {
             base.OnLoad();

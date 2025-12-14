@@ -282,7 +282,42 @@ namespace Aetheris
                 throw;
             }
         }
- 
+        public async Task SendBlockPlaceAsync(int x, int y, int z, byte blockType)
+        {
+            if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
+            {
+                Console.WriteLine("[Client] Cannot send block place - not connected");
+                return;
+            }
+
+            await networkSemaphore.WaitAsync();
+            try
+            {
+                // Send 14 bytes (1 byte packet type + 12 bytes coordinates + 1 byte block type)
+                byte[] packet = new byte[14];
+                packet[0] = (byte)TcpPacketType.BlockPlace;
+
+                BitConverter.TryWriteBytes(packet.AsSpan(1, 4), x);
+                BitConverter.TryWriteBytes(packet.AsSpan(5, 4), y);
+                BitConverter.TryWriteBytes(packet.AsSpan(9, 4), z);
+                packet[13] = blockType; // Add block type
+
+                await streamRequest.WriteAsync(packet, 0, packet.Length);
+                await streamRequest.FlushAsync();
+
+                Console.WriteLine($"[Client] ===== SENT BLOCK PLACE =====");
+                Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType: {blockType}");
+                Console.WriteLine($"[Client] Packet size: 14 bytes");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Client] Error sending block place: {ex.Message}");
+            }
+            finally
+            {
+                networkSemaphore.Release();
+            }
+        }
         public void ForceReloadChunk(int cx, int cy, int cz)
         {
             var coord = (cx, cy, cz);

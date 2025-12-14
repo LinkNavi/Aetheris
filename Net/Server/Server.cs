@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 using System.Numerics;
 using System.Collections.Generic;
 
-namespace Aetheris.Server
+namespace Aetheris
 {
     public partial class Server
     {

@@ -15,7 +15,7 @@ namespace Aetheris
         // Physics state
         private Vector3 velocity = Vector3.Zero;
         private bool isGrounded = false;
- public SimpleVoxelPlacer VoxelPlacer { get; private set; }
+
         // Debug properties
         public Vector3 Velocity => velocity;
         public bool IsGrounded => isGrounded;
