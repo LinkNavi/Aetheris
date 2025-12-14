@@ -19,7 +19,7 @@ namespace Aetheris
         private readonly ChunkManager chunkManager = new();
 
         // Mesh cache with LRU eviction
-private ServerInventoryManager inventoryManager;
+        private ServerInventoryManager inventoryManager;
         private readonly ConcurrentDictionary<ChunkCoord, (float[] renderMesh, CollisionMesh collisionMesh)> meshCache = new();
 
         private readonly ConcurrentDictionary<ChunkCoord, SemaphoreSlim> generationLocks = new();
@@ -276,32 +276,27 @@ private ServerInventoryManager inventoryManager;
 
         private async Task HandleBlockBreakTcpAsync(NetworkStream stream, CancellationToken token)
         {
-            // Read block coordinates (12 bytes)
-            var buf = new byte[12];
-            int totalRead = 0;
-            while (totalRead < 12)
+            var buf = new byte[13]; // 1 byte type + 12 bytes coords
+            await ReadFullAsync(stream, buf, 0, 13, token);
+
+            byte actionType = buf[0]; // 0 = break, 1 = place
+            int x = BitConverter.ToInt32(buf, 1);
+            int y = BitConverter.ToInt32(buf, 5);
+            int z = BitConverter.ToInt32(buf, 9);
+
+            if (actionType == 0)
             {
-                int bytesRead = await stream.ReadAsync(buf, totalRead, 12 - totalRead, token);
-                if (bytesRead == 0) return;
-                totalRead += bytesRead;
+                // Break block
+                WorldGen.RemoveBlock(x, y, z, radius: 5f, strength: 3.0f);
+            }
+            else if (actionType == 1)
+            {
+                // Place block
+                WorldGen.AddBlock(x, y, z, radius: 2.5f, strength: 4f);
             }
 
-            int x = BitConverter.ToInt32(buf, 0);
-            int y = BitConverter.ToInt32(buf, 4);
-            int z = BitConverter.ToInt32(buf, 8);
-
-            Log($"[Server] Block broken at ({x}, {y}, {z}) - applying to world");
-
-            // CRITICAL: Apply to WorldGen (server's authoritative state)
-            WorldGen.RemoveBlock(x, y, z, radius: 5f, strength: 3.0f);
-
-            // Invalidate server's mesh cache for affected chunks
             InvalidateChunksAroundBlock(x, y, z, radius: 5f);
-
-            // Broadcast to ALL clients (including the one who mined it)
             await BroadcastBlockBreakTcp(x, y, z);
-
-            Log($"[Server] Block break processed and broadcasted to {activeClientStreams.Count} clients");
         }
         // Store active client streams for broadcasting
         private readonly ConcurrentDictionary<string, NetworkStream> activeClientStreams = new();

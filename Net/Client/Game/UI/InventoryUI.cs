@@ -54,6 +54,8 @@ namespace Aetheris
         public InventoryUI(Inventory inventory)
         {
             this.inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
+
+            this.textRenderer = textRenderer;
             InitializeShaders();
             InitializeBuffers();
         }
@@ -501,6 +503,24 @@ void main()
                 if (item.Count > 1)
                 {
                     DrawRect(x + scaledSize - 10f, y + 2f, 8f, 8f, new Vector4(1f, 1f, 0f, alpha));
+                }
+            }
+
+            if (item.ItemId > 0 && item.Count > 1 && textRenderer != null)
+            {
+                string countText = item.Count.ToString();
+                Vector2 textPos = new Vector2(x + scaledSize - 20f, y + scaledSize - 18f);
+                textRenderer.DrawText(countText, textPos, 0.8f, new Vector4(1f, 1f, 1f, alpha));
+            }
+
+            // Render item name on hover
+            if (hovered && textRenderer != null)
+            {
+                var itemDef = ItemRegistry.Get(item.ItemId);
+                if (itemDef != null)
+                {
+                    Vector2 namePos = new Vector2(x, y - 25f);
+                    textRenderer.DrawText(itemDef.Name, namePos, 0.9f, itemDef.GetRarityColor());
                 }
             }
         }

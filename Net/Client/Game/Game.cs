@@ -8,7 +8,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using AetherisClient.Rendering;
-
+using Aetheris.UI;
 namespace Aetheris
 {
     public class Game : GameWindow
@@ -27,13 +27,19 @@ namespace Aetheris
         private InventoryUI? inventoryUI;
         private HUDRenderer? hudRenderer;
         private ChatSystem? chatSystem;
-        
+        private FontRenderer? fontRenderer;
+        private TooltipSystem? tooltipSystem;
+        private HeldItemRenderer? heldItemRenderer;
+        private BlockPlacementSystem? blockPlacementSystem;
+        private BlockPlacementPreview? blockPreview;
+        CrosshairRenderer crosshair = new CrosshairRenderer();
+        EnhancedHotbarRenderer enhancedHotbar = new EnhancedHotbarRenderer(player.Inventory, fontRenderer);
         // NEW: Player stats and gameplay systems
         private PlayerStats playerStats;
         private RespawnSystem? respawnSystem;
         private FallDamageTracker? fallDamageTracker;
         private TotemManager? totemManager;
-        
+
         // Logging
         private const string LogFileName = "physics_debug.log";
         private StreamWriter? logWriter;
@@ -42,7 +48,7 @@ namespace Aetheris
         private TeeTextWriter? teeWriter;
         private EntityRenderer? entityRenderer;
         private PlayerNetworkController? networkController;
-        
+
         public Game(Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks, Client? client = null)
        : base(GameWindowSettings.Default, new NativeWindowSettings()
        {
@@ -90,11 +96,11 @@ namespace Aetheris
             // Initialize inventory UI
             inventoryUI = new InventoryUI(player.Inventory);
             Console.WriteLine("[Game] Inventory UI initialized");
-            
+
             // Initialize HUD renderer
             hudRenderer = new HUDRenderer();
             Console.WriteLine("[Game] HUD renderer initialized");
-            
+
             // Initialize chat system
             chatSystem = new ChatSystem();
             Console.WriteLine("[Game] Chat system initialized");
@@ -141,20 +147,27 @@ namespace Aetheris
             GL.CullFace(TriangleFace.Back);
             GL.FrontFace(FrontFaceDirection.Ccw);
             CursorState = CursorState.Grabbed;
-            
+            ItemRegistry.Initialize();
             miningSystem = new MiningSystem(player, this, OnBlockMined);
-            
+            // Load font
+            fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 48);
+            fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
+
+            // Create tooltip system
+            tooltipSystem = new TooltipSystem(fontRenderer);
+            blockPlacementSystem = new BlockPlacementSystem(player, this, client);
+            blockPreview = new BlockPlacementPreview();
             // Initialize gameplay systems
             respawnSystem = new RespawnSystem(
-                player, 
-                playerStats, 
+                player,
+                playerStats,
                 player.Position,
                 (msg, type) => chatSystem?.AddMessage(msg, type)
             );
-            
+
             fallDamageTracker = new FallDamageTracker();
             totemManager = new TotemManager(player.Inventory, playerStats);
-            
+
             // Add some test items to inventory
             player.Inventory.AddItem(1, 10); // Stone
             player.Inventory.AddItem(2, 15); // Dirt
@@ -162,7 +175,7 @@ namespace Aetheris
             player.Inventory.AddItem(100, 5); // Bread (food)
             player.Inventory.AddItem(200, 1); // Leather helmet (armor)
             player.Inventory.AddItem(300, 1); // Vitality totem
-            
+
             // Load atlas
             string[] atlasPaths = new[]
             {
@@ -209,7 +222,7 @@ namespace Aetheris
             }
 
             Console.WriteLine($"[Game] Loaded {loadedChunks.Count} chunks");
-            
+
             // Welcome message
             chatSystem?.AddMessage("Welcome to Aetheris!", ChatMessageType.System);
             chatSystem?.AddMessage("Press T to chat, E for inventory, F for stats", ChatMessageType.System);
@@ -312,7 +325,7 @@ namespace Aetheris
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-            
+
             lock (mainThreadLock)
             {
                 while (pendingMainThreadActions.Count > 0)
@@ -328,7 +341,7 @@ namespace Aetheris
                     }
                 }
             }
-            
+
             float deltaTime = (float)e.Time;
 
             // Process pending mesh uploads
@@ -341,7 +354,7 @@ namespace Aetheris
             if (chatSystem != null)
             {
                 chatSystem.Update(KeyboardState, deltaTime);
-                
+
                 // Handle chat hotkeys
                 if (KeyboardState.IsKeyPressed(Keys.Slash))
                 {
@@ -356,10 +369,12 @@ namespace Aetheris
                 inventoryUI.Update(KeyboardState, MouseState, Size, deltaTime);
                 inventoryOpen = inventoryUI.IsInventoryOpen();
             }
-            
+
             // Check if chat is open
             bool chatOpen = chatSystem?.IsChatOpen() ?? false;
-
+            // Update tooltip (show when hovering over inventory slots)
+            bool showTooltip = inventoryUI != null && inventoryUI.IsInventoryOpen() && inventoryUI.GetHoveredSlot() >= 0;
+            tooltipSystem?.Update(deltaTime, showTooltip);
             // Only update player movement if inventory AND chat are closed
             if (!inventoryOpen && !chatOpen)
             {
@@ -388,6 +403,11 @@ namespace Aetheris
                 {
                     miningSystem.Update(deltaTime, MouseState, IsFocused);
                 }
+                // Block placement
+                if (!inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+                {
+                    blockPlacementSystem?.Update(deltaTime, MouseState, IsFocused);
+                }
             }
             else
             {
@@ -397,22 +417,22 @@ namespace Aetheris
                     CursorState = CursorState.Normal;
                 }
             }
-            
+
             // Update gameplay systems (always runs)
             respawnSystem?.Update(deltaTime);
             fallDamageTracker?.Update(player, playerStats);
             totemManager?.ApplyTotemEffects();
-            
+
             // Update armor from equipped items
             float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
             playerStats.Armor = totalArmor;
-            
+
             // Update player stats
             playerStats.Update(deltaTime);
-            
+
             // Update HUD
             hudRenderer?.Update(playerStats, deltaTime);
-            
+
             // Chunk loading (always runs)
             if (chunkUpdateTimer == 0f)
             {
@@ -441,13 +461,13 @@ namespace Aetheris
                 Console.WriteLine($"[Game] Render distance: {renderDistance}");
                 chatSystem?.AddMessage($"Render distance: {renderDistance}", ChatMessageType.System);
             }
-            
+
             // Stats hotkey
             if (KeyboardState.IsKeyPressed(Keys.F))
             {
                 ShowStats();
             }
-            
+
             // Test healing (H key)
             if (KeyboardState.IsKeyPressed(Keys.H))
             {
@@ -455,7 +475,7 @@ namespace Aetheris
                 hudRenderer?.OnHealed();
                 chatSystem?.AddMessage("Healed +20 HP", ChatMessageType.Success);
             }
-            
+
             // Test damage (J key for testing)
             if (KeyboardState.IsKeyPressed(Keys.J))
             {
@@ -464,7 +484,7 @@ namespace Aetheris
                 chatSystem?.AddMessage("Took 10 damage", ChatMessageType.Error);
             }
         }
-        
+
         private void ShowStats()
         {
             chatSystem?.AddMessage("=== Player Stats ===", ChatMessageType.System);
@@ -477,18 +497,18 @@ namespace Aetheris
         protected override void OnTextInput(TextInputEventArgs e)
         {
             base.OnTextInput(e);
-            
+
             // Pass text input to chat system
             if (chatSystem != null && chatSystem.IsChatOpen())
             {
                 chatSystem.HandleTextInput((char)e.Unicode);
             }
         }
-        
+
         protected override void OnKeyDown(KeyboardKeyEventArgs e)
         {
             base.OnKeyDown(e);
-            
+
             // Pass key events to chat system
             if (chatSystem != null && chatSystem.IsChatOpen())
             {
@@ -525,7 +545,45 @@ namespace Aetheris
                     );
                 }
             }
+            // Render block placement preview
+            if (!inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+            {
+                var selectedItem = player.Inventory.GetSelectedItem();
+                if (selectedItem.ItemId > 0)
+                {
+                    var itemDef = ItemRegistry.Get(selectedItem.ItemId);
+                    if (itemDef?.PlacesBlock.HasValue == true)
+                    {
+                        var preview = blockPlacementSystem?.GetPlacementPreview();
+                        if (preview.HasValue && preview.Value.canPlace)
+                        {
+                            blockPreview?.Render(preview.Value.position, preview.Value.canPlace, view, projection);
+                        }
+                    }
+                }
+            }
 
+            // Render held item (first-person view)
+            if (!inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+            {
+                var selectedItem = player.Inventory.GetSelectedItem();
+                if (selectedItem.ItemId > 0)
+                {
+                    // Calculate swing animation (when mining/attacking)
+                    float swingProgress = miningSystem?.GetSwingProgress() ?? 0f;
+                    float time = (float)DateTime.Now.TimeOfDay.TotalSeconds;
+
+                    heldItemRenderer?.RenderHeldItem(
+                        selectedItem.ItemId,
+                        view,
+                        projection,
+                        swingProgress,
+                        time
+                    );
+                }
+            }
+            enhancedHotbar.Render(Size);
+            crosshair.Render(Size);
             // === CLEANUP 3D RENDERING ===
             GL.BindVertexArray(0);
             GL.UseProgram(0);
@@ -535,12 +593,21 @@ namespace Aetheris
             {
                 hudRenderer.Render(playerStats, Size);
             }
-            
+
             if (inventoryUI != null)
             {
                 inventoryUI.Render(Size);
             }
-            
+            // Render tooltips
+            if (inventoryUI != null && inventoryUI.GetHoveredSlot() >= 0)
+            {
+                var item = player.Inventory.GetSlot(inventoryUI.GetHoveredSlot());
+                if (item.ItemId > 0)
+                {
+                    Vector2 mousePos = new Vector2(MouseState.X, MouseState.Y);
+                    tooltipSystem?.RenderItemTooltip(item.ItemId, mousePos, Size);
+                }
+            }
             if (chatSystem != null)
             {
                 chatSystem.Render(Size);

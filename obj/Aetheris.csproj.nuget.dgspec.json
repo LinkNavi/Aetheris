@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/home/kirby/Programming/Aetheris/Aetheris.csproj": {}
+    "/home/link/Programming/Aetheris/Aetheris.csproj": {}
   },
   "projects": {
-    "/home/kirby/Programming/Aetheris/Aetheris.csproj": {
+    "/home/link/Programming/Aetheris/Aetheris.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/kirby/Programming/Aetheris/Aetheris.csproj",
+        "projectUniqueName": "/home/link/Programming/Aetheris/Aetheris.csproj",
         "projectName": "Aetheris",
-        "projectPath": "/home/kirby/Programming/Aetheris/Aetheris.csproj",
-        "packagesPath": "/home/kirby/.nuget/packages/",
-        "outputPath": "/home/kirby/Programming/Aetheris/obj/",
+        "projectPath": "/home/link/Programming/Aetheris/Aetheris.csproj",
+        "packagesPath": "/home/link/.nuget/packages/",
+        "outputPath": "/home/link/Programming/Aetheris/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/kirby/.nuget/NuGet/NuGet.Config"
+          "/home/link/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -59,6 +59,14 @@
             "OpenTK": {
               "target": "Package",
               "version": "[4.9.4, )"
+            },
+            "SharpGLTF.Core": {
+              "target": "Package",
+              "version": "[1.0.0, )"
+            },
+            "SharpGLTF.Runtime": {
+              "target": "Package",
+              "version": "[1.0.0, )"
             },
             "SixLabors.Fonts": {
               "target": "Package",
