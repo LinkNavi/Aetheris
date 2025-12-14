@@ -94,6 +94,8 @@ namespace Aetheris
             hudRenderer = new HUDRenderer();
             Console.WriteLine("[Game] HUD renderer initialized");
 
+fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 12);
+fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
 
             chatSystem = new ChatSystem(fontRenderer);
             Console.WriteLine("[Game] Chat system initialized");

@@ -25,20 +25,20 @@ namespace Aetheris
         private const float CHAT_WIDTH = 600f;
         private const float CHAT_Y_OFFSET = 200f;
         private const float LINE_HEIGHT = 20f;
-private readonly ITextRenderer? textRenderer;
+        private readonly ITextRenderer? textRenderer;
         // Colors
         private static readonly Vector4 SYSTEM_COLOR = new Vector4(0.7f, 0.7f, 0.7f, 1f);
         private static readonly Vector4 PLAYER_COLOR = new Vector4(1f, 1f, 1f, 1f);
         private static readonly Vector4 ERROR_COLOR = new Vector4(1f, 0.3f, 0.3f, 1f);
         private static readonly Vector4 SUCCESS_COLOR = new Vector4(0.3f, 1f, 0.3f, 1f);
         private static readonly Vector4 COMMAND_COLOR = new Vector4(0.5f, 0.8f, 1f, 1f);
-public ChatSystem(ITextRenderer? textRenderer = null)
-{
-    this.textRenderer = textRenderer;
-    InitializeShaders();
-    InitializeBuffers();
-    AddMessage("Chat system initialized. Press T to chat, / for commands.", ChatMessageType.System);
-}
+        public ChatSystem(ITextRenderer? textRenderer = null)
+        {
+            this.textRenderer = textRenderer;
+            InitializeShaders();
+            InitializeBuffers();
+            AddMessage("Chat system initialized. Press T to chat, / for commands.", ChatMessageType.System);
+        }
         private void InitializeShaders()
         {
             string vertexShader = @"
@@ -269,6 +269,20 @@ void main()
             };
         }
 
+        private void DrawMessagePlaceholder(float x, float y, string text, Vector4 color)
+        {
+            if (textRenderer != null)
+            {
+                textRenderer.DrawText(text, new Vector2(x, y), 0.8f, color);
+            }
+            else
+            {
+                Console.WriteLine($"[Chat] Warning: No text renderer, message: {text}");
+                float width = Math.Min(text.Length * 8f, CHAT_WIDTH - 8f);
+                DrawRect(x, y + 4, width, 2f, color);
+            }
+        }
+
         public void Render(Vector2i windowSize)
         {
             bool depthTestEnabled = GL.IsEnabled(EnableCap.DepthTest);
@@ -289,14 +303,12 @@ void main()
             float x = 20f;
             float y = CHAT_Y_OFFSET;
 
-            // Render messages (bottom to top, most recent at bottom)
             int startIndex = Math.Max(0, messages.Count - VISIBLE_MESSAGES);
 
             for (int i = startIndex; i < messages.Count; i++)
             {
                 var msg = messages[i];
 
-                // Calculate alpha based on lifetime
                 float alpha = 1f;
                 if (!isChatOpen && msg.TimeAlive > MESSAGE_LIFETIME)
                 {
@@ -309,28 +321,41 @@ void main()
                     Vector4 color = msg.Color;
                     color.W *= alpha;
 
-                    // Background for better readability
                     DrawRect(x - 4, y - 2, CHAT_WIDTH, LINE_HEIGHT, new Vector4(0f, 0f, 0f, 0.5f * alpha));
 
-                    // Message text (would use proper text rendering in real implementation)
-                    DrawMessagePlaceholder(x, y, msg.Text, color);
+                    // FIXED: Properly render text
+                    if (textRenderer != null)
+                    {
+                        textRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, windowSize.X, windowSize.Y, 0, -1, 1));
+                        textRenderer.DrawText(msg.Text, new Vector2(x, windowSize.Y - y - LINE_HEIGHT), 0.8f, color);
+                    }
+                    else
+                    {
+                        DrawMessagePlaceholder(x, y, msg.Text, color);
+                    }
 
                     y += LINE_HEIGHT;
                 }
             }
 
-            // Render input box if chat is open
+            // Input box
             if (isChatOpen)
             {
                 float inputY = CHAT_Y_OFFSET - 30f;
 
-                // Input background
                 DrawRect(x - 4, inputY - 2, CHAT_WIDTH, LINE_HEIGHT + 4, new Vector4(0f, 0f, 0f, 0.8f));
                 DrawRectOutline(x - 4, inputY - 2, CHAT_WIDTH, LINE_HEIGHT + 4, 2f, new Vector4(1f, 1f, 1f, 1f));
 
-                // Input text
                 string displayText = "> " + inputText + "_";
-                DrawMessagePlaceholder(x, inputY, displayText, new Vector4(1f, 1f, 1f, 1f));
+                if (textRenderer != null)
+                {
+                    textRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, windowSize.X, windowSize.Y, 0, -1, 1));
+                    textRenderer.DrawText(displayText, new Vector2(x, windowSize.Y - inputY - LINE_HEIGHT), 0.8f, new Vector4(1f, 1f, 1f, 1f));
+                }
+                else
+                {
+                    DrawMessagePlaceholder(x, inputY, displayText, new Vector4(1f, 1f, 1f, 1f));
+                }
             }
 
             GL.BindVertexArray(0);
@@ -340,19 +365,6 @@ void main()
             if (!blendEnabled) GL.Disable(EnableCap.Blend);
         }
 
-        private void DrawMessagePlaceholder(float x, float y, string text, Vector4 color)
-        {
-            if (textRenderer != null)
-            {
-                textRenderer.DrawText(text, new Vector2(x, y), 0.8f, color);
-            }
-            else
-            {
-                // Fallback: draw colored line based on text length
-                float width = Math.Min(text.Length * 8f, CHAT_WIDTH - 8f);
-                DrawRect(x, y + 4, width, 2f, color);
-            }
-        }
 
         private void DrawRect(float x, float y, float w, float h, Vector4 color)
         {

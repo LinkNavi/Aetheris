@@ -248,7 +248,7 @@ void main()
         
         private const float SLOT_SIZE = 64f;
         private const float SLOT_SPACING = 4f;
-        private const float HOTBAR_Y_OFFSET = 20f;
+        private const float HOTBAR_Y_OFFSET = 80f;
         
         public EnhancedHotbarRenderer(Inventory inventory, ITextRenderer? textRenderer = null)
         {

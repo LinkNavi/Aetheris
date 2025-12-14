@@ -189,6 +189,17 @@ namespace Aetheris
             }
         }
 
+public static bool IsPlacedBlock(int x, int y, int z)
+{
+    lock (modificationLock)
+    {
+        if (densityModifications.TryGetValue((x, y, z), out float mod))
+        {
+            return mod > 2.0f; // Placed blocks have high positive density modification
+        }
+    }
+    return false;
+}
         public static void AddBlock(int x, int y, int z, float radius = 1.5f, float strength = 3f)
         {
             lock (modificationLock)

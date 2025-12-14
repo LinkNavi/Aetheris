@@ -297,13 +297,13 @@ namespace Aetheris
                     }
                 }
             }
-for (int i = 0; i < Math.Min(21, verts.Count); i += 7) // 7 floats per vertex (pos + normal + blocktype)
-{
-    float x = verts[i + 0];
-    float y = verts[i + 1];
-    float z = verts[i + 2];
+            for (int i = 0; i < Math.Min(21, verts.Count); i += 7) // 7 floats per vertex (pos + normal + blocktype)
+            {
+                float x = verts[i + 0];
+                float y = verts[i + 1];
+                float z = verts[i + 2];
 
-}
+            }
             return verts.ToArray();
         }
 
@@ -379,6 +379,48 @@ for (int i = 0; i < Math.Min(21, verts.Count); i += 7) // 7 floats per vertex (p
             return chosen;
         }
 
+        public static float[] GenerateMeshWithPlacedBlocks(Chunk chunk, ChunkCoord coord, ChunkManager chunkManager, float isoLevel = 0.5f)
+        {
+            var regularMesh = GenerateMesh(chunk, coord, chunkManager, isoLevel);
+            var cubeMeshes = new List<float>();
+
+            // Check for placed blocks in this chunk
+            int baseX = coord.X * ServerConfig.CHUNK_SIZE;
+            int baseY = coord.Y * ServerConfig.CHUNK_SIZE_Y;
+            int baseZ = coord.Z * ServerConfig.CHUNK_SIZE;
+
+            for (int lx = 0; lx < ServerConfig.CHUNK_SIZE; lx++)
+            {
+                for (int ly = 0; ly < ServerConfig.CHUNK_SIZE_Y; ly++)
+                {
+                    for (int lz = 0; lz < ServerConfig.CHUNK_SIZE; lz++)
+                    {
+                        int worldX = baseX + lx;
+                        int worldY = baseY + ly;
+                        int worldZ = baseZ + lz;
+
+                        // Check if this is a placed block (density modification > threshold)
+                        if (WorldGen.IsPlacedBlock(worldX, worldY, worldZ))
+                        {
+                            var blockType = WorldGen.GetBlockType(worldX, worldY, worldZ);
+                            var cubeMesh = CubeBlockMeshGenerator.GenerateCubeMesh(worldX, worldY, worldZ, blockType);
+                            cubeMeshes.AddRange(cubeMesh);
+                        }
+                    }
+                }
+            }
+
+            // Combine regular terrain mesh with cube block meshes
+            if (cubeMeshes.Count > 0)
+            {
+                var combined = new List<float>();
+                combined.AddRange(regularMesh);
+                combined.AddRange(cubeMeshes);
+                return combined.ToArray();
+            }
+
+            return regularMesh;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static BlockType GetMostCommonBlockType(BlockType a, BlockType b, BlockType c)
         {

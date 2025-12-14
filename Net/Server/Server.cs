@@ -272,49 +272,48 @@ namespace Aetheris
         }
 
 
-// Add this method inside the Server class
-private static async Task ReadFullAsync(NetworkStream stream, byte[] buffer, int offset, int count, CancellationToken token)
-{
-    int totalRead = 0;
-    while (totalRead < count)
-    {
-        int bytesRead = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead, token);
-        if (bytesRead == 0)
+        // Add this method inside the Server class
+        private static async Task ReadFullAsync(NetworkStream stream, byte[] buffer, int offset, int count, CancellationToken token)
         {
-            throw new IOException("Connection closed unexpectedly");
+            int totalRead = 0;
+            while (totalRead < count)
+            {
+                int bytesRead = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead, token);
+                if (bytesRead == 0)
+                {
+                    throw new IOException("Connection closed unexpectedly");
+                }
+                totalRead += bytesRead;
+            }
         }
-        totalRead += bytesRead;
-    }
-}
 
         private async Task HandleBlockBreakTcpAsync(NetworkStream stream, CancellationToken token)
         {
-            var buf = new byte[13]; // 1 byte type + 12 bytes coords
-            await ReadFullAsync(stream, buf, 0, 13, token);
+            var buf = new byte[12]; // Just 12 bytes for coordinates (not 13)
+            await ReadFullAsync(stream, buf, 0, 12, token);
 
-            byte actionType = buf[0]; // 0 = break, 1 = place
-            int x = BitConverter.ToInt32(buf, 1);
-            int y = BitConverter.ToInt32(buf, 5);
-            int z = BitConverter.ToInt32(buf, 9);
+            int x = BitConverter.ToInt32(buf, 0);
+            int y = BitConverter.ToInt32(buf, 4);
+            int z = BitConverter.ToInt32(buf, 8);
 
-            if (actionType == 0)
-            {
-                // Break block
-                WorldGen.RemoveBlock(x, y, z, radius: 5f, strength: 3.0f);
-            }
-            else if (actionType == 1)
-            {
-                // Place block
-                WorldGen.AddBlock(x, y, z, radius: 2.5f, strength: 4f);
-            }
+            Console.WriteLine($"[Server] ===== BLOCK BREAK RECEIVED =====");
+            Console.WriteLine($"[Server] Position: ({x}, {y}, {z})");
 
+            // Remove the block
+            WorldGen.RemoveBlock(x, y, z, radius: 5f, strength: 3.0f);
+            Console.WriteLine($"[Server] Called WorldGen.RemoveBlock");
+
+            // Invalidate chunks
             InvalidateChunksAroundBlock(x, y, z, radius: 5f);
+            Console.WriteLine($"[Server] Invalidated chunks around block");
+
+            // Broadcast to all clients
             await BroadcastBlockBreakTcp(x, y, z);
+            Console.WriteLine($"[Server] Broadcasted to {activeClientStreams.Count} clients");
         }
         // Store active client streams for broadcasting
         private readonly ConcurrentDictionary<string, NetworkStream> activeClientStreams = new();
 
-        // Update HandleClientAsync to track streams
         private async Task HandleClientAsync(TcpClient client, CancellationToken token)
         {
             using (client)
@@ -322,44 +321,40 @@ private static async Task ReadFullAsync(NetworkStream stream, byte[] buffer, int
                 var stream = client.GetStream();
                 string clientId = client.Client.RemoteEndPoint?.ToString() ?? Guid.NewGuid().ToString();
 
-                Log($"[[Server]] Client connected: {clientId}");
+                Log($"[Server] Client connected: {clientId}");
 
-                // CRITICAL: First byte determines stream purpose
-                // 0xFF = Broadcast listener, anything else = normal request
+                // First byte determines stream purpose
                 var firstByte = new byte[1];
                 int read = await stream.ReadAsync(firstByte, 0, 1, token);
 
                 if (read == 0)
                 {
-                    Log($"[[Server]] Client {clientId} disconnected immediately");
+                    Log($"[Server] Client {clientId} disconnected immediately");
                     return;
                 }
 
                 // If first byte is 0xFF, this is a broadcast listener
                 if (firstByte[0] == 0xFF)
                 {
-                    Log($"[[Server]] Client {clientId} registered as broadcast listener");
+                    Log($"[Server] Client {clientId} registered as broadcast listener");
                     activeClientStreams[clientId] = stream;
 
-                    // Keep connection alive for broadcasts only
                     try
                     {
                         while (!token.IsCancellationRequested && client.Connected)
                         {
-                            // Just keep alive, server will push broadcasts
                             await Task.Delay(1000, token);
                         }
                     }
                     finally
                     {
                         activeClientStreams.TryRemove(clientId, out _);
-                        Log($"[[Server]] Broadcast listener {clientId} disconnected");
+                        Log($"[Server] Broadcast listener {clientId} disconnected");
                     }
                     return;
                 }
 
-                // Otherwise, process as normal request/response stream
-                // Put the first byte back into processing
+                // Normal request/response stream
                 TcpPacketType packetType = (TcpPacketType)firstByte[0];
 
                 try
@@ -373,8 +368,10 @@ private static async Task ReadFullAsync(NetworkStream stream, byte[] buffer, int
                                 break;
 
                             case TcpPacketType.BlockBreak:
+                                Console.WriteLine($"[Server] Received BlockBreak packet from {clientId}");
                                 await HandleBlockBreakTcpAsync(stream, token);
                                 break;
+
                             case TcpPacketType.InventorySync:
                                 {
                                     var playerInv = inventoryManager.GetOrCreateInventory(clientId);
@@ -386,25 +383,25 @@ private static async Task ReadFullAsync(NetworkStream stream, byte[] buffer, int
                                     await stream.FlushAsync();
                                     break;
                                 }
+
                             default:
-                                Log($"[[Server]] Unknown TCP packet type: {packetType} from {clientId}");
+                                Log($"[Server] Unknown TCP packet type: {packetType} from {clientId}");
                                 break;
                         }
 
                         // Read next packet type
                         int bytesRead = await stream.ReadAsync(firstByte, 0, 1, token);
-
                         if (bytesRead == 0) break;
                         packetType = (TcpPacketType)firstByte[0];
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException))
                 {
-                    Log($"[[Server]] Client error ({clientId}): {ex.Message}");
+                    Log($"[Server] Client error ({clientId}): {ex.Message}");
                 }
                 finally
                 {
-                    Log($"[[Server]] Client disconnected: {clientId}");
+                    Log($"[Server] Client disconnected: {clientId}");
                 }
             }
         }

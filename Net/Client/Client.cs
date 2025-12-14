@@ -23,7 +23,7 @@ namespace Aetheris
         private UdpClient? udp;
         private IPEndPoint? serverUdpEndpoint;
         private NetworkStream? stream;
-private ServerInventoryManager inventoryManager;
+        private ServerInventoryManager inventoryManager;
         private readonly ConcurrentDictionary<(int, int, int), Aetheris.Chunk> loadedChunks = new();
         private readonly ConcurrentQueue<(int cx, int cy, int cz, float priority)> requestQueue = new();
         private readonly ConcurrentDictionary<(int, int, int), byte> requestedChunks = new();
@@ -207,17 +207,16 @@ private ServerInventoryManager inventoryManager;
 
             Console.WriteLine($"[Client] ForceReloadChunk called for ({cx}, {cy}, {cz})");
 
-            // Step 1: Remove from all client-side caches
+            // Step 1: Remove from client-side caches
             bool wasLoaded = loadedChunks.TryRemove(coord, out _);
             bool wasRequested = requestedChunks.TryRemove(coord, out _);
 
             Console.WriteLine($"[Client]   - Was loaded: {wasLoaded}, was requested: {wasRequested}");
 
-            // Step 2: Clear GPU mesh and cache
+            // Step 2: CRITICAL - Clear GPU mesh BEFORE re-requesting
             game?.Renderer.ClearChunkMesh(cx, cy, cz);
 
-            // Step 3: CRITICAL - Force re-request even if chunk exists in queue
-            // Remove any existing requests for this chunk
+            // Step 3: Remove from request queue
             var tempQueue = new List<(int cx, int cy, int cz, float priority)>();
             while (requestQueue.TryDequeue(out var item))
             {
@@ -227,17 +226,34 @@ private ServerInventoryManager inventoryManager;
                 }
             }
 
-            // Re-add all other requests
             foreach (var item in tempQueue)
             {
                 requestQueue.Enqueue(item);
             }
 
-            // Step 4: Queue with highest priority (0.0 = load first)
+            // Step 4: FORCE IMMEDIATE REQUEST
+            requestedChunks.TryRemove(coord, out _);
             requestQueue.Enqueue((cx, cy, cz, 0.0f));
-            requestedChunks[coord] = 0;
 
             Console.WriteLine($"[Client]   - Queued for immediate reload (queue size: {requestQueue.Count})");
+
+            // Step 5: CRITICAL - Process this request immediately in background
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await Task.Delay(50); // Small delay to let any in-flight requests finish
+
+                    var chunk = (cx, cy, cz, 0.0f);
+                    await LoadChunkAsync(chunk, CancellationToken.None);
+
+                    Console.WriteLine($"[Client] Successfully reloaded chunk ({cx}, {cy}, {cz})");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Client] Error force-reloading chunk: {ex.Message}");
+                }
+            });
         }
         public async Task RequestInventorySyncAsync()
         {
@@ -261,10 +277,10 @@ private ServerInventoryManager inventoryManager;
                 await ReadFullAsync(stream, inventoryData, 0, dataLength, CancellationToken.None);
 
                 // Deserialize and update local inventory
-               
 
-if (game?.player is { } p)
-    p.Inventory = inventoryManager.DeserializeInventory(inventoryData);
+
+                if (game?.player is { } p)
+                    p.Inventory = inventoryManager.DeserializeInventory(inventoryData);
 
             }
             finally
@@ -285,7 +301,8 @@ if (game?.player is { } p)
                 int y = BitConverter.ToInt32(buf, 4);
                 int z = BitConverter.ToInt32(buf, 8);
 
-                Console.WriteLine($"[Client] Received block break broadcast at ({x}, {y}, {z})");
+                Console.WriteLine($"[Client] ===== RECEIVED BLOCK BREAK BROADCAST =====");
+                Console.WriteLine($"[Client] Position: ({x}, {y}, {z})");
 
                 // Calculate affected chunks
                 float miningRadius = 5.0f;
@@ -311,15 +328,18 @@ if (game?.player is { } p)
                     }
                 }
 
-                Console.WriteLine($"[Client] Force-reloading {chunksToReload.Count} chunks from broadcast");
+                Console.WriteLine($"[Client] Need to reload {chunksToReload.Count} chunks");
 
                 // Small delay to let any in-flight chunk requests complete
-                await Task.Delay(50, token);
+                await Task.Delay(100, token);
 
                 foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
                 {
+                    Console.WriteLine($"[Client] Force reloading chunk ({chunkX}, {chunkY}, {chunkZ})");
                     ForceReloadChunk(chunkX, chunkY, chunkZ);
                 }
+
+                Console.WriteLine($"[Client] Finished processing block break broadcast");
             }
             catch (Exception ex)
             {
@@ -360,6 +380,7 @@ if (game?.player is { } p)
             await networkSemaphore.WaitAsync();
             try
             {
+                // FIXED: Send only 13 bytes (1 byte type + 12 bytes coordinates)
                 byte[] packet = new byte[13];
                 packet[0] = (byte)TcpPacketType.BlockBreak;
 
@@ -370,7 +391,9 @@ if (game?.player is { } p)
                 await streamRequest.WriteAsync(packet, 0, packet.Length);
                 await streamRequest.FlushAsync();
 
-                Console.WriteLine($"[Client] Sent block break at ({x}, {y}, {z}) via TCP");
+                Console.WriteLine($"[Client] ===== SENT BLOCK BREAK =====");
+                Console.WriteLine($"[Client] Position: ({x}, {y}, {z})");
+                Console.WriteLine($"[Client] Packet size: 13 bytes");
             }
             catch (Exception ex)
             {

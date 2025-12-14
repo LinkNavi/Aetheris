@@ -1,32 +1,53 @@
-﻿[2025-12-14 06:16:47.795] [Logging] Started logging to 'physics_debug.log'
-[2025-12-14 06:16:47.796] [Game] WorldGen initialized
-[2025-12-14 06:16:47.806] [PSX Effects] Shaders compiled successfully
-[2025-12-14 06:16:47.807] [Game] Renderer initialized
-[2025-12-14 06:16:47.818] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2025-12-14 06:16:47.818] [Game] EntityRenderer initialized
-[2025-12-14 06:16:47.835] [Player] Spawned at (16, 37.1, 16)
-[2025-12-14 06:16:47.836] [Game] Player initialized at position: (16, 37.1, 16)
-[2025-12-14 06:16:47.836] [Game] Player stats initialized
-[2025-12-14 06:16:47.837] [Game] Network controller initialized
-[2025-12-14 06:16:47.839] [Game] Inventory UI initialized
-[2025-12-14 06:16:47.841] [Game] HUD renderer initialized
-[2025-12-14 06:16:47.844] [Game] Chat system initialized
-[2025-12-14 06:16:47.846] [Client] TCP broadcast listener started
-[2025-12-14 06:16:47.853] [ItemRegistry] Registered 23 items
-[2025-12-14 06:16:48.169] [Game] Found atlas at: textures/atlas.png
-[2025-12-14 06:16:48.213] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2025-12-14 06:16:48.213] [AtlasManager] Using preferred tile size: 64
-[2025-12-14 06:16:48.214] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2025-12-14 06:16:48.217] [AtlasManager] Successfully uploaded to GL texture 571
-[2025-12-14 06:16:48.218] [AtlasManager] Verified texture dimensions: 256x256
-[2025-12-14 06:16:48.219] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 571)
-[2025-12-14 06:16:48.220] [Game] Loaded 0 chunks
-[2025-12-14 06:16:48.345] [Client] Chunk update loop starting...
-[2025-12-14 06:16:48.568] [Prediction] Error: 39.2cm - reconciling
-[2025-12-14 06:16:48.574] [Prediction] Replayed 19 inputs
-[2025-12-14 06:16:48.574] [Prediction] Error: 22.0cm - reconciling
-[2025-12-14 06:16:48.575] [Prediction] Replayed 8 inputs
-[2025-12-14 06:16:48.775] [Renderer] Uploaded chunk (0,0,0): VAO=10, VBO=11, 16506 vertices
-[2025-12-14 06:16:48.996] [Renderer] Uploaded chunk (1,0,0): VAO=11, VBO=12, 13323 vertices
-[2025-12-14 06:16:56.704] [Chat] Opened
-[2025-12-14 06:16:58.073] [Chat] Closed
+﻿[2025-12-14 06:58:36.909] [Logging] Started logging to 'physics_debug.log'
+[2025-12-14 06:58:36.932] [Game] WorldGen initialized
+[2025-12-14 06:58:36.943] [PSX Effects] Shaders compiled successfully
+[2025-12-14 06:58:36.944] [Game] Renderer initialized
+[2025-12-14 06:58:36.952] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2025-12-14 06:58:36.952] [Game] EntityRenderer initialized
+[2025-12-14 06:58:36.971] [Player] Spawned at (16, 37.1, 16)
+[2025-12-14 06:58:36.971] [Game] Player initialized at position: (16, 37.1, 16)
+[2025-12-14 06:58:36.971] [Game] Player stats initialized
+[2025-12-14 06:58:36.972] [Game] Network controller initialized
+[2025-12-14 06:58:36.974] [Game] Inventory UI initialized
+[2025-12-14 06:58:36.975] [Game] HUD renderer initialized
+[2025-12-14 06:58:38.140] [Game] Chat system initialized
+[2025-12-14 06:58:38.142] [Client] TCP broadcast listener started
+[2025-12-14 06:58:38.149] [ItemRegistry] Registered 23 items
+[2025-12-14 06:58:38.642] [Client] Chunk update loop starting...
+[2025-12-14 06:58:39.078] [Game] Found atlas at: textures/atlas.png
+[2025-12-14 06:58:39.125] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2025-12-14 06:58:39.125] [AtlasManager] Using preferred tile size: 64
+[2025-12-14 06:58:39.125] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2025-12-14 06:58:39.129] [AtlasManager] Successfully uploaded to GL texture 1141
+[2025-12-14 06:58:39.130] [AtlasManager] Verified texture dimensions: 256x256
+[2025-12-14 06:58:39.131] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
+[2025-12-14 06:58:39.132] [Game] Loaded 0 chunks
+[2025-12-14 06:58:39.386] [Prediction] Error: 46.0cm - reconciling
+[2025-12-14 06:58:39.456] [Client] UDP recv error: System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
+   at System.Collections.Generic.Queue`1.Enumerator.MoveNext()
+   at Aetheris.PlayerNetworkController.ReconcilePosition(ServerPlayerUpdate update) in /home/link/Programming/Aetheris/Net/Shared/PlayerNetworkController.cs:line 157
+   at Aetheris.PlayerNetworkController.OnServerUpdate(ServerPlayerUpdate update) in /home/link/Programming/Aetheris/Net/Shared/PlayerNetworkController.cs:line 138
+   at Aetheris.Client.HandleServerPositionUpdate(Byte[] data) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 459
+   at Aetheris.Client.HandleUdpPacket(Byte[] data) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 424
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 512
+[2025-12-14 06:58:39.457] [Prediction] Error: 10.1cm - reconciling
+[2025-12-14 06:58:39.467] [Prediction] Replayed 37 inputs
+[2025-12-14 06:58:39.468] [Prediction] Error: 75.3cm - reconciling
+[2025-12-14 06:58:39.473] [Prediction] Replayed 32 inputs
+[2025-12-14 06:58:39.473] [Prediction] Error: 65.7cm - reconciling
+[2025-12-14 06:58:39.478] [Prediction] Replayed 27 inputs
+[2025-12-14 06:58:39.478] [Prediction] Error: 102.7cm - reconciling
+[2025-12-14 06:58:39.482] [Prediction] Replayed 17 inputs
+[2025-12-14 06:58:39.504] [Prediction] Error: 29.8cm - reconciling
+[2025-12-14 06:58:39.506] [Prediction] Replayed 14 inputs
+[2025-12-14 06:58:39.507] [Prediction] Error: 30.1cm - reconciling
+[2025-12-14 06:58:39.508] [Prediction] Replayed 9 inputs
+[2025-12-14 06:58:39.580] [Renderer] Uploaded chunk (0,0,0): VAO=11, VBO=12, 16506 vertices
+[2025-12-14 06:58:39.848] [Renderer] Uploaded chunk (1,0,0): VAO=12, VBO=13, 13323 vertices
+[2025-12-14 06:59:29.950] [InventoryUI] Inventory opened
+[2025-12-14 06:59:46.954] [InventoryUI] Inventory closed
+[2025-12-14 06:59:57.934] [InventoryUI] Inventory opened
+[2025-12-14 06:59:58.364] [InventoryUI] Inventory closed
+[2025-12-14 07:00:06.923] [Chat] Opened
+[2025-12-14 07:00:08.573] [InventoryUI] Inventory opened
+[2025-12-14 07:00:12.659] [Chat] Closed

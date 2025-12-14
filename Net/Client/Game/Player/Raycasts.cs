@@ -38,130 +38,159 @@ namespace Aetheris
         /// </summary>
 
 
-        public RaycastHit[] Raycast(Vector3 start, Vector3 end, bool raycastAll = false)
+       public RaycastHit[] Raycast(Vector3 start, Vector3 end, bool raycastAll = false)
+{
+    Vector3 rayVec = end - start;
+    float maxDistance = rayVec.Length;
+    if (maxDistance <= 0.0001f)
+        return Array.Empty<RaycastHit>();
+
+    Vector3 dir = Vector3.Normalize(rayVec);
+
+    // DDA setup
+    int ix = (int)MathF.Floor(start.X);
+    int iy = (int)MathF.Floor(start.Y);
+    int iz = (int)MathF.Floor(start.Z);
+
+    int stepX = dir.X > 0 ? 1 : (dir.X < 0 ? -1 : 0);
+    int stepY = dir.Y > 0 ? 1 : (dir.Y < 0 ? -1 : 0);
+    int stepZ = dir.Z > 0 ? 1 : (dir.Z < 0 ? -1 : 0);
+
+    float tDeltaX = dir.X == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.X);
+    float tDeltaY = dir.Y == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.Y);
+    float tDeltaZ = dir.Z == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.Z);
+
+    float tMaxX = (stepX == 0) ? float.MaxValue
+        : (stepX > 0 ? ((ix + 1.0f) - start.X) * tDeltaX : (start.X - ix) * tDeltaX);
+    float tMaxY = (stepY == 0) ? float.MaxValue
+        : (stepY > 0 ? ((iy + 1.0f) - start.Y) * tDeltaY : (start.Y - iy) * tDeltaY);
+    float tMaxZ = (stepZ == 0) ? float.MaxValue
+        : (stepZ > 0 ? ((iz + 1.0f) - start.Z) * tDeltaZ : (start.Z - iz) * tDeltaZ);
+
+    int maxSteps = (int)(maxDistance * 2f) + 16;
+    var hits = new List<RaycastHit>();
+
+    for (int step = 0; step < maxSteps; step++)
+    {
+        try
         {
-            Vector3 rayVec = end - start;
-            float maxDistance = rayVec.Length;
-            if (maxDistance <= 0.0001f)
-                return Array.Empty<RaycastHit>();
+            int chunkX = (int)MathF.Floor((float)ix / ClientConfig.CHUNK_SIZE);
+            int chunkY = (int)MathF.Floor((float)iy / ClientConfig.CHUNK_SIZE_Y);
+            int chunkZ = (int)MathF.Floor((float)iz / ClientConfig.CHUNK_SIZE);
 
-            Vector3 dir = Vector3.Normalize(rayVec);
-
-            // DDA setup (voxel grid with unit cubes)
-            int ix = (int)MathF.Floor(start.X);
-            int iy = (int)MathF.Floor(start.Y);
-            int iz = (int)MathF.Floor(start.Z);
-
-            int stepX = dir.X > 0 ? 1 : (dir.X < 0 ? -1 : 0);
-            int stepY = dir.Y > 0 ? 1 : (dir.Y < 0 ? -1 : 0);
-            int stepZ = dir.Z > 0 ? 1 : (dir.Z < 0 ? -1 : 0);
-
-            float tDeltaX = dir.X == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.X);
-            float tDeltaY = dir.Y == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.Y);
-            float tDeltaZ = dir.Z == 0 ? float.MaxValue : MathF.Abs(1.0f / dir.Z);
-
-            float tMaxX = (stepX == 0) ? float.MaxValue
-                : (stepX > 0 ? ((ix + 1.0f) - start.X) * tDeltaX : (start.X - ix) * tDeltaX);
-            float tMaxY = (stepY == 0) ? float.MaxValue
-                : (stepY > 0 ? ((iy + 1.0f) - start.Y) * tDeltaY : (start.Y - iy) * tDeltaY);
-            float tMaxZ = (stepZ == 0) ? float.MaxValue
-                : (stepZ > 0 ? ((iz + 1.0f) - start.Z) * tDeltaZ : (start.Z - iz) * tDeltaZ);
-
-            int maxSteps = (int)(maxDistance * 2f) + 16; // safe upper bound
-            var hits = new List<RaycastHit>();
-
-            for (int step = 0; step < maxSteps; step++)
+            var meshData = game?.Renderer.GetMeshData(chunkX, chunkY, chunkZ);
+            if (meshData != null && meshData.Length >= 21)
             {
-                try
+                for (int i = 0; i + 20 < meshData.Length; i += 21)
                 {
-                    int chunkX = (int)MathF.Floor((float)ix / ClientConfig.CHUNK_SIZE);
-                    int chunkY = (int)MathF.Floor((float)iy / ClientConfig.CHUNK_SIZE_Y);
-                    int chunkZ = (int)MathF.Floor((float)iz / ClientConfig.CHUNK_SIZE);
+                    Vector3 v0 = new Vector3(meshData[i + 0], meshData[i + 1], meshData[i + 2]);
+                    Vector3 v1 = new Vector3(meshData[i + 7], meshData[i + 8], meshData[i + 9]);
+                    Vector3 v2 = new Vector3(meshData[i + 14], meshData[i + 15], meshData[i + 16]);
 
-                    var meshData = game?.Renderer.GetMeshData(chunkX, chunkY, chunkZ);
-                    if (meshData != null && meshData.Length >= 21)
+                    if (RayTriangleIntersect(start, dir, v0, v1, v2, out float t, out Vector3 triNormal))
                     {
-                        for (int i = 0; i + 20 < meshData.Length; i += 21)
+                        if (t > 0.0005f && t <= maxDistance)
                         {
-                            Vector3 v0 = new Vector3(meshData[i + 0], meshData[i + 1], meshData[i + 2]);
-                            Vector3 v1 = new Vector3(meshData[i + 7], meshData[i + 8], meshData[i + 9]);
-                            Vector3 v2 = new Vector3(meshData[i + 14], meshData[i + 15], meshData[i + 16]);
-
-                            if (RayTriangleIntersect(start, dir, v0, v1, v2, out float t, out Vector3 triNormal))
+                            Vector3 hitPoint = start + dir * t;
+                            
+                            // FIXED: Sample actual block type from world instead of mesh data
+                            Vector3 blockPos = new Vector3(
+                                MathF.Floor(hitPoint.X),
+                                MathF.Floor(hitPoint.Y),
+                                MathF.Floor(hitPoint.Z)
+                            );
+                            
+                            // Get the actual block type at this position
+                            BlockType actualBlockType = GetBlockTypeAtPosition((int)blockPos.X, (int)blockPos.Y, (int)blockPos.Z);
+                            
+                            var hit = new RaycastHit
                             {
-                                if (t > 0.0005f && t <= maxDistance)
-                                {
-                                    var hit = new RaycastHit
-                                    {
-                                        Hit = true,
-                                        Point = start + dir * t,
-                                        Normal = triNormal,
-                                        Distance = t,
-                                        BlockType = (BlockType)(int)meshData[i + 6]
-                                    };
-                                    hits.Add(hit);
-                                }
-                            }
+                                Hit = true,
+                                Point = hitPoint,
+                                Normal = triNormal,
+                                Distance = t,
+                                BlockType = actualBlockType  // Use sampled block type
+                            };
+                            hits.Add(hit);
                         }
                     }
                 }
-                catch
-                {
-                    // ignore chunk access errors
-                }
-
-                // advance DDA
-                if (tMaxX < tMaxY)
-                {
-                    if (tMaxX < tMaxZ)
-                    {
-                        if (tMaxX * 1.0001f > maxDistance) break;
-                        ix += stepX;
-                        tMaxX += tDeltaX;
-                    }
-                    else
-                    {
-                        if (tMaxZ * 1.0001f > maxDistance) break;
-                        iz += stepZ;
-                        tMaxZ += tDeltaZ;
-                    }
-                }
-                else
-                {
-                    if (tMaxY < tMaxZ)
-                    {
-                        if (tMaxY * 1.0001f > maxDistance) break;
-                        iy += stepY;
-                        tMaxY += tDeltaY;
-                    }
-                    else
-                    {
-                        if (tMaxZ * 1.0001f > maxDistance) break;
-                        iz += stepZ;
-                        tMaxZ += tDeltaZ;
-                    }
-                }
             }
-
-            if (hits.Count == 0) return Array.Empty<RaycastHit>();
-
-            // robust dedupe: sort then keep hits separated by a small delta
-            hits = hits.OrderBy(h => h.Distance).ToList();
-            var kept = new List<RaycastHit>();
-            const float KEEP_EPS = 0.0005f;
-            foreach (var h in hits)
-            {
-                if (kept.Count == 0 || h.Distance - kept[kept.Count - 1].Distance > KEEP_EPS)
-                    kept.Add(h);
-            }
-
-            if (!raycastAll)
-            {
-                return new[] { kept[0] };
-            }
-
-            return kept.ToArray();
         }
+        catch
+        {
+            // ignore chunk access errors
+        }
+
+        // advance DDA
+        if (tMaxX < tMaxY)
+        {
+            if (tMaxX < tMaxZ)
+            {
+                if (tMaxX * 1.0001f > maxDistance) break;
+                ix += stepX;
+                tMaxX += tDeltaX;
+            }
+            else
+            {
+                if (tMaxZ * 1.0001f > maxDistance) break;
+                iz += stepZ;
+                tMaxZ += tDeltaZ;
+            }
+        }
+        else
+        {
+            if (tMaxY < tMaxZ)
+            {
+                if (tMaxY * 1.0001f > maxDistance) break;
+                iy += stepY;
+                tMaxY += tDeltaY;
+            }
+            else
+            {
+                if (tMaxZ * 1.0001f > maxDistance) break;
+                iz += stepZ;
+                tMaxZ += tDeltaZ;
+            }
+        }
+    }
+
+    if (hits.Count == 0) return Array.Empty<RaycastHit>();
+
+    hits = hits.OrderBy(h => h.Distance).ToList();
+    var kept = new List<RaycastHit>();
+    const float KEEP_EPS = 0.0005f;
+    foreach (var h in hits)
+    {
+        if (kept.Count == 0 || h.Distance - kept[kept.Count - 1].Distance > KEEP_EPS)
+            kept.Add(h);
+    }
+
+    if (!raycastAll)
+    {
+        return new[] { kept[0] };
+    }
+
+    return kept.ToArray();
+}
+
+// ADD THIS NEW METHOD to the RaycastHelper class:
+private BlockType GetBlockTypeAtPosition(int x, int y, int z)
+{
+    // Sample the world density at this position
+    float density = WorldGen.SampleDensity(x, y, z);
+    
+    if (density <= 0.5f)
+    {
+        return BlockType.Air;
+    }
+    
+    // Get the actual block type from WorldGen
+    var columnData = WorldGen.GetColumnData(x, z);
+    BlockType blockType = WorldGen.GetBlockType(x, y, z, density, columnData);
+    
+    return blockType;
+}
 
         /// <summary>
         /// Estimate surface normal at a point using finite differences

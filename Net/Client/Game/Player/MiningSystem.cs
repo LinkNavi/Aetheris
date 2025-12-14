@@ -15,7 +15,7 @@ namespace Aetheris
         private float miningProgress = 0f;
         private BlockType targetBlockType = BlockType.Air;
 
-        private const float MAX_REACH = 10.0f;
+        private const float MAX_REACH = 20.0f;
         private const float MINING_SPEED_MULT = 1f;
         private const float STICKY_ANGLE_DEGREES = 15f;
         private const float STICKY_POSITION_EPS = 0.6f;
