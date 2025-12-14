@@ -1,53 +1,458 @@
-﻿[2025-12-14 06:58:36.909] [Logging] Started logging to 'physics_debug.log'
-[2025-12-14 06:58:36.932] [Game] WorldGen initialized
-[2025-12-14 06:58:36.943] [PSX Effects] Shaders compiled successfully
-[2025-12-14 06:58:36.944] [Game] Renderer initialized
-[2025-12-14 06:58:36.952] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2025-12-14 06:58:36.952] [Game] EntityRenderer initialized
-[2025-12-14 06:58:36.971] [Player] Spawned at (16, 37.1, 16)
-[2025-12-14 06:58:36.971] [Game] Player initialized at position: (16, 37.1, 16)
-[2025-12-14 06:58:36.971] [Game] Player stats initialized
-[2025-12-14 06:58:36.972] [Game] Network controller initialized
-[2025-12-14 06:58:36.974] [Game] Inventory UI initialized
-[2025-12-14 06:58:36.975] [Game] HUD renderer initialized
-[2025-12-14 06:58:38.140] [Game] Chat system initialized
-[2025-12-14 06:58:38.142] [Client] TCP broadcast listener started
-[2025-12-14 06:58:38.149] [ItemRegistry] Registered 23 items
-[2025-12-14 06:58:38.642] [Client] Chunk update loop starting...
-[2025-12-14 06:58:39.078] [Game] Found atlas at: textures/atlas.png
-[2025-12-14 06:58:39.125] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2025-12-14 06:58:39.125] [AtlasManager] Using preferred tile size: 64
-[2025-12-14 06:58:39.125] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2025-12-14 06:58:39.129] [AtlasManager] Successfully uploaded to GL texture 1141
-[2025-12-14 06:58:39.130] [AtlasManager] Verified texture dimensions: 256x256
-[2025-12-14 06:58:39.131] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
-[2025-12-14 06:58:39.132] [Game] Loaded 0 chunks
-[2025-12-14 06:58:39.386] [Prediction] Error: 46.0cm - reconciling
-[2025-12-14 06:58:39.456] [Client] UDP recv error: System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
-   at System.Collections.Generic.Queue`1.Enumerator.MoveNext()
-   at Aetheris.PlayerNetworkController.ReconcilePosition(ServerPlayerUpdate update) in /home/link/Programming/Aetheris/Net/Shared/PlayerNetworkController.cs:line 157
-   at Aetheris.PlayerNetworkController.OnServerUpdate(ServerPlayerUpdate update) in /home/link/Programming/Aetheris/Net/Shared/PlayerNetworkController.cs:line 138
-   at Aetheris.Client.HandleServerPositionUpdate(Byte[] data) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 459
-   at Aetheris.Client.HandleUdpPacket(Byte[] data) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 424
-   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 512
-[2025-12-14 06:58:39.457] [Prediction] Error: 10.1cm - reconciling
-[2025-12-14 06:58:39.467] [Prediction] Replayed 37 inputs
-[2025-12-14 06:58:39.468] [Prediction] Error: 75.3cm - reconciling
-[2025-12-14 06:58:39.473] [Prediction] Replayed 32 inputs
-[2025-12-14 06:58:39.473] [Prediction] Error: 65.7cm - reconciling
-[2025-12-14 06:58:39.478] [Prediction] Replayed 27 inputs
-[2025-12-14 06:58:39.478] [Prediction] Error: 102.7cm - reconciling
-[2025-12-14 06:58:39.482] [Prediction] Replayed 17 inputs
-[2025-12-14 06:58:39.504] [Prediction] Error: 29.8cm - reconciling
-[2025-12-14 06:58:39.506] [Prediction] Replayed 14 inputs
-[2025-12-14 06:58:39.507] [Prediction] Error: 30.1cm - reconciling
-[2025-12-14 06:58:39.508] [Prediction] Replayed 9 inputs
-[2025-12-14 06:58:39.580] [Renderer] Uploaded chunk (0,0,0): VAO=11, VBO=12, 16506 vertices
-[2025-12-14 06:58:39.848] [Renderer] Uploaded chunk (1,0,0): VAO=12, VBO=13, 13323 vertices
-[2025-12-14 06:59:29.950] [InventoryUI] Inventory opened
-[2025-12-14 06:59:46.954] [InventoryUI] Inventory closed
-[2025-12-14 06:59:57.934] [InventoryUI] Inventory opened
-[2025-12-14 06:59:58.364] [InventoryUI] Inventory closed
-[2025-12-14 07:00:06.923] [Chat] Opened
-[2025-12-14 07:00:08.573] [InventoryUI] Inventory opened
-[2025-12-14 07:00:12.659] [Chat] Closed
+﻿[2025-12-14 07:11:50.262] [Logging] Started logging to 'physics_debug.log'
+[2025-12-14 07:11:50.288] [Game] WorldGen initialized
+[2025-12-14 07:11:50.301] [PSX Effects] Shaders compiled successfully
+[2025-12-14 07:11:50.302] [Game] Renderer initialized
+[2025-12-14 07:11:50.311] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2025-12-14 07:11:50.311] [Game] EntityRenderer initialized
+[2025-12-14 07:11:50.335] [Player] Spawned at (16, 37.1, 16)
+[2025-12-14 07:11:50.335] [Game] Player initialized at position: (16, 37.1, 16)
+[2025-12-14 07:11:50.336] [Game] Player stats initialized
+[2025-12-14 07:11:50.336] [Game] Network controller initialized
+[2025-12-14 07:11:50.338] [Game] Inventory UI initialized
+[2025-12-14 07:11:50.339] [Game] HUD renderer initialized
+[2025-12-14 07:11:51.508] [Game] Chat system initialized
+[2025-12-14 07:11:51.510] [Client] TCP broadcast listener started
+[2025-12-14 07:11:51.519] [ItemRegistry] Registered 23 items
+[2025-12-14 07:11:52.009] [Client] Chunk update loop starting...
+[2025-12-14 07:11:52.286] [Game] Found atlas at: textures/atlas.png
+[2025-12-14 07:11:52.327] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2025-12-14 07:11:52.328] [AtlasManager] Using preferred tile size: 64
+[2025-12-14 07:11:52.328] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2025-12-14 07:11:52.332] [AtlasManager] Successfully uploaded to GL texture 1141
+[2025-12-14 07:11:52.332] [AtlasManager] Verified texture dimensions: 256x256
+[2025-12-14 07:11:52.333] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
+[2025-12-14 07:11:52.334] [Game] Loaded 0 chunks
+[2025-12-14 07:11:52.592] [Prediction] Error: 38.3cm - reconciling
+[2025-12-14 07:11:52.600] [Prediction] Replayed 26 inputs
+[2025-12-14 07:11:52.600] [Prediction] Error: 37.0cm - reconciling
+[2025-12-14 07:11:52.602] [Prediction] Replayed 19 inputs
+[2025-12-14 07:11:52.602] [Prediction] Error: 20.0cm - reconciling
+[2025-12-14 07:11:52.603] [Prediction] Replayed 11 inputs
+[2025-12-14 07:11:52.720] [Prediction] Error: 32.8cm - reconciling
+[2025-12-14 07:11:52.724] [Prediction] Replayed 22 inputs
+[2025-12-14 07:11:52.725] [Prediction] Error: 12.7cm - reconciling
+[2025-12-14 07:11:52.727] [Prediction] Replayed 15 inputs
+[2025-12-14 07:11:52.796] [Renderer] Uploaded chunk (0,0,0): VAO=11, VBO=12, 16506 vertices
+[2025-12-14 07:11:53.094] [Renderer] Uploaded chunk (1,0,0): VAO=12, VBO=13, 13323 vertices
+[2025-12-14 07:11:55.463] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 07:11:55.468] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:11:55.471] [Client]   - Was loaded: True, was requested: True
+[2025-12-14 07:11:55.472] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:11:55.473] [Renderer]   Deleted GPU: VAO=11, VBO=12
+[2025-12-14 07:11:55.473] [Renderer]   Cleared mesh cache
+[2025-12-14 07:11:55.474] [Client]   - Queued for immediate reload (queue size: 45)
+[2025-12-14 07:11:55.475] [BlockPlace] Placed Stone at (10, 36, 16)
+[2025-12-14 07:11:57.215] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 07:11:57.215] [Client] Position: (10, 36, 16)
+[2025-12-14 07:11:57.215] [Client] Packet size: 13 bytes
+[2025-12-14 07:11:57.232] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 07:11:57.232] [Client] Position: (10, 36, 16)
+[2025-12-14 07:11:57.232] [Client] Need to reload 1 chunks
+[2025-12-14 07:11:57.333] [Client] Force reloading chunk (0, 0, 0)
+[2025-12-14 07:11:57.333] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:11:57.333] [Client]   - Was loaded: False, was requested: False
+[2025-12-14 07:11:57.333] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:11:57.333] [Client]   - Queued for immediate reload (queue size: 37)
+[2025-12-14 07:11:57.333] [Client] Finished processing block place broadcast
+[2025-12-14 07:11:57.474] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:11:59.111] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:11:59.150] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 07:11:59.150] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:11:59.150] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 07:11:59.150] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:11:59.151] [Renderer]   Deleted GPU: VAO=29, VBO=30
+[2025-12-14 07:11:59.151] [Renderer]   Cleared mesh cache
+[2025-12-14 07:11:59.151] [Client]   - Queued for immediate reload (queue size: 93)
+[2025-12-14 07:11:59.151] [BlockPlace] Placed Stone at (11, 36, 16)
+[2025-12-14 07:11:59.976] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 07:11:59.976] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:11:59.976] [Client]   - Was loaded: False, was requested: False
+[2025-12-14 07:11:59.976] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:11:59.976] [Renderer]   Deleted GPU: VAO=36, VBO=37
+[2025-12-14 07:11:59.976] [Renderer]   Cleared mesh cache
+[2025-12-14 07:11:59.976] [Client]   - Queued for immediate reload (queue size: 88)
+[2025-12-14 07:11:59.976] [BlockPlace] Placed Stone at (11, 36, 16)
+[2025-12-14 07:12:00.328] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 07:12:00.329] [Client] Position: (11, 36, 16)
+[2025-12-14 07:12:00.329] [Client] Packet size: 13 bytes
+[2025-12-14 07:12:00.332] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 07:12:00.332] [Client] Position: (11, 36, 16)
+[2025-12-14 07:12:00.332] [Client] Need to reload 1 chunks
+[2025-12-14 07:12:00.432] [Client] Force reloading chunk (0, 0, 0)
+[2025-12-14 07:12:00.432] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:12:00.432] [Client]   - Was loaded: False, was requested: False
+[2025-12-14 07:12:00.432] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:12:00.432] [Client]   - Queued for immediate reload (queue size: 85)
+[2025-12-14 07:12:00.432] [Client] Finished processing block place broadcast
+[2025-12-14 07:12:00.569] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:12:00.926] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 07:12:00.926] [Client] Position: (11, 36, 16)
+[2025-12-14 07:12:00.926] [Client] Packet size: 13 bytes
+[2025-12-14 07:12:00.927] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 07:12:00.927] [Client] Position: (11, 36, 16)
+[2025-12-14 07:12:00.927] [Client] Need to reload 1 chunks
+[2025-12-14 07:12:01.029] [Client] Force reloading chunk (0, 0, 0)
+[2025-12-14 07:12:01.029] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:12:01.029] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 07:12:01.029] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:12:01.029] [Renderer]   Deleted GPU: VAO=40, VBO=41
+[2025-12-14 07:12:01.029] [Renderer]   Cleared mesh cache
+[2025-12-14 07:12:01.029] [Client]   - Queued for immediate reload (queue size: 80)
+[2025-12-14 07:12:01.029] [Client] Finished processing block place broadcast
+[2025-12-14 07:12:01.393] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:12:01.653] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:12:02.543] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:12:08.617] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 07:12:08.617] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:12:08.617] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 07:12:08.617] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:12:08.617] [Renderer]   Deleted GPU: VAO=48, VBO=49
+[2025-12-14 07:12:08.617] [Renderer]   Cleared mesh cache
+[2025-12-14 07:12:08.617] [Client]   - Queued for immediate reload (queue size: 36)
+[2025-12-14 07:12:08.617] [BlockPlace] Placed Grass Block at (10, 38, 16)
+[2025-12-14 07:12:09.431] [Prediction] Error: 17.4cm - reconciling
+[2025-12-14 07:12:09.432] [Prediction] Replayed 3 inputs
+[2025-12-14 07:12:09.538] [Prediction] Error: 36.9cm - reconciling
+[2025-12-14 07:12:09.539] [Prediction] Replayed 3 inputs
+[2025-12-14 07:12:09.649] [Prediction] Error: 47.0cm - reconciling
+[2025-12-14 07:12:09.650] [Prediction] Replayed 6 inputs
+[2025-12-14 07:12:09.650] [Prediction] Error: 12.8cm - reconciling
+[2025-12-14 07:12:09.652] [Prediction] Replayed 2 inputs
+[2025-12-14 07:12:09.764] [Prediction] Error: 24.7cm - reconciling
+[2025-12-14 07:12:09.767] [Prediction] Replayed 7 inputs
+[2025-12-14 07:12:09.907] [Prediction] Error: 35.8cm - reconciling
+[2025-12-14 07:12:09.911] [Prediction] Replayed 11 inputs
+[2025-12-14 07:12:09.912] [Prediction] Error: 23.1cm - reconciling
+[2025-12-14 07:12:09.913] [Prediction] Replayed 8 inputs
+[2025-12-14 07:12:09.914] [Prediction] Error: 10.4cm - reconciling
+[2025-12-14 07:12:09.914] [Prediction] Replayed 3 inputs
+[2025-12-14 07:12:10.082] [Prediction] Error: 40.6cm - reconciling
+[2025-12-14 07:12:10.086] [Prediction] Replayed 15 inputs
+[2025-12-14 07:12:10.086] [Prediction] Error: 21.6cm - reconciling
+[2025-12-14 07:12:10.090] [Prediction] Replayed 11 inputs
+[2025-12-14 07:12:10.091] [Prediction] Error: 11.1cm - reconciling
+[2025-12-14 07:12:10.093] [Prediction] Replayed 6 inputs
+[2025-12-14 07:12:10.385] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 07:12:10.385] [Client] Position: (10, 38, 16)
+[2025-12-14 07:12:10.385] [Client] Packet size: 13 bytes
+[2025-12-14 07:12:10.386] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 07:12:10.386] [Client] Position: (10, 38, 16)
+[2025-12-14 07:12:10.386] [Client] Need to reload 1 chunks
+[2025-12-14 07:12:10.486] [Client] Force reloading chunk (0, 0, 0)
+[2025-12-14 07:12:10.486] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 07:12:10.486] [Client]   - Was loaded: False, was requested: True
+[2025-12-14 07:12:10.486] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 07:12:10.486] [Client]   - Queued for immediate reload (queue size: 91)
+[2025-12-14 07:12:10.486] [Client] Finished processing block place broadcast
+[2025-12-14 07:12:10.637] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:12:11.724] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 07:12:11.818] [Prediction] Error: 60.7cm - reconciling
+[2025-12-14 07:12:11.819] [Prediction] Replayed 1 inputs
+[2025-12-14 07:20:19.237] [Client] Server closed broadcast connection
+[2025-12-14 07:20:19.654] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.656] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.CreateException(SocketError error, Boolean forAsyncThrow)
+   at System.Net.Sockets.Socket.ReceiveFromAsync(Memory`1 buffer, SocketFlags socketFlags, EndPoint remoteEndPoint, CancellationToken cancellationToken)
+   at System.Net.Sockets.UdpClient.ReceiveAsync(CancellationToken cancellationToken)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.AwaitTaskContinuation.RunOrScheduleAction(IAsyncStateMachineBox box, Boolean allowInlining)
+   at System.Threading.Tasks.Task.RunContinuations(Object continuationObject)
+   at System.Threading.Tasks.Task.FinishSlow(Boolean userDelegateExecute)
+   at System.Threading.Tasks.Task.TrySetException(Object exceptionObject)
+   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1.SetException(Exception exception, Task`1& taskField)
+   at System.Runtime.CompilerServices.AsyncValueTaskMethodBuilder`1.SetException(Exception exception)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Sources.ManualResetValueTaskSourceCore`1.SignalCompletion()
+   at System.Net.Sockets.SocketAsyncEventArgs.TransferCompletionCallbackCore(Int32 bytesTransferred, Memory`1 socketAddress, SocketFlags receivedFlags, SocketError socketError)
+   at System.Net.Sockets.SocketAsyncEngine.System.Threading.IThreadPoolWorkItem.Execute()
+   at System.Threading.ThreadPoolWorkQueue.Dispatch()
+   at System.Threading.PortableThreadPool.WorkerThread.WorkerThreadStart()
+--- End of stack trace from previous location ---
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.675] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.718] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.764] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.807] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.853] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.898] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.941] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:19.983] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.028] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.065] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.099] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.134] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.176] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.209] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.255] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.303] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.340] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.375] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.413] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.452] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.486] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.522] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.571] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.612] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.653] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.697] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.743] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.784] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.822] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.860] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.897] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.935] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:20.975] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.023] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.063] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.101] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.143] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.190] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.231] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.273] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.313] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.351] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.391] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.429] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.468] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.507] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.546] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.585] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.627] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.666] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.707] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.750] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.793] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.834] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.874] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611
+[2025-12-14 07:20:21.914] [Client] UDP recv error: System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.SocketReceiveFromResult>.GetResult(Int16 token)
+   at System.Net.Sockets.UdpClient.<ReceiveAsync>g__WaitAndWrap|62_0(ValueTask`1 task)
+   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 611

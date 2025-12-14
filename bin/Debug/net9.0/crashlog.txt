@@ -1,5 +1,5 @@
 ===== Aetheris Crash Report =====
-Time: 12/14/2025 6:58:21 AM
+Time: 12/14/2025 7:20:19 AM
 Message: One or more errors occurred. (Operation canceled)
 Source: System.Private.CoreLib
 Stack Trace:
@@ -13,4 +13,4 @@ System.Net.Sockets.SocketException (125): Operation canceled
    at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
    at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
    at System.Net.Sockets.TcpListener.<AcceptTcpClientAsync>g__WaitAndWrap|32_0(ValueTask`1 task)
-   at Aetheris.Server.RunServerAsync() in /home/link/Programming/Aetheris/Net/Server/Server.cs:line 674
+   at Aetheris.Server.RunServerAsync() in /home/link/Programming/Aetheris/Net/Server/Server.cs:line 739

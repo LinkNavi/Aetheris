@@ -114,32 +114,26 @@ namespace Aetheris
             return false;
         }
         
-        private void PlaceBlockAt(int x, int y, int z)
-        {
-            // Place block by adding density (opposite of mining)
-            WorldGen.AddBlock(x, y, z, BLOCK_PLACE_RADIUS, BLOCK_PLACE_STRENGTH);
-            
-            // Send to server
-            if (client != null)
-            {
-                _ = SendBlockPlacement(x, y, z);
-            }
-            
-            // Invalidate affected chunks on client
-            game.RegenerateMeshForBlock(new Vector3(x, y, z));
-        }
+     private void PlaceBlockAt(int x, int y, int z)
+{
+    // Place block by adding density (opposite of mining)
+    WorldGen.AddBlock(x, y, z, BLOCK_PLACE_RADIUS, BLOCK_PLACE_STRENGTH);
+    
+    // Send to server
+    if (client != null)
+    {
+        _ = SendBlockPlacement(x, y, z);
+    }
+    
+    // Invalidate affected chunks on client
+    game.RegenerateMeshForBlock(new Vector3(x, y, z));
+}
         
-        private async System.Threading.Tasks.Task SendBlockPlacement(int x, int y, int z)
-        {
-            // For now, reuse BlockBreak packet type but with a flag
-            // In production, you'd want a dedicated BlockPlace packet
-            
-            // Send block placement to server
-            await client.SendBlockBreakAsync(x, y, z);
-            
-            // Note: Server should distinguish between break and place
-            // This is a simplified implementation
-        }
+      private async System.Threading.Tasks.Task SendBlockPlacement(int x, int y, int z)
+{
+    // Send block placement to server using the new method
+    await client.SendBlockPlaceAsync(x, y, z);
+}
         
         /// <summary>
         /// Get preview of where block would be placed

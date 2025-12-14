@@ -37,9 +37,10 @@ namespace Aetheris
         {
             ChunkRequest = 0,
             BlockBreak = 1,
-            InventorySync = 2,      // NEW: Full inventory sync
-            InventoryUpdate = 3,    // NEW: Single slot update
-            ItemPickup = 4          // NEW: Pick up dropped item
+            BlockPlace = 2,         // NEW: Block placement
+            InventorySync = 3,
+            InventoryUpdate = 4,
+            ItemPickup = 5
         }
         private class PlayerState
         {
@@ -314,6 +315,107 @@ namespace Aetheris
         // Store active client streams for broadcasting
         private readonly ConcurrentDictionary<string, NetworkStream> activeClientStreams = new();
 
+private BlockType ConvertByteToBlockType(byte blockTypeByte)
+{
+    return blockTypeByte switch
+    {
+        1 => BlockType.Stone,
+        2 => BlockType.Dirt,
+        3 => BlockType.Grass,
+        4 => BlockType.Sand,
+        5 => BlockType.Snow,
+        6 => BlockType.Gravel,
+        7 => BlockType.Wood,
+        8 => BlockType.Leaves,
+        _ => BlockType.Stone
+    };
+}
+
+        private async Task BroadcastBlockPlaceTcp(int x, int y, int z, byte blockType)
+        {
+            byte[] packet = new byte[14]; // Add 1 byte for block type
+            packet[0] = (byte)TcpPacketType.BlockPlace;
+
+            BitConverter.TryWriteBytes(packet.AsSpan(1, 4), x);
+            BitConverter.TryWriteBytes(packet.AsSpan(5, 4), y);
+            BitConverter.TryWriteBytes(packet.AsSpan(9, 4), z);
+            packet[13] = blockType; // Include block type
+
+            var deadStreams = new List<string>();
+            int successCount = 0;
+
+            foreach (var kvp in activeClientStreams)
+            {
+                try
+                {
+                    await kvp.Value.WriteAsync(packet, 0, packet.Length);
+                    await kvp.Value.FlushAsync();
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    Log($"[Server] Error broadcasting to {kvp.Key}: {ex.Message}");
+                    deadStreams.Add(kvp.Key);
+                }
+            }
+
+            foreach (var id in deadStreams)
+            {
+                activeClientStreams.TryRemove(id, out _);
+            }
+
+            Log($"[Server] Broadcasted block place ({blockType}) at ({x},{y},{z}) to {successCount}/{activeClientStreams.Count + deadStreams.Count} clients");
+        }
+
+        private async Task HandleBlockPlaceTcpAsync(NetworkStream stream, CancellationToken token)
+        {
+            var buf = new byte[13]; // 12 bytes coordinates + 1 byte block type
+            await ReadFullAsync(stream, buf, 0, 13, token);
+
+            int x = BitConverter.ToInt32(buf, 0);
+            int y = BitConverter.ToInt32(buf, 4);
+            int z = BitConverter.ToInt32(buf, 8);
+            byte blockTypeByte = buf[12];
+
+            Console.WriteLine($"[Server] ===== BLOCK PLACE RECEIVED =====");
+            Console.WriteLine($"[Server] Position: ({x}, {y}, {z}), BlockType: {blockTypeByte}");
+
+            // Place a SOLID CUBE (not a blob)
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    for (int dz = -1; dz <= 1; dz++)
+                    {
+                        int px = x + dx;
+                        int py = y + dy;
+                        int pz = z + dz;
+
+                        float dist = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
+                        float strength = 10f * (1f - Math.Clamp(dist / 1.5f, 0f, 1f));
+
+                        if (strength > 0.1f)
+                        {
+                            WorldGen.AddDensityModification(px, py, pz, strength);
+                        }
+                    }
+                }
+            }
+
+            // Set the block type
+            BlockType serverBlockType = ConvertByteToBlockType(blockTypeByte);
+            WorldGen.SetBlock(x, y, z, serverBlockType);
+
+            Console.WriteLine($"[Server] Placed {serverBlockType} cube at ({x}, {y}, {z})");
+
+            // Invalidate chunks
+            InvalidateChunksAroundBlock(x, y, z, radius: 2f);
+            Console.WriteLine($"[Server] Invalidated chunks around block");
+
+            // Broadcast to all clients
+            await BroadcastBlockPlaceTcp(x, y, z, blockTypeByte);
+            Console.WriteLine($"[Server] Broadcasted to {activeClientStreams.Count} clients");
+        }
         private async Task HandleClientAsync(TcpClient client, CancellationToken token)
         {
             using (client)
@@ -383,6 +485,11 @@ namespace Aetheris
                                     await stream.FlushAsync();
                                     break;
                                 }
+
+                            case TcpPacketType.BlockPlace:
+                                Console.WriteLine($"[Server] Received BlockPlace packet from {clientId}");
+                                await HandleBlockPlaceTcpAsync(stream, token);
+                                break;
 
                             default:
                                 Log($"[Server] Unknown TCP packet type: {packetType} from {clientId}");

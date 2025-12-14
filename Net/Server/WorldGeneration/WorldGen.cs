@@ -189,6 +189,24 @@ namespace Aetheris
             }
         }
 
+/// <summary>
+/// Helper method to add density at a specific position
+/// Used for placing individual blocks
+/// </summary>
+public static void AddDensityModification(int x, int y, int z, float strength)
+{
+    lock (modificationLock)
+    {
+        var key = (x, y, z);
+        densityModifications.AddOrUpdate(
+            key,
+            strength,
+            (k, existing) => existing + strength
+        );
+    }
+}
+
+
 public static bool IsPlacedBlock(int x, int y, int z)
 {
     lock (modificationLock)
