@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using System.Numerics;
 using System.Collections.Generic;
 
-namespace Aetheris
+namespace Aetheris.Server
 {
-    public class Server
+    public partial class Server
     {
         private TcpListener? listener;
         private CancellationTokenSource? cts;
@@ -367,35 +367,72 @@ namespace Aetheris
             Log($"[Server] Broadcasted block place ({blockType}) at ({x},{y},{z}) to {successCount}/{activeClientStreams.Count + deadStreams.Count} clients");
         }
 
-        private async Task HandleBlockPlaceTcpAsync(NetworkStream stream, CancellationToken token)
+
+
+private async Task HandleBlockPlaceTcpAsync(NetworkStream stream, CancellationToken token)
+{
+    var buf = new byte[13]; // 12 bytes coordinates + 1 byte block type
+    await ReadFullAsync(stream, buf, 0, 13, token);
+
+    int x = BitConverter.ToInt32(buf, 0);
+    int y = BitConverter.ToInt32(buf, 4);
+    int z = BitConverter.ToInt32(buf, 8);
+    byte blockTypeByte = buf[12];
+
+    Console.WriteLine($"[Server] ===== BLOCK PLACE RECEIVED =====");
+    Console.WriteLine($"[Server] Position: ({x}, {y}, {z}), BlockType: {blockTypeByte}");
+
+    // Convert byte to BlockType
+    BlockType serverBlockType = ConvertByteToBlockType(blockTypeByte);
+
+    // FIXED: Place SINGLE SOLID BLOCK (not a cube)
+    WorldGen.PlaceSolidBlock(x, y, z, serverBlockType);
+
+    Console.WriteLine($"[Server] Placed single solid {serverBlockType} block at ({x}, {y}, {z})");
+
+    // Invalidate ONLY the chunks that contain this block
+    InvalidateSingleBlockChunks(x, y, z);
+    Console.WriteLine($"[Server] Invalidated chunks around block");
+
+    // Broadcast to all clients
+    await BroadcastBlockPlaceTcp(x, y, z, blockTypeByte);
+    Console.WriteLine($"[Server] Broadcasted to {activeClientStreams.Count} clients");
+}
+
+// ADD this helper method
+private void InvalidateSingleBlockChunks(int x, int y, int z)
+{
+    HashSet<ChunkCoord> chunksToInvalidate = new HashSet<ChunkCoord>();
+    
+    // Only invalidate chunks within 1 block radius (to handle chunk boundaries)
+    for (int dx = -1; dx <= 1; dx++)
+    {
+        for (int dy = -1; dy <= 1; dy++)
         {
-            var buf = new byte[13]; // 12 bytes coordinates + 1 byte block type
-            await ReadFullAsync(stream, buf, 0, 13, token);
+            for (int dz = -1; dz <= 1; dz++)
+            {
+                int wx = x + dx;
+                int wy = y + dy;
+                int wz = z + dz;
 
-            int x = BitConverter.ToInt32(buf, 0);
-            int y = BitConverter.ToInt32(buf, 4);
-            int z = BitConverter.ToInt32(buf, 8);
-            byte blockTypeByte = buf[12];
+                int cx = wx / ServerConfig.CHUNK_SIZE;
+                int cy = wy / ServerConfig.CHUNK_SIZE_Y;
+                int cz = wz / ServerConfig.CHUNK_SIZE;
 
-            Console.WriteLine($"[Server] ===== BLOCK PLACE RECEIVED =====");
-            Console.WriteLine($"[Server] Position: ({x}, {y}, {z}), BlockType: {blockTypeByte}");
-
-            // Convert byte to BlockType
-            BlockType serverBlockType = ConvertByteToBlockType(blockTypeByte);
-
-            // Place a SOLID CUBE with the correct block type
-            WorldGen.PlaceCubeBlock(x, y, z, serverBlockType, cubeSize: 5.0f);
-
-            Console.WriteLine($"[Server] Placed {serverBlockType} cube at ({x}, {y}, {z})");
-
-            // Invalidate chunks
-            InvalidateChunksAroundBlock(x, y, z, radius: 2f);
-            Console.WriteLine($"[Server] Invalidated chunks around block");
-
-            // Broadcast to all clients
-            await BroadcastBlockPlaceTcp(x, y, z, blockTypeByte);
-            Console.WriteLine($"[Server] Broadcasted to {activeClientStreams.Count} clients");
+                chunksToInvalidate.Add(new ChunkCoord(cx, cy, cz));
+            }
         }
+    }
+
+    Log($"[Server] Invalidating {chunksToInvalidate.Count} chunks for single block at ({x}, {y}, {z})");
+
+    foreach (var coord in chunksToInvalidate)
+    {
+        meshCache.TryRemove(coord, out _);
+        chunkManager.UnloadChunk(coord);
+        Log($"[Server] Invalidated chunk {coord}");
+    }
+}
 
         private async Task HandleClientAsync(TcpClient client, CancellationToken token)
         {

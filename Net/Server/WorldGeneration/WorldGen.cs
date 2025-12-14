@@ -553,6 +553,22 @@ public static bool IsPlacedBlock(int x, int y, int z)
             return GetBlockType(x, y, z, density, columnData);
         }
 
+public static void PlaceSolidBlock(int x, int y, int z, BlockType blockType)
+{
+    lock (modificationLock)
+    {
+        // Set block type in modified blocks dictionary
+        modifiedBlocks[(x, y, z)] = blockType;
+        
+        // CRITICAL: Set VERY high density for collision
+        // This must be well above the ISO level (0.5) for marching cubes
+        // Using 100.0f to ensure it's definitely recognized as solid
+        densityModifications[(x, y, z)] = 100.0f;
+        
+        Console.WriteLine($"[WorldGen] Placed solid {blockType} at ({x}, {y}, {z}) with density=100");
+    }
+}
+
 public static void PlaceCubeBlock(int centerX, int centerY, int centerZ, BlockType blockType, float cubeSize = 1.0f)
 {
     lock (modificationLock)

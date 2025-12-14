@@ -10,7 +10,7 @@ using System.Net;
 
 namespace Aetheris
 {
-    public class Client
+    public partial class Client
     {
         private readonly ConcurrentQueue<(TcpPacketType type, byte[] data)> tcpPacketQueue = new();
         private readonly Dictionary<int, TaskCompletionSource<byte[]>> pendingChunkRequests = new();
@@ -204,120 +204,85 @@ namespace Aetheris
                 Console.WriteLine("[Client] TCP broadcast listener cancelled");
             }
         }
-private BlockType ConvertByteToBlockType(byte blockTypeByte)
-{
-    return blockTypeByte switch
-    {
-        1 => BlockType.Stone,
-        2 => BlockType.Dirt,
-        3 => BlockType.Grass,
-        4 => BlockType.Sand,
-        5 => BlockType.Snow,
-        6 => BlockType.Gravel,
-        7 => BlockType.Wood,
-        8 => BlockType.Leaves,
-        _ => BlockType.Stone
-    };
-}
-       private async Task HandleBlockPlaceBroadcastAsync(CancellationToken token)
-{
-    try
-    {
-        // Read 13 bytes (12 for coordinates + 1 for block type)
-        var buf = new byte[13];
-        await ReadFullAsync(streamBroadcast!, buf, 0, 13, token);
-
-        int x = BitConverter.ToInt32(buf, 0);
-        int y = BitConverter.ToInt32(buf, 4);
-        int z = BitConverter.ToInt32(buf, 8);
-        byte blockType = buf[12];
-
-        Console.WriteLine($"[Client] ===== RECEIVED BLOCK PLACE BROADCAST =====");
-        Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType: {blockType}");
-
-        // Convert byte to BlockType
-        BlockType serverBlockType = ConvertByteToBlockType(blockType);
-        
-        // Place the solid cube block with correct type
-        WorldGen.PlaceCubeBlock(x, y, z, serverBlockType, cubeSize: 1.0f);
-
-        // Calculate affected chunks
-        float placeRadius = 2f;
-        int affectRadius = (int)Math.Ceiling(placeRadius);
-        var chunksToReload = new HashSet<(int, int, int)>();
-
-        for (int dx = -affectRadius; dx <= affectRadius; dx++)
+        private BlockType ConvertByteToBlockType(byte blockTypeByte)
         {
-            for (int dy = -affectRadius; dy <= affectRadius; dy++)
+            return blockTypeByte switch
             {
-                for (int dz = -affectRadius; dz <= affectRadius; dz++)
-                {
-                    int worldX = x + dx;
-                    int worldY = y + dy;
-                    int worldZ = z + dz;
-
-                    int chunkX = worldX / ClientConfig.CHUNK_SIZE;
-                    int chunkY = worldY / ClientConfig.CHUNK_SIZE_Y;
-                    int chunkZ = worldZ / ClientConfig.CHUNK_SIZE;
-
-                    chunksToReload.Add((chunkX, chunkY, chunkZ));
-                }
-            }
+                1 => BlockType.Stone,
+                2 => BlockType.Dirt,
+                3 => BlockType.Grass,
+                4 => BlockType.Sand,
+                5 => BlockType.Snow,
+                6 => BlockType.Gravel,
+                7 => BlockType.Wood,
+                8 => BlockType.Leaves,
+                _ => BlockType.Stone
+            };
         }
+        // Client.cs - REPLACE HandleBlockPlaceBroadcastAsync method
 
-        Console.WriteLine($"[Client] Need to reload {chunksToReload.Count} chunks");
-
-        await Task.Delay(100, token);
-
-        foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
+        private async Task HandleBlockPlaceBroadcastAsync(CancellationToken token)
         {
-            ForceReloadChunk(chunkX, chunkY, chunkZ);
-        }
-
-        Console.WriteLine($"[Client] Finished processing block place broadcast");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[Client] Error in HandleBlockPlaceBroadcastAsync: {ex.Message}");
-        throw;
-    }
-}
-        public async Task SendBlockPlaceAsync(int x, int y, int z, byte blockType)
-        {
-            if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
-            {
-                Console.WriteLine("[Client] Cannot send block place - not connected");
-                return;
-            }
-
-            await networkSemaphore.WaitAsync();
             try
             {
-                // Send 14 bytes (1 byte packet type + 12 bytes coordinates + 1 byte block type)
-                byte[] packet = new byte[14];
-                packet[0] = (byte)TcpPacketType.BlockPlace;
+                // Read 13 bytes (12 for coordinates + 1 for block type)
+                var buf = new byte[13];
+                await ReadFullAsync(streamBroadcast!, buf, 0, 13, token);
 
-                BitConverter.TryWriteBytes(packet.AsSpan(1, 4), x);
-                BitConverter.TryWriteBytes(packet.AsSpan(5, 4), y);
-                BitConverter.TryWriteBytes(packet.AsSpan(9, 4), z);
-                packet[13] = blockType; // Add block type
+                int x = BitConverter.ToInt32(buf, 0);
+                int y = BitConverter.ToInt32(buf, 4);
+                int z = BitConverter.ToInt32(buf, 8);
+                byte blockType = buf[12];
 
-                await streamRequest.WriteAsync(packet, 0, packet.Length);
-                await streamRequest.FlushAsync();
-
-                Console.WriteLine($"[Client] ===== SENT BLOCK PLACE =====");
+                Console.WriteLine($"[Client] ===== RECEIVED BLOCK PLACE BROADCAST =====");
                 Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType: {blockType}");
-                Console.WriteLine($"[Client] Packet size: 14 bytes");
+
+                // Convert byte to BlockType
+                BlockType serverBlockType = ConvertByteToBlockType(blockType);
+
+                // FIXED: Place SINGLE solid block (not a cube)
+                WorldGen.PlaceSolidBlock(x, y, z, serverBlockType);
+
+                // Calculate affected chunks (only immediate neighbors)
+                var chunksToReload = new HashSet<(int, int, int)>();
+
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        for (int dz = -1; dz <= 1; dz++)
+                        {
+                            int worldX = x + dx;
+                            int worldY = y + dy;
+                            int worldZ = z + dz;
+
+                            int chunkX = worldX / ClientConfig.CHUNK_SIZE;
+                            int chunkY = worldY / ClientConfig.CHUNK_SIZE_Y;
+                            int chunkZ = worldZ / ClientConfig.CHUNK_SIZE;
+
+                            chunksToReload.Add((chunkX, chunkY, chunkZ));
+                        }
+                    }
+                }
+
+                Console.WriteLine($"[Client] Need to reload {chunksToReload.Count} chunks for single block");
+
+                await Task.Delay(100, token);
+
+                foreach (var (chunkX, chunkY, chunkZ) in chunksToReload)
+                {
+                    ForceReloadChunk(chunkX, chunkY, chunkZ);
+                }
+
+                Console.WriteLine($"[Client] Finished processing block place broadcast");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Client] Error sending block place: {ex.Message}");
-            }
-            finally
-            {
-                networkSemaphore.Release();
+                Console.WriteLine($"[Client] Error in HandleBlockPlaceBroadcastAsync: {ex.Message}");
+                throw;
             }
         }
+ 
         public void ForceReloadChunk(int cx, int cy, int cz)
         {
             var coord = (cx, cy, cz);

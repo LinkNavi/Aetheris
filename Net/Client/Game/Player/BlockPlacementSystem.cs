@@ -14,8 +14,8 @@ namespace Aetheris
         private readonly RaycastHelper raycaster;
         
         private const float MAX_REACH = 10f;
-        private const float BLOCK_PLACE_RADIUS = 2.5f; // Size of placed block
-        private const float BLOCK_PLACE_STRENGTH = 4f;
+        private const float BLOCK_PLACE_RADIUS = 0.5f; // Smaller radius for single block
+        private const float BLOCK_PLACE_STRENGTH = 100f; // Much higher for solid collision
         
         private float placeCooldown = 0f;
         private const float PLACE_COOLDOWN_TIME = 0.15f;
@@ -51,6 +51,11 @@ namespace Aetheris
             var itemDef = ItemRegistry.Get(selectedItem.ItemId);
             if (itemDef == null || !itemDef.PlacesBlock.HasValue) return;
             
+            // CRITICAL FIX: Store block type from ITEM before raycasting
+            // Don't use the block type from the raycast hit - that's what you're looking at,
+            // not what you're holding!
+            var blockTypeToPlace = itemDef.PlacesBlock.Value;
+            
             // Raycast to find placement position
             Vector3 rayStart = player.GetEyePosition();
             Vector3 rayDir = player.GetForward().Normalized();
@@ -77,13 +82,13 @@ namespace Aetheris
                 return;
             }
             
-            // Place block with the type from the item definition
-            PlaceBlockAt(x, y, z, itemDef.PlacesBlock.Value);
+            // Place block with type from INVENTORY (not raycast!)
+            PlaceBlockAt(x, y, z, blockTypeToPlace);
             
             // Consume item
             if (player.Inventory.RemoveItem(selectedItem.ItemId, 1))
             {
-                Console.WriteLine($"[BlockPlace] Placed {itemDef.Name} at ({x}, {y}, {z})");
+                Console.WriteLine($"[BlockPlace] Placed {itemDef.Name} ({blockTypeToPlace}) at ({x}, {y}, {z})");
             }
             
             placeCooldown = PLACE_COOLDOWN_TIME;
@@ -104,9 +109,9 @@ namespace Aetheris
             float dy = Math.Abs(blockPos.Y - playerPos.Y);
             float dz = Math.Abs(blockPos.Z - playerPos.Z);
             
-            if (dx < (PLAYER_WIDTH / 2f + BLOCK_PLACE_RADIUS) &&
-                dy < (PLAYER_HEIGHT / 2f + BLOCK_PLACE_RADIUS) &&
-                dz < (PLAYER_WIDTH / 2f + BLOCK_PLACE_RADIUS))
+            if (dx < (PLAYER_WIDTH / 2f + 0.5f) &&
+                dy < (PLAYER_HEIGHT / 2f + 0.5f) &&
+                dz < (PLAYER_WIDTH / 2f + 0.5f))
             {
                 return true;
             }
@@ -116,11 +121,11 @@ namespace Aetheris
         
         private void PlaceBlockAt(int x, int y, int z, AetherisClient.Rendering.BlockType clientBlockType)
         {
-            // Convert client block type to server block type (they should match)
+            // Convert client block type to server block type
             BlockType serverBlockType = (BlockType)((int)clientBlockType);
             
-            // Place a solid cube block with the correct type
-            WorldGen.PlaceCubeBlock(x, y, z, serverBlockType, cubeSize: 1.0f);
+            // CRITICAL: Place SINGLE solid block with high density
+            WorldGen.PlaceSolidBlock(x, y, z, serverBlockType);
             
             // Convert block type to byte for network protocol
             byte blockTypeByte = (byte)clientBlockType;
@@ -137,7 +142,6 @@ namespace Aetheris
         
         private async System.Threading.Tasks.Task SendBlockPlacement(int x, int y, int z, byte blockTypeByte)
         {
-            // Send block placement to server with block type
             await client.SendBlockPlaceAsync(x, y, z, blockTypeByte);
         }
         
@@ -185,7 +189,7 @@ namespace Aetheris
         private void InitializePreviewMesh()
         {
             // Create wireframe cube
-            float size = 1f;
+            float size = 0.5f;
             float[] vertices = {
                 // 8 corners of cube
                 -size, -size, -size,
@@ -199,9 +203,9 @@ namespace Aetheris
             };
             
             uint[] indices = {
-                0, 1, 1, 2, 2, 3, 3, 0, // Front face
-                4, 5, 5, 6, 6, 7, 7, 4, // Back face
-                0, 4, 1, 5, 2, 6, 3, 7  // Connecting edges
+                0, 1, 1, 2, 2, 3, 3, 0,
+                4, 5, 5, 6, 6, 7, 7, 4,
+                0, 4, 1, 5, 2, 6, 3, 7
             };
             
             vao = GL.GenVertexArray();

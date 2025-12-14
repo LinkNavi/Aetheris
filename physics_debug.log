@@ -1,113 +1,243 @@
-﻿[2025-12-14 07:40:48.131] [Logging] Started logging to 'physics_debug.log'
-[2025-12-14 07:40:48.153] [Game] WorldGen initialized
-[2025-12-14 07:40:48.166] [PSX Effects] Shaders compiled successfully
-[2025-12-14 07:40:48.166] [Game] Renderer initialized
-[2025-12-14 07:40:48.177] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2025-12-14 07:40:48.177] [Game] EntityRenderer initialized
-[2025-12-14 07:40:48.194] [Player] Spawned at (16, 37.1, 16)
-[2025-12-14 07:40:48.195] [Game] Player initialized at position: (16, 37.1, 16)
-[2025-12-14 07:40:48.195] [Game] Player stats initialized
-[2025-12-14 07:40:48.196] [Game] Network controller initialized
-[2025-12-14 07:40:48.197] [Game] Inventory UI initialized
-[2025-12-14 07:40:48.198] [Game] HUD renderer initialized
-[2025-12-14 07:40:49.300] [Game] Chat system initialized
-[2025-12-14 07:40:49.302] [Client] TCP broadcast listener started
-[2025-12-14 07:40:49.309] [ItemRegistry] Registered 23 items
-[2025-12-14 07:40:49.802] [Client] Chunk update loop starting...
-[2025-12-14 07:40:49.955] [Game] Found atlas at: textures/atlas.png
-[2025-12-14 07:40:49.995] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2025-12-14 07:40:49.996] [AtlasManager] Using preferred tile size: 64
-[2025-12-14 07:40:49.996] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2025-12-14 07:40:50.000] [AtlasManager] Successfully uploaded to GL texture 1141
-[2025-12-14 07:40:50.000] [AtlasManager] Verified texture dimensions: 256x256
-[2025-12-14 07:40:50.002] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
-[2025-12-14 07:40:50.003] [Game] Loaded 0 chunks
-[2025-12-14 07:40:50.252] [Prediction] Error: 31.7cm - reconciling
-[2025-12-14 07:40:50.457] [Client] UDP recv error: System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
-   at System.Collections.Generic.Queue`1.Enumerator.MoveNext()
-   at Aetheris.PlayerNetworkController.ReconcilePosition(ServerPlayerUpdate update) in /home/link/Programming/Aetheris/Net/Shared/PlayerNetworkController.cs:line 157
-   at Aetheris.PlayerNetworkController.OnServerUpdate(ServerPlayerUpdate update) in /home/link/Programming/Aetheris/Net/Shared/PlayerNetworkController.cs:line 138
-   at Aetheris.Client.HandleServerPositionUpdate(Byte[] data) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 576
-   at Aetheris.Client.HandleUdpPacket(Byte[] data) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 541
-   at Aetheris.Client.ListenForUdpAsync(CancellationToken token) in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 629
-[2025-12-14 07:40:50.458] [Prediction] Error: 97.3cm - reconciling
-[2025-12-14 07:40:50.477] [Prediction] Replayed 43 inputs
-[2025-12-14 07:40:50.478] [Prediction] Error: 64.6cm - reconciling
-[2025-12-14 07:40:50.490] [Prediction] Replayed 37 inputs
-[2025-12-14 07:40:50.490] [Prediction] Error: 88.0cm - reconciling
-[2025-12-14 07:40:50.498] [Prediction] Replayed 28 inputs
-[2025-12-14 07:40:50.499] [Prediction] Error: 93.0cm - reconciling
-[2025-12-14 07:40:50.503] [Prediction] Replayed 20 inputs
-[2025-12-14 07:40:50.503] [Prediction] Error: 76.2cm - reconciling
-[2025-12-14 07:40:50.506] [Prediction] Replayed 11 inputs
-[2025-12-14 07:40:50.517] [Renderer] Uploaded chunk (0,0,0): VAO=11, VBO=12, 16506 vertices
-[2025-12-14 07:40:50.741] [Renderer] Uploaded chunk (1,0,0): VAO=12, VBO=13, 13323 vertices
-[2025-12-14 07:40:55.253] [WorldGen] Placed Stone cube at (9, 36, 19) with size 1
-[2025-12-14 07:40:55.259] [Client] Re-requesting 1 chunks from server after block break
-[2025-12-14 07:40:55.261] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-12-14 07:40:55.264] [Client]   - Was loaded: True, was requested: True
-[2025-12-14 07:40:55.265] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-12-14 07:40:55.266] [Renderer]   Deleted GPU: VAO=11, VBO=12
-[2025-12-14 07:40:55.266] [Renderer]   Cleared mesh cache
-[2025-12-14 07:40:55.267] [Client]   - Queued for immediate reload (queue size: 97)
-[2025-12-14 07:40:55.268] [BlockPlace] Placed Stone at (9, 36, 19)
-[2025-12-14 07:40:56.492] [Client] ===== SENT BLOCK PLACE =====
-[2025-12-14 07:40:56.493] [Client] Position: (9, 36, 19), BlockType: 1
-[2025-12-14 07:40:56.493] [Client] Packet size: 14 bytes
-[2025-12-14 07:40:56.520] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
-[2025-12-14 07:40:56.521] [Client] Position: (9, 36, 19), BlockType: 1
-[2025-12-14 07:40:56.525] [WorldGen] Placed Stone cube at (9, 36, 19) with size 1
-[2025-12-14 07:40:56.527] [Client] Need to reload 1 chunks
-[2025-12-14 07:40:56.629] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-12-14 07:40:56.629] [Client]   - Was loaded: False, was requested: False
-[2025-12-14 07:40:56.630] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-12-14 07:40:56.630] [Client]   - Queued for immediate reload (queue size: 89)
-[2025-12-14 07:40:56.630] [Client] Finished processing block place broadcast
-[2025-12-14 07:40:56.748] [Client] Successfully reloaded chunk (0, 0, 0)
-[2025-12-14 07:40:57.573] [Client] Successfully reloaded chunk (0, 0, 0)
-[2025-12-14 07:41:21.675] [WorldGen] Placed Stone cube at (7, 37, 18) with size 1
-[2025-12-14 07:41:21.675] [Client] Re-requesting 1 chunks from server after block break
-[2025-12-14 07:41:21.675] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-12-14 07:41:21.675] [Client]   - Was loaded: True, was requested: False
-[2025-12-14 07:41:21.675] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-12-14 07:41:21.675] [Renderer]   Deleted GPU: VAO=90, VBO=91
-[2025-12-14 07:41:21.675] [Renderer]   Cleared mesh cache
-[2025-12-14 07:41:21.675] [Client]   - Queued for immediate reload (queue size: 42)
-[2025-12-14 07:41:21.675] [BlockPlace] Placed Stone at (7, 37, 18)
-[2025-12-14 07:41:22.333] [Prediction] Error: 21.4cm - reconciling
-[2025-12-14 07:41:22.333] [Prediction] Replayed 1 inputs
-[2025-12-14 07:41:22.439] [Prediction] Error: 38.1cm - reconciling
-[2025-12-14 07:41:22.440] [Prediction] Replayed 2 inputs
-[2025-12-14 07:41:22.557] [Prediction] Error: 29.3cm - reconciling
-[2025-12-14 07:41:22.559] [Prediction] Replayed 3 inputs
-[2025-12-14 07:41:22.685] [Prediction] Error: 56.2cm - reconciling
-[2025-12-14 07:41:22.687] [Prediction] Replayed 7 inputs
-[2025-12-14 07:41:22.689] [Prediction] Error: 15.3cm - reconciling
-[2025-12-14 07:41:22.689] [Prediction] Replayed 3 inputs
-[2025-12-14 07:41:22.822] [Prediction] Error: 56.0cm - reconciling
-[2025-12-14 07:41:22.827] [Prediction] Replayed 10 inputs
-[2025-12-14 07:41:22.828] [Prediction] Error: 21.3cm - reconciling
-[2025-12-14 07:41:22.830] [Prediction] Replayed 5 inputs
-[2025-12-14 07:41:23.021] [Prediction] Error: 70.1cm - reconciling
-[2025-12-14 07:41:23.026] [Prediction] Replayed 14 inputs
-[2025-12-14 07:41:23.026] [Prediction] Error: 40.1cm - reconciling
-[2025-12-14 07:41:23.030] [Prediction] Replayed 8 inputs
-[2025-12-14 07:41:23.239] [Prediction] Error: 39.9cm - reconciling
-[2025-12-14 07:41:23.243] [Prediction] Replayed 14 inputs
-[2025-12-14 07:41:23.243] [Prediction] Error: 17.9cm - reconciling
-[2025-12-14 07:41:23.245] [Prediction] Replayed 8 inputs
-[2025-12-14 07:41:23.245] [Prediction] Error: 14.9cm - reconciling
-[2025-12-14 07:41:23.649] [Client] ===== SENT BLOCK PLACE =====
-[2025-12-14 07:41:23.649] [Client] Position: (7, 37, 18), BlockType: 1
-[2025-12-14 07:41:23.649] [Client] Packet size: 14 bytes
-[2025-12-14 07:41:23.653] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
-[2025-12-14 07:41:23.653] [Client] Position: (7, 37, 18), BlockType: 1
-[2025-12-14 07:41:23.654] [WorldGen] Placed Stone cube at (7, 37, 18) with size 1
-[2025-12-14 07:41:23.654] [Client] Need to reload 1 chunks
-[2025-12-14 07:41:23.754] [Client] ForceReloadChunk called for (0, 0, 0)
-[2025-12-14 07:41:23.754] [Client]   - Was loaded: False, was requested: False
-[2025-12-14 07:41:23.755] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2025-12-14 07:41:23.755] [Client]   - Queued for immediate reload (queue size: 34)
-[2025-12-14 07:41:23.755] [Client] Finished processing block place broadcast
-[2025-12-14 07:41:24.205] [Client] Successfully reloaded chunk (0, 0, 0)
-[2025-12-14 07:41:25.751] [Client] Successfully reloaded chunk (0, 0, 0)
+﻿[2025-12-14 08:08:16.081] [Logging] Started logging to 'physics_debug.log'
+[2025-12-14 08:08:16.103] [Game] WorldGen initialized
+[2025-12-14 08:08:16.116] [PSX Effects] Shaders compiled successfully
+[2025-12-14 08:08:16.116] [Game] Renderer initialized
+[2025-12-14 08:08:16.126] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2025-12-14 08:08:16.126] [Game] EntityRenderer initialized
+[2025-12-14 08:08:16.144] [Player] Spawned at (16, 37.1, 16)
+[2025-12-14 08:08:16.144] [Game] Player initialized at position: (16, 37.1, 16)
+[2025-12-14 08:08:16.144] [Game] Player stats initialized
+[2025-12-14 08:08:16.145] [Game] Network controller initialized
+[2025-12-14 08:08:16.147] [Game] Inventory UI initialized
+[2025-12-14 08:08:16.147] [Game] HUD renderer initialized
+[2025-12-14 08:08:17.242] [Game] Chat system initialized
+[2025-12-14 08:08:17.244] [Client] TCP broadcast listener started
+[2025-12-14 08:08:17.251] [ItemRegistry] Registered 23 items
+[2025-12-14 08:08:17.743] [Client] Chunk update loop starting...
+[2025-12-14 08:08:18.117] [Game] Found atlas at: textures/atlas.png
+[2025-12-14 08:08:18.158] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2025-12-14 08:08:18.158] [AtlasManager] Using preferred tile size: 64
+[2025-12-14 08:08:18.159] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2025-12-14 08:08:18.163] [AtlasManager] Successfully uploaded to GL texture 1141
+[2025-12-14 08:08:18.163] [AtlasManager] Verified texture dimensions: 256x256
+[2025-12-14 08:08:18.164] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
+[2025-12-14 08:08:18.165] [Game] Loaded 0 chunks
+[2025-12-14 08:08:18.400] [Prediction] Error: 38.2cm - reconciling
+[2025-12-14 08:08:18.409] [Prediction] Replayed 31 inputs
+[2025-12-14 08:08:18.409] [Prediction] Error: 40.3cm - reconciling
+[2025-12-14 08:08:18.413] [Prediction] Replayed 26 inputs
+[2025-12-14 08:08:18.413] [Prediction] Error: 27.7cm - reconciling
+[2025-12-14 08:08:18.416] [Prediction] Replayed 19 inputs
+[2025-12-14 08:08:18.416] [Prediction] Error: 16.2cm - reconciling
+[2025-12-14 08:08:18.419] [Prediction] Replayed 12 inputs
+[2025-12-14 08:08:18.419] [Prediction] Error: 26.9cm - reconciling
+[2025-12-14 08:08:18.419] [Prediction] Replayed 1 inputs
+[2025-12-14 08:08:18.500] [Prediction] Error: 25.5cm - reconciling
+[2025-12-14 08:08:18.502] [Prediction] Replayed 11 inputs
+[2025-12-14 08:08:18.580] [Renderer] Uploaded chunk (0,0,0): VAO=11, VBO=12, 16506 vertices
+[2025-12-14 08:08:18.638] [Prediction] Error: 41.4cm - reconciling
+[2025-12-14 08:08:18.639] [Prediction] Replayed 1 inputs
+[2025-12-14 08:08:18.818] [Renderer] Uploaded chunk (1,0,0): VAO=12, VBO=13, 13323 vertices
+[2025-12-14 08:08:22.085] [WorldGen] Placed solid Grass at (12, 37, 16) with density=100
+[2025-12-14 08:08:22.092] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 08:08:22.095] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:22.097] [Client]   - Was loaded: True, was requested: True
+[2025-12-14 08:08:22.099] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:22.100] [Renderer]   Deleted GPU: VAO=11, VBO=12
+[2025-12-14 08:08:22.100] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:22.101] [Client]   - Queued for immediate reload (queue size: 40)
+[2025-12-14 08:08:22.103] [BlockPlace] Placed Grass Block (Grass) at (12, 37, 16)
+[2025-12-14 08:08:22.600] [Prediction] Error: 31.6cm - reconciling
+[2025-12-14 08:08:22.600] [Prediction] Replayed 3 inputs
+[2025-12-14 08:08:22.601] [Prediction] Error: 15.4cm - reconciling
+[2025-12-14 08:08:22.601] [Prediction] Replayed 1 inputs
+[2025-12-14 08:08:22.741] [Prediction] Error: 80.3cm - reconciling
+[2025-12-14 08:08:22.743] [Prediction] Replayed 10 inputs
+[2025-12-14 08:08:22.743] [Prediction] Error: 44.2cm - reconciling
+[2025-12-14 08:08:22.745] [Prediction] Replayed 6 inputs
+[2025-12-14 08:08:22.889] [Prediction] Error: 85.5cm - reconciling
+[2025-12-14 08:08:22.895] [Prediction] Replayed 16 inputs
+[2025-12-14 08:08:22.895] [Prediction] Error: 59.9cm - reconciling
+[2025-12-14 08:08:22.900] [Prediction] Replayed 10 inputs
+[2025-12-14 08:08:22.901] [Prediction] Error: 28.1cm - reconciling
+[2025-12-14 08:08:22.901] [Prediction] Replayed 5 inputs
+[2025-12-14 08:08:23.014] [Prediction] Error: 55.1cm - reconciling
+[2025-12-14 08:08:23.018] [Prediction] Replayed 12 inputs
+[2025-12-14 08:08:23.018] [Prediction] Error: 26.4cm - reconciling
+[2025-12-14 08:08:23.019] [Prediction] Replayed 7 inputs
+[2025-12-14 08:08:23.020] [Prediction] Error: 21.2cm - reconciling
+[2025-12-14 08:08:23.021] [Prediction] Replayed 1 inputs
+[2025-12-14 08:08:23.151] [Prediction] Error: 27.4cm - reconciling
+[2025-12-14 08:08:23.158] [Prediction] Replayed 11 inputs
+[2025-12-14 08:08:23.158] [Prediction] Error: 13.0cm - reconciling
+[2025-12-14 08:08:23.160] [Prediction] Replayed 6 inputs
+[2025-12-14 08:08:23.310] [Prediction] Error: 12.3cm - reconciling
+[2025-12-14 08:08:23.313] [Prediction] Replayed 12 inputs
+[2025-12-14 08:08:23.666] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 08:08:23.667] [Client] Position: (12, 37, 16), BlockType: 3
+[2025-12-14 08:08:23.667] [Client] Packet size: 14 bytes
+[2025-12-14 08:08:23.690] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 08:08:23.690] [Client] Position: (12, 37, 16), BlockType: 3
+[2025-12-14 08:08:23.693] [WorldGen] Placed solid Grass at (12, 37, 16) with density=100
+[2025-12-14 08:08:23.693] [Client] Need to reload 1 chunks for single block
+[2025-12-14 08:08:23.794] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:23.794] [Client]   - Was loaded: False, was requested: True
+[2025-12-14 08:08:23.794] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:23.794] [Client]   - Queued for immediate reload (queue size: 95)
+[2025-12-14 08:08:23.794] [Client] Finished processing block place broadcast
+[2025-12-14 08:08:23.914] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:24.938] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:28.448] [WorldGen] Placed solid Grass at (8, 36, 18) with density=100
+[2025-12-14 08:08:28.449] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 08:08:28.449] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:28.449] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:28.449] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:28.449] [Renderer]   Deleted GPU: VAO=39, VBO=40
+[2025-12-14 08:08:28.449] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:28.449] [Client]   - Queued for immediate reload (queue size: 62)
+[2025-12-14 08:08:28.449] [BlockPlace] Placed Grass Block (Grass) at (8, 36, 18)
+[2025-12-14 08:08:29.266] [Prediction] Error: 40.3cm - reconciling
+[2025-12-14 08:08:29.269] [Prediction] Replayed 3 inputs
+[2025-12-14 08:08:29.372] [Prediction] Error: 28.9cm - reconciling
+[2025-12-14 08:08:29.373] [Prediction] Replayed 4 inputs
+[2025-12-14 08:08:29.462] [Prediction] Error: 38.4cm - reconciling
+[2025-12-14 08:08:29.463] [Prediction] Replayed 7 inputs
+[2025-12-14 08:08:29.465] [Prediction] Error: 10.6cm - reconciling
+[2025-12-14 08:08:29.466] [Prediction] Replayed 2 inputs
+[2025-12-14 08:08:29.578] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 08:08:29.578] [Client] Position: (8, 36, 18), BlockType: 3
+[2025-12-14 08:08:29.578] [Client] Packet size: 14 bytes
+[2025-12-14 08:08:29.579] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 08:08:29.579] [Client] Position: (8, 36, 18), BlockType: 3
+[2025-12-14 08:08:29.579] [WorldGen] Placed solid Grass at (8, 36, 18) with density=100
+[2025-12-14 08:08:29.579] [Client] Need to reload 1 chunks for single block
+[2025-12-14 08:08:29.665] [Prediction] Error: 19.3cm - reconciling
+[2025-12-14 08:08:29.667] [Prediction] Replayed 6 inputs
+[2025-12-14 08:08:29.679] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:29.680] [Client]   - Was loaded: False, was requested: False
+[2025-12-14 08:08:29.680] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:29.680] [Client]   - Queued for immediate reload (queue size: 54)
+[2025-12-14 08:08:29.680] [Client] Finished processing block place broadcast
+[2025-12-14 08:08:29.790] [Prediction] Error: 14.1cm - reconciling
+[2025-12-14 08:08:29.793] [Prediction] Replayed 9 inputs
+[2025-12-14 08:08:29.825] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:31.052] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:33.046] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:33.047] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 08:08:33.047] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:33.047] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:33.047] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:33.047] [Renderer]   Deleted GPU: VAO=63, VBO=64
+[2025-12-14 08:08:33.047] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:33.047] [Client]   - Queued for immediate reload (queue size: 33)
+[2025-12-14 08:08:33.047] [BlockPlace] Placed Grass Block (Grass) at (12, 36, 18)
+[2025-12-14 08:08:34.596] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 08:08:34.596] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:34.596] [Client] Packet size: 14 bytes
+[2025-12-14 08:08:34.597] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 08:08:34.597] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:34.597] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:34.597] [Client] Need to reload 1 chunks for single block
+[2025-12-14 08:08:34.697] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:34.697] [Client]   - Was loaded: False, was requested: True
+[2025-12-14 08:08:34.697] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:34.697] [Client]   - Queued for immediate reload (queue size: 88)
+[2025-12-14 08:08:34.697] [Client] Finished processing block place broadcast
+[2025-12-14 08:08:34.852] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:35.992] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:35.993] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 08:08:35.993] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:35.993] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:35.993] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:35.993] [Renderer]   Deleted GPU: VAO=74, VBO=75
+[2025-12-14 08:08:35.993] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:35.993] [Client]   - Queued for immediate reload (queue size: 81)
+[2025-12-14 08:08:35.993] [BlockPlace] Placed Grass Block (Grass) at (12, 36, 18)
+[2025-12-14 08:08:36.119] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:36.917] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 08:08:36.917] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:36.917] [Client] Packet size: 14 bytes
+[2025-12-14 08:08:36.919] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 08:08:36.919] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:36.919] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:36.919] [Client] Need to reload 1 chunks for single block
+[2025-12-14 08:08:37.021] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:37.021] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:37.021] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:37.021] [Renderer]   Deleted GPU: VAO=80, VBO=81
+[2025-12-14 08:08:37.021] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:37.022] [Client]   - Queued for immediate reload (queue size: 73)
+[2025-12-14 08:08:37.022] [Client] Finished processing block place broadcast
+[2025-12-14 08:08:37.132] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:37.985] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:37.985] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 08:08:37.985] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:37.985] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:37.986] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:37.986] [Renderer]   Deleted GPU: VAO=83, VBO=84
+[2025-12-14 08:08:37.986] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:37.986] [Client]   - Queued for immediate reload (queue size: 66)
+[2025-12-14 08:08:37.986] [BlockPlace] Placed Grass Block (Grass) at (12, 36, 18)
+[2025-12-14 08:08:38.101] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:38.862] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:38.862] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 08:08:38.862] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:38.863] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:38.863] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:38.864] [Renderer]   Deleted GPU: VAO=83, VBO=84
+[2025-12-14 08:08:38.864] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:38.864] [Client]   - Queued for immediate reload (queue size: 61)
+[2025-12-14 08:08:38.865] [BlockPlace] Placed Grass Block (Grass) at (12, 36, 18)
+[2025-12-14 08:08:39.291] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 08:08:39.291] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:39.291] [Client] Packet size: 14 bytes
+[2025-12-14 08:08:39.291] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 08:08:39.291] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:39.291] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:39.292] [Client] Need to reload 1 chunks for single block
+[2025-12-14 08:08:39.391] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:39.391] [Client]   - Was loaded: False, was requested: False
+[2025-12-14 08:08:39.392] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:39.392] [Client]   - Queued for immediate reload (queue size: 58)
+[2025-12-14 08:08:39.392] [Client] Finished processing block place broadcast
+[2025-12-14 08:08:39.565] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:40.284] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 08:08:40.284] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:40.285] [Client] Packet size: 14 bytes
+[2025-12-14 08:08:40.285] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 08:08:40.285] [Client] Position: (12, 36, 18), BlockType: 3
+[2025-12-14 08:08:40.285] [WorldGen] Placed solid Grass at (12, 36, 18) with density=100
+[2025-12-14 08:08:40.285] [Client] Need to reload 1 chunks for single block
+[2025-12-14 08:08:40.386] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:40.386] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:40.386] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:40.386] [Renderer]   Deleted GPU: VAO=88, VBO=89
+[2025-12-14 08:08:40.386] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:40.386] [Client]   - Queued for immediate reload (queue size: 53)
+[2025-12-14 08:08:40.386] [Client] Finished processing block place broadcast
+[2025-12-14 08:08:40.510] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:40.926] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:41.938] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:45.060] [WorldGen] Placed solid Grass at (15, 34, 13) with density=100
+[2025-12-14 08:08:45.061] [Client] Re-requesting 1 chunks from server after block break
+[2025-12-14 08:08:45.061] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:45.061] [Client]   - Was loaded: True, was requested: False
+[2025-12-14 08:08:45.061] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:45.061] [Renderer]   Deleted GPU: VAO=99, VBO=100
+[2025-12-14 08:08:45.061] [Renderer]   Cleared mesh cache
+[2025-12-14 08:08:45.061] [Client]   - Queued for immediate reload (queue size: 91)
+[2025-12-14 08:08:45.061] [BlockPlace] Placed Grass Block (Grass) at (15, 34, 13)
+[2025-12-14 08:08:46.574] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-14 08:08:46.575] [Client] Position: (15, 34, 13), BlockType: 3
+[2025-12-14 08:08:46.575] [Client] Packet size: 14 bytes
+[2025-12-14 08:08:46.575] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-14 08:08:46.575] [Client] Position: (15, 34, 13), BlockType: 3
+[2025-12-14 08:08:46.575] [WorldGen] Placed solid Grass at (15, 34, 13) with density=100
+[2025-12-14 08:08:46.575] [Client] Need to reload 1 chunks for single block
+[2025-12-14 08:08:46.676] [Client] ForceReloadChunk called for (0, 0, 0)
+[2025-12-14 08:08:46.677] [Client]   - Was loaded: False, was requested: False
+[2025-12-14 08:08:46.679] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2025-12-14 08:08:46.680] [Client]   - Queued for immediate reload (queue size: 83)
+[2025-12-14 08:08:46.680] [Client] Finished processing block place broadcast
+[2025-12-14 08:08:46.846] [Client] Successfully reloaded chunk (0, 0, 0)
+[2025-12-14 08:08:47.780] [Client] Successfully reloaded chunk (0, 0, 0)
