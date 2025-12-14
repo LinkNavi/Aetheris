@@ -315,21 +315,21 @@ namespace Aetheris
         // Store active client streams for broadcasting
         private readonly ConcurrentDictionary<string, NetworkStream> activeClientStreams = new();
 
-private BlockType ConvertByteToBlockType(byte blockTypeByte)
-{
-    return blockTypeByte switch
-    {
-        1 => BlockType.Stone,
-        2 => BlockType.Dirt,
-        3 => BlockType.Grass,
-        4 => BlockType.Sand,
-        5 => BlockType.Snow,
-        6 => BlockType.Gravel,
-        7 => BlockType.Wood,
-        8 => BlockType.Leaves,
-        _ => BlockType.Stone
-    };
-}
+        private BlockType ConvertByteToBlockType(byte blockTypeByte)
+        {
+            return blockTypeByte switch
+            {
+                1 => BlockType.Stone,
+                2 => BlockType.Dirt,
+                3 => BlockType.Grass,
+                4 => BlockType.Sand,
+                5 => BlockType.Snow,
+                6 => BlockType.Gravel,
+                7 => BlockType.Wood,
+                8 => BlockType.Leaves,
+                _ => BlockType.Stone
+            };
+        }
 
         private async Task BroadcastBlockPlaceTcp(int x, int y, int z, byte blockType)
         {
@@ -380,31 +380,11 @@ private BlockType ConvertByteToBlockType(byte blockTypeByte)
             Console.WriteLine($"[Server] ===== BLOCK PLACE RECEIVED =====");
             Console.WriteLine($"[Server] Position: ({x}, {y}, {z}), BlockType: {blockTypeByte}");
 
-            // Place a SOLID CUBE (not a blob)
-            for (int dx = -1; dx <= 1; dx++)
-            {
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    for (int dz = -1; dz <= 1; dz++)
-                    {
-                        int px = x + dx;
-                        int py = y + dy;
-                        int pz = z + dz;
-
-                        float dist = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
-                        float strength = 10f * (1f - Math.Clamp(dist / 1.5f, 0f, 1f));
-
-                        if (strength > 0.1f)
-                        {
-                            WorldGen.AddDensityModification(px, py, pz, strength);
-                        }
-                    }
-                }
-            }
-
-            // Set the block type
+            // Convert byte to BlockType
             BlockType serverBlockType = ConvertByteToBlockType(blockTypeByte);
-            WorldGen.SetBlock(x, y, z, serverBlockType);
+
+            // Place a SOLID CUBE with the correct block type
+            WorldGen.PlaceCubeBlock(x, y, z, serverBlockType, cubeSize: 5.0f);
 
             Console.WriteLine($"[Server] Placed {serverBlockType} cube at ({x}, {y}, {z})");
 
@@ -416,6 +396,7 @@ private BlockType ConvertByteToBlockType(byte blockTypeByte)
             await BroadcastBlockPlaceTcp(x, y, z, blockTypeByte);
             Console.WriteLine($"[Server] Broadcasted to {activeClientStreams.Count} clients");
         }
+
         private async Task HandleClientAsync(TcpClient client, CancellationToken token)
         {
             using (client)

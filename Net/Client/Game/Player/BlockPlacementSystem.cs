@@ -1,4 +1,4 @@
-// Net/Client/Game/BlockPlacementSystem.cs - Block placement for marching cubes terrain
+// Net/Client/Game/Player/BlockPlacementSystem.cs - Block placement for marching cubes terrain
 using System;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -77,8 +77,8 @@ namespace Aetheris
                 return;
             }
             
-            // Place block
-            PlaceBlockAt(x, y, z);
+            // Place block with the type from the item definition
+            PlaceBlockAt(x, y, z, itemDef.PlacesBlock.Value);
             
             // Consume item
             if (player.Inventory.RemoveItem(selectedItem.ItemId, 1))
@@ -114,26 +114,32 @@ namespace Aetheris
             return false;
         }
         
-     private void PlaceBlockAt(int x, int y, int z)
-{
-    // Place block by adding density (opposite of mining)
-    WorldGen.AddBlock(x, y, z, BLOCK_PLACE_RADIUS, BLOCK_PLACE_STRENGTH);
-    
-    // Send to server
-    if (client != null)
-    {
-        _ = SendBlockPlacement(x, y, z);
-    }
-    
-    // Invalidate affected chunks on client
-    game.RegenerateMeshForBlock(new Vector3(x, y, z));
-}
+        private void PlaceBlockAt(int x, int y, int z, AetherisClient.Rendering.BlockType clientBlockType)
+        {
+            // Convert client block type to server block type (they should match)
+            BlockType serverBlockType = (BlockType)((int)clientBlockType);
+            
+            // Place a solid cube block with the correct type
+            WorldGen.PlaceCubeBlock(x, y, z, serverBlockType, cubeSize: 1.0f);
+            
+            // Convert block type to byte for network protocol
+            byte blockTypeByte = (byte)clientBlockType;
+            
+            // Send to server
+            if (client != null)
+            {
+                _ = SendBlockPlacement(x, y, z, blockTypeByte);
+            }
+            
+            // Invalidate affected chunks on client
+            game.RegenerateMeshForBlock(new Vector3(x, y, z));
+        }
         
-      private async System.Threading.Tasks.Task SendBlockPlacement(int x, int y, int z)
-{
-    // Send block placement to server using the new method
-    await client.SendBlockPlaceAsync(x, y, z);
-}
+        private async System.Threading.Tasks.Task SendBlockPlacement(int x, int y, int z, byte blockTypeByte)
+        {
+            // Send block placement to server with block type
+            await client.SendBlockPlaceAsync(x, y, z, blockTypeByte);
+        }
         
         /// <summary>
         /// Get preview of where block would be placed

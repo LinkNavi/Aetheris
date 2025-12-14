@@ -174,22 +174,10 @@ namespace Aetheris
     return kept.ToArray();
 }
 
-// ADD THIS NEW METHOD to the RaycastHelper class:
 private BlockType GetBlockTypeAtPosition(int x, int y, int z)
 {
-    // Sample the world density at this position
-    float density = WorldGen.SampleDensity(x, y, z);
-    
-    if (density <= 0.5f)
-    {
-        return BlockType.Air;
-    }
-    
-    // Get the actual block type from WorldGen
-    var columnData = WorldGen.GetColumnData(x, z);
-    BlockType blockType = WorldGen.GetBlockType(x, y, z, density, columnData);
-    
-    return blockType;
+    // CRITICAL: Use WorldGen's method that checks modified blocks first
+    return WorldGen.GetBlockTypeAt(x, y, z);
 }
 
         /// <summary>

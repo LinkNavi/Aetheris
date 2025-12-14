@@ -553,7 +553,83 @@ public static bool IsPlacedBlock(int x, int y, int z)
             return GetBlockType(x, y, z, density, columnData);
         }
 
+public static void PlaceCubeBlock(int centerX, int centerY, int centerZ, BlockType blockType, float cubeSize = 1.0f)
+{
+    lock (modificationLock)
+    {
+        // Define cube bounds
+        int halfSize = (int)Math.Ceiling(cubeSize / 2f);
+        
+        // Set the block type for the center position
+        modifiedBlocks[(centerX, centerY, centerZ)] = blockType;
+        
+        // Create a solid cube by setting very high density in a cube shape
+        for (int dx = -halfSize; dx <= halfSize; dx++)
+        {
+            for (int dy = -halfSize; dy <= halfSize; dy++)
+            {
+                for (int dz = -halfSize; dz <= halfSize; dz++)
+                {
+                    int px = centerX + dx;
+                    int py = centerY + dy;
+                    int pz = centerZ + dz;
+                    
+                    // Calculate distance from center (for cube, use max of abs values)
+                    float distX = Math.Abs(dx) / (float)halfSize;
+                    float distY = Math.Abs(dy) / (float)halfSize;
+                    float distZ = Math.Abs(dz) / (float)halfSize;
+                    float maxDist = Math.Max(Math.Max(distX, distY), distZ);
+                    
+                    // Cube falloff (sharp edges)
+                    float strength;
+                    if (maxDist < 0.8f)
+                    {
+                        // Core of the cube - very solid
+                        strength = 50f;
+                    }
+                    else
+                    {
+                        // Edge smoothing
+                        float edgeFalloff = 1f - ((maxDist - 0.8f) / 0.2f);
+                        strength = 50f * edgeFalloff;
+                    }
+                    
+                    if (strength > 0.1f)
+                    {
+                        var key = (px, py, pz);
+                        densityModifications.AddOrUpdate(
+                            key,
+                            strength,
+                            (k, existing) => Math.Max(existing, strength) // Use max to ensure solidity
+                        );
+                        
+                        // Set block type for all voxels in the cube
+                        modifiedBlocks[key] = blockType;
+                    }
+                }
+            }
+        }
+        
+        Console.WriteLine($"[WorldGen] Placed {blockType} cube at ({centerX}, {centerY}, {centerZ}) with size {cubeSize}");
+    }
+}
 
+/// <summary>
+/// Get the block type at a position, checking modified blocks first
+/// </summary>
+public static BlockType GetBlockTypeAt(int x, int y, int z)
+{
+    // Check if this block was placed/modified
+    if (modifiedBlocks.TryGetValue((x, y, z), out var blockType))
+    {
+        return blockType;
+    }
+    
+    // Fall back to procedural generation
+    var columnData = GetColumnData(x, z);
+    float density = SampleDensityFast(x, y, z, columnData);
+    return GetBlockType(x, y, z, density, columnData);
+}
 
         public static bool IsSolid(int x, int y, int z)
         {
