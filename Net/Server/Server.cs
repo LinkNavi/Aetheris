@@ -272,7 +272,20 @@ namespace Aetheris
         }
 
 
-
+// Add this method inside the Server class
+private static async Task ReadFullAsync(NetworkStream stream, byte[] buffer, int offset, int count, CancellationToken token)
+{
+    int totalRead = 0;
+    while (totalRead < count)
+    {
+        int bytesRead = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead, token);
+        if (bytesRead == 0)
+        {
+            throw new IOException("Connection closed unexpectedly");
+        }
+        totalRead += bytesRead;
+    }
+}
 
         private async Task HandleBlockBreakTcpAsync(NetworkStream stream, CancellationToken token)
         {

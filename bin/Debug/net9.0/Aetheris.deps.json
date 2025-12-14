@@ -12,6 +12,8 @@
           "BepuUtilities": "2.5.0-beta.27",
           "Jitter2": "2.4.1",
           "OpenTK": "4.9.4",
+          "SharpGLTF.Core": "1.0.0",
+          "SharpGLTF.Runtime": "1.0.0",
           "SixLabors.Fonts": "2.1.3",
           "SixLabors.ImageSharp": "3.1.11",
           "SixLabors.ImageSharp.Drawing": "2.1.7",
@@ -188,6 +190,25 @@
           }
         }
       },
+      "SharpGLTF.Core/1.0.0": {
+        "runtime": {
+          "lib/net8.0/SharpGLTF.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "SharpGLTF.Runtime/1.0.0": {
+        "dependencies": {
+          "SharpGLTF.Core": "1.0.0"
+        },
+        "runtime": {
+          "lib/net8.0/SharpGLTF.Runtime.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
       "SixLabors.Fonts/2.1.3": {
         "runtime": {
           "lib/net6.0/SixLabors.Fonts.dll": {
@@ -338,6 +359,20 @@
       "sha512": "sha512-wNlxnPrD7veMV8EGTTi/sCDeg5V8w/18vC0aw0Ao69eNneD7YSq9Ad+C389rVA957eHNR6Xieu/5qzHQeEOyxQ==",
       "path": "opentk.windowing.graphicslibraryframework/4.9.4",
       "hashPath": "opentk.windowing.graphicslibraryframework.4.9.4.nupkg.sha512"
+    },
+    "SharpGLTF.Core/1.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-cfOyA8GXX6qJNx7U36RMj32fTql4mpd46reiMJK8M1MXeDtbPDcqLColYDfKGgcgC1zc3ABGJlvi3epxvuCzQw==",
+      "path": "sharpgltf.core/1.0.0",
+      "hashPath": "sharpgltf.core.1.0.0.nupkg.sha512"
+    },
+    "SharpGLTF.Runtime/1.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-axMTu7CMOoIxqfNhzfwbWvYQQZUeq3YcL/lN5f1wmrq+xO010kth8zh9XD8BFMNFZ5MKM946swXdAneYaeppfw==",
+      "path": "sharpgltf.runtime/1.0.0",
+      "hashPath": "sharpgltf.runtime.1.0.0.nupkg.sha512"
     },
     "SixLabors.Fonts/2.1.3": {
       "type": "package",

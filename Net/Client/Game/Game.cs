@@ -94,7 +94,8 @@ namespace Aetheris
             hudRenderer = new HUDRenderer();
             Console.WriteLine("[Game] HUD renderer initialized");
 
-            chatSystem = new ChatSystem();
+
+            chatSystem = new ChatSystem(fontRenderer);
             Console.WriteLine("[Game] Chat system initialized");
         }
 
@@ -504,7 +505,7 @@ namespace Aetheris
                 }
             }
 
-            if (inventoryUI != null && blockPlacementSystem != null && blockPreview != null && 
+            if (inventoryUI != null && blockPlacementSystem != null && blockPreview != null &&
                 !inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
             {
                 var selectedItem = player.Inventory.GetSelectedItem();

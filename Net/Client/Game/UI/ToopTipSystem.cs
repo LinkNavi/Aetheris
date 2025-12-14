@@ -300,11 +300,7 @@ void main()
         }
     }
     
-    // Add text renderer interface if not exists
-    public interface ITextRenderer
-    {
-        void DrawText(string text, Vector2 position, float scale = 1f, Vector4? color = null);
-        Vector2 MeasureText(string text, float scale = 1f);
-        void SetProjection(Matrix4 projection);
-    }
+
+
+
 }

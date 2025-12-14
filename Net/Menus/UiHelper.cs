@@ -6,7 +6,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Windowing.Desktop;
-
+using Aetheris.UI;
 namespace Aetheris.UI
 {
     // Text alignment options
@@ -84,12 +84,7 @@ namespace Aetheris.UI
         public static Spacing Zero => new Spacing(0);
     }
 
-    public interface ITextRenderer
-    {
-        void DrawText(string text, Vector2 position, float scale = 1f, Vector4? color = null);
-        Vector2 MeasureText(string text, float scale = 1f);
-        void SetProjection(Matrix4 projection);
-    }
+
 
     public class UIManager : IDisposable
     {

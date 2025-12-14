@@ -22,8 +22,17 @@ namespace Aetheris.UI
         public float Advance;
     }
 
+   public interface ITextRenderer
+    {
+        void DrawText(string text, Vector2 position, float scale = 1f, Vector4? color = null);
+        Vector2 MeasureText(string text, float scale = 1f);
+        void SetProjection(Matrix4 projection);
+    }
+
     public class FontRenderer : ITextRenderer, IDisposable
     {
+
+
         // Store glyphs at multiple sizes for better quality
         private readonly Dictionary<(char, int), CharGlyph> glyphCache = new Dictionary<(char, int), CharGlyph>();
         private readonly int shaderProgram;

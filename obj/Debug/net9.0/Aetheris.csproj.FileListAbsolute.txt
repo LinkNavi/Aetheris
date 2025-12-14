@@ -80,3 +80,5 @@
 /home/link/Programming/Aetheris/obj/Debug/net9.0/Aetheris.pdb
 /home/link/Programming/Aetheris/obj/Debug/net9.0/Aetheris.genruntimeconfig.cache
 /home/link/Programming/Aetheris/obj/Debug/net9.0/ref/Aetheris.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/SharpGLTF.Core.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/SharpGLTF.Runtime.dll
