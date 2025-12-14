@@ -1,39 +1,33 @@
-// Net/Client/Game/Inventory/InventoryUI.cs - Enhanced with animations, armor, totems
+// Fixed InventoryUI.cs - Add missing methods
 using System;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Aetheris.UI;
 
 namespace Aetheris
 {
-    /// <summary>
-    /// Enhanced inventory UI with animations, armor slots, and totem slots
-    /// </summary>
     public class InventoryUI : IDisposable
     {
         private readonly Inventory inventory;
+        private readonly ITextRenderer? textRenderer;
         private bool isInventoryOpen = false;
 
-        // Animation state
         private float inventoryOpenProgress = 0f;
         private const float ANIMATION_SPEED = 8f;
 
-        // UI state
         private int hoveredSlot = -1;
         private int draggedSlot = -1;
         private bool wasMousePressed = false;
         private Vector2 dragOffset = Vector2.Zero;
 
-        // Slot animations
         private readonly Dictionary<int, float> slotPulseTimers = new();
         private readonly Dictionary<int, float> slotScales = new();
 
-        // Shader and rendering
         private int shaderProgram;
         private int vao, vbo;
 
-        // Layout constants
         private const float HOTBAR_SLOT_SIZE = 50f;
         private const float HOTBAR_SPACING = 4f;
         private const float HOTBAR_Y_OFFSET = 20f;
@@ -48,17 +42,18 @@ namespace Aetheris
         private const float TOTEM_SLOT_SIZE = 40f;
         private const float TOTEM_SPACING = 4f;
 
-        // Slot type enum for rendering
         private enum SlotType { Hotbar, Inventory, Armor, Totem }
 
-        public InventoryUI(Inventory inventory)
+        public InventoryUI(Inventory inventory, ITextRenderer? textRenderer = null)
         {
             this.inventory = inventory ?? throw new ArgumentNullException(nameof(inventory));
-
             this.textRenderer = textRenderer;
             InitializeShaders();
             InitializeBuffers();
         }
+
+        // ADDED: Missing method
+        public int GetHoveredSlot() => hoveredSlot;
 
         private void InitializeShaders()
         {
@@ -128,18 +123,15 @@ void main()
 
         public void Update(KeyboardState keyboard, MouseState mouse, Vector2i windowSize, float deltaTime)
         {
-            // Toggle inventory
             if (keyboard.IsKeyPressed(Keys.E))
             {
                 isInventoryOpen = !isInventoryOpen;
                 Console.WriteLine($"[InventoryUI] Inventory {(isInventoryOpen ? "opened" : "closed")}");
             }
 
-            // Animate inventory panel
             float targetProgress = isInventoryOpen ? 1f : 0f;
             inventoryOpenProgress = Lerp(inventoryOpenProgress, targetProgress, deltaTime * ANIMATION_SPEED);
 
-            // Hotbar selection
             if (!isInventoryOpen)
             {
                 for (int i = 0; i < Inventory.HOTBAR_SIZE; i++)
@@ -167,13 +159,11 @@ void main()
                 }
             }
 
-            // Handle inventory interactions
             if (isInventoryOpen && inventoryOpenProgress > 0.5f)
             {
                 UpdateInventoryInteraction(mouse, windowSize);
             }
 
-            // Update animations
             UpdateAnimations(deltaTime);
         }
 
@@ -237,7 +227,6 @@ void main()
         {
             float centerX = windowSize.X / 2f;
 
-            // Check hotbar
             float hotbarWidth = Inventory.HOTBAR_SIZE * (HOTBAR_SLOT_SIZE + HOTBAR_SPACING) - HOTBAR_SPACING;
             float hotbarStartX = centerX - hotbarWidth / 2f;
 
@@ -252,7 +241,6 @@ void main()
 
             if (inventoryOpenProgress < 0.5f) return -1;
 
-            // Check main inventory
             float invWidth = 9 * (INV_SLOT_SIZE + INV_SPACING) - INV_SPACING;
             float invStartX = centerX - invWidth / 2f;
 
@@ -269,7 +257,6 @@ void main()
                 }
             }
 
-            // Check armor slots (left side)
             float armorStartX = invStartX - ARMOR_SLOT_SIZE - 40f;
             float armorStartY = INV_Y_START;
 
@@ -282,7 +269,6 @@ void main()
                     return Inventory.GetArmorSlotIndex(i);
             }
 
-            // Check totem slots (right side)
             float totemStartX = invStartX + invWidth + 40f;
             float totemStartY = INV_Y_START;
 
@@ -308,13 +294,11 @@ void main()
             var itemA = inventory.GetSlot(slotA);
             var itemB = inventory.GetSlot(slotB);
 
-            // Check if trying to place into armor slot
             if (slotB >= Inventory.GetArmorSlotIndex(0) &&
                 slotB < Inventory.GetArmorSlotIndex(0) + Inventory.ARMOR_SIZE)
             {
                 if (!ArmorCalculator.IsArmorItem(itemA.ItemId))
                 {
-                    // Not armor - reject
                     AnimateSlotPulse(slotA);
                     return;
                 }
@@ -324,25 +308,21 @@ void main()
 
                 if (itemSlot != requiredSlot)
                 {
-                    // Wrong armor slot
                     AnimateSlotPulse(slotA);
                     return;
                 }
             }
 
-            // Check if trying to place into totem slot
             if (slotB >= Inventory.GetTotemSlotIndex(0) &&
                 slotB < Inventory.GetTotemSlotIndex(0) + Inventory.TOTEM_SIZE)
             {
                 if (!TotemData.IsTotem(itemA.ItemId))
                 {
-                    // Not a totem - reject
                     AnimateSlotPulse(slotA);
                     return;
                 }
             }
 
-            // Valid swap
             inventory.SetSlot(slotA, itemB);
             inventory.SetSlot(slotB, itemA);
             AnimateSlotPulse(slotB);
@@ -365,10 +345,8 @@ void main()
 
             GL.BindVertexArray(vao);
 
-            // Always render hotbar
             RenderHotbar(windowSize);
 
-            // Render full inventory if open (with animation)
             if (inventoryOpenProgress > 0.01f)
             {
                 RenderFullInventory(windowSize);
@@ -408,7 +386,6 @@ void main()
 
             float alpha = inventoryOpenProgress;
 
-            // Background panel
             float panelWidth = invWidth + 300f;
             float panelHeight = 3 * (INV_SLOT_SIZE + INV_SPACING) + 80f;
             float panelY = INV_Y_START - 20f;
@@ -416,7 +393,6 @@ void main()
             DrawRect(startX - 150f, panelY, panelWidth, panelHeight,
                      new Vector4(0.1f, 0.1f, 0.1f, 0.9f * alpha));
 
-            // Main inventory slots
             for (int row = 0; row < 3; row++)
             {
                 for (int col = 0; col < 9; col++)
@@ -431,10 +407,8 @@ void main()
                 }
             }
 
-            // Armor slots (left side with icons)
             float armorStartX = startX - ARMOR_SLOT_SIZE - 40f;
             float armorStartY = INV_Y_START;
-            string[] armorLabels = { "HEAD", "CHEST", "LEGS", "FEET" };
 
             for (int i = 0; i < 4; i++)
             {
@@ -447,7 +421,6 @@ void main()
                 RenderSlot(x, y, ARMOR_SLOT_SIZE, inventory.GetSlot(slot), false, isHovered, scale, SlotType.Armor, alpha);
             }
 
-            // Totem slots (right side)
             float totemStartX = startX + invWidth + 40f;
             float totemStartY = INV_Y_START;
 
@@ -465,13 +438,11 @@ void main()
 
         private void RenderSlot(float x, float y, float size, ItemStack item, bool selected, bool hovered, float scale, SlotType slotType, float alpha = 1f)
         {
-            // Apply scale from center
             float scaledSize = size * scale;
             float offset = (size - scaledSize) / 2f;
             x += offset;
             y += offset;
 
-            // Background color based on slot type
             Vector4 bgColor = slotType switch
             {
                 SlotType.Armor => new Vector4(0.3f, 0.25f, 0.2f, 0.8f * alpha),
@@ -484,13 +455,11 @@ void main()
 
             DrawRect(x, y, scaledSize, scaledSize, bgColor);
 
-            // Border
             Vector4 borderColor = selected
                 ? new Vector4(1f, 1f, 1f, alpha)
                 : new Vector4(0.5f, 0.5f, 0.5f, 0.8f * alpha);
             DrawRectOutline(x, y, scaledSize, scaledSize, 2f, borderColor);
 
-            // Item
             if (item.ItemId > 0)
             {
                 Vector4 itemColor = GetItemColor(item.ItemId);
@@ -513,7 +482,6 @@ void main()
                 textRenderer.DrawText(countText, textPos, 0.8f, new Vector4(1f, 1f, 1f, alpha));
             }
 
-            // Render item name on hover
             if (hovered && textRenderer != null)
             {
                 var itemDef = ItemRegistry.Get(item.ItemId);
@@ -529,12 +497,12 @@ void main()
         {
             return itemId switch
             {
-                1 => new Vector4(0.5f, 0.5f, 0.5f, 1f),  // Stone
-                2 => new Vector4(0.6f, 0.4f, 0.2f, 1f),  // Dirt
-                3 => new Vector4(0.3f, 0.8f, 0.3f, 1f),  // Grass
-                4 => new Vector4(0.9f, 0.9f, 0.6f, 1f),  // Sand
-                5 => new Vector4(1.0f, 1.0f, 1.0f, 1f),  // Snow
-                _ => new Vector4(0.8f, 0.3f, 0.8f, 1f),  // Unknown
+                1 => new Vector4(0.5f, 0.5f, 0.5f, 1f),
+                2 => new Vector4(0.6f, 0.4f, 0.2f, 1f),
+                3 => new Vector4(0.3f, 0.8f, 0.3f, 1f),
+                4 => new Vector4(0.9f, 0.9f, 0.6f, 1f),
+                5 => new Vector4(1.0f, 1.0f, 1.0f, 1f),
+                _ => new Vector4(0.8f, 0.3f, 0.8f, 1f),
             };
         }
 

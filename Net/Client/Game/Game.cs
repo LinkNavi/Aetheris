@@ -9,6 +9,7 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using AetherisClient.Rendering;
 using Aetheris.UI;
+
 namespace Aetheris
 {
     public class Game : GameWindow
@@ -32,15 +33,14 @@ namespace Aetheris
         private HeldItemRenderer? heldItemRenderer;
         private BlockPlacementSystem? blockPlacementSystem;
         private BlockPlacementPreview? blockPreview;
-        CrosshairRenderer crosshair = new CrosshairRenderer();
-        EnhancedHotbarRenderer enhancedHotbar = new EnhancedHotbarRenderer(player.Inventory, fontRenderer);
-        // NEW: Player stats and gameplay systems
+        private CrosshairRenderer? crosshair;
+        private EnhancedHotbarRenderer? enhancedHotbar;
+
         private PlayerStats playerStats;
         private RespawnSystem? respawnSystem;
         private FallDamageTracker? fallDamageTracker;
         private TotemManager? totemManager;
 
-        // Logging
         private const string LogFileName = "physics_debug.log";
         private StreamWriter? logWriter;
         private TextWriter? originalConsoleOut;
@@ -58,30 +58,25 @@ namespace Aetheris
         {
             this.loadedChunks = loadedChunks ?? new Dictionary<(int, int, int), Aetheris.Chunk>();
             this.client = client;
+            this.chunkManager = new ChunkManager();
 
             SetupLogging();
 
-            // Initialize WorldGen FIRST (needed for player collision)
             WorldGen.Initialize();
             Console.WriteLine("[Game] WorldGen initialized");
 
-            // Create Renderer
             Renderer = new Renderer();
             Console.WriteLine("[Game] Renderer initialized");
 
-            // Create EntityRenderer
             entityRenderer = new EntityRenderer();
             Console.WriteLine("[Game] EntityRenderer initialized");
 
-            // Create player (MUST be after WorldGen.Initialize())
             player = new Player(new Vector3(16, 50, 16));
             Console.WriteLine("[Game] Player initialized at position: {0}", player.Position);
 
-            // Initialize player stats
             playerStats = new PlayerStats();
             Console.WriteLine("[Game] Player stats initialized");
 
-            // Create network controller (MUST be after player is created)
             if (client != null)
             {
                 NetworkController = new PlayerNetworkController(player, client);
@@ -93,15 +88,12 @@ namespace Aetheris
                 Console.WriteLine("[Game] Running in single-player mode (no network)");
             }
 
-            // Initialize inventory UI
             inventoryUI = new InventoryUI(player.Inventory);
             Console.WriteLine("[Game] Inventory UI initialized");
 
-            // Initialize HUD renderer
             hudRenderer = new HUDRenderer();
             Console.WriteLine("[Game] HUD renderer initialized");
 
-            // Initialize chat system
             chatSystem = new ChatSystem();
             Console.WriteLine("[Game] Chat system initialized");
         }
@@ -149,15 +141,16 @@ namespace Aetheris
             CursorState = CursorState.Grabbed;
             ItemRegistry.Initialize();
             miningSystem = new MiningSystem(player, this, OnBlockMined);
-            // Load font
+
             fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 48);
             fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
 
-            // Create tooltip system
             tooltipSystem = new TooltipSystem(fontRenderer);
             blockPlacementSystem = new BlockPlacementSystem(player, this, client);
             blockPreview = new BlockPlacementPreview();
-            // Initialize gameplay systems
+            crosshair = new CrosshairRenderer();
+            enhancedHotbar = new EnhancedHotbarRenderer(player.Inventory, fontRenderer);
+
             respawnSystem = new RespawnSystem(
                 player,
                 playerStats,
@@ -168,15 +161,13 @@ namespace Aetheris
             fallDamageTracker = new FallDamageTracker();
             totemManager = new TotemManager(player.Inventory, playerStats);
 
-            // Add some test items to inventory
-            player.Inventory.AddItem(1, 10); // Stone
-            player.Inventory.AddItem(2, 15); // Dirt
-            player.Inventory.AddItem(3, 8);  // Grass
-            player.Inventory.AddItem(100, 5); // Bread (food)
-            player.Inventory.AddItem(200, 1); // Leather helmet (armor)
-            player.Inventory.AddItem(300, 1); // Vitality totem
+            player.Inventory.AddItem(1, 10);
+            player.Inventory.AddItem(2, 15);
+            player.Inventory.AddItem(3, 8);
+            player.Inventory.AddItem(100, 5);
+            player.Inventory.AddItem(200, 1);
+            player.Inventory.AddItem(300, 1);
 
-            // Load atlas
             string[] atlasPaths = new[]
             {
                 "textures/atlas.png",
@@ -203,7 +194,6 @@ namespace Aetheris
                 Renderer.CreateProceduralAtlas();
             }
 
-            // Load pre-fetched chunks into both renderer and chunk manager
             foreach (var kv in loadedChunks)
             {
                 var coord = kv.Key;
@@ -211,10 +201,8 @@ namespace Aetheris
 
                 var chunkCoord = new ChunkCoord(coord.Item1, coord.Item2, coord.Item3);
 
-                // Generate mesh for rendering
                 var meshFloats = MarchingCubes.GenerateMesh(chunk, chunkCoord, chunkManager, 0.5f);
 
-                // Generate collision mesh for physics
                 chunk.GenerateCollisionMesh(meshFloats);
 
                 Console.WriteLine($"[Game] Loading chunk {coord} with {meshFloats.Length / 7} vertices");
@@ -223,7 +211,6 @@ namespace Aetheris
 
             Console.WriteLine($"[Game] Loaded {loadedChunks.Count} chunks");
 
-            // Welcome message
             chatSystem?.AddMessage("Welcome to Aetheris!", ChatMessageType.System);
             chatSystem?.AddMessage("Press T to chat, E for inventory, F for stats", ChatMessageType.System);
         }
@@ -239,7 +226,6 @@ namespace Aetheris
             int y = (int)blockPos.Y;
             int z = (int)blockPos.Z;
 
-            // Add block to inventory
             int itemId = BlockTypeToItemId(blockType);
             if (itemId > 0)
             {
@@ -256,7 +242,6 @@ namespace Aetheris
                 }
             }
 
-            // Send to server via TCP (reliable)
             if (client != null)
             {
                 _ = client.SendBlockBreakAsync(x, y, z);
@@ -344,25 +329,16 @@ namespace Aetheris
 
             float deltaTime = (float)e.Time;
 
-            // Process pending mesh uploads
             Renderer.ProcessPendingUploads();
 
             if (IsKeyDown(Keys.Escape))
                 Close();
 
-            // Update chat system first (handles text input)
             if (chatSystem != null)
             {
                 chatSystem.Update(KeyboardState, deltaTime);
-
-                // Handle chat hotkeys
-                if (KeyboardState.IsKeyPressed(Keys.Slash))
-                {
-                    // Commands are handled by chat system
-                }
             }
 
-            // Update inventory UI (checks if open)
             bool inventoryOpen = false;
             if (inventoryUI != null)
             {
@@ -370,21 +346,18 @@ namespace Aetheris
                 inventoryOpen = inventoryUI.IsInventoryOpen();
             }
 
-            // Check if chat is open
             bool chatOpen = chatSystem?.IsChatOpen() ?? false;
-            // Update tooltip (show when hovering over inventory slots)
+
             bool showTooltip = inventoryUI != null && inventoryUI.IsInventoryOpen() && inventoryUI.GetHoveredSlot() >= 0;
             tooltipSystem?.Update(deltaTime, showTooltip);
-            // Only update player movement if inventory AND chat are closed
+
             if (!inventoryOpen && !chatOpen)
             {
-                // Restore grabbed cursor
                 if (CursorState != CursorState.Grabbed)
                 {
                     CursorState = CursorState.Grabbed;
                 }
 
-                // Update player
                 if (NetworkController != null)
                 {
                     NetworkController.Update(e, KeyboardState, MouseState);
@@ -398,42 +371,35 @@ namespace Aetheris
                     player.Update(e, KeyboardState, MouseState);
                 }
 
-                // Mining system
                 if (miningSystem != null)
                 {
                     miningSystem.Update(deltaTime, MouseState, IsFocused);
                 }
-                // Block placement
-                if (!inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+
+                if (blockPlacementSystem != null && !inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
                 {
-                    blockPlacementSystem?.Update(deltaTime, MouseState, IsFocused);
+                    blockPlacementSystem.Update(deltaTime, MouseState, IsFocused);
                 }
             }
             else
             {
-                // Show cursor when inventory or chat is open
                 if (CursorState != CursorState.Normal)
                 {
                     CursorState = CursorState.Normal;
                 }
             }
 
-            // Update gameplay systems (always runs)
             respawnSystem?.Update(deltaTime);
             fallDamageTracker?.Update(player, playerStats);
             totemManager?.ApplyTotemEffects();
 
-            // Update armor from equipped items
             float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
             playerStats.Armor = totalArmor;
 
-            // Update player stats
             playerStats.Update(deltaTime);
 
-            // Update HUD
             hudRenderer?.Update(playerStats, deltaTime);
 
-            // Chunk loading (always runs)
             if (chunkUpdateTimer == 0f)
             {
                 Vector3 playerChunk = player.GetPlayersChunk();
@@ -448,7 +414,6 @@ namespace Aetheris
                 client?.UpdateLoadedChunks(playerChunk, renderDistance);
             }
 
-            // Render distance controls
             if (KeyboardState.IsKeyPressed(Keys.Equal) || KeyboardState.IsKeyPressed(Keys.KeyPadAdd))
             {
                 renderDistance = Math.Min(renderDistance + 1, 999);
@@ -462,13 +427,11 @@ namespace Aetheris
                 chatSystem?.AddMessage($"Render distance: {renderDistance}", ChatMessageType.System);
             }
 
-            // Stats hotkey
             if (KeyboardState.IsKeyPressed(Keys.F))
             {
                 ShowStats();
             }
 
-            // Test healing (H key)
             if (KeyboardState.IsKeyPressed(Keys.H))
             {
                 playerStats.Heal(20f);
@@ -476,7 +439,6 @@ namespace Aetheris
                 chatSystem?.AddMessage("Healed +20 HP", ChatMessageType.Success);
             }
 
-            // Test damage (J key for testing)
             if (KeyboardState.IsKeyPressed(Keys.J))
             {
                 playerStats.TakeDamage(10f);
@@ -498,7 +460,6 @@ namespace Aetheris
         {
             base.OnTextInput(e);
 
-            // Pass text input to chat system
             if (chatSystem != null && chatSystem.IsChatOpen())
             {
                 chatSystem.HandleTextInput((char)e.Unicode);
@@ -509,7 +470,6 @@ namespace Aetheris
         {
             base.OnKeyDown(e);
 
-            // Pass key events to chat system
             if (chatSystem != null && chatSystem.IsChatOpen())
             {
                 chatSystem.HandleKeyPress(e.Key);
@@ -528,10 +488,8 @@ namespace Aetheris
                 1000f);
             var view = player.GetViewMatrix();
 
-            // === RENDER TERRAIN ===
             Renderer.Render(projection, view, player.Position);
 
-            // === RENDER OTHER PLAYERS ===
             if (entityRenderer != null && networkController != null)
             {
                 var remotePlayers = networkController.RemotePlayers;
@@ -545,8 +503,9 @@ namespace Aetheris
                     );
                 }
             }
-            // Render block placement preview
-            if (!inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+
+            if (inventoryUI != null && blockPlacementSystem != null && blockPreview != null && 
+                !inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
             {
                 var selectedItem = player.Inventory.GetSelectedItem();
                 if (selectedItem.ItemId > 0)
@@ -554,26 +513,25 @@ namespace Aetheris
                     var itemDef = ItemRegistry.Get(selectedItem.ItemId);
                     if (itemDef?.PlacesBlock.HasValue == true)
                     {
-                        var preview = blockPlacementSystem?.GetPlacementPreview();
-                        if (preview.HasValue && preview.Value.canPlace)
+                        var preview = blockPlacementSystem.GetPlacementPreview();
+                        if (preview.canPlace)
                         {
-                            blockPreview?.Render(preview.Value.position, preview.Value.canPlace, view, projection);
+                            blockPreview.Render(preview.position, preview.canPlace, view, projection);
                         }
                     }
                 }
             }
 
-            // Render held item (first-person view)
-            if (!inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+            if (heldItemRenderer != null && !inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
             {
                 var selectedItem = player.Inventory.GetSelectedItem();
                 if (selectedItem.ItemId > 0)
                 {
-                    // Calculate swing animation (when mining/attacking)
-                    float swingProgress = miningSystem?.GetSwingProgress() ?? 0f;
+                    var miningInfo = miningSystem?.GetMiningInfo();
+                    float swingProgress = miningInfo.HasValue ? miningInfo.Value.progress : 0f;
                     float time = (float)DateTime.Now.TimeOfDay.TotalSeconds;
 
-                    heldItemRenderer?.RenderHeldItem(
+                    heldItemRenderer.RenderHeldItem(
                         selectedItem.ItemId,
                         view,
                         projection,
@@ -582,36 +540,28 @@ namespace Aetheris
                     );
                 }
             }
-            enhancedHotbar.Render(Size);
-            crosshair.Render(Size);
-            // === CLEANUP 3D RENDERING ===
+
+            enhancedHotbar?.Render(Size);
+            crosshair?.Render(Size);
+
             GL.BindVertexArray(0);
             GL.UseProgram(0);
 
-            // === RENDER UI (2D overlay) ===
-            if (hudRenderer != null)
-            {
-                hudRenderer.Render(playerStats, Size);
-            }
+            hudRenderer?.Render(playerStats, Size);
 
-            if (inventoryUI != null)
-            {
-                inventoryUI.Render(Size);
-            }
-            // Render tooltips
-            if (inventoryUI != null && inventoryUI.GetHoveredSlot() >= 0)
+            inventoryUI?.Render(Size);
+
+            if (inventoryUI != null && tooltipSystem != null && inventoryUI.GetHoveredSlot() >= 0)
             {
                 var item = player.Inventory.GetSlot(inventoryUI.GetHoveredSlot());
                 if (item.ItemId > 0)
                 {
                     Vector2 mousePos = new Vector2(MouseState.X, MouseState.Y);
-                    tooltipSystem?.RenderItemTooltip(item.ItemId, mousePos, Size);
+                    tooltipSystem.RenderItemTooltip(item.ItemId, mousePos, Size);
                 }
             }
-            if (chatSystem != null)
-            {
-                chatSystem.Render(Size);
-            }
+
+            chatSystem?.Render(Size);
 
             SwapBuffers();
         }
@@ -626,7 +576,6 @@ namespace Aetheris
             chatSystem?.Dispose();
             entityRenderer?.Dispose();
 
-            // Restore console
             try
             {
                 if (originalConsoleOut != null)

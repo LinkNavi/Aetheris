@@ -1,4 +1,3 @@
-// Additional Gameplay Features to enable the gameplay loop
 using OpenTK.Mathematics;
 // ============================================================================
 // 1. RESPAWN SYSTEM
