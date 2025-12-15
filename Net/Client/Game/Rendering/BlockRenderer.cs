@@ -5,6 +5,9 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using AetherisClient.Rendering;
 
+// Type alias for clarity
+using ClientBlockType = AetherisClient.Rendering.BlockType;
+
 namespace Aetheris
 {
     /// <summary>
@@ -201,7 +204,7 @@ void main()
             
             if (rendered > 0)
             {
-                Console.WriteLine($"[BlockRenderer] Rendered {rendered} blocks");
+                //Console.WriteLine($"[BlockRenderer] Rendered {rendered} blocks");
             }
         }
         
@@ -249,10 +252,11 @@ void main()
             List<float> vertices = new List<float>();
             float s = BLOCK_SIZE / 2f; // Half size
             
+            // FIXED: Use fully qualified namespace to avoid ambiguity
             // Get UV coordinates for each face
-            var topUV = AtlasManager.GetAtlasUV(BlockType.Grass, BlockFace.Top);
-            var bottomUV = AtlasManager.GetAtlasUV(BlockType.Grass, BlockFace.Bottom);
-            var sideUV = AtlasManager.GetAtlasUV(BlockType.Grass, BlockFace.Side);
+            var topUV = AtlasManager.GetAtlasUV(ClientBlockType.Grass, BlockFace.Top);
+            var bottomUV = AtlasManager.GetAtlasUV(ClientBlockType.Grass, BlockFace.Bottom);
+            var sideUV = AtlasManager.GetAtlasUV(ClientBlockType.Grass, BlockFace.Side);
             
             // Front face (+Z)
             AddQuad(vertices, 

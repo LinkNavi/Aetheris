@@ -239,15 +239,19 @@ namespace Aetheris
             // Check if this is a placed block
             if (PlacedBlocks.HasBlockAt(x, y, z))
             {
-                // Remove the placed block
+                // Remove the placed block locally
                 PlacedBlocks.RemoveBlock(x, y, z);
                 Console.WriteLine($"[Client] Removed placed block at ({x}, {y}, {z})");
 
-                // Get the block type for inventory
+                // Get the actual block type for inventory
                 var placedBlock = PlacedBlocks.GetBlockAt(x, y, z);
                 if (placedBlock != null)
                 {
                     blockType = (BlockType)((int)placedBlock.BlockType);
+                }
+                else
+                {
+                    blockType = BlockType.Stone;
                 }
             }
 
@@ -267,6 +271,7 @@ namespace Aetheris
                 }
             }
 
+            // Send to server (server will handle both placed blocks and terrain)
             if (client != null)
             {
                 _ = client.SendBlockBreakAsync(x, y, z);

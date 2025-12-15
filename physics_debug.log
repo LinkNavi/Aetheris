@@ -1,12 +1,471 @@
-﻿[2025-12-14 08:39:14.575] [Logging] Started logging to 'physics_debug.log'
-[2025-12-14 08:39:14.598] [Game] WorldGen initialized
-[2025-12-14 08:39:14.616] [PSX Effects] Shaders compiled successfully
-[2025-12-14 08:39:14.616] [Game] Renderer initialized
-[2025-12-14 08:39:14.629] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2025-12-14 08:39:14.629] [Game] EntityRenderer initialized
-[2025-12-14 08:39:14.653] [Player] Spawned at (16, 37.1, 16)
-[2025-12-14 08:39:14.653] [Game] Player initialized at position: (16, 37.1, 16)
-[2025-12-14 08:39:14.654] [Game] Player stats initialized
-[2025-12-14 08:39:14.655] [Game] Network controller initialized
-[2025-12-14 08:39:14.657] [Game] Inventory UI initialized
-[2025-12-14 08:39:14.658] [Game] HUD renderer initialized
+﻿[2025-12-15 01:22:52.745] [Logging] Started logging to 'physics_debug.log'
+[2025-12-15 01:22:52.765] [Game] WorldGen initialized
+[2025-12-15 01:22:52.837] [PSX Effects] Shaders compiled successfully
+[2025-12-15 01:22:52.837] [Game] Renderer initialized
+[2025-12-15 01:22:52.856] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2025-12-15 01:22:52.856] [Game] EntityRenderer initialized
+[2025-12-15 01:22:52.873] [Player] Spawned at (16, 37.1, 16)
+[2025-12-15 01:22:52.873] [Game] Player initialized at position: (16, 37.1, 16)
+[2025-12-15 01:22:52.874] [Game] Player stats initialized
+[2025-12-15 01:22:52.875] [Game] PlacedBlockManager initialized
+[2025-12-15 01:22:52.875] [Game] Network controller initialized
+[2025-12-15 01:22:52.877] [Game] Inventory UI initialized
+[2025-12-15 01:22:52.878] [Game] HUD renderer initialized
+[2025-12-15 01:22:53.977] [Game] Chat system initialized
+[2025-12-15 01:22:53.979] [Client] TCP broadcast listener started
+[2025-12-15 01:22:53.986] [ItemRegistry] Registered 23 items
+[2025-12-15 01:22:54.479] [Client] Chunk update loop starting...
+[2025-12-15 01:22:54.809] [BlockRenderer] Initialized with 36 vertices
+[2025-12-15 01:22:54.820] [Game] BlockRenderer initialized
+[2025-12-15 01:22:54.821] [Game] Found atlas at: textures/atlas.png
+[2025-12-15 01:22:54.908] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2025-12-15 01:22:54.909] [AtlasManager] Using preferred tile size: 64
+[2025-12-15 01:22:54.909] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2025-12-15 01:22:54.913] [AtlasManager] Successfully uploaded to GL texture 1141
+[2025-12-15 01:22:54.913] [AtlasManager] Verified texture dimensions: 256x256
+[2025-12-15 01:22:54.915] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
+[2025-12-15 01:22:54.915] [Game] Loaded 0 chunks
+[2025-12-15 01:22:55.120] [Prediction] Error: 27.1cm - reconciling
+[2025-12-15 01:22:55.125] [Prediction] Replayed 11 inputs
+[2025-12-15 01:22:55.125] [Prediction] Error: 26.9cm - reconciling
+[2025-12-15 01:22:55.126] [Prediction] Replayed 8 inputs
+[2025-12-15 01:22:55.126] [Prediction] Error: 15.9cm - reconciling
+[2025-12-15 01:22:55.127] [Prediction] Replayed 4 inputs
+[2025-12-15 01:22:55.133] [Prediction] Error: 38.3cm - reconciling
+[2025-12-15 01:22:55.133] [Prediction] Replayed 1 inputs
+[2025-12-15 01:22:55.245] [Prediction] Error: 28.9cm - reconciling
+[2025-12-15 01:22:55.248] [Prediction] Replayed 9 inputs
+[2025-12-15 01:22:55.249] [Prediction] Error: 15.7cm - reconciling
+[2025-12-15 01:22:55.250] [Prediction] Replayed 5 inputs
+[2025-12-15 01:22:55.348] [Renderer] Uploaded chunk (0,0,0): VAO=12, VBO=13, 16506 vertices
+[2025-12-15 01:22:55.558] [Renderer] Uploaded chunk (1,0,0): VAO=13, VBO=14, 13323 vertices
+[2025-12-15 01:22:57.808] [PlacedBlockManager] Placed Stone at (10, 36, 16)
+[2025-12-15 01:22:57.813] [BlockPlace] Placed Stone block model at (10, 36, 16)
+[2025-12-15 01:22:57.813] [BlockPlace] Placed Stone (Stone) at (10, 36, 16)
+[2025-12-15 01:22:57.823] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:57.895] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.005] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.090] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.179] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.267] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.347] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.448] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.546] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.629] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.716] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.798] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.873] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:58.963] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.054] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.070] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-15 01:22:59.070] [Client] Position: (10, 36, 16), BlockType: Stone (byte: 1)
+[2025-12-15 01:22:59.070] [Client] Packet size: 14 bytes
+[2025-12-15 01:22:59.092] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-15 01:22:59.092] [Client] Position: (10, 36, 16), BlockType byte: 1
+[2025-12-15 01:22:59.092] [Client] Placed Stone block model
+[2025-12-15 01:22:59.119] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.212] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.295] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.386] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.475] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.556] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.650] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.732] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.826] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.912] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:22:59.986] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.073] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.145] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.208] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.289] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.368] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.444] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.530] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.611] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.692] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.774] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.843] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.902] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:00.979] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.056] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.115] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.172] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.233] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.318] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.394] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.477] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.559] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.582] [Prediction] Error: 22.1cm - reconciling
+[2025-12-15 01:23:01.582] [Prediction] Replayed 1 inputs
+[2025-12-15 01:23:01.630] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.709] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.768] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.827] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.888] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:01.956] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.014] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.076] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.156] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.253] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.343] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.438] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.504] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.592] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.680] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.763] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.859] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:02.956] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:03.039] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:03.128] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:03.214] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:03.279] [BlockRenderer] Rendered 1 blocks
+[2025-12-15 01:23:03.377] [PlacedBlockManager] Placed Stone at (6, 35, 17)
+[2025-12-15 01:23:03.377] [BlockPlace] Placed Stone block model at (6, 35, 17)
+[2025-12-15 01:23:03.377] [BlockPlace] Placed Stone (Stone) at (6, 35, 17)
+[2025-12-15 01:23:03.381] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:03.468] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:03.547] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:03.637] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:03.715] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:03.816] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:03.891] [BlockPlace] Block already exists at this position
+[2025-12-15 01:23:03.893] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:03.990] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.066] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.125] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.203] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.289] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.374] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.422] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-15 01:23:04.422] [Client] Position: (6, 35, 17), BlockType: Stone (byte: 1)
+[2025-12-15 01:23:04.422] [Client] Packet size: 14 bytes
+[2025-12-15 01:23:04.422] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-15 01:23:04.423] [Client] Position: (6, 35, 17), BlockType byte: 1
+[2025-12-15 01:23:04.423] [Client] Placed Stone block model
+[2025-12-15 01:23:04.454] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.535] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.616] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.711] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.803] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.895] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:04.988] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.095] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.195] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.296] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.440] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.610] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.780] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.881] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:05.997] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.119] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.231] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.310] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.449] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.564] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.671] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.774] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.886] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:06.982] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.070] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.153] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.220] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.285] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.370] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.443] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.520] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.582] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.654] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.726] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.790] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.864] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:07.936] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.021] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.109] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.194] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.324] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.429] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.544] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.628] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.767] [BlockRenderer] Rendered 2 blocks
+[2025-12-15 01:23:08.871] [PlacedBlockManager] Placed Stone at (13, 37, 20)
+[2025-12-15 01:23:08.871] [BlockPlace] Placed Stone block model at (13, 37, 20)
+[2025-12-15 01:23:08.871] [BlockPlace] Placed Stone (Stone) at (13, 37, 20)
+[2025-12-15 01:23:08.875] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:08.997] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.111] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.243] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.373] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.488] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.606] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.741] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.841] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:09.945] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:10.056] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:10.145] [Client] ===== SENT BLOCK PLACE =====
+[2025-12-15 01:23:10.145] [Client] Position: (13, 37, 20), BlockType: Stone (byte: 1)
+[2025-12-15 01:23:10.145] [Client] Packet size: 14 bytes
+[2025-12-15 01:23:10.145] [Client] ===== RECEIVED BLOCK PLACE BROADCAST =====
+[2025-12-15 01:23:10.145] [Client] Position: (13, 37, 20), BlockType byte: 1
+[2025-12-15 01:23:10.145] [Client] Placed Stone block model
+[2025-12-15 01:23:10.191] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:10.328] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:10.436] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:10.586] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:10.750] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:10.906] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:11.094] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:11.263] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:11.398] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:11.516] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:11.632] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:11.723] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:11.864] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.002] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.083] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.191] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.290] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.370] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.445] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.517] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.611] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.713] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.829] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:12.943] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.047] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.151] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.247] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.352] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.466] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.562] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.671] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.764] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.859] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:13.968] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.064] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.155] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.283] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.412] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.529] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.676] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.779] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.898] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:14.982] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.051] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.106] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.172] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.231] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.297] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.364] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.431] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.499] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.556] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.602] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.666] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.733] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.800] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.881] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:15.946] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.022] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.091] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.157] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.227] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.282] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.365] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.451] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.542] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.637] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.730] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.836] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:16.941] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.055] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.131] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.233] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.332] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.437] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.542] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.659] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.775] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.912] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:17.957] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.002] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.043] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.085] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.126] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.161] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.199] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.251] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.292] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.329] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.378] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.419] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.457] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.496] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.537] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.575] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.621] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.664] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.710] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.744] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.789] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.832] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.875] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.914] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.947] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:18.995] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.038] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.070] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.110] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.149] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.179] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.220] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.257] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.291] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.325] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.363] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.402] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.439] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.467] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.498] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.541] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.587] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.632] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.673] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.709] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.749] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.794] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.861] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.900] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.950] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:19.992] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.022] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.064] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.098] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.125] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.151] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.178] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.210] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.249] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.282] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.321] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.359] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.397] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.443] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.484] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.522] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.554] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.596] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.636] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.665] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.701] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.729] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.762] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.810] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.843] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.880] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.921] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.956] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:20.993] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.027] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.063] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.094] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.129] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.171] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.203] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.231] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.260] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.295] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.336] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.371] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.409] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.451] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.488] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.527] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.570] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.603] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.641] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.686] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.727] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.771] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.817] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.860] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.894] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.938] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:21.977] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.017] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.045] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.080] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.117] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.160] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.200] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.242] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.286] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.321] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.349] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.379] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.413] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.452] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.489] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.527] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.570] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.607] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.649] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.686] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.719] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.764] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.803] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.883] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.914] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.944] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.971] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:22.998] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.025] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.051] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.078] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.117] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.157] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.189] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.230] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.268] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.304] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.345] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.374] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.408] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.451] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.477] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.514] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.541] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.566] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.593] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.619] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.646] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.691] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.725] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.766] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.806] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.843] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.882] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.917] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.958] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:23.990] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.016] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.043] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.068] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.095] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.122] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.157] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.196] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.231] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.272] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.308] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.354] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.392] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.428] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.469] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.502] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.544] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.586] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.627] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.656] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.682] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.709] [BlockRenderer] Rendered 3 blocks
+[2025-12-15 01:23:24.743] [BlockRenderer] Rendered 3 blocks

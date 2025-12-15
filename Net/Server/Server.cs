@@ -290,7 +290,7 @@ namespace Aetheris
 
         private async Task HandleBlockBreakTcpAsync(NetworkStream stream, CancellationToken token)
         {
-            var buf = new byte[12]; // Just 12 bytes for coordinates (not 13)
+            var buf = new byte[12];
             await ReadFullAsync(stream, buf, 0, 12, token);
 
             int x = BitConverter.ToInt32(buf, 0);
@@ -300,8 +300,22 @@ namespace Aetheris
             Console.WriteLine($"[Server] ===== BLOCK BREAK RECEIVED =====");
             Console.WriteLine($"[Server] Position: ({x}, {y}, {z})");
 
-            // Remove the block
-            WorldGen.RemoveBlock(x, y, z, radius: 5f, strength: 3.0f);
+            // Check if this is a placed block first
+            if (serverBlocks.HasBlockAt(x, y, z))
+            {
+                // Remove from placed blocks
+                serverBlocks.RemoveBlock(x, y, z);
+                Console.WriteLine($"[Server] Removed placed block at ({x}, {y}, {z})");
+
+                // CRITICAL: Remove density modifications to restore collision
+                WorldGen.RemoveBlock(x, y, z, radius: 2f, strength: 50f);
+            }
+            else
+            {
+                // Remove terrain
+                WorldGen.RemoveBlock(x, y, z, radius: 5f, strength: 3.0f);
+            }
+
             Console.WriteLine($"[Server] Called WorldGen.RemoveBlock");
 
             // Invalidate chunks
@@ -382,7 +396,7 @@ namespace Aetheris
             Console.WriteLine($"[Server] ===== BLOCK PLACE RECEIVED =====");
             Console.WriteLine($"[Server] Position: ({x}, {y}, {z}), BlockType: {blockTypeByte}");
 
-            // CHANGED: Add to server block manager instead of WorldGen
+            // FIXED: Add to server block manager
             bool placed = serverBlocks.PlaceBlock(x, y, z, blockTypeByte, "player");
 
             if (!placed)
@@ -391,7 +405,14 @@ namespace Aetheris
                 return;
             }
 
+            // CRITICAL: Also add to WorldGen for physics collision
+            BlockType serverBlockType = (BlockType)blockTypeByte;
+            WorldGen.PlaceSolidBlock(x, y, z, serverBlockType);
+
             Console.WriteLine($"[Server] Placed block type {blockTypeByte} at ({x}, {y}, {z})");
+
+            // Invalidate affected chunks for mesh regeneration
+            InvalidateSingleBlockChunks(x, y, z);
 
             // Broadcast to all clients
             await BroadcastBlockPlaceTcp(x, y, z, blockTypeByte);

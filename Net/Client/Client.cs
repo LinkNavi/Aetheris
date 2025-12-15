@@ -219,9 +219,6 @@ namespace Aetheris
                 _ => BlockType.Stone
             };
         }
-        // Client.cs - REPLACE HandleBlockPlaceBroadcastAsync method
-
-
         private async Task HandleBlockPlaceBroadcastAsync(CancellationToken token)
         {
             try
@@ -232,19 +229,18 @@ namespace Aetheris
                 int x = BitConverter.ToInt32(buf, 0);
                 int y = BitConverter.ToInt32(buf, 4);
                 int z = BitConverter.ToInt32(buf, 8);
-                byte blockType = buf[12];
+                byte blockTypeByte = buf[12];
 
                 Console.WriteLine($"[Client] ===== RECEIVED BLOCK PLACE BROADCAST =====");
-                Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType: {blockType}");
+                Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType byte: {blockTypeByte}");
 
-                // Convert byte to BlockType
-                AetherisClient.Rendering.BlockType clientBlockType =
-                    (AetherisClient.Rendering.BlockType)blockType;
+                // FIXED: Convert byte to network BlockType (which PlaceBlock expects)
+                Aetheris.BlockType networkBlockType = (Aetheris.BlockType)blockTypeByte;
 
                 // Place block in game's PlacedBlockManager
-                game?.PlacedBlocks.PlaceBlock(x, y, z, clientBlockType);
+                game?.PlacedBlocks.PlaceBlock(x, y, z, networkBlockType);
 
-                Console.WriteLine($"[Client] Placed {clientBlockType} block model");
+                Console.WriteLine($"[Client] Placed {networkBlockType} block model");
             }
             catch (Exception ex)
             {
@@ -252,7 +248,8 @@ namespace Aetheris
                 throw;
             }
         }
-        public async Task SendBlockPlaceAsync(int x, int y, int z, byte blockType)
+
+        public async Task SendBlockPlaceAsync(int x, int y, int z, Aetheris.BlockType blockType)
         {
             if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected)
             {
@@ -263,6 +260,9 @@ namespace Aetheris
             await networkSemaphore.WaitAsync();
             try
             {
+                // Convert BlockType enum to byte for network protocol
+                byte blockTypeByte = (byte)blockType;
+
                 // Send 14 bytes (1 byte packet type + 12 bytes coordinates + 1 byte block type)
                 byte[] packet = new byte[14];
                 packet[0] = (byte)TcpPacketType.BlockPlace;
@@ -270,13 +270,13 @@ namespace Aetheris
                 BitConverter.TryWriteBytes(packet.AsSpan(1, 4), x);
                 BitConverter.TryWriteBytes(packet.AsSpan(5, 4), y);
                 BitConverter.TryWriteBytes(packet.AsSpan(9, 4), z);
-                packet[13] = blockType; // Add block type
+                packet[13] = blockTypeByte; // CHANGED: Use converted byte value
 
                 await streamRequest.WriteAsync(packet, 0, packet.Length);
                 await streamRequest.FlushAsync();
 
                 Console.WriteLine($"[Client] ===== SENT BLOCK PLACE =====");
-                Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType: {blockType}");
+                Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType: {blockType} (byte: {blockTypeByte})");
                 Console.WriteLine($"[Client] Packet size: 14 bytes");
             }
             catch (Exception ex)
