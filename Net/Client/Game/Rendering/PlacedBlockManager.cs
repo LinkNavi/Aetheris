@@ -7,15 +7,9 @@ using AetherisClient.Rendering;
 
 namespace Aetheris
 {
-    /// <summary>
-    /// Manages individual placed blocks as 3D models (separate from terrain)
-    /// </summary>
     public class PlacedBlockManager
     {
-        // Store placed blocks by world position
         private readonly ConcurrentDictionary<Vector3i, PlacedBlock> placedBlocks = new();
-        
-        // Fast spatial lookup by chunk
         private readonly ConcurrentDictionary<(int, int, int), HashSet<Vector3i>> blocksByChunk = new();
         
         public class PlacedBlock
@@ -33,22 +27,16 @@ namespace Aetheris
             }
         }
         
-        /// <summary>
-        /// Place a block at the given position
-        /// </summary>
         public bool PlaceBlock(int x, int y, int z, BlockType blockType)
         {
             var pos = new Vector3i(x, y, z);
-            
             var block = new PlacedBlock(pos, blockType);
             
             if (!placedBlocks.TryAdd(pos, block))
             {
-                // Block already exists at this position
                 return false;
             }
             
-            // Add to spatial index
             var chunkKey = GetChunkKey(x, y, z);
             var chunkBlocks = blocksByChunk.GetOrAdd(chunkKey, _ => new HashSet<Vector3i>());
             lock (chunkBlocks)
@@ -60,9 +48,6 @@ namespace Aetheris
             return true;
         }
         
-        /// <summary>
-        /// Remove a block at the given position
-        /// </summary>
         public bool RemoveBlock(int x, int y, int z)
         {
             var pos = new Vector3i(x, y, z);
@@ -72,7 +57,6 @@ namespace Aetheris
                 return false;
             }
             
-            // Remove from spatial index
             var chunkKey = GetChunkKey(x, y, z);
             if (blocksByChunk.TryGetValue(chunkKey, out var chunkBlocks))
             {
@@ -86,26 +70,17 @@ namespace Aetheris
             return true;
         }
         
-        /// <summary>
-        /// Check if a block exists at the given position
-        /// </summary>
         public bool HasBlockAt(int x, int y, int z)
         {
             return placedBlocks.ContainsKey(new Vector3i(x, y, z));
         }
         
-        /// <summary>
-        /// Get the block at a position (null if none)
-        /// </summary>
         public PlacedBlock? GetBlockAt(int x, int y, int z)
         {
             placedBlocks.TryGetValue(new Vector3i(x, y, z), out var block);
             return block;
         }
         
-        /// <summary>
-        /// Get all blocks in a chunk for rendering
-        /// </summary>
         public IEnumerable<PlacedBlock> GetBlocksInChunk(int chunkX, int chunkY, int chunkZ)
         {
             var chunkKey = (chunkX, chunkY, chunkZ);
@@ -130,16 +105,13 @@ namespace Aetheris
             }
         }
         
-        /// <summary>
-        /// Get all blocks within render distance
-        /// </summary>
         public IEnumerable<PlacedBlock> GetBlocksInRange(Vector3 center, float range)
         {
-            int centerChunkX = (int)Math.Floor(center.X / ClientConfig.CHUNK_SIZE);
-            int centerChunkY = (int)Math.Floor(center.Y / ClientConfig.CHUNK_SIZE_Y);
-            int centerChunkZ = (int)Math.Floor(center.Z / ClientConfig.CHUNK_SIZE);
+            int centerChunkX = (int)Math.Floor(center.X / 32);
+            int centerChunkY = (int)Math.Floor(center.Y / 96);
+            int centerChunkZ = (int)Math.Floor(center.Z / 32);
             
-            int chunkRange = (int)Math.Ceiling(range / ClientConfig.CHUNK_SIZE) + 1;
+            int chunkRange = (int)Math.Ceiling(range / 32) + 1;
             
             for (int dx = -chunkRange; dx <= chunkRange; dx++)
             {
@@ -164,9 +136,11 @@ namespace Aetheris
             }
         }
         
-        /// <summary>
-        /// Clear all placed blocks
-        /// </summary>
+        public IEnumerable<PlacedBlock> GetAllBlocks()
+        {
+            return placedBlocks.Values;
+        }
+        
         public void Clear()
         {
             placedBlocks.Clear();
@@ -174,9 +148,6 @@ namespace Aetheris
             Console.WriteLine("[PlacedBlockManager] Cleared all placed blocks");
         }
         
-        /// <summary>
-        /// Get statistics
-        /// </summary>
         public (int totalBlocks, int chunks) GetStats()
         {
             return (placedBlocks.Count, blocksByChunk.Count);
@@ -185,16 +156,13 @@ namespace Aetheris
         private (int, int, int) GetChunkKey(int x, int y, int z)
         {
             return (
-                (int)Math.Floor((float)x / ClientConfig.CHUNK_SIZE),
-                (int)Math.Floor((float)y / ClientConfig.CHUNK_SIZE_Y),
-                (int)Math.Floor((float)z / ClientConfig.CHUNK_SIZE)
+                (int)Math.Floor((float)x / 32),
+                (int)Math.Floor((float)y / 96),
+                (int)Math.Floor((float)z / 32)
             );
         }
     }
     
-    /// <summary>
-    /// Simple Vector3 with integer coordinates for dictionary keys
-    /// </summary>
     public struct Vector3i : IEquatable<Vector3i>
     {
         public int X { get; set; }
@@ -232,5 +200,7 @@ namespace Aetheris
         {
             return !left.Equals(right);
         }
+        
+        public override string ToString() => $"({X}, {Y}, {Z})";
     }
 }

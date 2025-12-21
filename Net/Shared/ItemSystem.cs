@@ -1,4 +1,4 @@
-// Net/Shared/ItemSystem.cs - Enhanced item system with rarity, categories, and tooltips
+// Net/Shared/ItemSystem.cs - Enhanced item system with all block types
 using System;
 using System.Collections.Generic;
 using OpenTK.Mathematics;
@@ -48,30 +48,24 @@ namespace Aetheris
         public ItemCategory Category { get; set; } = ItemCategory.Misc;
         public ToolType ToolType { get; set; } = ToolType.None;
         
-        // Stacking
         public int MaxStack { get; set; } = 64;
         
-        // Stats
-        public float Durability { get; set; } = 0; // 0 = unbreakable
+        public float Durability { get; set; } = 0;
         public float MiningSpeed { get; set; } = 1f;
         public float AttackDamage { get; set; } = 0f;
         public float AttackSpeed { get; set; } = 1f;
         
-        // Food properties
         public int HungerRestore { get; set; } = 0;
         public float HealthRestore { get; set; } = 0;
         
-        // Rendering
-        public string ModelPath { get; set; } = ""; // Path to GLB model
-        public string IconPath { get; set; } = ""; // Path to icon texture
+        public string ModelPath { get; set; } = "";
+        public string IconPath { get; set; } = "";
         public Vector3 HeldScale { get; set; } = Vector3.One;
         public Vector3 HeldRotation { get; set; } = Vector3.Zero;
         public Vector3 HeldOffset { get; set; } = Vector3.Zero;
         
-        // Block placement (for block items)
         public AetherisClient.Rendering.BlockType? PlacesBlock { get; set; } = null;
         
-        // Crafting
         public bool IsCraftable { get; set; } = false;
         public Dictionary<int, int> CraftingRecipe { get; set; } = new();
         
@@ -127,6 +121,7 @@ namespace Aetheris
 
         private static void RegisterBlocks()
         {
+            // Block items - ID matches BlockType enum value
             Register(new ItemDefinition
             {
                 ItemId = 1,
@@ -135,8 +130,7 @@ namespace Aetheris
                 Category = ItemCategory.Block,
                 Rarity = ItemRarity.Common,
                 MaxStack = 64,
-                PlacesBlock = AetherisClient.Rendering.BlockType.Stone,
-                ModelPath = "models/items/stone_block.glb"
+                PlacesBlock = AetherisClient.Rendering.BlockType.Stone
             });
 
             Register(new ItemDefinition
@@ -147,8 +141,7 @@ namespace Aetheris
                 Category = ItemCategory.Block,
                 Rarity = ItemRarity.Common,
                 MaxStack = 64,
-                PlacesBlock = AetherisClient.Rendering.BlockType.Dirt,
-                ModelPath = "models/items/dirt_block.glb"
+                PlacesBlock = AetherisClient.Rendering.BlockType.Dirt
             });
 
             Register(new ItemDefinition
@@ -159,8 +152,7 @@ namespace Aetheris
                 Category = ItemCategory.Block,
                 Rarity = ItemRarity.Common,
                 MaxStack = 64,
-                PlacesBlock = AetherisClient.Rendering.BlockType.Grass,
-                ModelPath = "models/items/grass_block.glb"
+                PlacesBlock = AetherisClient.Rendering.BlockType.Grass
             });
 
             Register(new ItemDefinition
@@ -171,8 +163,7 @@ namespace Aetheris
                 Category = ItemCategory.Block,
                 Rarity = ItemRarity.Common,
                 MaxStack = 64,
-                PlacesBlock = AetherisClient.Rendering.BlockType.Sand,
-                ModelPath = "models/items/sand_block.glb"
+                PlacesBlock = AetherisClient.Rendering.BlockType.Sand
             });
 
             Register(new ItemDefinition
@@ -183,8 +174,40 @@ namespace Aetheris
                 Category = ItemCategory.Block,
                 Rarity = ItemRarity.Common,
                 MaxStack = 64,
-                PlacesBlock = AetherisClient.Rendering.BlockType.Snow,
-                ModelPath = "models/items/snow_block.glb"
+                PlacesBlock = AetherisClient.Rendering.BlockType.Snow
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 6,
+                Name = "Gravel",
+                Description = "Loose rocky material",
+                Category = ItemCategory.Block,
+                Rarity = ItemRarity.Common,
+                MaxStack = 64,
+                PlacesBlock = AetherisClient.Rendering.BlockType.Gravel
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 7,
+                Name = "Wood",
+                Description = "Natural wood block",
+                Category = ItemCategory.Block,
+                Rarity = ItemRarity.Common,
+                MaxStack = 64,
+                PlacesBlock = AetherisClient.Rendering.BlockType.Wood
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 8,
+                Name = "Leaves",
+                Description = "Foliage block",
+                Category = ItemCategory.Block,
+                Rarity = ItemRarity.Common,
+                MaxStack = 64,
+                PlacesBlock = AetherisClient.Rendering.BlockType.Leaves
             });
         }
 
@@ -202,7 +225,6 @@ namespace Aetheris
                 Durability = 60,
                 MiningSpeed = 1.5f,
                 AttackDamage = 2f,
-                ModelPath = "models/tools/wooden_pickaxe.glb",
                 HeldOffset = new Vector3(0.3f, -0.2f, 0.5f),
                 HeldRotation = new Vector3(-45f, 0f, 0f)
             });
@@ -218,10 +240,7 @@ namespace Aetheris
                 MaxStack = 1,
                 Durability = 132,
                 MiningSpeed = 2.5f,
-                AttackDamage = 3f,
-                ModelPath = "models/tools/stone_pickaxe.glb",
-                HeldOffset = new Vector3(0.3f, -0.2f, 0.5f),
-                HeldRotation = new Vector3(-45f, 0f, 0f)
+                AttackDamage = 3f
             });
 
             Register(new ItemDefinition
@@ -235,10 +254,7 @@ namespace Aetheris
                 MaxStack = 1,
                 Durability = 251,
                 MiningSpeed = 4f,
-                AttackDamage = 4f,
-                ModelPath = "models/tools/iron_pickaxe.glb",
-                HeldOffset = new Vector3(0.3f, -0.2f, 0.5f),
-                HeldRotation = new Vector3(-45f, 0f, 0f)
+                AttackDamage = 4f
             });
 
             Register(new ItemDefinition
@@ -252,10 +268,35 @@ namespace Aetheris
                 MaxStack = 1,
                 Durability = 1562,
                 MiningSpeed = 6f,
-                AttackDamage = 5f,
-                ModelPath = "models/tools/diamond_pickaxe.glb",
-                HeldOffset = new Vector3(0.3f, -0.2f, 0.5f),
-                HeldRotation = new Vector3(-45f, 0f, 0f)
+                AttackDamage = 5f
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 54,
+                Name = "Wooden Axe",
+                Description = "Basic chopping tool",
+                Category = ItemCategory.Tool,
+                ToolType = ToolType.Axe,
+                Rarity = ItemRarity.Common,
+                MaxStack = 1,
+                Durability = 60,
+                MiningSpeed = 2f,
+                AttackDamage = 4f
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 55,
+                Name = "Wooden Shovel",
+                Description = "Basic digging tool",
+                Category = ItemCategory.Tool,
+                ToolType = ToolType.Shovel,
+                Rarity = ItemRarity.Common,
+                MaxStack = 1,
+                Durability = 60,
+                MiningSpeed = 2f,
+                AttackDamage = 1f
             });
         }
 
@@ -272,10 +313,35 @@ namespace Aetheris
                 MaxStack = 1,
                 Durability = 60,
                 AttackDamage = 4f,
-                AttackSpeed = 1.6f,
-                ModelPath = "models/weapons/wooden_sword.glb",
-                HeldOffset = new Vector3(0.2f, -0.3f, 0.4f),
-                HeldRotation = new Vector3(-90f, 0f, 0f)
+                AttackSpeed = 1.6f
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 71,
+                Name = "Stone Sword",
+                Description = "Sturdy weapon",
+                Category = ItemCategory.Weapon,
+                ToolType = ToolType.Sword,
+                Rarity = ItemRarity.Common,
+                MaxStack = 1,
+                Durability = 132,
+                AttackDamage = 5f,
+                AttackSpeed = 1.6f
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 72,
+                Name = "Iron Sword",
+                Description = "Strong weapon",
+                Category = ItemCategory.Weapon,
+                ToolType = ToolType.Sword,
+                Rarity = ItemRarity.Uncommon,
+                MaxStack = 1,
+                Durability = 251,
+                AttackDamage = 6f,
+                AttackSpeed = 1.6f
             });
 
             Register(new ItemDefinition
@@ -289,10 +355,7 @@ namespace Aetheris
                 MaxStack = 1,
                 Durability = 1562,
                 AttackDamage = 7f,
-                AttackSpeed = 1.6f,
-                ModelPath = "models/weapons/diamond_sword.glb",
-                HeldOffset = new Vector3(0.2f, -0.3f, 0.4f),
-                HeldRotation = new Vector3(-90f, 0f, 0f)
+                AttackSpeed = 1.6f
             });
         }
 
@@ -302,25 +365,23 @@ namespace Aetheris
             {
                 ItemId = 100,
                 Name = "Bread",
-                Description = "Restores hunger",
+                Description = "Restores 20 hunger",
                 Category = ItemCategory.Food,
                 Rarity = ItemRarity.Common,
                 MaxStack = 16,
-                HungerRestore = 20,
-                ModelPath = "models/food/bread.glb"
+                HungerRestore = 20
             });
 
             Register(new ItemDefinition
             {
                 ItemId = 101,
                 Name = "Apple",
-                Description = "Restores hunger and health",
+                Description = "Restores 10 hunger, 2 health",
                 Category = ItemCategory.Food,
                 Rarity = ItemRarity.Common,
                 MaxStack = 16,
                 HungerRestore = 10,
-                HealthRestore = 2f,
-                ModelPath = "models/food/apple.glb"
+                HealthRestore = 2f
             });
 
             Register(new ItemDefinition
@@ -332,14 +393,24 @@ namespace Aetheris
                 Rarity = ItemRarity.Uncommon,
                 MaxStack = 16,
                 HungerRestore = 40,
-                HealthRestore = 5f,
-                ModelPath = "models/food/cooked_meat.glb"
+                HealthRestore = 5f
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 103,
+                Name = "Golden Apple",
+                Description = "Magical fruit",
+                Category = ItemCategory.Food,
+                Rarity = ItemRarity.Epic,
+                MaxStack = 8,
+                HungerRestore = 20,
+                HealthRestore = 20f
             });
         }
 
         private static void RegisterArmor()
         {
-            // Leather Armor
             Register(new ItemDefinition
             {
                 ItemId = 200,
@@ -351,7 +422,17 @@ namespace Aetheris
                 Durability = 56
             });
 
-            // Iron Armor
+            Register(new ItemDefinition
+            {
+                ItemId = 201,
+                Name = "Leather Chestplate",
+                Description = "+3 Armor",
+                Category = ItemCategory.Armor,
+                Rarity = ItemRarity.Common,
+                MaxStack = 1,
+                Durability = 81
+            });
+
             Register(new ItemDefinition
             {
                 ItemId = 210,
@@ -363,7 +444,6 @@ namespace Aetheris
                 Durability = 166
             });
 
-            // Diamond Armor
             Register(new ItemDefinition
             {
                 ItemId = 220,
@@ -385,8 +465,7 @@ namespace Aetheris
                 Description = "+20 Max Health",
                 Category = ItemCategory.Totem,
                 Rarity = ItemRarity.Epic,
-                MaxStack = 1,
-                ModelPath = "models/totems/vitality.glb"
+                MaxStack = 1
             });
 
             Register(new ItemDefinition
@@ -396,8 +475,7 @@ namespace Aetheris
                 Description = "+15 Max Armor",
                 Category = ItemCategory.Totem,
                 Rarity = ItemRarity.Epic,
-                MaxStack = 1,
-                ModelPath = "models/totems/protection.glb"
+                MaxStack = 1
             });
 
             Register(new ItemDefinition
@@ -407,8 +485,7 @@ namespace Aetheris
                 Description = "+50% Movement Speed",
                 Category = ItemCategory.Totem,
                 Rarity = ItemRarity.Epic,
-                MaxStack = 1,
-                ModelPath = "models/totems/swiftness.glb"
+                MaxStack = 1
             });
         }
 
@@ -437,10 +514,20 @@ namespace Aetheris
             Register(new ItemDefinition
             {
                 ItemId = 402,
-                Name = "Emerald",
-                Description = "Rare gemstone",
+                Name = "Coal",
+                Description = "Fuel source",
                 Category = ItemCategory.Material,
-                Rarity = ItemRarity.Epic,
+                Rarity = ItemRarity.Common,
+                MaxStack = 64
+            });
+
+            Register(new ItemDefinition
+            {
+                ItemId = 403,
+                Name = "Copper Ingot",
+                Description = "Conductive metal",
+                Category = ItemCategory.Material,
+                Rarity = ItemRarity.Common,
                 MaxStack = 64
             });
         }
@@ -474,4 +561,5 @@ namespace Aetheris
             }
         }
     }
-}
+
+   }

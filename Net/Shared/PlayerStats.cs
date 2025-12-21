@@ -1,171 +1,107 @@
-// Net/Shared/PlayerStats.cs - Shared player statistics
+// Net/Shared/PlayerStats.cs - Health, hunger, and player stat management
 using System;
 
 namespace Aetheris
 {
-    /// <summary>
-    /// Player statistics - synchronized between client and server
-    /// </summary>
     public class PlayerStats
     {
-        // Health
-        public float Health { get; set; } = 100f;
-        public float MaxHealth { get; set; } = 100f;
+        public float Health { get; private set; }
+        public float MaxHealth { get; private set; }
+        public float Hunger { get; private set; }
+        public float MaxHunger { get; private set; }
+        public float Armor { get; private set; }
         
-        // Armor
-        public float Armor { get; set; } = 0f;
-        public float MaxArmor { get; set; } = 100f;
-        
-        // Hunger
-        public float Hunger { get; set; } = 100f;
-        public float MaxHunger { get; set; } = 100f;
-        
-        // Regeneration
-        public float HealthRegenRate { get; set; } = 1f;  // HP per second when well-fed
-        public float HungerDecayRate { get; set; } = 0.1f; // Hunger per second
-        
-        // Damage modifiers
-        public float DamageMultiplier { get; set; } = 1f;
-        public float DamageReduction { get; set; } = 0f;
-        
-        // Status flags
         public bool IsDead => Health <= 0;
         public bool IsStarving => Hunger <= 0;
-        public bool IsWellFed => Hunger >= 80f;
+        public float HealthPercent => Health / MaxHealth;
+        public float HungerPercent => Hunger / MaxHunger;
         
-        public PlayerStats()
+        public event Action OnDeath;
+        public event Action<float> OnDamage;
+        public event Action<float> OnHeal;
+        
+        private float hungerDrainRate = 0.5f;  // Per second
+        private float starveDamageRate = 1f;
+        private float regenRate = 0.5f;
+        private float regenHungerThreshold = 0.8f;
+        
+        public PlayerStats(float maxHealth = 100f, float maxHunger = 100f)
         {
-            Reset();
+            MaxHealth = maxHealth;
+            MaxHunger = maxHunger;
+            Health = maxHealth;
+            Hunger = maxHunger;
+            Armor = 0;
         }
         
-        public void Reset()
+        public void Update(float deltaTime)
+        {
+            if (IsDead) return;
+            
+            // Drain hunger
+            Hunger = MathF.Max(0, Hunger - hungerDrainRate * deltaTime);
+            
+            // Starve damage
+            if (IsStarving)
+            {
+                TakeDamage(starveDamageRate * deltaTime, "starvation");
+            }
+            // Regen when well-fed
+            else if (HungerPercent >= regenHungerThreshold && Health < MaxHealth)
+            {
+                Health = MathF.Min(MaxHealth, Health + regenRate * deltaTime);
+            }
+        }
+        
+        public void TakeDamage(float amount, string source = "unknown")
+        {
+            if (IsDead) return;
+            
+            float reduced = amount * (1f - Armor / (Armor + 100f));
+            Health = MathF.Max(0, Health - reduced);
+            OnDamage?.Invoke(reduced);
+            
+            if (IsDead)
+            {
+                Console.WriteLine($"[Stats] Player died from {source}");
+                OnDeath?.Invoke();
+            }
+        }
+        
+        public void Heal(float amount)
+        {
+            if (IsDead) return;
+            float healed = MathF.Min(amount, MaxHealth - Health);
+            Health += healed;
+            if (healed > 0) OnHeal?.Invoke(healed);
+        }
+        
+        public void RestoreHunger(float amount)
+        {
+            Hunger = MathF.Min(MaxHunger, Hunger + amount);
+        }
+        
+        public void SetArmor(float value) => Armor = MathF.Max(0, value);
+        
+        public void AddMaxHealth(float bonus) { MaxHealth += bonus; Health += bonus; }
+        
+        public void Respawn()
         {
             Health = MaxHealth;
-            Armor = 0f;
             Hunger = MaxHunger;
         }
         
-        /// <summary>
-        /// Apply damage with armor reduction
-        /// </summary>
-        public float TakeDamage(float amount, DamageType damageType = DamageType.Generic)
+        public bool UseFood(int itemId, Inventory inventory)
         {
-            if (IsDead) return 0f;
+            var def = ItemRegistry.Get(itemId);
+            if (def == null || def.HungerRestore <= 0) return false;
+            if (!inventory.HasItem(itemId)) return false;
             
-            float finalDamage = amount * DamageMultiplier;
-            
-            // Apply armor reduction
-            if (Armor > 0 && damageType != DamageType.Hunger)
-            {
-                float armorReduction = Math.Min(Armor / MaxArmor * 0.8f, 0.8f); // Max 80% reduction
-                float damageToArmor = finalDamage * 0.5f;
-                float damageToHealth = finalDamage * (1f - armorReduction);
-                
-                Armor = Math.Max(0f, Armor - damageToArmor);
-                finalDamage = damageToHealth;
-            }
-            
-            // Apply damage reduction
-            finalDamage *= (1f - DamageReduction);
-            
-            Health = Math.Max(0f, Health - finalDamage);
-            
-            return finalDamage;
+            inventory.RemoveItem(itemId, 1);
+            RestoreHunger(def.HungerRestore);
+            Heal(def.HealthRestore);
+            Console.WriteLine($"[Stats] Ate {def.Name}: +{def.HungerRestore} hunger, +{def.HealthRestore} health");
+            return true;
         }
-        
-        /// <summary>
-        /// Heal the player
-        /// </summary>
-        public float Heal(float amount)
-        {
-            float oldHealth = Health;
-            Health = Math.Min(MaxHealth, Health + amount);
-            return Health - oldHealth;
-        }
-        
-        /// <summary>
-        /// Add armor points
-        /// </summary>
-        public void AddArmor(float amount)
-        {
-            Armor = Math.Min(MaxArmor, Armor + amount);
-        }
-        
-        /// <summary>
-        /// Restore hunger
-        /// </summary>
-        public void Feed(float amount)
-        {
-            Hunger = Math.Min(MaxHunger, Hunger + amount);
-        }
-        
-        /// <summary>
-        /// Update stats (called every tick on server)
-        /// </summary>
-        public void Update(float deltaTime)
-        {
-            // Hunger decay
-            Hunger = Math.Max(0f, Hunger - HungerDecayRate * deltaTime);
-            
-            // Regeneration when well-fed
-            if (IsWellFed && Health < MaxHealth)
-            {
-                Heal(HealthRegenRate * deltaTime);
-            }
-            
-            // Starvation damage
-            if (IsStarving)
-            {
-                TakeDamage(2f * deltaTime, DamageType.Hunger);
-            }
-        }
-        
-        /// <summary>
-        /// Serialize for network transmission
-        /// </summary>
-        public byte[] Serialize()
-        {
-            using var ms = new System.IO.MemoryStream();
-            using var writer = new System.IO.BinaryWriter(ms);
-            
-            writer.Write(Health);
-            writer.Write(MaxHealth);
-            writer.Write(Armor);
-            writer.Write(MaxArmor);
-            writer.Write(Hunger);
-            writer.Write(MaxHunger);
-            
-            return ms.ToArray();
-        }
-        
-        /// <summary>
-        /// Deserialize from network data
-        /// </summary>
-        public static PlayerStats Deserialize(byte[] data)
-        {
-            using var ms = new System.IO.MemoryStream(data);
-            using var reader = new System.IO.BinaryReader(ms);
-            
-            return new PlayerStats
-            {
-                Health = reader.ReadSingle(),
-                MaxHealth = reader.ReadSingle(),
-                Armor = reader.ReadSingle(),
-                MaxArmor = reader.ReadSingle(),
-                Hunger = reader.ReadSingle(),
-                MaxHunger = reader.ReadSingle()
-            };
-        }
-    }
-    
-    public enum DamageType
-    {
-        Generic,
-        Fall,
-        Hunger,
-        Melee,
-        Projectile,
-        Fire,
-        Drowning
     }
 }
