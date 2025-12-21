@@ -219,6 +219,7 @@ namespace Aetheris
                 _ => BlockType.Stone
             };
         }
+
         private async Task HandleBlockPlaceBroadcastAsync(CancellationToken token)
         {
             try
@@ -234,13 +235,14 @@ namespace Aetheris
                 Console.WriteLine($"[Client] ===== RECEIVED BLOCK PLACE BROADCAST =====");
                 Console.WriteLine($"[Client] Position: ({x}, {y}, {z}), BlockType byte: {blockTypeByte}");
 
-                // FIXED: Convert byte to network BlockType (which PlaceBlock expects)
-                Aetheris.BlockType networkBlockType = (Aetheris.BlockType)blockTypeByte;
+                // FIXED: Convert byte to AetherisClient.Rendering.BlockType (for rendering)
+                AetherisClient.Rendering.BlockType renderingBlockType =
+                    (AetherisClient.Rendering.BlockType)blockTypeByte;
 
-                // Place block in game's PlacedBlockManager
-                game?.PlacedBlocks.PlaceBlock(x, y, z, networkBlockType);
+                // Place block in game's PlacedBlockManager (expects rendering type)
+                game?.PlacedBlocks.PlaceBlock(x, y, z, renderingBlockType);
 
-                Console.WriteLine($"[Client] Placed {networkBlockType} block model");
+                Console.WriteLine($"[Client] Placed {renderingBlockType} block model");
             }
             catch (Exception ex)
             {
@@ -248,6 +250,7 @@ namespace Aetheris
                 throw;
             }
         }
+
 
         public async Task SendBlockPlaceAsync(int x, int y, int z, Aetheris.BlockType blockType)
         {

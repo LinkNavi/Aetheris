@@ -9,7 +9,7 @@ namespace Aetheris
         private readonly Player player;
         private readonly RaycastHelper raycaster;
         private readonly Action<Vector3, BlockType> onBlockMined;
-        private readonly Func<float> toolSpeedProvider;
+        private readonly Func<float>? toolSpeedProvider;  // Made nullable
 
         private Vector3? currentTarget = null;
         private float miningProgress = 0f;
@@ -45,12 +45,12 @@ namespace Aetheris
         public event Action<Vector3, BlockType> OnMiningStarted = delegate { };
         public event Action OnMiningStopped = delegate { };
 
-        public MiningSystem(Player player, Game game, Action<Vector3, BlockType> onBlockMined, Func<float> toolSpeedProvider = null)
+        public MiningSystem(Player player, Game game, Action<Vector3, BlockType> onBlockMined, Func<float>? toolSpeedProvider = null)
         {
             this.player = player ?? throw new ArgumentNullException(nameof(player));
             this.raycaster = new RaycastHelper(game);
             this.onBlockMined = onBlockMined;
-            this.toolSpeedProvider = toolSpeedProvider ?? (() => 1f);
+            this.toolSpeedProvider = toolSpeedProvider;
         }
 
         public void Update(float deltaTime, MouseState mouse, bool isWindowFocused)
@@ -226,7 +226,6 @@ namespace Aetheris
             return (currentTarget.HasValue, targetBlockType, miningProgress, currentTarget);
         }
 
-        // ADDED: Missing method
         public float GetSwingProgress()
         {
             return miningProgress;

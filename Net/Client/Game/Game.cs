@@ -14,42 +14,48 @@ namespace Aetheris
 {
     public class Game : GameWindow
     {
+        // Core systems
         public Renderer Renderer { get; private set; }
         private readonly Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks;
         public Player player;
         private readonly Client? client;
         private readonly ChunkManager chunkManager;
         public PlayerNetworkController? NetworkController { get; private set; }
-        private int renderDistance = ClientConfig.RENDER_DISTANCE;
-        private float chunkUpdateTimer = 0f;
-        private const float CHUNK_UPDATE_INTERVAL = 0.5f;
-
-        private MiningSystem? miningSystem;
+        
+        // Game systems (new unified approach)
+        private GameSystems gameSystems = null!;
+        
+        // UI systems
         private InventoryUI? inventoryUI;
         private HUDRenderer? hudRenderer;
         private ChatSystem? chatSystem;
         private FontRenderer? fontRenderer;
         private TooltipSystem? tooltipSystem;
-        private HeldItemRenderer? heldItemRenderer;
-        private BlockPlacementSystem? blockPlacementSystem;
         private BlockPlacementPreview? blockPreview;
         private CrosshairRenderer? crosshair;
         private EnhancedHotbarRenderer? enhancedHotbar;
-
-        public PlacedBlockManager PlacedBlocks { get; private set; }
-        private BlockRenderer? blockRenderer;
-        private PlayerStats playerStats;
+        
+        // Additional systems
+        private MiningSystem? miningSystem;
         private RespawnSystem? respawnSystem;
         private FallDamageTracker? fallDamageTracker;
         private TotemManager? totemManager;
-
+        private EntityRenderer? entityRenderer;
+        
+        // Placed blocks (accessed by both game and systems)
+        public PlacedBlockManager PlacedBlocks => gameSystems?.PlacedBlocks!;
+        
+        // Configuration
+        private int renderDistance = ClientConfig.RENDER_DISTANCE;
+        private float chunkUpdateTimer = 0f;
+        private const float CHUNK_UPDATE_INTERVAL = 0.5f;
+        
+        // Logging
         private const string LogFileName = "physics_debug.log";
         private StreamWriter? logWriter;
         private TextWriter? originalConsoleOut;
         private TextWriter? originalConsoleError;
         private TeeTextWriter? teeWriter;
-        private EntityRenderer? entityRenderer;
-        private PlayerNetworkController? networkController;
 
         public Game(Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks, Client? client = null)
        : base(GameWindowSettings.Default, new NativeWindowSettings()
@@ -76,33 +82,15 @@ namespace Aetheris
             player = new Player(new Vector3(16, 50, 16));
             Console.WriteLine("[Game] Player initialized at position: {0}", player.Position);
 
-            playerStats = new PlayerStats();
-            Console.WriteLine("[Game] Player stats initialized");
-
-            PlacedBlocks = new PlacedBlockManager();
-            Console.WriteLine("[Game] PlacedBlockManager initialized");
             if (client != null)
             {
                 NetworkController = new PlayerNetworkController(player, client);
-                networkController = NetworkController;
                 Console.WriteLine("[Game] Network controller initialized");
             }
             else
             {
                 Console.WriteLine("[Game] Running in single-player mode (no network)");
             }
-
-            inventoryUI = new InventoryUI(player.Inventory);
-            Console.WriteLine("[Game] Inventory UI initialized");
-
-            hudRenderer = new HUDRenderer();
-            Console.WriteLine("[Game] HUD renderer initialized");
-
-            fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 12);
-            fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
-
-            chatSystem = new ChatSystem(fontRenderer);
-            Console.WriteLine("[Game] Chat system initialized");
         }
 
         private void SetupLogging()
@@ -146,37 +134,47 @@ namespace Aetheris
             GL.CullFace(TriangleFace.Back);
             GL.FrontFace(FrontFaceDirection.Ccw);
             CursorState = CursorState.Grabbed;
+            
+            // Initialize item and crafting registries
             ItemRegistry.Initialize();
+            
+            // Initialize game systems
+            gameSystems = new GameSystems();
+            gameSystems.Initialize(player, this, client);
+            
+            // Link player inventory to systems
+            player.Inventory = gameSystems.Inventory;
+            
+            // Initialize mining system
             miningSystem = new MiningSystem(player, this, OnBlockMined);
 
+            // Initialize font renderer
             fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 48);
             fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
 
+            // Initialize UI systems
             tooltipSystem = new TooltipSystem(fontRenderer);
-            blockPlacementSystem = new BlockPlacementSystem(player, this, client);
+            inventoryUI = new InventoryUI(player.Inventory, fontRenderer);
+            hudRenderer = new HUDRenderer();
+            chatSystem = new ChatSystem(fontRenderer);
             blockPreview = new BlockPlacementPreview();
             crosshair = new CrosshairRenderer();
             enhancedHotbar = new EnhancedHotbarRenderer(player.Inventory, fontRenderer);
 
+            // Initialize gameplay systems
             respawnSystem = new RespawnSystem(
                 player,
-                playerStats,
+                gameSystems.Stats,
                 player.Position,
                 (msg, type) => chatSystem?.AddMessage(msg, type)
             );
 
             fallDamageTracker = new FallDamageTracker();
-            totemManager = new TotemManager(player.Inventory, playerStats);
+            totemManager = new TotemManager(player.Inventory, gameSystems.Stats);
 
-            blockRenderer = new BlockRenderer();
-            Console.WriteLine("[Game] BlockRenderer initialized");
-            player.Inventory.AddItem(1, 10);
-            player.Inventory.AddItem(2, 15);
-            player.Inventory.AddItem(3, 8);
-            player.Inventory.AddItem(100, 5);
-            player.Inventory.AddItem(200, 1);
-            player.Inventory.AddItem(300, 1);
+            Console.WriteLine("[Game] All systems initialized");
 
+            // Load texture atlas
             string[] atlasPaths = new[]
             {
                 "textures/atlas.png",
@@ -203,15 +201,14 @@ namespace Aetheris
                 Renderer.CreateProceduralAtlas();
             }
 
+            // Load initial chunks
             foreach (var kv in loadedChunks)
             {
                 var coord = kv.Key;
                 var chunk = kv.Value;
 
                 var chunkCoord = new ChunkCoord(coord.Item1, coord.Item2, coord.Item3);
-
                 var meshFloats = MarchingCubes.GenerateMesh(chunk, chunkCoord, chunkManager, 0.5f);
-
                 chunk.GenerateCollisionMesh(meshFloats);
 
                 Console.WriteLine($"[Game] Loading chunk {coord} with {meshFloats.Length / 7} vertices");
@@ -224,10 +221,6 @@ namespace Aetheris
             chatSystem?.AddMessage("Press T to chat, E for inventory, F for stats", ChatMessageType.System);
         }
 
-        private readonly Queue<Action> pendingMainThreadActions = new Queue<Action>();
-        private readonly object mainThreadLock = new object();
-
-
         private void OnBlockMined(Vector3 blockPos, BlockType blockType)
         {
             Console.WriteLine($"[Client] Mined {blockType} at {blockPos}");
@@ -239,19 +232,13 @@ namespace Aetheris
             // Check if this is a placed block
             if (PlacedBlocks.HasBlockAt(x, y, z))
             {
-                // Remove the placed block locally
                 PlacedBlocks.RemoveBlock(x, y, z);
                 Console.WriteLine($"[Client] Removed placed block at ({x}, {y}, {z})");
 
-                // Get the actual block type for inventory
                 var placedBlock = PlacedBlocks.GetBlockAt(x, y, z);
                 if (placedBlock != null)
                 {
                     blockType = (BlockType)((int)placedBlock.BlockType);
-                }
-                else
-                {
-                    blockType = BlockType.Stone;
                 }
             }
 
@@ -271,14 +258,12 @@ namespace Aetheris
                 }
             }
 
-            // Send to server (server will handle both placed blocks and terrain)
+            // Send to server
             if (client != null)
             {
                 _ = client.SendBlockBreakAsync(x, y, z);
             }
         }
-
-
 
         private int BlockTypeToItemId(BlockType blockType)
         {
@@ -296,68 +281,9 @@ namespace Aetheris
             };
         }
 
-        public void RegenerateMeshForBlock(Vector3 blockPos)
-        {
-            int blockX = (int)blockPos.X;
-            int blockY = (int)blockPos.Y;
-            int blockZ = (int)blockPos.Z;
-
-            float miningRadius = 5.0f;
-            int affectRadius = (int)Math.Ceiling(miningRadius);
-
-            HashSet<(int, int, int)> chunksToUpdate = new HashSet<(int, int, int)>();
-
-            for (int dx = -affectRadius; dx <= affectRadius; dx++)
-            {
-                for (int dy = -affectRadius; dy <= affectRadius; dy++)
-                {
-                    for (int dz = -affectRadius; dz <= affectRadius; dz++)
-                    {
-                        int wx = blockX + dx;
-                        int wy = blockY + dy;
-                        int wz = blockZ + dz;
-
-                        int cx = (int)Math.Floor((float)wx / ClientConfig.CHUNK_SIZE);
-                        int cy = (int)Math.Floor((float)wy / ClientConfig.CHUNK_SIZE_Y);
-                        int cz = (int)Math.Floor((float)wz / ClientConfig.CHUNK_SIZE);
-
-                        chunksToUpdate.Add((cx, cy, cz));
-                    }
-                }
-            }
-
-            Console.WriteLine($"[Client] Re-requesting {chunksToUpdate.Count} chunks from server after block break");
-
-            foreach (var (cx, cy, cz) in chunksToUpdate)
-            {
-                loadedChunks.Remove((cx, cy, cz));
-
-                if (client != null)
-                {
-                    client.ForceReloadChunk(cx, cy, cz);
-                }
-            }
-        }
-
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-
-            lock (mainThreadLock)
-            {
-                while (pendingMainThreadActions.Count > 0)
-                {
-                    var action = pendingMainThreadActions.Dequeue();
-                    try
-                    {
-                        action?.Invoke();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[Game] Error executing pending action: {ex.Message}");
-                    }
-                }
-            }
 
             float deltaTime = (float)e.Time;
 
@@ -366,11 +292,10 @@ namespace Aetheris
             if (IsKeyDown(Keys.Escape))
                 Close();
 
-            if (chatSystem != null)
-            {
-                chatSystem.Update(KeyboardState, deltaTime);
-            }
+            // Update chat system
+            chatSystem?.Update(KeyboardState, deltaTime);
 
+            // Update inventory UI
             bool inventoryOpen = false;
             if (inventoryUI != null)
             {
@@ -380,9 +305,11 @@ namespace Aetheris
 
             bool chatOpen = chatSystem?.IsChatOpen() ?? false;
 
+            // Update tooltip
             bool showTooltip = inventoryUI != null && inventoryUI.IsInventoryOpen() && inventoryUI.GetHoveredSlot() >= 0;
             tooltipSystem?.Update(deltaTime, showTooltip);
 
+            // Gameplay updates (only when not in UI)
             if (!inventoryOpen && !chatOpen)
             {
                 if (CursorState != CursorState.Grabbed)
@@ -390,27 +317,30 @@ namespace Aetheris
                     CursorState = CursorState.Grabbed;
                 }
 
+                // Player movement
                 if (NetworkController != null)
                 {
                     NetworkController.Update(e, KeyboardState, MouseState);
-                }
-                else if (networkController != null)
-                {
-                    networkController.Update(e, KeyboardState, MouseState);
                 }
                 else
                 {
                     player.Update(e, KeyboardState, MouseState);
                 }
 
-                if (miningSystem != null)
-                {
-                    miningSystem.Update(deltaTime, MouseState, IsFocused);
-                }
+                // Mining
+                miningSystem?.Update(deltaTime, MouseState, IsFocused);
 
-                if (blockPlacementSystem != null && !inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+                // Block placement (handled by game systems)
+                if (MouseState.IsButtonPressed(MouseButton.Right))
                 {
-                    blockPlacementSystem.Update(deltaTime, MouseState, IsFocused);
+                    gameSystems?.Update(
+                        deltaTime,
+                        player.Position,
+                        player.GetForward(),
+                        true,  // place pressed
+                        false,
+                        player.Inventory.SelectedHotbarSlot
+                    );
                 }
             }
             else
@@ -421,17 +351,20 @@ namespace Aetheris
                 }
             }
 
+            // Update gameplay systems
             respawnSystem?.Update(deltaTime);
-            fallDamageTracker?.Update(player, playerStats);
+            fallDamageTracker?.Update(player, gameSystems.Stats);
             totemManager?.ApplyTotemEffects();
 
+            // Update armor from equipped items
             float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
-            playerStats.Armor = totalArmor;
+            gameSystems.Stats.Armor = totalArmor;
 
-            playerStats.Update(deltaTime);
+            // Update stats
+            gameSystems.Stats.Update(deltaTime);
+            hudRenderer?.Update(gameSystems.Stats, deltaTime);
 
-            hudRenderer?.Update(playerStats, deltaTime);
-
+            // Chunk loading
             if (chunkUpdateTimer == 0f)
             {
                 Vector3 playerChunk = player.GetPlayersChunk();
@@ -446,6 +379,7 @@ namespace Aetheris
                 client?.UpdateLoadedChunks(playerChunk, renderDistance);
             }
 
+            // Render distance controls
             if (KeyboardState.IsKeyPressed(Keys.Equal) || KeyboardState.IsKeyPressed(Keys.KeyPadAdd))
             {
                 renderDistance = Math.Min(renderDistance + 1, 999);
@@ -459,21 +393,23 @@ namespace Aetheris
                 chatSystem?.AddMessage($"Render distance: {renderDistance}", ChatMessageType.System);
             }
 
+            // Stats display
             if (KeyboardState.IsKeyPressed(Keys.F))
             {
                 ShowStats();
             }
 
+            // Debug heal/damage
             if (KeyboardState.IsKeyPressed(Keys.H))
             {
-                playerStats.Heal(20f);
+                gameSystems.Stats.Heal(20f);
                 hudRenderer?.OnHealed();
                 chatSystem?.AddMessage("Healed +20 HP", ChatMessageType.Success);
             }
 
             if (KeyboardState.IsKeyPressed(Keys.J))
             {
-                playerStats.TakeDamage(10f);
+                gameSystems.Stats.TakeDamage(10f);
                 hudRenderer?.OnDamageTaken();
                 chatSystem?.AddMessage("Took 10 damage", ChatMessageType.Error);
             }
@@ -482,9 +418,9 @@ namespace Aetheris
         private void ShowStats()
         {
             chatSystem?.AddMessage("=== Player Stats ===", ChatMessageType.System);
-            chatSystem?.AddMessage($"Health: {playerStats.Health:F1}/{playerStats.MaxHealth:F1}", ChatMessageType.System);
-            chatSystem?.AddMessage($"Armor: {playerStats.Armor:F1}/{playerStats.MaxArmor:F1}", ChatMessageType.System);
-            chatSystem?.AddMessage($"Hunger: {playerStats.Hunger:F1}/{playerStats.MaxHunger:F1}", ChatMessageType.System);
+            chatSystem?.AddMessage($"Health: {gameSystems.Stats.Health:F1}/{gameSystems.Stats.MaxHealth:F1}", ChatMessageType.System);
+            chatSystem?.AddMessage($"Armor: {gameSystems.Stats.Armor:F1}/{gameSystems.Stats.MaxArmor:F1}", ChatMessageType.System);
+            chatSystem?.AddMessage($"Hunger: {gameSystems.Stats.Hunger:F1}/{gameSystems.Stats.MaxHunger:F1}", ChatMessageType.System);
             chatSystem?.AddMessage($"Position: {player.Position}", ChatMessageType.System);
         }
 
@@ -519,29 +455,17 @@ namespace Aetheris
                 0.1f,
                 1000f);
             var view = player.GetViewMatrix();
-            if (blockRenderer != null)
-            {
-                int atlasTexture = AetherisClient.Rendering.AtlasManager.IsLoaded
-                    ? AetherisClient.Rendering.AtlasManager.AtlasTextureId
-                    : 0;
-
-                float maxRenderDistance = renderDistance * ClientConfig.CHUNK_SIZE * 1.5f;
-
-                blockRenderer.RenderBlocks(
-                    PlacedBlocks,
-                    player.Position,
-                    view,
-                    projection,
-                    atlasTexture,
-                    Renderer.FogDecay,
-                    maxRenderDistance
-                );
-            }
+            
+            // Render placed blocks (from game systems)
+            gameSystems?.Render(view, projection, player.Position);
+            
+            // Render terrain
             Renderer.Render(projection, view, player.Position);
 
-            if (entityRenderer != null && networkController != null)
+            // Render remote players
+            if (entityRenderer != null && NetworkController != null)
             {
-                var remotePlayers = networkController.RemotePlayers;
+                var remotePlayers = NetworkController.RemotePlayers;
                 if (remotePlayers != null && remotePlayers.Count > 0)
                 {
                     entityRenderer.RenderPlayers(
@@ -553,8 +477,9 @@ namespace Aetheris
                 }
             }
 
-            if (inventoryUI != null && blockPlacementSystem != null && blockPreview != null &&
-                !inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
+            // Render block placement preview
+            if (inventoryUI != null && gameSystems.PlacementSystem != null && blockPreview != null &&
+                !inventoryUI.IsInventoryOpen() && !(chatSystem?.IsChatOpen() ?? false))
             {
                 var selectedItem = player.Inventory.GetSelectedItem();
                 if (selectedItem.ItemId > 0)
@@ -562,7 +487,7 @@ namespace Aetheris
                     var itemDef = ItemRegistry.Get(selectedItem.ItemId);
                     if (itemDef?.PlacesBlock.HasValue == true)
                     {
-                        var preview = blockPlacementSystem.GetPlacementPreview();
+                        var preview = gameSystems.PlacementSystem.GetPlacementPreview();
                         if (preview.canPlace)
                         {
                             blockPreview.Render(preview.position, preview.canPlace, view, projection);
@@ -571,35 +496,16 @@ namespace Aetheris
                 }
             }
 
-            if (heldItemRenderer != null && !inventoryUI.IsInventoryOpen() && !chatSystem.IsChatOpen())
-            {
-                var selectedItem = player.Inventory.GetSelectedItem();
-                if (selectedItem.ItemId > 0)
-                {
-                    var miningInfo = miningSystem?.GetMiningInfo();
-                    float swingProgress = miningInfo.HasValue ? miningInfo.Value.progress : 0f;
-                    float time = (float)DateTime.Now.TimeOfDay.TotalSeconds;
-
-                    heldItemRenderer.RenderHeldItem(
-                        selectedItem.ItemId,
-                        view,
-                        projection,
-                        swingProgress,
-                        time
-                    );
-                }
-            }
-
-            enhancedHotbar?.Render(Size);
-            crosshair?.Render(Size);
-
             GL.BindVertexArray(0);
             GL.UseProgram(0);
 
-            hudRenderer?.Render(playerStats, Size);
-
+            // Render UI
+            hudRenderer?.Render(gameSystems.Stats, Size);
+            enhancedHotbar?.Render(Size);
+            crosshair?.Render(Size);
             inventoryUI?.Render(Size);
 
+            // Render tooltips
             if (inventoryUI != null && tooltipSystem != null && inventoryUI.GetHoveredSlot() >= 0)
             {
                 var item = player.Inventory.GetSlot(inventoryUI.GetHoveredSlot());
@@ -624,9 +530,8 @@ namespace Aetheris
             hudRenderer?.Dispose();
             chatSystem?.Dispose();
             entityRenderer?.Dispose();
+            gameSystems?.Dispose();
 
-            blockRenderer?.Dispose();
-            PlacedBlocks?.Clear();
             try
             {
                 if (originalConsoleOut != null)

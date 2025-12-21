@@ -1,4 +1,4 @@
-// Net/Client/Game/Rendering/PlacedBlockManager.cs - Manages placed block instances
+// Net/Client/Game/Rendering/PlacedBlockManager.cs - Fixed to use correct BlockType
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,11 +15,12 @@ namespace Aetheris
         public class PlacedBlock
         {
             public Vector3i Position { get; set; }
-            public BlockType BlockType { get; set; }
+            // FIXED: Use AetherisClient.Rendering.BlockType (for rendering)
+            public AetherisClient.Rendering.BlockType BlockType { get; set; }
             public DateTime PlacedTime { get; set; }
             public string PlacedBy { get; set; } = "";
             
-            public PlacedBlock(Vector3i position, BlockType blockType)
+            public PlacedBlock(Vector3i position, AetherisClient.Rendering.BlockType blockType)
             {
                 Position = position;
                 BlockType = blockType;
@@ -27,7 +28,8 @@ namespace Aetheris
             }
         }
         
-        public bool PlaceBlock(int x, int y, int z, BlockType blockType)
+        // FIXED: Accept AetherisClient.Rendering.BlockType
+        public bool PlaceBlock(int x, int y, int z, AetherisClient.Rendering.BlockType blockType)
         {
             var pos = new Vector3i(x, y, z);
             var block = new PlacedBlock(pos, blockType);

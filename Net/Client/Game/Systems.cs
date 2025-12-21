@@ -1,4 +1,4 @@
-// Net/Client/Game/GameSystems.cs - Initializes and manages all game systems
+// Net/Client/Game/Systems.cs - Fixed with nullable properties
 using System;
 using OpenTK.Mathematics;
 using AetherisClient.Rendering;
@@ -7,32 +7,39 @@ namespace Aetheris
 {
     public class GameSystems : IDisposable
     {
-        public Inventory Inventory { get; private set; }
-        public PlayerStats Stats { get; private set; }
-        public PlacedBlockManager PlacedBlocks { get; private set; }
-        public BlockRenderer BlockRenderer { get; private set; }
-        public BlockPlacementSystem PlacementSystem { get; private set; }
-        public BlockBreakingSystem BreakingSystem { get; private set; }
-        public CraftingManager Crafting { get; private set; }
+        public Inventory Inventory { get; private set; } = null!;
+        public PlayerStats Stats { get; private set; } = null!;
+        public PlacedBlockManager PlacedBlocks { get; private set; } = null!;
+        public BlockRenderer BlockRenderer { get; private set; } = null!;
+        public BlockPlacementSystem? PlacementSystem { get; private set; }
+        public BlockBreakingSystem BreakingSystem { get; private set; } = null!;
+        public CraftingManager Crafting { get; private set; } = null!;
         
         private bool initialized;
+        private Player? player;
+        private Game? game;
+        private Client? client;
         
-        public void Initialize()
+        public void Initialize(Player player, Game game, Client? client)
         {
             if (initialized) return;
+            
+            this.player = player;
+            this.game = game;
+            this.client = client;
             
             // Initialize registries
             ItemRegistry.Initialize();
             CraftingRegistry.Initialize();
             
             // Create core systems
-            Inventory = new Inventory(40);
+            Inventory = new Inventory();
             Stats = new PlayerStats(100f, 100f);
             PlacedBlocks = new PlacedBlockManager();
             BlockRenderer = new BlockRenderer();
             
             // Create gameplay systems
-            PlacementSystem = new BlockPlacementSystem(PlacedBlocks, Inventory);
+            PlacementSystem = new BlockPlacementSystem(player, game, client);
             BreakingSystem = new BlockBreakingSystem(PlacedBlocks, Inventory);
             Crafting = new CraftingManager(Inventory);
             
@@ -68,16 +75,16 @@ namespace Aetheris
             // Update stats (hunger drain, regen)
             Stats.Update(deltaTime);
             
-            PlacementSystem.UpdateCooldown(deltaTime);
+            PlacementSystem?.UpdateCooldown(deltaTime);
             
             var selectedItem = Inventory.GetSlot(selectedSlot);
-            int toolId = selectedItem?.ItemId ?? 0;
+            int toolId = selectedItem.ItemId;
             
             // Handle placement
-            if (placePressed && selectedItem != null)
+            if (placePressed && selectedItem.ItemId > 0)
             {
                 var itemDef = ItemRegistry.Get(selectedItem.ItemId);
-                if (itemDef?.PlacesBlock != null)
+                if (itemDef?.PlacesBlock != null && PlacementSystem != null)
                 {
                     if (PlacementSystem.TryPlace(playerPos, lookDir, itemDef.PlacesBlock.Value))
                     {
@@ -113,8 +120,14 @@ namespace Aetheris
         
         public void Render(Matrix4 view, Matrix4 projection, Vector3 cameraPos)
         {
-            var blocks = PlacedBlocks.GetBlocksInRange(cameraPos, 100f);
-            BlockRenderer.Render(blocks, view, projection, cameraPos);
+            if (BlockRenderer == null || PlacedBlocks == null) return;
+            
+            int atlasTexture = AetherisClient.Rendering.AtlasManager.IsLoaded
+                ? AetherisClient.Rendering.AtlasManager.AtlasTextureId
+                : 0;
+            
+            BlockRenderer.RenderBlocks(PlacedBlocks, cameraPos, view, projection, 
+                atlasTexture, 0.003f, 100f);
         }
         
         public void Dispose()

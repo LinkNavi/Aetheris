@@ -5,14 +5,16 @@ namespace Aetheris
     {
         public int ItemId;
         public int Count;
-        public byte[] Metadata;
+        public byte[]? Metadata;
         
-        public ItemStack(int itemId, int count, byte[] metadata = null)
+        public ItemStack(int itemId, int count, byte[]? metadata = null)
         {
             ItemId = itemId;
             Count = count;
             Metadata = metadata;
         }
+        
+        public static ItemStack Empty => new ItemStack(0, 0, null);
     }
 
     public class Inventory
@@ -35,12 +37,16 @@ namespace Aetheris
         public Inventory()
         {
             slots = new ItemStack[TOTAL_SIZE];
+            for (int i = 0; i < TOTAL_SIZE; i++)
+            {
+                slots[i] = ItemStack.Empty;
+            }
         }
 
         // Safe slot access
         public ItemStack GetSlot(int index)
         {
-            if (index < 0 || index >= TOTAL_SIZE) return new ItemStack();
+            if (index < 0 || index >= TOTAL_SIZE) return ItemStack.Empty;
             return slots[index];
         }
 
@@ -107,7 +113,7 @@ namespace Aetheris
                     
                     if (slots[i].Count <= 0)
                     {
-                        slots[i] = new ItemStack();
+                        slots[i] = ItemStack.Empty;
                     }
                 }
             }
@@ -126,6 +132,11 @@ namespace Aetheris
                 }
             }
             return total;
+        }
+
+        public bool HasItem(int itemId)
+        {
+            return CountItem(itemId) > 0;
         }
 
         public ItemStack GetSelectedItem()

@@ -1,4 +1,4 @@
-// Net/Client/Game/Rendering/BlockRenderer.cs - Renders placed blocks with correct textures
+// Net/Client/Game/Rendering/BlockRenderer.cs - Fixed type conversion
 using System;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL4;
@@ -15,10 +15,8 @@ namespace Aetheris
         private const float BLOCK_SIZE = 1f;
         private const int FLOATS_PER_INSTANCE = 8; // x,y,z, blockType, uMin,vMin,uMax,vMax
         
-        // Base cube vertices: Position(3) + Normal(3) + LocalUV(2) = 8 floats per vertex
         private static readonly float[] baseCubeVertices = GenerateBaseCubeVertices();
         
-        // Instance data buffer
         private float[] instanceData = new float[1024 * FLOATS_PER_INSTANCE];
         private int instanceCount = 0;
         
@@ -36,7 +34,6 @@ namespace Aetheris
             
             GL.BindVertexArray(vao);
             
-            // Base cube geometry
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, 
                 baseCubeVertices.Length * sizeof(float), 
@@ -45,35 +42,28 @@ namespace Aetheris
             
             int stride = 8 * sizeof(float);
             
-            // Position (location 0)
             GL.EnableVertexAttribArray(0);
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);
             
-            // Normal (location 1)
             GL.EnableVertexAttribArray(1);
             GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
             
-            // Local UV (location 2)
             GL.EnableVertexAttribArray(2);
             GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));
             
-            // Instance data buffer
             GL.BindBuffer(BufferTarget.ArrayBuffer, instanceVbo);
             GL.BufferData(BufferTarget.ArrayBuffer, instanceData.Length * sizeof(float), IntPtr.Zero, BufferUsageHint.DynamicDraw);
             
             int instanceStride = FLOATS_PER_INSTANCE * sizeof(float);
             
-            // Instance position (location 3) - xyz
             GL.EnableVertexAttribArray(3);
             GL.VertexAttribPointer(3, 3, VertexAttribPointerType.Float, false, instanceStride, 0);
             GL.VertexAttribDivisor(3, 1);
             
-            // Block type (location 4)
             GL.EnableVertexAttribArray(4);
             GL.VertexAttribPointer(4, 1, VertexAttribPointerType.Float, false, instanceStride, 3 * sizeof(float));
             GL.VertexAttribDivisor(4, 1);
             
-            // UV bounds (location 5) - uMin,vMin,uMax,vMax
             GL.EnableVertexAttribArray(5);
             GL.VertexAttribPointer(5, 4, VertexAttribPointerType.Float, false, instanceStride, 4 * sizeof(float));
             GL.VertexAttribDivisor(5, 1);
@@ -110,7 +100,6 @@ void main()
     vViewPos = viewPos4.xyz;
     vNormal = aNormal;
     
-    // Map local UV [0,1] to atlas UV bounds
     vUV = mix(aUVBounds.xy, aUVBounds.zw, aLocalUV);
     vBlockType = int(aBlockType);
     
@@ -191,7 +180,6 @@ void main()
             float fogDecay,
             float maxRenderDistance)
         {
-            // Build instance data
             instanceCount = 0;
             float maxDistSq = maxRenderDistance * maxRenderDistance;
             
@@ -204,10 +192,12 @@ void main()
                 
                 if (distSq > maxDistSq) continue;
                 
-                // Get UV for this block type
-                var (uMin, vMin, uMax, vMax) = AtlasManager.GetAtlasUV(block.BlockType, BlockFace.Side);
+                // FIXED: Convert from Aetheris.BlockType to AetherisClient.Rendering.BlockType
+                AetherisClient.Rendering.BlockType renderingBlockType = 
+                    (AetherisClient.Rendering.BlockType)((int)block.BlockType);
                 
-                // Ensure buffer capacity
+                var (uMin, vMin, uMax, vMax) = AtlasManager.GetAtlasUV(renderingBlockType, BlockFace.Side);
+                
                 int neededSize = (instanceCount + 1) * FLOATS_PER_INSTANCE;
                 if (neededSize > instanceData.Length)
                 {
@@ -218,7 +208,7 @@ void main()
                 instanceData[offset + 0] = block.Position.X;
                 instanceData[offset + 1] = block.Position.Y;
                 instanceData[offset + 2] = block.Position.Z;
-                instanceData[offset + 3] = (float)block.BlockType;
+                instanceData[offset + 3] = (float)renderingBlockType;
                 instanceData[offset + 4] = uMin;
                 instanceData[offset + 5] = vMin;
                 instanceData[offset + 6] = uMax;
@@ -243,7 +233,6 @@ void main()
             GL.BindTexture(TextureTarget.Texture2D, atlasTexture);
             GL.Uniform1(GL.GetUniformLocation(shaderProgram, "uAtlasTexture"), 0);
             
-            // Upload instance data
             GL.BindBuffer(BufferTarget.ArrayBuffer, instanceVbo);
             GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, instanceCount * FLOATS_PER_INSTANCE * sizeof(float), instanceData);
             
@@ -272,37 +261,31 @@ void main()
         {
             var vertices = new List<float>();
             
-            // Front face (+Z)
             AddQuad(vertices, 
                 new Vector3(-1, -1, 1), new Vector3(1, -1, 1), 
                 new Vector3(1, 1, 1), new Vector3(-1, 1, 1),
                 new Vector3(0, 0, 1));
             
-            // Back face (-Z)
             AddQuad(vertices,
                 new Vector3(1, -1, -1), new Vector3(-1, -1, -1),
                 new Vector3(-1, 1, -1), new Vector3(1, 1, -1),
                 new Vector3(0, 0, -1));
             
-            // Top face (+Y)
             AddQuad(vertices,
                 new Vector3(-1, 1, 1), new Vector3(1, 1, 1),
                 new Vector3(1, 1, -1), new Vector3(-1, 1, -1),
                 new Vector3(0, 1, 0));
             
-            // Bottom face (-Y)
             AddQuad(vertices,
                 new Vector3(-1, -1, -1), new Vector3(1, -1, -1),
                 new Vector3(1, -1, 1), new Vector3(-1, -1, 1),
                 new Vector3(0, -1, 0));
             
-            // Right face (+X)
             AddQuad(vertices,
                 new Vector3(1, -1, 1), new Vector3(1, -1, -1),
                 new Vector3(1, 1, -1), new Vector3(1, 1, 1),
                 new Vector3(1, 0, 0));
             
-            // Left face (-X)
             AddQuad(vertices,
                 new Vector3(-1, -1, -1), new Vector3(-1, -1, 1),
                 new Vector3(-1, 1, 1), new Vector3(-1, 1, -1),
@@ -314,12 +297,10 @@ void main()
         private static void AddQuad(List<float> vertices, 
             Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3, Vector3 normal)
         {
-            // Triangle 1
             AddVertex(vertices, v0, normal, 0, 0);
             AddVertex(vertices, v1, normal, 1, 0);
             AddVertex(vertices, v2, normal, 1, 1);
             
-            // Triangle 2
             AddVertex(vertices, v0, normal, 0, 0);
             AddVertex(vertices, v2, normal, 1, 1);
             AddVertex(vertices, v3, normal, 0, 1);

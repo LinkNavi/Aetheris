@@ -3,26 +3,39 @@ using System;
 
 namespace Aetheris
 {
+    public enum DamageType
+    {
+        Unknown,
+        Fall,
+        Drowning,
+        Fire,
+        Lava,
+        Starvation,
+        Combat,
+        Explosion
+    }
+
     public class PlayerStats
     {
         public float Health { get; private set; }
-        public float MaxHealth { get; private set; }
+        public float MaxHealth { get; set; }  // Made public set for totem system
         public float Hunger { get; private set; }
         public float MaxHunger { get; private set; }
-        public float Armor { get; private set; }
+        public float Armor { get; set; }  // Made public set for armor system
+        public float MaxArmor { get; set; } = 100f;  // Added for armor system
+        public float HealthRegenRate { get; set; } = 0.5f;  // Added for totem system
         
         public bool IsDead => Health <= 0;
         public bool IsStarving => Hunger <= 0;
         public float HealthPercent => Health / MaxHealth;
         public float HungerPercent => Hunger / MaxHunger;
         
-        public event Action OnDeath;
-        public event Action<float> OnDamage;
-        public event Action<float> OnHeal;
+        public event Action OnDeath = delegate { };
+        public event Action<float> OnDamage = delegate { };
+        public event Action<float> OnHeal = delegate { };
         
         private float hungerDrainRate = 0.5f;  // Per second
         private float starveDamageRate = 1f;
-        private float regenRate = 0.5f;
         private float regenHungerThreshold = 0.8f;
         
         public PlayerStats(float maxHealth = 100f, float maxHunger = 100f)
@@ -44,16 +57,16 @@ namespace Aetheris
             // Starve damage
             if (IsStarving)
             {
-                TakeDamage(starveDamageRate * deltaTime, "starvation");
+                TakeDamage(starveDamageRate * deltaTime, DamageType.Starvation);
             }
             // Regen when well-fed
             else if (HungerPercent >= regenHungerThreshold && Health < MaxHealth)
             {
-                Health = MathF.Min(MaxHealth, Health + regenRate * deltaTime);
+                Health = MathF.Min(MaxHealth, Health + HealthRegenRate * deltaTime);
             }
         }
         
-        public void TakeDamage(float amount, string source = "unknown")
+        public void TakeDamage(float amount, DamageType damageType = DamageType.Unknown)
         {
             if (IsDead) return;
             
@@ -63,7 +76,7 @@ namespace Aetheris
             
             if (IsDead)
             {
-                Console.WriteLine($"[Stats] Player died from {source}");
+                Console.WriteLine($"[Stats] Player died from {damageType}");
                 OnDeath?.Invoke();
             }
         }
@@ -85,6 +98,12 @@ namespace Aetheris
         
         public void AddMaxHealth(float bonus) { MaxHealth += bonus; Health += bonus; }
         
+        public void Reset()
+        {
+            Health = MaxHealth;
+            Hunger = MaxHunger;
+        }
+        
         public void Respawn()
         {
             Health = MaxHealth;
@@ -95,7 +114,7 @@ namespace Aetheris
         {
             var def = ItemRegistry.Get(itemId);
             if (def == null || def.HungerRestore <= 0) return false;
-            if (!inventory.HasItem(itemId)) return false;
+            if (inventory.CountItem(itemId) <= 0) return false;
             
             inventory.RemoveItem(itemId, 1);
             RestoreHunger(def.HungerRestore);
