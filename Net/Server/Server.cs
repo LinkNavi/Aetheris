@@ -207,21 +207,28 @@ namespace Aetheris
         // Terrain Modification Event Handler
         // ============================================================================
         
-        private void OnServerTerrainModified(TerrainModifyResult result)
+    private void OnServerTerrainModified(TerrainModifyResult result)
+{
+    if (!result.Success) return;
+    
+    Log($"[Server] Terrain modified: {result.BlocksRemoved} removed, {result.BlocksAdded} added");
+    
+    // CRITICAL: Invalidate affected chunks in mesh cache
+    foreach (var (cx, cy, cz) in result.AffectedChunks)
+    {
+        var coord = new ChunkCoord(cx, cy, cz);
+        
+        // Remove from mesh cache so it regenerates
+        if (meshCache.TryRemove(coord, out _))
         {
-            if (!result.Success) return;
-            
-            Log($"[Server] Terrain modified: {result.BlocksRemoved} removed, {result.BlocksAdded} added");
-            
-            // Invalidate affected chunks in mesh cache
-            foreach (var (cx, cy, cz) in result.AffectedChunks)
-            {
-                var coord = new ChunkCoord(cx, cy, cz);
-                meshCache.TryRemove(coord, out _);
-                chunkManager.UnloadChunk(coord);
-                Log($"[Server] Invalidated chunk {coord}");
-            }
+            Interlocked.Decrement(ref cacheSize);
+            Log($"[Server] Invalidated cached mesh for chunk {coord}");
         }
+        
+        // Also unload from chunk manager
+        chunkManager.UnloadChunk(coord);
+    }
+}
         
         // ============================================================================
         // TCP Client Handler

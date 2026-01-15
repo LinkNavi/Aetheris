@@ -1,6 +1,7 @@
-// Fixed InventoryUI.cs - Add missing methods
+// Net/Client/Game/UI/InventoryUI.cs - FULLY FIXED: Consistent OpenGL coordinate system
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -20,7 +21,6 @@ namespace Aetheris
         private int hoveredSlot = -1;
         private int draggedSlot = -1;
         private bool wasMousePressed = false;
-        private Vector2 dragOffset = Vector2.Zero;
 
         private readonly Dictionary<int, float> slotPulseTimers = new();
         private readonly Dictionary<int, float> slotScales = new();
@@ -30,11 +30,11 @@ namespace Aetheris
 
         private const float HOTBAR_SLOT_SIZE = 50f;
         private const float HOTBAR_SPACING = 4f;
-        private const float HOTBAR_Y_OFFSET = 20f;
+        private const float HOTBAR_Y_OFFSET = 20f;  // From BOTTOM
 
         private const float INV_SLOT_SIZE = 45f;
         private const float INV_SPACING = 4f;
-        private const float INV_Y_START = 120f;
+        private const float INV_Y_START = 120f;  // From BOTTOM
 
         private const float ARMOR_SLOT_SIZE = 50f;
         private const float ARMOR_SPACING = 6f;
@@ -52,7 +52,6 @@ namespace Aetheris
             InitializeBuffers();
         }
 
-        // ADDED: Missing method
         public int GetHoveredSlot() => hoveredSlot;
 
         private void InitializeShaders()
@@ -200,6 +199,7 @@ void main()
 
         private void UpdateInventoryInteraction(MouseState mouse, Vector2i windowSize)
         {
+            // Convert mouse from screen space (Y-down) to OpenGL space (Y-up)
             Vector2 mousePos = new Vector2(mouse.X, windowSize.Y - mouse.Y);
             hoveredSlot = GetSlotAtPosition(mousePos, windowSize);
 
@@ -227,6 +227,7 @@ void main()
         {
             float centerX = windowSize.X / 2f;
 
+            // Hotbar slots
             float hotbarWidth = Inventory.HOTBAR_SIZE * (HOTBAR_SLOT_SIZE + HOTBAR_SPACING) - HOTBAR_SPACING;
             float hotbarStartX = centerX - hotbarWidth / 2f;
 
@@ -241,6 +242,7 @@ void main()
 
             if (inventoryOpenProgress < 0.5f) return -1;
 
+            // Main inventory slots
             float invWidth = 9 * (INV_SLOT_SIZE + INV_SPACING) - INV_SPACING;
             float invStartX = centerX - invWidth / 2f;
 
@@ -257,6 +259,7 @@ void main()
                 }
             }
 
+            // Armor slots
             float armorStartX = invStartX - ARMOR_SLOT_SIZE - 40f;
             float armorStartY = INV_Y_START;
 
@@ -269,6 +272,7 @@ void main()
                     return Inventory.GetArmorSlotIndex(i);
             }
 
+            // Totem slots
             float totemStartX = invStartX + invWidth + 40f;
             float totemStartY = INV_Y_START;
 
@@ -339,9 +343,16 @@ void main()
 
             GL.UseProgram(shaderProgram);
 
+            // CRITICAL: Use OpenGL coordinates (Y-up, 0 at bottom)
             var projection = Matrix4.CreateOrthographicOffCenter(0, windowSize.X, 0, windowSize.Y, -1, 1);
             int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
             GL.UniformMatrix4(projLoc, false, ref projection);
+
+            // Set text renderer to use SAME projection
+            if (textRenderer != null)
+            {
+                textRenderer.SetProjection(projection);
+            }
 
             GL.BindVertexArray(vao);
 
@@ -374,7 +385,7 @@ void main()
                 bool isHovered = hoveredSlot == i;
                 float scale = slotScales.ContainsKey(i) ? slotScales[i] : 1f;
 
-                RenderSlot(x, y, HOTBAR_SLOT_SIZE, inventory.GetSlot(i), isSelected, isHovered, scale, SlotType.Hotbar);
+                RenderSlot(x, y, HOTBAR_SLOT_SIZE, inventory.GetSlot(i), isSelected, isHovered, scale, SlotType.Hotbar, i);
             }
         }
 
@@ -403,7 +414,7 @@ void main()
 
                     bool isHovered = hoveredSlot == slot;
                     float scale = slotScales.ContainsKey(slot) ? slotScales[slot] : 1f;
-                    RenderSlot(x, y, INV_SLOT_SIZE, inventory.GetSlot(slot), false, isHovered, scale, SlotType.Inventory, alpha);
+                    RenderSlot(x, y, INV_SLOT_SIZE, inventory.GetSlot(slot), false, isHovered, scale, SlotType.Inventory, slot, alpha);
                 }
             }
 
@@ -418,7 +429,7 @@ void main()
 
                 bool isHovered = hoveredSlot == slot;
                 float scale = slotScales.ContainsKey(slot) ? slotScales[slot] : 1f;
-                RenderSlot(x, y, ARMOR_SLOT_SIZE, inventory.GetSlot(slot), false, isHovered, scale, SlotType.Armor, alpha);
+                RenderSlot(x, y, ARMOR_SLOT_SIZE, inventory.GetSlot(slot), false, isHovered, scale, SlotType.Armor, slot, alpha);
             }
 
             float totemStartX = startX + invWidth + 40f;
@@ -432,11 +443,11 @@ void main()
 
                 bool isHovered = hoveredSlot == slot;
                 float scale = slotScales.ContainsKey(slot) ? slotScales[slot] : 1f;
-                RenderSlot(x, y, TOTEM_SLOT_SIZE, inventory.GetSlot(slot), false, isHovered, scale, SlotType.Totem, alpha);
+                RenderSlot(x, y, TOTEM_SLOT_SIZE, inventory.GetSlot(slot), false, isHovered, scale, SlotType.Totem, slot, alpha);
             }
         }
 
-        private void RenderSlot(float x, float y, float size, ItemStack item, bool selected, bool hovered, float scale, SlotType slotType, float alpha = 1f)
+        private void RenderSlot(float x, float y, float size, ItemStack item, bool selected, bool hovered, float scale, SlotType slotType, int slotIndex, float alpha = 1f)
         {
             float scaledSize = size * scale;
             float offset = (size - scaledSize) / 2f;
@@ -469,26 +480,35 @@ void main()
                 float itemY = y + (scaledSize - itemSize) / 2f;
                 DrawRect(itemX, itemY, itemSize, itemSize, itemColor);
 
-                if (item.Count > 1)
+                // FIXED: Text rendering in OpenGL space (no conversion needed!)
+                if (textRenderer != null)
                 {
-                    DrawRect(x + scaledSize - 10f, y + 2f, 8f, 8f, new Vector4(1f, 1f, 0f, alpha));
-                }
-            }
-
-            if (item.ItemId > 0 && item.Count > 1 && textRenderer != null)
-            {
-                string countText = item.Count.ToString();
-                Vector2 textPos = new Vector2(x + scaledSize - 20f, y + scaledSize - 18f);
-                textRenderer.DrawText(countText, textPos, 0.8f, new Vector4(1f, 1f, 1f, alpha));
-            }
-
-            if (hovered && textRenderer != null)
-            {
-                var itemDef = ItemRegistry.Get(item.ItemId);
-                if (itemDef != null)
-                {
-                    Vector2 namePos = new Vector2(x, y - 25f);
-                    textRenderer.DrawText(itemDef.Name, namePos, 0.9f, itemDef.GetRarityColor());
+                    // Item count (bottom-right of slot)
+                    if (item.Count > 1)
+                    {
+                        string countText = item.Count.ToString();
+                        Vector2 textPos = new Vector2(x + scaledSize - 20f, y + 4f);
+                        textRenderer.DrawText(countText, textPos, 0.8f, new Vector4(1f, 1f, 1f, alpha));
+                    }
+                    
+                    // Slot number (top-left of slot) - only for hotbar
+                    if (slotType == SlotType.Hotbar && slotIndex < 9)
+                    {
+                        string numText = (slotIndex + 1).ToString();
+                        Vector2 numPos = new Vector2(x + 4f, y + scaledSize - 16f);
+                        textRenderer.DrawText(numText, numPos, 0.6f, new Vector4(0.7f, 0.7f, 0.7f, 0.8f * alpha));
+                    }
+                    
+                    // Item name on hover (above slot)
+                    if (hovered)
+                    {
+                        var itemDef = ItemRegistry.Get(item.ItemId);
+                        if (itemDef != null)
+                        {
+                            Vector2 namePos = new Vector2(x, y + scaledSize + 8f);
+                            textRenderer.DrawText(itemDef.Name, namePos, 0.9f, itemDef.GetRarityColor());
+                        }
+                    }
                 }
             }
         }

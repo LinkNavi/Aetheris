@@ -241,7 +241,7 @@ void main()
     /// </summary>
     public class EnhancedHotbarRenderer : IDisposable
     {
-        private readonly Inventory inventory;
+       private readonly Inventory inventory;
         private readonly ITextRenderer? textRenderer;
         private int backgroundVAO, backgroundVBO;
         private int shaderProgram;
@@ -313,7 +313,7 @@ void main()
             GL.DeleteShader(fs);
         }
         
-        public void Render(Vector2i screenSize)
+         public void Render(Vector2i screenSize)
         {
             float totalWidth = Inventory.HOTBAR_SIZE * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING;
             float startX = (screenSize.X - totalWidth) / 2f;
@@ -336,7 +336,7 @@ void main()
             GL.Enable(EnableCap.DepthTest);
         }
         
-        private void RenderSlot(float x, float y, float size, bool selected, int slotIndex, Matrix4 projection, Vector2i screenSize)
+       private void RenderSlot(float x, float y, float size, bool selected, int slotIndex, Matrix4 projection, Vector2i screenSize)
         {
             var item = inventory.GetSlot(slotIndex);
             
@@ -358,67 +358,66 @@ void main()
             if (item.ItemId > 0)
             {
                 var itemDef = ItemRegistry.Get(item.ItemId);
-                if (itemDef != null)
+                if (itemDef != null && textRenderer != null)
                 {
-                    // Item icon/representation (simple colored square for now)
+                    // FIXED: Set correct text projection (Y-down)
+                    textRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(
+                        0, screenSize.X, screenSize.Y, 0, -1, 1));
+                    
+                    // Item icon (colored square)
                     Vector4 itemColor = itemDef.GetRarityColor();
                     float itemSize = size * 0.6f;
                     float itemX = x + (size - itemSize) / 2f;
                     float itemY = y + (size - itemSize) / 2f;
                     DrawRect(itemX, itemY, itemSize, itemSize, itemColor, projection);
                     
-                    if (textRenderer != null)
+                    // Item count (bottom-right)
+                    if (item.Count > 1)
                     {
-                        // Item count
-                        if (item.Count > 1)
-                        {
-                            string countText = item.Count > 99 ? "99+" : item.Count.ToString();
-                            Vector2 countPos = new Vector2(x + size - 18f, y + size - 16f);
-                            textRenderer.DrawText(countText, countPos, 0.7f, new Vector4(1f, 1f, 1f, 1f));
-                        }
+                        string countText = item.Count > 99 ? "99+" : item.Count.ToString();
+                        Vector2 countPos = new Vector2(x + size - 18f, y + size - 4f);
+                        textRenderer.DrawText(countText, countPos, 0.7f, new Vector4(1f, 1f, 1f, 1f));
+                    }
+                    
+                    // Slot number (top-left)
+                    string slotNum = (slotIndex + 1).ToString();
+                    Vector2 numPos = new Vector2(x + 4f, y + 16f);
+                    textRenderer.DrawText(slotNum, numPos, 0.6f, new Vector4(0.7f, 0.7f, 0.7f, 0.8f));
+                    
+                    // Selected item name (below hotbar)
+                    if (selected)
+                    {
+                        Vector2 namePos = new Vector2(
+                            x + size / 2f - 30f,  // Approximate centering
+                            y + size + 24f
+                        );
+                        textRenderer.DrawText(itemDef.Name, namePos, 1f, itemDef.GetRarityColor());
+                    }
+                    
+                    // Durability bar
+                    if (itemDef.Durability > 0)
+                    {
+                        float durabilityPercent = 1f; // TODO: Track actual durability
+                        float barWidth = size * 0.8f;
+                        float barHeight = 3f;
+                        float barX = x + (size - barWidth) / 2f;
+                        float barY = y + size - barHeight - 4f;
                         
-                        // Slot number
-                        string slotNum = (slotIndex + 1).ToString();
-                        Vector2 numPos = new Vector2(x + 4f, y + 4f);
-                        textRenderer.DrawText(slotNum, numPos, 0.6f, new Vector4(0.7f, 0.7f, 0.7f, 0.8f));
+                        // Background
+                        DrawRect(barX, barY, barWidth, barHeight, new Vector4(0.3f, 0.3f, 0.3f, 0.8f), projection);
                         
-                        // Selected item name below hotbar
-                        if (selected)
-                        {
-                            Vector2 nameSize = textRenderer.MeasureText(itemDef.Name, 1f);
-                            Vector2 namePos = new Vector2(
-                                x + size / 2f - nameSize.X / 2f,
-                                y + size + 8f
-                            );
-                            textRenderer.DrawText(itemDef.Name, namePos, 1f, itemDef.GetRarityColor());
-                        }
+                        // Durability
+                        Vector4 durColor = durabilityPercent > 0.5f 
+                            ? new Vector4(0.2f, 1f, 0.2f, 1f)
+                            : durabilityPercent > 0.25f
+                                ? new Vector4(1f, 1f, 0.2f, 1f)
+                                : new Vector4(1f, 0.2f, 0.2f, 1f);
                         
-                        // Durability bar
-                        if (itemDef.Durability > 0)
-                        {
-                            float durabilityPercent = 1f; // TODO: Track actual durability
-                            float barWidth = size * 0.8f;
-                            float barHeight = 3f;
-                            float barX = x + (size - barWidth) / 2f;
-                            float barY = y + size - barHeight - 4f;
-                            
-                            // Background
-                            DrawRect(barX, barY, barWidth, barHeight, new Vector4(0.3f, 0.3f, 0.3f, 0.8f), projection);
-                            
-                            // Durability
-                            Vector4 durColor = durabilityPercent > 0.5f 
-                                ? new Vector4(0.2f, 1f, 0.2f, 1f)
-                                : durabilityPercent > 0.25f
-                                    ? new Vector4(1f, 1f, 0.2f, 1f)
-                                    : new Vector4(1f, 0.2f, 0.2f, 1f);
-                            
-                            DrawRect(barX, barY, barWidth * durabilityPercent, barHeight, durColor, projection);
-                        }
+                        DrawRect(barX, barY, barWidth * durabilityPercent, barHeight, durColor, projection);
                     }
                 }
             }
-        }
-        
+        }        
         private void DrawRect(float x, float y, float w, float h, Vector4 color, Matrix4 projection)
         {
             GL.UseProgram(shaderProgram);

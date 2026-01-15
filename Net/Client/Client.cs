@@ -246,6 +246,9 @@ namespace Aetheris
         /// <summary>
         /// Mine a block with client-side prediction
         /// </summary>
+       /// <summary>
+        /// Mine a block with client-side prediction
+        /// </summary>
         public async Task MineBlockAsync(int x, int y, int z)
         {
             if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected || predictionManager == null)
@@ -262,6 +265,10 @@ namespace Aetheris
             
             // Apply prediction locally FIRST
             uint sequence = predictionManager.PredictModification(message);
+            
+            // CRITICAL FIX: Invalidate chunks immediately for visual feedback
+            Console.WriteLine($"[Client] Applied mine prediction at ({x},{y},{z}), invalidating chunks...");
+            InvalidateChunksAroundBlock(x, y, z);
             
             // Send to server
             await networkSemaphore.WaitAsync();
@@ -283,7 +290,7 @@ namespace Aetheris
             }
         }
         
-        /// <summary>
+      /// <summary>
         /// Place a block with client-side prediction
         /// </summary>
         public async Task PlaceBlockAsync(int x, int y, int z, BlockType blockType, byte rotation = 0)
@@ -304,6 +311,10 @@ namespace Aetheris
             
             // Apply prediction locally FIRST
             uint sequence = predictionManager.PredictModification(message);
+            
+            // CRITICAL FIX: Invalidate chunks immediately for visual feedback
+            Console.WriteLine($"[Client] Applied place prediction at ({x},{y},{z}), invalidating chunks...");
+            InvalidateChunksAroundBlock(x, y, z);
             
             // Send to server
             await networkSemaphore.WaitAsync();
