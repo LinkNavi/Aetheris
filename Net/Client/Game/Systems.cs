@@ -1,7 +1,8 @@
-// Net/Client/Game/Systems.cs - Fixed with nullable properties
+// Net/Client/Game/Systems.cs - Updated with GameLogic integration
 using System;
 using OpenTK.Mathematics;
 using AetherisClient.Rendering;
+using Aetheris.GameLogic;
 
 namespace Aetheris
 {
@@ -19,18 +20,21 @@ namespace Aetheris
         private Player? player;
         private Game? game;
         private Client? client;
+        private GameWorld? clientWorld;
         
-        public void Initialize(Player player, Game game, Client? client)
+        public void Initialize(Player player, Game game, Client? client, GameWorld? clientWorld = null)
         {
             if (initialized) return;
             
             this.player = player;
             this.game = game;
             this.client = client;
+            this.clientWorld = clientWorld;
             
             // Initialize registries
             ItemRegistry.Initialize();
             CraftingRegistry.Initialize();
+            BlockRegistry.Initialize(); // NEW: Initialize GameLogic block registry
             
             // Create core systems
             Inventory = new Inventory();
@@ -38,7 +42,7 @@ namespace Aetheris
             PlacedBlocks = new PlacedBlockManager();
             BlockRenderer = new BlockRenderer();
             
-            // Create gameplay systems
+            // Create gameplay systems with GameLogic integration
             PlacementSystem = new BlockPlacementSystem(player, game, client);
             BreakingSystem = new BlockBreakingSystem(PlacedBlocks, Inventory);
             Crafting = new CraftingManager(Inventory);
@@ -50,7 +54,7 @@ namespace Aetheris
             GiveStarterItems();
             
             initialized = true;
-            Console.WriteLine("[GameSystems] All systems initialized");
+            Console.WriteLine("[GameSystems] All systems initialized with GameLogic integration");
         }
         
         private void GiveStarterItems()
@@ -86,6 +90,7 @@ namespace Aetheris
                 var itemDef = ItemRegistry.Get(selectedItem.ItemId);
                 if (itemDef?.PlacesBlock != null && PlacementSystem != null)
                 {
+                    // Use the new GameLogic-based placement system
                     if (PlacementSystem.TryPlace(playerPos, lookDir, itemDef.PlacesBlock.Value))
                     {
                         Inventory.RemoveItem(selectedItem.ItemId, 1);
@@ -97,7 +102,7 @@ namespace Aetheris
                 }
             }
             
-            // Handle breaking
+            // Handle breaking (still uses old system for placed blocks)
             if (breakHeld)
             {
                 var hit = BreakingSystem.RaycastPlacedBlocks(playerPos, lookDir, 5f);

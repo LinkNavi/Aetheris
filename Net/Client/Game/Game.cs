@@ -113,8 +113,8 @@ namespace Aetheris
             
             // Initialize game systems
             gameSystems = new GameSystems();
-            gameSystems.Initialize(player, this, client);
-            player.Inventory = gameSystems.Inventory;
+          gameSystems.Initialize(player, this, client, clientWorld);
+	  player.Inventory = gameSystems.Inventory;
             
             // Initialize mining system with networked callback
             miningSystem = new MiningSystem(player, this, OnBlockMined);
