@@ -84,7 +84,7 @@ namespace Aetheris
             // Warn about server timeout
             if (timeSinceLastServerUpdate > SERVER_TIMEOUT)
             {
-                Console.WriteLine($"[Network] Warning: No server update for {timeSinceLastServerUpdate:F1}s");
+                // Console.WriteLine($"[Network] Warning: No server update for {timeSinceLastServerUpdate:F1}s");
             }
 
             // Update remote players (smooth interpolation)

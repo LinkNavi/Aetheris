@@ -1,75 +1,74 @@
-
+// Net/Client/Game/UI/HUD.cs - Gothic vampire hunter themed HUD
 using System;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using Aetheris.UI;
 
 namespace Aetheris
 {
     /// <summary>
-    /// Dynamic crosshair that changes based on what you're looking at
+
+
     /// </summary>
-    public class CrosshairRenderer : IDisposable
+    public class HUD : IDisposable
     {
-        private int vao, vbo;
         private int shaderProgram;
+        private int vao, vbo;
         
-        public enum CrosshairState
+        // Animation state
+        private float healthBarWidth = 0f;
+        private float armorBarWidth = 0f;
+        private float hungerBarWidth = 0f;
+        private const float LERP_SPEED = 12f;
+        
+        // Flash effects
+        private float damageFlashTimer = 0f;
+        private float healFlashTimer = 0f;
+        private float heartbeatPulse = 0f;
+        
+        // Gothic color palette
+        private static readonly Vector4 BLOOD_RED = new Vector4(0.8f, 0.1f, 0.1f, 1f);
+        private static readonly Vector4 DARK_CRIMSON = new Vector4(0.5f, 0.05f, 0.05f, 1f);
+        private static readonly Vector4 GOLD_ACCENT = new Vector4(0.9f, 0.7f, 0.3f, 1f);
+        private static readonly Vector4 SILVER = new Vector4(0.75f, 0.75f, 0.8f, 1f);
+        private static readonly Vector4 DARK_BG = new Vector4(0.08f, 0.05f, 0.05f, 0.95f);
+        private static readonly Vector4 ORNATE_BORDER = new Vector4(0.4f, 0.25f, 0.15f, 1f);
+        
+        public HUD()
         {
-            Normal,      // Default crosshair
-            Mining,      // Mining a block
-            CanPlace,    // Can place block here
-            CannotPlace, // Cannot place block here
-            Enemy        // Looking at enemy
+            InitializeShaders();
+            InitializeBuffers();
         }
         
-        public CrosshairState State { get; set; } = CrosshairState.Normal;
-        
-        public CrosshairRenderer()
-        {
-            InitializeMesh();
-            InitializeShader();
-        }
-        
-        private void InitializeMesh()
-        {
-            vao = GL.GenVertexArray();
-            vbo = GL.GenBuffer();
-            
-            GL.BindVertexArray(vao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            
-            // Allocate for dynamic vertex data
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * 2 * 12, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-            
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
-            
-            GL.BindVertexArray(0);
-        }
-        
-        private void InitializeShader()
+        private void InitializeShaders()
         {
             string vertexShader = @"
 #version 330 core
 layout (location = 0) in vec2 aPos;
+layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec4 aColor;
+
+out vec2 TexCoord;
+out vec4 Color;
 
 uniform mat4 projection;
 
 void main()
 {
     gl_Position = projection * vec4(aPos, 0.0, 1.0);
+    TexCoord = aTexCoord;
+    Color = aColor;
 }";
 
             string fragmentShader = @"
 #version 330 core
-out vec4 FragColor;
+in vec2 TexCoord;
+in vec4 Color;
 
-uniform vec4 color;
+out vec4 FragColor;
 
 void main()
 {
-    FragColor = color;
+    FragColor = Color;
 }";
 
             int vs = CompileShader(ShaderType.VertexShader, vertexShader);
@@ -79,138 +78,318 @@ void main()
             GL.AttachShader(shaderProgram, vs);
             GL.AttachShader(shaderProgram, fs);
             GL.LinkProgram(shaderProgram);
-
+            
             GL.DeleteShader(vs);
             GL.DeleteShader(fs);
         }
         
-        public void Render(Vector2i screenSize, float scale = 1f)
+        private void InitializeBuffers()
         {
-            Vector2 center = new Vector2(screenSize.X / 2f, screenSize.Y / 2f);
+            vao = GL.GenVertexArray();
+            vbo = GL.GenBuffer();
+
+            GL.BindVertexArray(vao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+
+            int stride = 8 * sizeof(float);
             
-            GL.UseProgram(shaderProgram);
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, stride, 0);
+            GL.EnableVertexAttribArray(0);
             
-            var projection = Matrix4.CreateOrthographicOffCenter(0, screenSize.X, screenSize.Y, 0, -1, 1);
-            GL.UniformMatrix4(GL.GetUniformLocation(shaderProgram, "projection"), false, ref projection);
+            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, stride, 2 * sizeof(float));
+            GL.EnableVertexAttribArray(1);
             
-            Vector4 color = GetColorForState();
-            GL.Uniform4(GL.GetUniformLocation(shaderProgram, "color"), ref color);
+            GL.VertexAttribPointer(2, 4, VertexAttribPointerType.Float, false, stride, 4 * sizeof(float));
+            GL.EnableVertexAttribArray(2);
+
+            GL.BindVertexArray(0);
+        }
+        
+        public void Update(PlayerStats stats, float deltaTime)
+        {
+            // Smooth bar animations
+            float targetHealth = (stats.Health / stats.MaxHealth) * 200f;
+            float targetArmor = (stats.Armor / stats.MaxArmor) * 180f;
+            float targetHunger = (stats.Hunger / stats.MaxHunger) * 180f;
             
-            float size = 10f * scale;
-            float thickness = 2f;
-            float gap = 4f;
+            healthBarWidth = Lerp(healthBarWidth, targetHealth, deltaTime * LERP_SPEED);
+            armorBarWidth = Lerp(armorBarWidth, targetArmor, deltaTime * LERP_SPEED);
+            hungerBarWidth = Lerp(hungerBarWidth, targetHunger, deltaTime * LERP_SPEED);
             
-            // Generate crosshair geometry based on state
-            float[] vertices;
-            
-            if (State == CrosshairState.Mining)
+            // Heartbeat pulse effect when low health
+            if (stats.HealthPercent < 0.3f)
             {
-                // Pulsing circle for mining
-                float pulseScale = 1f + MathF.Sin((float)DateTime.Now.TimeOfDay.TotalSeconds * 8f) * 0.2f;
-                vertices = GenerateCircle(center, size * pulseScale, 16);
-            }
-            else if (State == CrosshairState.CanPlace)
-            {
-                // Plus sign for placement
-                vertices = GeneratePlusCrosshair(center, size, thickness, gap);
-            }
-            else if (State == CrosshairState.CannotPlace)
-            {
-                // X mark for invalid placement
-                vertices = GenerateXCrosshair(center, size, thickness);
+                heartbeatPulse += deltaTime * 8f;
+                if (heartbeatPulse > MathF.PI * 2f) heartbeatPulse -= MathF.PI * 2f;
             }
             else
             {
-                // Normal dot crosshair
-                vertices = GenerateDotCrosshair(center, size, thickness, gap);
+                heartbeatPulse = 0f;
             }
+            
+            // Update flash timers
+            if (damageFlashTimer > 0f) damageFlashTimer -= deltaTime;
+            if (healFlashTimer > 0f) healFlashTimer -= deltaTime;
+        }
+        
+        public void OnDamageTaken() => damageFlashTimer = 0.4f;
+        public void OnHealed() => healFlashTimer = 0.4f;
+        
+        public void Render(PlayerStats stats, Vector2i windowSize)
+        {
+            bool depthTestEnabled = GL.IsEnabled(EnableCap.DepthTest);
+            bool blendEnabled = GL.IsEnabled(EnableCap.Blend);
             
             GL.Disable(EnableCap.DepthTest);
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            GL.UseProgram(shaderProgram);
             
+            var projection = Matrix4.CreateOrthographicOffCenter(0, windowSize.X, windowSize.Y, 0, -1, 1);
+            int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
+            GL.UniformMatrix4(projLoc, false, ref projection);
+
             GL.BindVertexArray(vao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
             
-            GL.DrawArrays(PrimitiveType.Lines, 0, vertices.Length / 2);
+            // Render left side panel (health/armor)
+            RenderLeftPanel(stats, windowSize);
             
-            GL.BindVertexArray(0);
-            GL.Enable(EnableCap.DepthTest);
-        }
-        
-        private Vector4 GetColorForState()
-        {
-            return State switch
-            {
-                CrosshairState.Mining => new Vector4(1f, 1f, 0f, 0.9f),
-                CrosshairState.CanPlace => new Vector4(0f, 1f, 0f, 0.8f),
-                CrosshairState.CannotPlace => new Vector4(1f, 0f, 0f, 0.8f),
-                CrosshairState.Enemy => new Vector4(1f, 0.3f, 0f, 0.9f),
-                _ => new Vector4(1f, 1f, 1f, 0.7f)
-            };
-        }
-        
-        private float[] GeneratePlusCrosshair(Vector2 center, float size, float thickness, float gap)
-        {
-            return new float[]
-            {
-                // Horizontal line (left)
-                center.X - size, center.Y,
-                center.X - gap, center.Y,
-                // Horizontal line (right)
-                center.X + gap, center.Y,
-                center.X + size, center.Y,
-                // Vertical line (top)
-                center.X, center.Y - size,
-                center.X, center.Y - gap,
-                // Vertical line (bottom)
-                center.X, center.Y + gap,
-                center.X, center.Y + size
-            };
-        }
-        
-        private float[] GenerateDotCrosshair(Vector2 center, float size, float thickness, float gap)
-        {
-            return new float[]
-            {
-                // Center dot
-                center.X - thickness, center.Y,
-                center.X + thickness, center.Y,
-                center.X, center.Y - thickness,
-                center.X, center.Y + thickness
-            };
-        }
-        
-        private float[] GenerateXCrosshair(Vector2 center, float size, float thickness)
-        {
-            float offset = size * 0.7f;
-            return new float[]
-            {
-                center.X - offset, center.Y - offset,
-                center.X + offset, center.Y + offset,
-                center.X + offset, center.Y - offset,
-                center.X - offset, center.Y + offset
-            };
-        }
-        
-        private float[] GenerateCircle(Vector2 center, float radius, int segments)
-        {
-            var vertices = new float[segments * 4];
+            // Render right side panel (hunger/stamina)
+            RenderRightPanel(stats, windowSize);
             
-            for (int i = 0; i < segments; i++)
+            // Damage flash overlay
+            if (damageFlashTimer > 0f)
             {
-                float angle1 = (float)i / segments * MathF.PI * 2f;
-                float angle2 = (float)(i + 1) / segments * MathF.PI * 2f;
-                
-                vertices[i * 4 + 0] = center.X + MathF.Cos(angle1) * radius;
-                vertices[i * 4 + 1] = center.Y + MathF.Sin(angle1) * radius;
-                vertices[i * 4 + 2] = center.X + MathF.Cos(angle2) * radius;
-                vertices[i * 4 + 3] = center.Y + MathF.Sin(angle2) * radius;
+                float alpha = damageFlashTimer / 0.4f * 0.4f;
+                Vector4 flashColor = BLOOD_RED;
+                flashColor.W = alpha;
+                DrawFullScreenOverlay(flashColor, windowSize);
             }
             
-            return vertices;
+            // Heal flash overlay
+            if (healFlashTimer > 0f)
+            {
+                float alpha = healFlashTimer / 0.4f * 0.25f;
+                Vector4 flashColor = GOLD_ACCENT;
+                flashColor.W = alpha;
+                DrawFullScreenOverlay(flashColor, windowSize);
+            }
+
+            GL.BindVertexArray(0);
+            GL.UseProgram(0);
+
+            if (depthTestEnabled) GL.Enable(EnableCap.DepthTest);
+            if (!blendEnabled) GL.Disable(EnableCap.Blend);
         }
+        
+        private void RenderLeftPanel(PlayerStats stats, Vector2i windowSize)
+        {
+            float panelX = 20f;
+            float panelY = 20f;
+            float panelWidth = 280f;
+            float panelHeight = 180f;
+            
+            // Gothic ornate background
+            DrawGothicPanel(panelX, panelY, panelWidth, panelHeight);
+            
+            // Health bar
+            float healthY = panelY + 50f;
+            RenderGothicBar(
+                panelX + 20f, healthY, 240f, 28f,
+                healthBarWidth, stats.HealthPercent,
+                BLOOD_RED, DARK_CRIMSON,
+                "VITALITY",
+                $"{(int)stats.Health}/{(int)stats.MaxHealth}",
+                heartbeatPulse
+            );
+            
+            // Armor bar (if player has armor)
+            if (stats.Armor > 0f || armorBarWidth > 1f)
+            {
+                float armorY = healthY + 45f;
+                RenderGothicBar(
+                    panelX + 30f, armorY, 220f, 22f,
+                    armorBarWidth, stats.Armor / stats.MaxArmor,
+                    SILVER, new Vector4(0.3f, 0.3f, 0.35f, 1f),
+                    "ARMOR",
+                    $"{(int)stats.Armor}",
+                    0f
+                );
+            }
+        }
+        
+        private void RenderRightPanel(PlayerStats stats, Vector2i windowSize)
+        {
+            float panelX = windowSize.X - 300f;
+            float panelY = 20f;
+            float panelWidth = 280f;
+            float panelHeight = 120f;
+            
+            // Gothic ornate background
+            DrawGothicPanel(panelX, panelY, panelWidth, panelHeight);
+            
+            // Hunger/Stamina bar
+            float hungerY = panelY + 50f;
+            Vector4 hungerColor = stats.IsStarving 
+                ? new Vector4(0.7f, 0.2f, 0.1f, 1f)
+                : new Vector4(0.9f, 0.6f, 0.2f, 1f);
+            
+            RenderGothicBar(
+                panelX + 20f, hungerY, 240f, 28f,
+                hungerBarWidth, stats.HungerPercent,
+                hungerColor, new Vector4(0.4f, 0.2f, 0.1f, 1f),
+                "STAMINA",
+                $"{(int)stats.Hunger}%",
+                0f
+            );
+        }
+        
+        private void DrawGothicPanel(float x, float y, float w, float h)
+        {
+            // Dark background with vignette effect
+            DrawRect(x, y, w, h, DARK_BG);
+            
+            // Ornate border frame (multiple layers for depth)
+            float borderThickness = 3f;
+            
+            // Outer gold accent
+            DrawRectOutline(x - 2f, y - 2f, w + 4f, h + 4f, 1f, GOLD_ACCENT);
+            
+            // Main ornate border
+            DrawRectOutline(x, y, w, h, borderThickness, ORNATE_BORDER);
+            
+            // Inner highlight
+            DrawRectOutline(x + borderThickness, y + borderThickness, 
+                          w - borderThickness * 2, h - borderThickness * 2, 
+                          1f, new Vector4(0.5f, 0.4f, 0.3f, 0.4f));
+            
+            // Corner decorations (small diagonal lines)
+            float cornerSize = 12f;
+            DrawLine(x, y, x + cornerSize, y, 2f, GOLD_ACCENT);
+            DrawLine(x, y, x, y + cornerSize, 2f, GOLD_ACCENT);
+            
+            DrawLine(x + w, y, x + w - cornerSize, y, 2f, GOLD_ACCENT);
+            DrawLine(x + w, y, x + w, y + cornerSize, 2f, GOLD_ACCENT);
+            
+            DrawLine(x, y + h, x + cornerSize, y + h, 2f, GOLD_ACCENT);
+            DrawLine(x, y + h, x, y + h - cornerSize, 2f, GOLD_ACCENT);
+            
+            DrawLine(x + w, y + h, x + w - cornerSize, y + h, 2f, GOLD_ACCENT);
+            DrawLine(x + w, y + h, x + w, y + h - cornerSize, 2f, GOLD_ACCENT);
+        }
+        
+        private void RenderGothicBar(float x, float y, float w, float h,
+                                     float fillWidth, float fillPercent,
+                                     Vector4 fillColor, Vector4 bgColor,
+                                     string label, string value, float pulse)
+        {
+            // Background
+            DrawRect(x, y, w, h, bgColor);
+            
+            // Fill with gradient effect
+            if (fillWidth > 0.5f)
+            {
+                float actualFill = Math.Min(fillWidth, w - 4f);
+                
+                // Pulsing effect for low health
+                if (pulse > 0f)
+                {
+                    float pulseIntensity = MathF.Sin(pulse) * 0.3f + 0.7f;
+                    fillColor.X *= pulseIntensity;
+                    fillColor.Y *= pulseIntensity;
+                    fillColor.Z *= pulseIntensity;
+                }
+                
+                // Main fill
+                DrawRect(x + 2f, y + 2f, actualFill, h - 4f, fillColor);
+                
+                // Highlight on top
+                Vector4 highlight = fillColor;
+                highlight.W = 0.4f;
+                DrawRect(x + 2f, y + 2f, actualFill, 3f, highlight);
+                
+                //危険 effect when very low
+                if (fillPercent < 0.2f)
+                {
+                    float flashAlpha = (MathF.Sin(DateTime.Now.Millisecond * 0.01f) + 1f) * 0.3f;
+                    Vector4 warningFlash = new Vector4(1f, 0.2f, 0.2f, flashAlpha);
+                    DrawRect(x + 2f, y + 2f, actualFill, h - 4f, warningFlash);
+                }
+            }
+            
+            // Ornate border
+            DrawRectOutline(x, y, w, h, 2f, ORNATE_BORDER);
+            DrawRectOutline(x + 1f, y + 1f, w - 2f, h - 2f, 1f, GOLD_ACCENT);
+            
+            // Notches every 20% for visual measurement
+            for (int i = 1; i < 5; i++)
+            {
+                float notchX = x + (w * i / 5f);
+                DrawLine(notchX, y, notchX, y + 4f, 1f, new Vector4(0.3f, 0.2f, 0.15f, 0.8f));
+                DrawLine(notchX, y + h - 4f, notchX, y + h, 1f, new Vector4(0.3f, 0.2f, 0.15f, 0.8f));
+            }
+        }
+        
+        private void DrawRect(float x, float y, float w, float h, Vector4 color)
+        {
+            float[] vertices = new float[]
+            {
+                x,     y,       0, 0,        color.X, color.Y, color.Z, color.W,
+                x + w, y,       1, 0,        color.X, color.Y, color.Z, color.W,
+                x + w, y + h,   1, 1,        color.X, color.Y, color.Z, color.W,
+                
+                x,     y,       0, 0,        color.X, color.Y, color.Z, color.W,
+                x + w, y + h,   1, 1,        color.X, color.Y, color.Z, color.W,
+                x,     y + h,   0, 1,        color.X, color.Y, color.Z, color.W,
+            };
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+        }
+        
+        private void DrawRectOutline(float x, float y, float w, float h, float thickness, Vector4 color)
+        {
+            DrawRect(x, y + h - thickness, w, thickness, color); // Bottom
+            DrawRect(x, y, w, thickness, color); // Top
+            DrawRect(x, y, thickness, h, color); // Left
+            DrawRect(x + w - thickness, y, thickness, h, color); // Right
+        }
+        
+        private void DrawLine(float x1, float y1, float x2, float y2, float thickness, Vector4 color)
+        {
+            float dx = x2 - x1;
+            float dy = y2 - y1;
+            float length = MathF.Sqrt(dx * dx + dy * dy);
+            float angle = MathF.Atan2(dy, dx);
+            
+            float halfThickness = thickness * 0.5f;
+            float perpX = -MathF.Sin(angle) * halfThickness;
+            float perpY = MathF.Cos(angle) * halfThickness;
+            
+            float[] vertices = new float[]
+            {
+                x1 + perpX, y1 + perpY, 0, 0, color.X, color.Y, color.Z, color.W,
+                x1 - perpX, y1 - perpY, 0, 1, color.X, color.Y, color.Z, color.W,
+                x2 - perpX, y2 - perpY, 1, 1, color.X, color.Y, color.Z, color.W,
+                
+                x1 + perpX, y1 + perpY, 0, 0, color.X, color.Y, color.Z, color.W,
+                x2 - perpX, y2 - perpY, 1, 1, color.X, color.Y, color.Z, color.W,
+                x2 + perpX, y2 + perpY, 1, 0, color.X, color.Y, color.Z, color.W,
+            };
+            
+            GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+        }
+        
+        private void DrawFullScreenOverlay(Vector4 color, Vector2i windowSize)
+        {
+            DrawRect(0, 0, windowSize.X, windowSize.Y, color);
+        }
+        
+        private float Lerp(float a, float b, float t) => a + (b - a) * Math.Clamp(t, 0f, 1f);
         
         private int CompileShader(ShaderType type, string source)
         {
@@ -222,7 +401,7 @@ void main()
             if (success == 0)
             {
                 string info = GL.GetShaderInfoLog(shader);
-                Console.WriteLine($"[Crosshair] Shader compilation failed: {info}");
+                Console.WriteLine($"[HUD] Shader compilation failed: {info}");
             }
             
             return shader;
@@ -232,246 +411,6 @@ void main()
         {
             GL.DeleteVertexArray(vao);
             GL.DeleteBuffer(vbo);
-            GL.DeleteProgram(shaderProgram);
-        }
-    }
-    
-    /// <summary>
-    /// Enhanced hotbar with item names, counts, and durability bars
-    /// </summary>
-    public class EnhancedHotbarRenderer : IDisposable
-    {
-       private readonly Inventory inventory;
-        private readonly ITextRenderer? textRenderer;
-        private int backgroundVAO, backgroundVBO;
-        private int shaderProgram;
-        
-        private const float SLOT_SIZE = 64f;
-        private const float SLOT_SPACING = 4f;
-        private const float HOTBAR_Y_OFFSET = 80f;
-        
-        public EnhancedHotbarRenderer(Inventory inventory, ITextRenderer? textRenderer = null)
-        {
-            this.inventory = inventory;
-            this.textRenderer = textRenderer;
-            InitializeBuffers();
-            InitializeShader();
-        }
-        
-        private void InitializeBuffers()
-        {
-            backgroundVAO = GL.GenVertexArray();
-            backgroundVBO = GL.GenBuffer();
-            
-            GL.BindVertexArray(backgroundVAO);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, backgroundVBO);
-            
-            GL.BufferData(BufferTarget.ArrayBuffer, sizeof(float) * 6 * 4, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-            
-            GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, 4 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-            
-            GL.BindVertexArray(0);
-        }
-        
-        private void InitializeShader()
-        {
-            string vertexShader = @"
-#version 330 core
-layout (location = 0) in vec4 vertex;
-out vec2 TexCoords;
-
-uniform mat4 projection;
-
-void main()
-{
-    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
-    TexCoords = vertex.zw;
-}";
-
-            string fragmentShader = @"
-#version 330 core
-in vec2 TexCoords;
-out vec4 color;
-
-uniform vec4 bgColor;
-
-void main()
-{
-    color = bgColor;
-}";
-
-            int vs = CompileShader(ShaderType.VertexShader, vertexShader);
-            int fs = CompileShader(ShaderType.FragmentShader, fragmentShader);
-
-            shaderProgram = GL.CreateProgram();
-            GL.AttachShader(shaderProgram, vs);
-            GL.AttachShader(shaderProgram, fs);
-            GL.LinkProgram(shaderProgram);
-
-            GL.DeleteShader(vs);
-            GL.DeleteShader(fs);
-        }
-        
-         public void Render(Vector2i screenSize)
-        {
-            float totalWidth = Inventory.HOTBAR_SIZE * (SLOT_SIZE + SLOT_SPACING) - SLOT_SPACING;
-            float startX = (screenSize.X - totalWidth) / 2f;
-            float startY = HOTBAR_Y_OFFSET;
-            
-            GL.Disable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-            
-            var projection = Matrix4.CreateOrthographicOffCenter(0, screenSize.X, screenSize.Y, 0, -1, 1);
-            
-            for (int i = 0; i < Inventory.HOTBAR_SIZE; i++)
-            {
-                float x = startX + i * (SLOT_SIZE + SLOT_SPACING);
-                bool isSelected = i == inventory.SelectedHotbarSlot;
-                
-                RenderSlot(x, startY, SLOT_SIZE, isSelected, i, projection, screenSize);
-            }
-            
-            GL.Enable(EnableCap.DepthTest);
-        }
-        
-       private void RenderSlot(float x, float y, float size, bool selected, int slotIndex, Matrix4 projection, Vector2i screenSize)
-        {
-            var item = inventory.GetSlot(slotIndex);
-            
-            // Background
-            Vector4 bgColor = selected 
-                ? new Vector4(0.4f, 0.4f, 0.4f, 0.9f)
-                : new Vector4(0.2f, 0.2f, 0.2f, 0.8f);
-            
-            DrawRect(x, y, size, size, bgColor, projection);
-            
-            // Border
-            Vector4 borderColor = selected 
-                ? new Vector4(1f, 1f, 1f, 1f)
-                : new Vector4(0.5f, 0.5f, 0.5f, 0.6f);
-            
-            float borderThickness = selected ? 3f : 2f;
-            DrawRectOutline(x, y, size, size, borderThickness, borderColor, projection);
-            
-            if (item.ItemId > 0)
-            {
-                var itemDef = ItemRegistry.Get(item.ItemId);
-                if (itemDef != null && textRenderer != null)
-                {
-                    // FIXED: Set correct text projection (Y-down)
-                    textRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(
-                        0, screenSize.X, screenSize.Y, 0, -1, 1));
-                    
-                    // Item icon (colored square)
-                    Vector4 itemColor = itemDef.GetRarityColor();
-                    float itemSize = size * 0.6f;
-                    float itemX = x + (size - itemSize) / 2f;
-                    float itemY = y + (size - itemSize) / 2f;
-                    DrawRect(itemX, itemY, itemSize, itemSize, itemColor, projection);
-                    
-                    // Item count (bottom-right)
-                    if (item.Count > 1)
-                    {
-                        string countText = item.Count > 99 ? "99+" : item.Count.ToString();
-                        Vector2 countPos = new Vector2(x + size - 18f, y + size - 4f);
-                        textRenderer.DrawText(countText, countPos, 0.7f, new Vector4(1f, 1f, 1f, 1f));
-                    }
-                    
-                    // Slot number (top-left)
-                    string slotNum = (slotIndex + 1).ToString();
-                    Vector2 numPos = new Vector2(x + 4f, y + 16f);
-                    textRenderer.DrawText(slotNum, numPos, 0.6f, new Vector4(0.7f, 0.7f, 0.7f, 0.8f));
-                    
-                    // Selected item name (below hotbar)
-                    if (selected)
-                    {
-                        Vector2 namePos = new Vector2(
-                            x + size / 2f - 30f,  // Approximate centering
-                            y + size + 24f
-                        );
-                        textRenderer.DrawText(itemDef.Name, namePos, 1f, itemDef.GetRarityColor());
-                    }
-                    
-                    // Durability bar
-                    if (itemDef.Durability > 0)
-                    {
-                        float durabilityPercent = 1f; // TODO: Track actual durability
-                        float barWidth = size * 0.8f;
-                        float barHeight = 3f;
-                        float barX = x + (size - barWidth) / 2f;
-                        float barY = y + size - barHeight - 4f;
-                        
-                        // Background
-                        DrawRect(barX, barY, barWidth, barHeight, new Vector4(0.3f, 0.3f, 0.3f, 0.8f), projection);
-                        
-                        // Durability
-                        Vector4 durColor = durabilityPercent > 0.5f 
-                            ? new Vector4(0.2f, 1f, 0.2f, 1f)
-                            : durabilityPercent > 0.25f
-                                ? new Vector4(1f, 1f, 0.2f, 1f)
-                                : new Vector4(1f, 0.2f, 0.2f, 1f);
-                        
-                        DrawRect(barX, barY, barWidth * durabilityPercent, barHeight, durColor, projection);
-                    }
-                }
-            }
-        }        
-        private void DrawRect(float x, float y, float w, float h, Vector4 color, Matrix4 projection)
-        {
-            GL.UseProgram(shaderProgram);
-            GL.UniformMatrix4(GL.GetUniformLocation(shaderProgram, "projection"), false, ref projection);
-            GL.Uniform4(GL.GetUniformLocation(shaderProgram, "bgColor"), ref color);
-            
-            float[] vertices = {
-                x, y, 0, 0,
-                x + w, y, 1, 0,
-                x + w, y + h, 1, 1,
-                
-                x, y, 0, 0,
-                x + w, y + h, 1, 1,
-                x, y + h, 0, 1
-            };
-            
-            GL.BindVertexArray(backgroundVAO);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, backgroundVBO);
-            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-        }
-        
-        private void DrawRectOutline(float x, float y, float w, float h, float thickness, Vector4 color, Matrix4 projection)
-        {
-            // Top
-            DrawRect(x, y, w, thickness, color, projection);
-            // Bottom
-            DrawRect(x, y + h - thickness, w, thickness, color, projection);
-            // Left
-            DrawRect(x, y, thickness, h, color, projection);
-            // Right
-            DrawRect(x + w - thickness, y, thickness, h, color, projection);
-        }
-        
-        private int CompileShader(ShaderType type, string source)
-        {
-            int shader = GL.CreateShader(type);
-            GL.ShaderSource(shader, source);
-            GL.CompileShader(shader);
-            
-            GL.GetShader(shader, ShaderParameter.CompileStatus, out int success);
-            if (success == 0)
-            {
-                string info = GL.GetShaderInfoLog(shader);
-                Console.WriteLine($"[EnhancedHotbar] Shader compilation failed: {info}");
-            }
-            
-            return shader;
-        }
-        
-        public void Dispose()
-        {
-            GL.DeleteVertexArray(backgroundVAO);
-            GL.DeleteBuffer(backgroundVBO);
             GL.DeleteProgram(shaderProgram);
         }
     }
