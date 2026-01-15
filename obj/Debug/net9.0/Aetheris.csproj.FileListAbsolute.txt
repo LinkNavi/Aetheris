@@ -82,3 +82,16 @@
 /home/link/Programming/Aetheris/obj/Debug/net9.0/ref/Aetheris.dll
 /home/link/Programming/Aetheris/bin/Debug/net9.0/SharpGLTF.Core.dll
 /home/link/Programming/Aetheris/bin/Debug/net9.0/SharpGLTF.Runtime.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/AssetManagementBase.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/Cyotek.Drawing.BitmapFont.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/FontStashSharp.Base.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/FontStashSharp.MonoGame.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/FontStashSharp.Rasterizers.StbTrueTypeSharp.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/info.lundin.math.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/Myra.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/XNAssets.FontStashSharp.MonoGame.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/XNAssets.MonoGame.dll
+/home/link/Programming/Aetheris/bin/Debug/net9.0/Ultralight/bin/libAppCore.so
+/home/link/Programming/Aetheris/bin/Debug/net9.0/Ultralight/bin/libUltralight.so
+/home/link/Programming/Aetheris/bin/Debug/net9.0/Ultralight/bin/libUltralightCore.so
+/home/link/Programming/Aetheris/bin/Debug/net9.0/Ultralight/bin/libWebCore.so

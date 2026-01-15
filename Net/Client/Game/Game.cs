@@ -24,13 +24,13 @@ namespace Aetheris
         public GameWorld? clientWorld;  // Client's predicted world state
         private readonly ChunkManager chunkManager;
         public PlayerNetworkController? NetworkController { get; private set; }
-
+private SkiaGameHUD? hud;
         // Game systems
         private GameSystems gameSystems = null!;
 
         // UI systems
-        private InventoryUIRedo? inventoryUI;
-        private HUD? hud;
+private ImGuiInventoryUI? inventoryUI;
+
         private ChatSystem? chatSystem;
         private FontRenderer? fontRenderer;
         private TooltipSystem? tooltipSystem;
@@ -96,7 +96,14 @@ namespace Aetheris
                 Console.WriteLine("[Game] Running in single-player mode (no network)");
             }
         }
-
+private void CheckGLError(string location)
+{
+    OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
+    if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError)
+    {
+        Console.WriteLine($"[OpenGL Error at {location}]: {error}");
+    }
+}
         protected override void OnLoad()
         {
             base.OnLoad();
@@ -125,13 +132,16 @@ namespace Aetheris
 
             // Initialize UI systems
             tooltipSystem = new TooltipSystem(fontRenderer);
-            inventoryUI = new InventoryUIRedo(player.Inventory, fontRenderer);
-            hud = new HUD();
+
+
             chatSystem = new ChatSystem(fontRenderer);
             blockPreview = new BlockPlacementPreview();
 
+hud = new SkiaGameHUD(1980,1080);
+Console.WriteLine($"[Game] HUD created: {hud != null}");
 
-
+inventoryUI = new ImGuiInventoryUI(player.Inventory);
+Console.WriteLine($"[Game] InventoryUI created: {inventoryUI != null}");
             // Initialize gameplay systems
             respawnSystem = new RespawnSystem(
                 player,
@@ -344,14 +354,14 @@ namespace Aetheris
            gameSystems.Stats.Update(deltaTime);
 if (hud != null)
 {
-    hud.Update(gameSystems.Stats, deltaTime);
+    hud.Update(deltaTime, gameSystems.Stats, player.Inventory);
 }
 
 // Update armor from equipped items
 float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
 gameSystems.Stats.Armor = totalArmor;            // Update stats
             gameSystems.Stats.Update(deltaTime);
-            hud.Update(gameSystems.Stats, deltaTime);
+
 
             // Chunk loading
             UpdateChunkLoading(deltaTime);
@@ -449,14 +459,14 @@ gameSystems.Stats.Armor = totalArmor;            // Update stats
             if (KeyboardState.IsKeyPressed(Keys.H))
             {
                 gameSystems.Stats.Heal(20f);
-                hud?.OnHealed();
+
                 chatSystem?.AddMessage("Healed +20 HP", ChatMessageType.Success);
             }
 
             if (KeyboardState.IsKeyPressed(Keys.J))
             {
                 gameSystems.Stats.TakeDamage(10f);
-                hud?.OnDamageTaken();
+
                 chatSystem?.AddMessage("Took 10 damage", ChatMessageType.Error);
             }
         }
@@ -537,8 +547,7 @@ gameSystems.Stats.Armor = totalArmor;            // Update stats
     GL.UseProgram(0);
 
     // CRITICAL: Render HUD AFTER 3D but BEFORE UI
-    hud?.Render(gameSystems.Stats, Size);
-
+hud?.Render();
     // Render inventory UI
     inventoryUI?.Render(Size);
 
@@ -591,7 +600,7 @@ gameSystems.Stats.Armor = totalArmor;            // Update stats
 
             Renderer.Dispose();
             inventoryUI?.Dispose();
-            hud?.Dispose();
+
             chatSystem?.Dispose();
             entityRenderer?.Dispose();
             gameSystems?.Dispose();
@@ -618,7 +627,12 @@ gameSystems.Stats.Armor = totalArmor;            // Update stats
         // ============================================================================
         // Logging Setup
         // ============================================================================
-
+protected override void OnResize(ResizeEventArgs e)
+{
+    base.OnResize(e);
+    GL.Viewport(0, 0, Size.X, Size.Y);
+    hud?.Resize(Size.X, Size.Y);
+}
         private void SetupLogging()
         {
             try

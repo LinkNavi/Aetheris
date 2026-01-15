@@ -1,0 +1,28 @@
+===== Aetheris Crash Report =====
+Time: 1/15/2026 10:47:57 AM
+Message: The type initializer for 'SkiaSharp.SKImageInfo' threw an exception.
+Source: System.Private.CoreLib
+Stack Trace:
+   at SkiaSharp.SKImageInfo..ctor(Int32 width, Int32 height, SKColorType colorType, SKAlphaType alphaType)
+   at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, SKColorType colorType, SKAlphaType alphaType)
+   at Aetheris.UI.SkiaGameHUD..ctor(Int32 width, Int32 height) in /home/link/Programming/Aetheris/Net/Client/Game/UI/ActualHud.cs:line 30
+   at Aetheris.Game.OnLoad() in /home/link/Programming/Aetheris/Net/Client/Game/Game.cs:line 140
+   at OpenTK.Windowing.Desktop.GameWindow.Run()
+   at Aetheris.Game.RunGame() in /home/link/Programming/Aetheris/Net/Client/Game/Game.cs:line 625
+   at Aetheris.Client.Run() in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 78
+   at Aetheris.Program.Main(String[] args) in /home/link/Programming/Aetheris/Program.cs:line 69
+
+Inner Exception:
+System.DllNotFoundException: Unable to load shared library 'libSkiaSharp' or one of its dependencies. In order to help diagnose loading problems, consider using a tool like strace. If you're using glibc, consider setting the LD_DEBUG environment variable: 
+/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/libSkiaSharp.so: cannot open shared object file: No such file or directory
+/usr/share/dotnet/shared/Microsoft.NETCore.App/10.0.0/libSkiaSharp.so: cannot open shared object file: No such file or directory
+/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/liblibSkiaSharp.so: cannot open shared object file: No such file or directory
+/usr/share/dotnet/shared/Microsoft.NETCore.App/10.0.0/liblibSkiaSharp.so: cannot open shared object file: No such file or directory
+/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/libSkiaSharp: cannot open shared object file: No such file or directory
+/usr/share/dotnet/shared/Microsoft.NETCore.App/10.0.0/libSkiaSharp: cannot open shared object file: No such file or directory
+/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/liblibSkiaSharp: cannot open shared object file: No such file or directory
+/usr/share/dotnet/shared/Microsoft.NETCore.App/10.0.0/liblibSkiaSharp: cannot open shared object file: No such file or directory
+
+   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()
+   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()
+   at SkiaSharp.SKImageInfo..cctor()

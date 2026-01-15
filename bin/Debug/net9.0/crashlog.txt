@@ -1,17 +1,14 @@
 ===== Aetheris Crash Report =====
-Time: 1/15/2026 5:31:50 AM
-Message: One or more errors occurred. (Operation canceled)
-Source: System.Private.CoreLib
+Time: 1/15/2026 7:52:01 AM
+Message: Could not load file or assembly 'MonoGame.Framework, Version=3.8.0.1641, Culture=neutral, PublicKeyToken=null'. The system cannot find the file specified.
+
+Source: Aetheris
 Stack Trace:
-   at System.Threading.Tasks.Task.ThrowIfExceptional(Boolean includeTaskCanceledExceptions)
-   at System.Threading.Tasks.Task.Wait(Int32 millisecondsTimeout, CancellationToken cancellationToken)
-   at System.Threading.Tasks.Task.Wait(TimeSpan timeout, CancellationToken cancellationToken)
-   at System.Threading.Tasks.Task.Wait(TimeSpan timeout)
-   at Aetheris.Program.Main(String[] args) in /home/link/Programming/Aetheris/Program.cs:line 98
+   at MyraHUD..ctor(Int32 width, Int32 height)
+   at Aetheris.Game.OnLoad() in /home/link/Programming/Aetheris/Net/Client/Game/Game.cs:line 129
+   at OpenTK.Windowing.Desktop.GameWindow.Run()
+   at Aetheris.Game.RunGame() in /home/link/Programming/Aetheris/Net/Client/Game/Game.cs:line 616
+   at Aetheris.Client.Run() in /home/link/Programming/Aetheris/Net/Client/Client.cs:line 78
+   at Aetheris.Program.Main(String[] args) in /home/link/Programming/Aetheris/Program.cs:line 69
 
 Inner Exception:
-System.Net.Sockets.SocketException (125): Operation canceled
-   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
-   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource<System.Net.Sockets.Socket>.GetResult(Int16 token)
-   at System.Net.Sockets.TcpListener.<AcceptTcpClientAsync>g__WaitAndWrap|32_0(ValueTask`1 task)
-   at Aetheris.Server.RunServerAsync() in /home/link/Programming/Aetheris/Net/Server/Server.cs:line 190

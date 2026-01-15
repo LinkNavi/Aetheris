@@ -1,0 +1,37 @@
+[INFO] Launching main menu...
+WARNING: Glycin running without sandbox.
+[MenuWindow] Twilight Princess menu initialized
+[INFO] Starting Single Player mode...
+[INFO] Server started.
+[10:30:24.302] [[Server]] Log file created: /home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/logs/server_log_20260115_103024.txt
+[10:30:24.307] [[Server]] Initializing world generation...
+[10:30:24.321] [[Server]] GameWorld initialized with terrain modification events
+[10:30:24.333] [[Server]] UDP listening on port 42070
+[10:30:24.359] [[Server]] Listening on port 42069 @ 60 TPS
+[INFO] Launching client...
+[Client] Auto-tuned for 2 chunk render distance: 4 concurrent, 32 batch size
+[Client] Connecting to 127.0.0.1:42069...
+[Client] Request stream connected
+[Client] Broadcast stream connected and registered
+[Client] Connected to server (TCP request + TCP broadcast + UDP)
+[10:30:24.819] [Server] Client connected: 127.0.0.1:54684
+[10:30:24.819] [Server] Client connected: 127.0.0.1:54676
+[10:30:24.819] [Server] Client 127.0.0.1:54684 registered as broadcast listener
+[2026-01-15 10:30:24.929] [Logging] Started logging to 'physics_debug.log'
+[2026-01-15 10:30:24.930] [Game] WorldGen initialized
+[2026-01-15 10:30:24.937] [PSX Effects] Shaders compiled successfully
+[2026-01-15 10:30:24.938] [Game] Renderer initialized
+[2026-01-15 10:30:24.954] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2026-01-15 10:30:24.954] [Game] EntityRenderer initialized
+[2026-01-15 10:30:24.980] [Player] Spawned at (16, 37.1, 16)
+[2026-01-15 10:30:24.981] [Game] Player initialized at position: (16, 37.1, 16)
+[2026-01-15 10:30:24.982] [Game] Network controller initialized
+[2026-01-15 10:30:24.986] [Client] TCP broadcast listener started
+[2026-01-15 10:30:24.993] [ItemRegistry] Registered 33 items
+[2026-01-15 10:30:24.998] [Crafting] Registered 12 recipes
+[2026-01-15 10:30:25.007] [BlockRegistry] Registered 9 block types
+[2026-01-15 10:30:25.021] [GameSystems] Starter items added
+[2026-01-15 10:30:25.021] [GameSystems] All systems initialized with GameLogic integration
+[2026-01-15 10:30:25.486] [Client] Chunk update loop starting...
+[2026-01-15 10:30:25.521] [UltralightHUD] Starting initialization...
+[2026-01-15 10:30:25.526] [UltralightHUD] Config created: 3028923768896

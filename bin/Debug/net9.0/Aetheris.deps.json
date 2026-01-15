@@ -11,6 +11,7 @@
           "BepuPhysics": "2.5.0-beta.27",
           "BepuUtilities": "2.5.0-beta.27",
           "Jitter2": "2.4.1",
+          "Myra": "1.5.10",
           "OpenTK": "4.9.4",
           "SharpGLTF.Core": "1.0.0",
           "SharpGLTF.Runtime": "1.0.0",
@@ -22,6 +23,14 @@
         },
         "runtime": {
           "Aetheris.dll": {}
+        }
+      },
+      "AssetManagementBase/0.7.1": {
+        "runtime": {
+          "lib/netstandard2.0/AssetManagementBase.dll": {
+            "assemblyVersion": "0.7.1.0",
+            "fileVersion": "0.7.1.0"
+          }
         }
       },
       "BepuPhysics/2.5.0-beta.27": {
@@ -43,11 +52,74 @@
           }
         }
       },
+      "Cyotek.Drawing.BitmapFont/2.0.4": {
+        "runtime": {
+          "lib/net5.0/Cyotek.Drawing.BitmapFont.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "2.0.4.0"
+          }
+        }
+      },
+      "FontStashSharp.Base/1.2.2": {
+        "runtime": {
+          "lib/netstandard2.0/FontStashSharp.Base.dll": {
+            "assemblyVersion": "1.2.2.0",
+            "fileVersion": "1.2.2.0"
+          }
+        }
+      },
+      "FontStashSharp.MonoGame/1.5.2": {
+        "dependencies": {
+          "Cyotek.Drawing.BitmapFont": "2.0.4",
+          "FontStashSharp.Base": "1.2.2",
+          "FontStashSharp.Rasterizers.StbTrueTypeSharp": "1.2.2",
+          "StbImageSharp": "2.30.15"
+        },
+        "runtime": {
+          "lib/netstandard2.0/FontStashSharp.MonoGame.dll": {
+            "assemblyVersion": "1.5.2.0",
+            "fileVersion": "1.5.2.0"
+          }
+        }
+      },
+      "FontStashSharp.Rasterizers.StbTrueTypeSharp/1.2.2": {
+        "dependencies": {
+          "FontStashSharp.Base": "1.2.2",
+          "StbTrueTypeSharp": "1.26.12"
+        },
+        "runtime": {
+          "lib/netstandard2.0/FontStashSharp.Rasterizers.StbTrueTypeSharp.dll": {
+            "assemblyVersion": "1.2.2.0",
+            "fileVersion": "1.2.2.0"
+          }
+        }
+      },
+      "info.lundin.math.dll/1.2.6": {
+        "runtime": {
+          "lib/netstandard2.0/info.lundin.math.dll": {
+            "assemblyVersion": "1.2.6.0",
+            "fileVersion": "1.2.6.0"
+          }
+        }
+      },
       "Jitter2/2.4.1": {
         "runtime": {
           "lib/net8.0/Jitter2.dll": {
             "assemblyVersion": "2.0.0.0",
             "fileVersion": "2.4.1.0"
+          }
+        }
+      },
+      "Myra/1.5.10": {
+        "dependencies": {
+          "XNAssets.FontStashSharp.MonoGame": "0.8.2",
+          "XNAssets.MonoGame": "0.8.2",
+          "info.lundin.math.dll": "1.2.6"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Myra.dll": {
+            "assemblyVersion": "1.5.10.0",
+            "fileVersion": "1.5.10.0"
           }
         }
       },
@@ -113,9 +185,6 @@
         }
       },
       "OpenTK.Mathematics/4.9.4": {
-        "dependencies": {
-          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
-        },
         "runtime": {
           "lib/netcoreapp3.1/OpenTK.Mathematics.dll": {
             "assemblyVersion": "4.9.4.0",
@@ -253,7 +322,31 @@
           }
         }
       },
-      "System.Runtime.CompilerServices.Unsafe/6.0.0": {}
+      "XNAssets.FontStashSharp.MonoGame/0.8.2": {
+        "dependencies": {
+          "AssetManagementBase": "0.7.1",
+          "FontStashSharp.MonoGame": "1.5.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/XNAssets.FontStashSharp.MonoGame.dll": {
+            "assemblyVersion": "0.8.2.0",
+            "fileVersion": "0.8.2.0"
+          }
+        }
+      },
+      "XNAssets.MonoGame/0.8.2": {
+        "dependencies": {
+          "AssetManagementBase": "0.7.1",
+          "Cyotek.Drawing.BitmapFont": "2.0.4",
+          "StbImageSharp": "2.30.15"
+        },
+        "runtime": {
+          "lib/netstandard2.0/XNAssets.MonoGame.dll": {
+            "assemblyVersion": "0.8.2.0",
+            "fileVersion": "0.8.2.0"
+          }
+        }
+      }
     }
   },
   "libraries": {
@@ -261,6 +354,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "AssetManagementBase/0.7.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ciI67Vo0fvJY/0owQCsfbXy6++mrYmizJiVw9rXmSNe9YB6OhqTMJ+rYrzokeSLCSDJcj8w5Yj98FhkYrV1AoQ==",
+      "path": "assetmanagementbase/0.7.1",
+      "hashPath": "assetmanagementbase.0.7.1.nupkg.sha512"
     },
     "BepuPhysics/2.5.0-beta.27": {
       "type": "package",
@@ -276,12 +376,54 @@
       "path": "bepuutilities/2.5.0-beta.27",
       "hashPath": "bepuutilities.2.5.0-beta.27.nupkg.sha512"
     },
+    "Cyotek.Drawing.BitmapFont/2.0.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-iA6WehGVdMUuNbfsQQDq/Bt+mMd/OqHjiMUtKFLIQd/0pyYh4ehT7FEjTxN9/4OXNKQZsp9bAJgltP2nnswUJg==",
+      "path": "cyotek.drawing.bitmapfont/2.0.4",
+      "hashPath": "cyotek.drawing.bitmapfont.2.0.4.nupkg.sha512"
+    },
+    "FontStashSharp.Base/1.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-t2PT+/Sat9WPLm4AVYU1Aa/PrOgNQ4npSUGDHTYufXzLUHxrN3+BaRhAU0DZXkJNfuGCS5iKaQNopNXe9ES24g==",
+      "path": "fontstashsharp.base/1.2.2",
+      "hashPath": "fontstashsharp.base.1.2.2.nupkg.sha512"
+    },
+    "FontStashSharp.MonoGame/1.5.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+bhbAZ52L2fIWTRrHnSCNccB7ArKVH6Wa7c/kzO4YybrzXxgmDbLjuOwS49FgN9qsEp/7/Xqalc3YyquXs9uwA==",
+      "path": "fontstashsharp.monogame/1.5.2",
+      "hashPath": "fontstashsharp.monogame.1.5.2.nupkg.sha512"
+    },
+    "FontStashSharp.Rasterizers.StbTrueTypeSharp/1.2.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-OoXoGkxNMhyQeYR/wjeN6Bs8Guea7FisKXLcVJdeNtSYT+5iKxIh4ETi9x9OIk7GEQtNbE0yVhG3rb8RS04Kmg==",
+      "path": "fontstashsharp.rasterizers.stbtruetypesharp/1.2.2",
+      "hashPath": "fontstashsharp.rasterizers.stbtruetypesharp.1.2.2.nupkg.sha512"
+    },
+    "info.lundin.math.dll/1.2.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rCSUXUISKOmFkpEPd9wZJP9bHsyozEwvid3zO4gByG1QQX9IMAUZ8R9OZmpKp20JWrBMGBMTgoXAuLCSoK6VAQ==",
+      "path": "info.lundin.math.dll/1.2.6",
+      "hashPath": "info.lundin.math.dll.1.2.6.nupkg.sha512"
+    },
     "Jitter2/2.4.1": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-qlwfHlxyqWC6knqb3I7Kfb6MobjAcuhtHrsCPoNyoUyF3FuulZh3SFZHbYXcPRZZxk5viutdUUuLvPaLecU9OQ==",
       "path": "jitter2/2.4.1",
       "hashPath": "jitter2.2.4.1.nupkg.sha512"
+    },
+    "Myra/1.5.10": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-cT6Ng18vIAZ0z17D+v6Lj9X5DEYFx2trJV6KMKVCLzgF8G9cMCOyPQkg272qBE7nZbzkpGe6o2iw/DU/ZBSQxw==",
+      "path": "myra/1.5.10",
+      "hashPath": "myra.1.5.10.nupkg.sha512"
     },
     "OpenTK/4.9.4": {
       "type": "package",
@@ -409,12 +551,19 @@
       "path": "stbtruetypesharp/1.26.12",
       "hashPath": "stbtruetypesharp.1.26.12.nupkg.sha512"
     },
-    "System.Runtime.CompilerServices.Unsafe/6.0.0": {
+    "XNAssets.FontStashSharp.MonoGame/0.8.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg==",
-      "path": "system.runtime.compilerservices.unsafe/6.0.0",
-      "hashPath": "system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+      "sha512": "sha512-bhOh0TzNubCartCFtKtCjF4vazXYaejPtMhyymOcBGwcrAyBJ49JH61LqxSn+sJmvPrRisq6/ncQqIXsRrR5fw==",
+      "path": "xnassets.fontstashsharp.monogame/0.8.2",
+      "hashPath": "xnassets.fontstashsharp.monogame.0.8.2.nupkg.sha512"
+    },
+    "XNAssets.MonoGame/0.8.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CLdO+nj43tjhp27lQqoVCLHeJbdT7SPlpdGziD2w5sm4+dnnt/CP0i4nzEKAttlxTr1BTLs0neoY0c2GXoU2qA==",
+      "path": "xnassets.monogame/0.8.2",
+      "hashPath": "xnassets.monogame.0.8.2.nupkg.sha512"
     }
   }
 }
