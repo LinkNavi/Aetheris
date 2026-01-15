@@ -223,10 +223,10 @@ namespace Aetheris.GameLogic
         }
 
         /// <summary>Get all modified blocks in a region</summary>
-        public ConcurrentDictionary<BlockPos, BlockData>.Enumerator GetModifiedBlocksEnumerator()
-        {
-            return modifiedBlocks.GetEnumerator();
-        }
+       // public ConcurrentDictionary<BlockPos, BlockData>.Enumerator GetModifiedBlocksEnumerator()
+       // {
+         //   return modifiedBlocks.GetEnumerator();
+       // }
 
         /// <summary>Clear a specific modification (revert to procedural)</summary>
         public bool ClearModification(BlockPos pos)
