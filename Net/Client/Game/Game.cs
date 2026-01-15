@@ -24,12 +24,12 @@ namespace Aetheris
         public GameWorld? clientWorld;  // Client's predicted world state
         private readonly ChunkManager chunkManager;
         public PlayerNetworkController? NetworkController { get; private set; }
-private SkiaGameHUD? hud;
+        private EnhancedGameHUD? hud;
         // Game systems
         private GameSystems gameSystems = null!;
 
         // UI systems
-private ImGuiInventoryUI? inventoryUI;
+        private OpenGLInventoryUI? inventoryUI;
 
         private ChatSystem? chatSystem;
         private FontRenderer? fontRenderer;
@@ -137,11 +137,11 @@ private void CheckGLError(string location)
             chatSystem = new ChatSystem(fontRenderer);
             blockPreview = new BlockPlacementPreview();
 
-hud = new SkiaGameHUD(1980,1080);
-Console.WriteLine($"[Game] HUD created: {hud != null}");
+            hud = new EnhancedGameHUD(fontRenderer);
+            Console.WriteLine($"[Game] EnhancedGameHUD created: {hud != null}");
 
-inventoryUI = new ImGuiInventoryUI(player.Inventory);
-Console.WriteLine($"[Game] InventoryUI created: {inventoryUI != null}");
+            inventoryUI = new OpenGLInventoryUI(player.Inventory, fontRenderer);
+            Console.WriteLine($"[Game] OpenGLInventoryUI created: {inventoryUI != null}");
             // Initialize gameplay systems
             respawnSystem = new RespawnSystem(
                 player,
@@ -309,6 +309,35 @@ Console.WriteLine($"[Game] InventoryUI created: {inventoryUI != null}");
                 if (CursorState != CursorState.Grabbed)
                 {
                     CursorState = CursorState.Grabbed;
+                }
+
+                // Hotbar selection with number keys
+                for (int i = 0; i < 9; i++)
+                {
+                    Keys key = Keys.D1 + i; // D1 = 0, D2 = 1, etc.
+                    if (KeyboardState.IsKeyPressed(key))
+                    {
+                        player.Inventory.SelectedHotbarSlot = i;
+                        Console.WriteLine($"[Game] Selected hotbar slot {i + 1}");
+                        break;
+                    }
+                }
+
+                // Mouse wheel for hotbar selection
+                float scrollDelta = MouseState.ScrollDelta.Y;
+                if (scrollDelta != 0)
+                {
+                    int currentSlot = player.Inventory.SelectedHotbarSlot;
+                    if (scrollDelta > 0)
+                    {
+                        currentSlot = (currentSlot - 1 + 9) % 9;
+                    }
+                    else
+                    {
+                        currentSlot = (currentSlot + 1) % 9;
+                    }
+                    player.Inventory.SelectedHotbarSlot = currentSlot;
+                    Console.WriteLine($"[Game] Scrolled to hotbar slot {currentSlot + 1}");
                 }
 
                 // Player movement
@@ -546,8 +575,9 @@ gameSystems.Stats.Armor = totalArmor;            // Update stats
     GL.BindVertexArray(0);
     GL.UseProgram(0);
 
-    // CRITICAL: Render HUD AFTER 3D but BEFORE UI
-hud?.Render();
+    // Render HUD with proper parameters
+    hud?.Render(gameSystems.Stats, player.Inventory, Size);
+    
     // Render inventory UI
     inventoryUI?.Render(Size);
 
@@ -599,8 +629,11 @@ hud?.Render();
             base.OnUnload();
 
             Renderer.Dispose();
+            hud?.Dispose();
             inventoryUI?.Dispose();
-
+            fontRenderer?.Dispose();
+            tooltipSystem?.Dispose();
+            blockPreview?.Dispose();
             chatSystem?.Dispose();
             entityRenderer?.Dispose();
             gameSystems?.Dispose();

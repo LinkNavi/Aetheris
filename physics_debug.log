@@ -1,18 +1,120 @@
-﻿[2026-01-15 10:47:56.717] [Logging] Started logging to 'physics_debug.log'
-[2026-01-15 10:47:56.717] [Game] WorldGen initialized
-[2026-01-15 10:47:56.725] [PSX Effects] Shaders compiled successfully
-[2026-01-15 10:47:56.725] [Game] Renderer initialized
-[2026-01-15 10:47:56.734] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2026-01-15 10:47:56.734] [Game] EntityRenderer initialized
-[2026-01-15 10:47:56.752] [Player] Spawned at (16, 37.1, 16)
-[2026-01-15 10:47:56.752] [Game] Player initialized at position: (16, 37.1, 16)
-[2026-01-15 10:47:56.753] [Game] Network controller initialized
-[2026-01-15 10:47:56.755] [Client] TCP broadcast listener started
-[2026-01-15 10:47:56.762] [ItemRegistry] Registered 33 items
-[2026-01-15 10:47:56.765] [Crafting] Registered 12 recipes
-[2026-01-15 10:47:56.770] [BlockRegistry] Registered 9 block types
-[2026-01-15 10:47:56.779] [GameSystems] Starter items added
-[2026-01-15 10:47:56.779] [GameSystems] All systems initialized with GameLogic integration
-[2026-01-15 10:47:57.255] [Client] Chunk update loop starting...
-[2026-01-15 10:47:57.788] [ERROR] Program crashed! Crash log saved to: /home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/crashlog.txt
-[2026-01-15 10:47:57.788] [ERROR] The type initializer for 'SkiaSharp.SKImageInfo' threw an exception.
+﻿[2026-01-15 12:09:31.407] [Logging] Started logging to 'physics_debug.log'
+[2026-01-15 12:09:31.407] [Game] WorldGen initialized
+[2026-01-15 12:09:31.414] [PSX Effects] Shaders compiled successfully
+[2026-01-15 12:09:31.414] [Game] Renderer initialized
+[2026-01-15 12:09:31.422] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2026-01-15 12:09:31.422] [Game] EntityRenderer initialized
+[2026-01-15 12:09:31.439] [Player] Spawned at (16, 37.1, 16)
+[2026-01-15 12:09:31.439] [Game] Player initialized at position: (16, 37.1, 16)
+[2026-01-15 12:09:31.441] [Game] Network controller initialized
+[2026-01-15 12:09:31.443] [Client] TCP broadcast listener started
+[2026-01-15 12:09:31.451] [ItemRegistry] Registered 33 items
+[2026-01-15 12:09:31.453] [Crafting] Registered 12 recipes
+[2026-01-15 12:09:31.459] [BlockRegistry] Registered 9 block types
+[2026-01-15 12:09:31.469] [GameSystems] Starter items added
+[2026-01-15 12:09:31.469] [GameSystems] All systems initialized with GameLogic integration
+[2026-01-15 12:09:31.802] [EnhancedHUD] Initialized with dark theme and animations
+[2026-01-15 12:09:31.802] [Game] EnhancedGameHUD created: True
+[2026-01-15 12:09:31.803] [OpenGLInventoryUI] Initialized
+[2026-01-15 12:09:31.803] [Game] OpenGLInventoryUI created: True
+[2026-01-15 12:09:31.803] [Game] All systems initialized
+[2026-01-15 12:09:31.803] [Game] Found atlas at: textures/atlas.png
+[2026-01-15 12:09:31.842] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2026-01-15 12:09:31.843] [AtlasManager] Using preferred tile size: 64
+[2026-01-15 12:09:31.843] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2026-01-15 12:09:31.847] [AtlasManager] Successfully uploaded to GL texture 571
+[2026-01-15 12:09:31.847] [AtlasManager] Verified texture dimensions: 256x256
+[2026-01-15 12:09:31.848] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 571)
+[2026-01-15 12:09:31.849] [Game] Loaded 0 chunks
+[2026-01-15 12:09:31.943] [Client] Chunk update loop starting...
+[2026-01-15 12:09:32.334] [12:09:32.334] [[Generation]] (0,0,0): Render verts=16506, Collision verts=16506
+[2026-01-15 12:09:32.341] [12:09:32.341] [[Timing]] Chunk (0,0,0): Chunk=142.88ms Mesh=102.60ms Send=6.14ms Total=263.01ms
+[2026-01-15 12:09:32.378] [Renderer] Uploaded chunk (0,0,0): VAO=9, VBO=11, 16506 vertices
+[2026-01-15 12:09:32.610] [12:09:32.610] [[Generation]] (0,0,1): Render verts=13995, Collision verts=13995
+[2026-01-15 12:09:32.613] [12:09:32.613] [[Timing]] Chunk (0,0,1): Chunk=125.29ms Mesh=135.95ms Send=2.57ms Total=263.97ms
+[2026-01-15 12:09:32.638] [Renderer] Uploaded chunk (0,0,1): VAO=10, VBO=12, 13995 vertices
+[2026-01-15 12:09:32.822] [12:09:32.822] [[Generation]] (0,0,-1): Render verts=13143, Collision verts=13143
+[2026-01-15 12:09:32.824] [12:09:32.824] [[Timing]] Chunk (0,0,-1): Chunk=109.45ms Mesh=96.19ms Send=2.00ms Total=208.75ms
+[2026-01-15 12:09:33.046] [12:09:33.046] [[Generation]] (-1,0,0): Render verts=18186, Collision verts=18186
+[2026-01-15 12:09:33.049] [12:09:33.049] [[Timing]] Chunk (-1,0,0): Chunk=108.33ms Mesh=111.73ms Send=2.99ms Total=223.20ms
+[2026-01-15 12:09:33.285] [12:09:33.285] [[Generation]] (1,0,0): Render verts=13323, Collision verts=13323
+[2026-01-15 12:09:33.287] [12:09:33.287] [[Timing]] Chunk (1,0,0): Chunk=126.16ms Mesh=105.88ms Send=1.91ms Total=234.08ms
+[2026-01-15 12:09:33.520] [12:09:33.520] [[Generation]] (1,0,-1): Render verts=13056, Collision verts=13056
+[2026-01-15 12:09:33.522] [12:09:33.522] [[Timing]] Chunk (1,0,-1): Chunk=125.83ms Mesh=105.21ms Send=1.73ms Total=232.88ms
+[2026-01-15 12:09:33.722] [12:09:33.722] [[Generation]] (-1,0,-1): Render verts=12909, Collision verts=12909
+[2026-01-15 12:09:33.724] [12:09:33.724] [[Timing]] Chunk (-1,0,-1): Chunk=105.60ms Mesh=91.87ms Send=2.46ms Total=200.04ms
+[2026-01-15 12:09:34.037] [12:09:34.037] [[Generation]] (-1,0,1): Render verts=18120, Collision verts=18120
+[2026-01-15 12:09:34.041] [12:09:34.041] [[Timing]] Chunk (-1,0,1): Chunk=162.22ms Mesh=148.17ms Send=4.46ms Total=315.03ms
+[2026-01-15 12:09:34.223] [OpenGLInventoryUI] Inventory opened
+[2026-01-15 12:09:34.223] [Game] Inventory toggle: opened
+[2026-01-15 12:09:34.300] [12:09:34.300] [[Generation]] (1,0,1): Render verts=13893, Collision verts=13893
+[2026-01-15 12:09:34.302] [12:09:34.302] [[Timing]] Chunk (1,0,1): Chunk=121.59ms Mesh=133.62ms Send=1.84ms Total=257.17ms
+[2026-01-15 12:09:34.566] [12:09:34.566] [[Generation]] (0,-1,0): Render verts=46158, Collision verts=46158
+[2026-01-15 12:09:34.575] [12:09:34.575] [[Timing]] Chunk (0,-1,0): Chunk=124.20ms Mesh=137.53ms Send=9.11ms Total=270.98ms
+[2026-01-15 12:09:34.799] [12:09:34.799] [[Generation]] (0,-1,1): Render verts=18219, Collision verts=18219
+[2026-01-15 12:09:34.803] [12:09:34.803] [[Timing]] Chunk (0,-1,1): Chunk=95.01ms Mesh=120.87ms Send=3.75ms Total=219.80ms
+[2026-01-15 12:09:35.061] [12:09:35.061] [[Generation]] (1,-1,0): Render verts=46677, Collision verts=46677
+[2026-01-15 12:09:35.070] [12:09:35.070] [[Timing]] Chunk (1,-1,0): Chunk=118.98ms Mesh=138.07ms Send=8.52ms Total=265.72ms
+[2026-01-15 12:09:35.310] [12:09:35.310] [[Generation]] (0,-1,-1): Render verts=22779, Collision verts=22779
+[2026-01-15 12:09:35.314] [12:09:35.314] [[Timing]] Chunk (0,-1,-1): Chunk=107.96ms Mesh=126.41ms Send=3.17ms Total=237.67ms
+[2026-01-15 12:09:35.552] [12:09:35.552] [[Generation]] (-1,-1,0): Render verts=47148, Collision verts=47148
+[2026-01-15 12:09:35.563] [12:09:35.563] [[Timing]] Chunk (-1,-1,0): Chunk=111.82ms Mesh=123.50ms Send=10.39ms Total=245.90ms
+[2026-01-15 12:09:35.819] [12:09:35.819] [[Generation]] (-1,-1,1): Render verts=28041, Collision verts=28041
+[2026-01-15 12:09:35.827] [12:09:35.827] [[Timing]] Chunk (-1,-1,1): Chunk=112.68ms Mesh=136.71ms Send=7.65ms Total=257.21ms
+[2026-01-15 12:09:36.062] [12:09:36.062] [[Generation]] (1,-1,-1): Render verts=8361, Collision verts=8361
+[2026-01-15 12:09:36.064] [12:09:36.064] [[Timing]] Chunk (1,-1,-1): Chunk=108.89ms Mesh=121.73ms Send=1.93ms Total=232.67ms
+[2026-01-15 12:09:36.345] [12:09:36.345] [[Generation]] (1,-1,1): Render verts=49929, Collision verts=49929
+[2026-01-15 12:09:36.358] [12:09:36.358] [[Timing]] Chunk (1,-1,1): Chunk=132.19ms Mesh=146.38ms Send=13.34ms Total=292.09ms
+[2026-01-15 12:09:36.645] [12:09:36.645] [[Generation]] (-1,-1,-1): Render verts=43515, Collision verts=43515
+[2026-01-15 12:09:36.655] [12:09:36.655] [[Timing]] Chunk (-1,-1,-1): Chunk=130.69ms Mesh=148.92ms Send=10.34ms Total=290.12ms
+[2026-01-15 12:09:36.890] [12:09:36.890] [[Generation]] (0,0,-2): Render verts=16290, Collision verts=16290
+[2026-01-15 12:09:36.894] [12:09:36.894] [[Timing]] Chunk (0,0,-2): Chunk=110.66ms Mesh=118.13ms Send=3.46ms Total=232.40ms
+[2026-01-15 12:09:37.270] [12:09:37.270] [[Generation]] (0,0,2): Render verts=15900, Collision verts=15900
+[2026-01-15 12:09:37.277] [12:09:37.277] [[Timing]] Chunk (0,0,2): Chunk=177.97ms Mesh=195.73ms Send=6.92ms Total=381.15ms
+[2026-01-15 12:09:37.561] [12:09:37.561] [[Generation]] (-2,0,0): Render verts=19455, Collision verts=19455
+[2026-01-15 12:09:37.566] [12:09:37.566] [[Timing]] Chunk (-2,0,0): Chunk=151.09ms Mesh=130.45ms Send=4.94ms Total=286.69ms
+[2026-01-15 12:09:37.832] [12:09:37.832] [[Generation]] (2,0,0): Render verts=15930, Collision verts=15930
+[2026-01-15 12:09:37.835] [12:09:37.835] [[Timing]] Chunk (2,0,0): Chunk=124.42ms Mesh=139.09ms Send=2.95ms Total=266.57ms
+[2026-01-15 12:09:37.926] [12:09:37.926] [[Generation]] (0,1,0): Render verts=0, Collision verts=0
+[2026-01-15 12:09:37.927] [12:09:37.927] [[Timing]] Chunk (0,1,0): Chunk=41.52ms Mesh=44.12ms Send=0.10ms Total=89.90ms
+[2026-01-15 12:09:38.011] [12:09:38.011] [[Generation]] (0,1,1): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.011] [12:09:38.011] [[Timing]] Chunk (0,1,1): Chunk=40.21ms Mesh=43.37ms Send=0.08ms Total=83.78ms
+[2026-01-15 12:09:38.104] [12:09:38.104] [[Generation]] (-1,1,0): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.104] [12:09:38.104] [[Timing]] Chunk (-1,1,0): Chunk=53.03ms Mesh=39.62ms Send=0.12ms Total=92.94ms
+[2026-01-15 12:09:38.191] [12:09:38.191] [[Generation]] (0,1,-1): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.191] [12:09:38.191] [[Timing]] Chunk (0,1,-1): Chunk=43.30ms Mesh=42.92ms Send=0.12ms Total=86.51ms
+[2026-01-15 12:09:38.275] [12:09:38.275] [[Generation]] (1,1,0): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.275] [12:09:38.275] [[Timing]] Chunk (1,1,0): Chunk=43.40ms Mesh=40.36ms Send=0.18ms Total=84.17ms
+[2026-01-15 12:09:38.367] [12:09:38.367] [[Generation]] (1,1,1): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.367] [12:09:38.367] [[Timing]] Chunk (1,1,1): Chunk=45.33ms Mesh=45.56ms Send=0.10ms Total=91.18ms
+[2026-01-15 12:09:38.457] [12:09:38.457] [[Generation]] (-1,1,1): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.458] [12:09:38.458] [[Timing]] Chunk (-1,1,1): Chunk=46.22ms Mesh=43.86ms Send=0.28ms Total=90.65ms
+[2026-01-15 12:09:38.544] [12:09:38.544] [[Generation]] (1,1,-1): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.544] [12:09:38.544] [[Timing]] Chunk (1,1,-1): Chunk=46.35ms Mesh=39.17ms Send=0.08ms Total=85.76ms
+[2026-01-15 12:09:38.631] [12:09:38.631] [[Generation]] (-1,1,-1): Render verts=0, Collision verts=0
+[2026-01-15 12:09:38.631] [12:09:38.631] [[Timing]] Chunk (-1,1,-1): Chunk=40.21ms Mesh=46.32ms Send=0.26ms Total=87.05ms
+[2026-01-15 12:09:38.867] [12:09:38.867] [[Generation]] (2,-1,0): Render verts=8961, Collision verts=8961
+[2026-01-15 12:09:38.869] [12:09:38.869] [[Timing]] Chunk (2,-1,0): Chunk=119.60ms Mesh=115.73ms Send=1.48ms Total=237.01ms
+[2026-01-15 12:09:39.072] [12:09:39.072] [[Generation]] (-2,-1,0): Render verts=38448, Collision verts=38448
+[2026-01-15 12:09:39.079] [12:09:39.079] [[Timing]] Chunk (-2,-1,0): Chunk=107.35ms Mesh=94.85ms Send=6.86ms Total=209.19ms
+[2026-01-15 12:09:39.169] [12:09:39.169] [[Generation]] (-2,1,0): Render verts=0, Collision verts=0
+[2026-01-15 12:09:39.170] [12:09:39.170] [[Timing]] Chunk (-2,1,0): Chunk=45.68ms Mesh=41.28ms Send=0.43ms Total=87.55ms
+[2026-01-15 12:09:39.369] [12:09:39.369] [[Generation]] (0,-1,-2): Render verts=20592, Collision verts=20592
+[2026-01-15 12:09:39.372] [12:09:39.372] [[Timing]] Chunk (0,-1,-2): Chunk=101.23ms Mesh=97.14ms Send=3.13ms Total=201.62ms
+[2026-01-15 12:09:39.451] [12:09:39.451] [[Generation]] (0,1,-2): Render verts=0, Collision verts=0
+[2026-01-15 12:09:39.452] [12:09:39.452] [[Timing]] Chunk (0,1,-2): Chunk=38.17ms Mesh=37.88ms Send=0.19ms Total=76.44ms
+[2026-01-15 12:09:39.630] [12:09:39.630] [[Generation]] (0,-1,2): Render verts=0, Collision verts=0
+[2026-01-15 12:09:39.630] [12:09:39.630] [[Timing]] Chunk (0,-1,2): Chunk=90.94ms Mesh=86.40ms Send=0.12ms Total=177.81ms
+[2026-01-15 12:09:39.721] [12:09:39.721] [[Generation]] (0,1,2): Render verts=0, Collision verts=0
+[2026-01-15 12:09:39.722] [12:09:39.722] [[Timing]] Chunk (0,1,2): Chunk=46.57ms Mesh=44.31ms Send=0.18ms Total=91.17ms
+[2026-01-15 12:09:39.803] [12:09:39.803] [[Generation]] (2,1,0): Render verts=0, Collision verts=0
+[2026-01-15 12:09:39.803] [12:09:39.803] [[Timing]] Chunk (2,1,0): Chunk=39.85ms Mesh=41.30ms Send=0.26ms Total=81.72ms
+[2026-01-15 12:09:40.872] [12:09:40.872] [[Server]] Tick 600 | Cache: 39/20000
+[2026-01-15 12:09:40.930] [OpenGLInventoryUI] Inventory closed
+[2026-01-15 12:09:40.930] [Game] Inventory toggle: closed
+[2026-01-15 12:09:41.693] [OpenGLInventoryUI] Inventory opened
+[2026-01-15 12:09:41.694] [Game] Inventory toggle: opened
+[2026-01-15 12:09:43.140] [OpenGLInventoryUI] Inventory closed
+[2026-01-15 12:09:43.140] [Game] Inventory toggle: closed
+[2026-01-15 12:09:45.861] [12:09:45.861] [[Server]] Tick 900 | Cache: 39/20000
+[2026-01-15 12:09:45.877] [12:09:45.877] [[Server]] Tick 900 | Cache: 39/20000

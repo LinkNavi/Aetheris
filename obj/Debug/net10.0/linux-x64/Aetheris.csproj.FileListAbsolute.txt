@@ -1,9 +1,5 @@
 /home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/assets/font.ttf
 /home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/textures/atlas.png
-/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/Ultralight/bin/libAppCore.so
-/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/Ultralight/bin/libUltralight.so
-/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/Ultralight/bin/libUltralightCore.so
-/home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/Ultralight/bin/libWebCore.so
 /home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/Aetheris
 /home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/Aetheris.deps.json
 /home/link/Programming/Aetheris/bin/Debug/net10.0/linux-x64/Aetheris.runtimeconfig.json
