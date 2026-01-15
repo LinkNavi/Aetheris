@@ -342,43 +342,49 @@ void main()
             AnimateSlotPulse(slotB);
         }
 
-        public void Render(Vector2i windowSize)
-        {
-            bool depthTestEnabled = GL.IsEnabled(EnableCap.DepthTest);
-            bool blendEnabled = GL.IsEnabled(EnableCap.Blend);
+      public void Render(Vector2i windowSize)
+{
+    // CRITICAL FIX: Save and restore OpenGL state properly
+    bool depthTestEnabled = GL.IsEnabled(EnableCap.DepthTest);
+    bool blendEnabled = GL.IsEnabled(EnableCap.Blend);
+    bool cullFaceEnabled = GL.IsEnabled(EnableCap.CullFace);
 
-            GL.Disable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.Blend);
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+    GL.Disable(EnableCap.DepthTest);
+    GL.Enable(EnableCap.Blend);
+    GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+    GL.Disable(EnableCap.CullFace);  // IMPORTANT: Disable culling for UI
 
-            GL.UseProgram(shaderProgram);
+    GL.UseProgram(shaderProgram);
 
-            var projection = Matrix4.CreateOrthographicOffCenter(0, windowSize.X, 0, windowSize.Y, -1, 1);
-            int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
-            GL.UniformMatrix4(projLoc, false, ref projection);
+   var projection = Matrix4.CreateOrthographicOffCenter(0, windowSize.X, windowSize.Y, 0, -1, 1);  
+   int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
 
-            if (textRenderer != null)
-            {
-                textRenderer.SetProjection(projection);
-            }
+    GL.UniformMatrix4(projLoc, false, ref projection);
 
-            GL.BindVertexArray(vao);
+    if (textRenderer != null)
+    {
+        textRenderer.SetProjection(projection);
+    }
 
-            // Always render hotbar
-            RenderGothicHotbar(windowSize);
+    GL.BindVertexArray(vao);
 
-            // Render full inventory when open
-            if (inventoryOpenProgress > 0.01f)
-            {
-                RenderGothicInventory(windowSize);
-            }
+    // Always render hotbar
+    RenderGothicHotbar(windowSize);
 
-            GL.BindVertexArray(0);
-            GL.UseProgram(0);
+    // Render full inventory when open
+    if (inventoryOpenProgress > 0.01f)
+    {
+        RenderGothicInventory(windowSize);
+    }
 
-            if (depthTestEnabled) GL.Enable(EnableCap.DepthTest);
-            if (!blendEnabled) GL.Disable(EnableCap.Blend);
-        }
+    GL.BindVertexArray(0);
+    GL.UseProgram(0);
+
+    // CRITICAL: Restore OpenGL state
+    if (depthTestEnabled) GL.Enable(EnableCap.DepthTest);
+    if (!blendEnabled) GL.Disable(EnableCap.Blend);
+    if (cullFaceEnabled) GL.Enable(EnableCap.CullFace);
+}
 
         private void RenderGothicHotbar(Vector2i windowSize)
         {

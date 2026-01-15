@@ -368,30 +368,30 @@ namespace Aetheris
             }
         }
 
-        public void ForceReloadChunk(int cx, int cy, int cz)
-        {
-            var coord = (cx, cy, cz);
+     public void ForceReloadChunk(int cx, int cy, int cz)
+{
+    var coord = (cx, cy, cz);
 
-            Console.WriteLine($"[Client] ForceReloadChunk called for ({cx}, {cy}, {cz})");
+    Console.WriteLine($"[Client] ForceReloadChunk called for ({cx}, {cy}, {cz})");
 
-            // CRITICAL: Clear all traces of this chunk
-            bool wasLoaded = loadedChunks.TryRemove(coord, out _);
-            bool wasRequested = requestedChunks.TryRemove(coord, out _);
+    bool wasLoaded = loadedChunks.ContainsKey(coord);
 
-            Console.WriteLine($"[Client]   - Was loaded: {wasLoaded}, was requested: {wasRequested}");
+    Console.WriteLine($"[Client]   - Was loaded: {wasLoaded}");
 
-            // Clear GPU mesh
-            game?.Renderer.ClearChunkMesh(cx, cy, cz);
+    // Clear GPU mesh
+    game?.Renderer.ClearChunkMesh(cx, cy, cz);
 
-            // IMPORTANT: Add small delay before re-requesting to let server invalidate
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(50); // 50ms delay
-                requestedChunks.TryRemove(coord, out _);
-                requestQueue.Enqueue((cx, cy, cz, 0.0f));
-                Console.WriteLine($"[Client]   - Queued for reload after delay");
-            });
-        }
+    // CRITICAL: Remove from both dictionaries
+    requestedChunks.TryRemove(coord, out _);
+    loadedChunks.TryRemove(coord, out _);
+    
+    // Immediately add to request queue
+    if (wasLoaded)
+    {
+        requestQueue.Enqueue((cx, cy, cz, 0.0f));
+        Console.WriteLine($"[Client]   - Re-queued for reload");
+    }
+}
 
         // ============================================================================
         // UDP Packet Handling

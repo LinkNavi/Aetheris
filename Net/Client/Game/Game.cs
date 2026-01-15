@@ -21,7 +21,7 @@ namespace Aetheris
         private readonly Dictionary<(int, int, int), Aetheris.Chunk> loadedChunks;
         public Player player;
         private readonly Client? client;
-        private readonly GameWorld? clientWorld;  // Client's predicted world state
+        public GameWorld? clientWorld;  // Client's predicted world state
         private readonly ChunkManager chunkManager;
         public PlayerNetworkController? NetworkController { get; private set; }
 
@@ -341,10 +341,15 @@ namespace Aetheris
             totemManager?.ApplyTotemEffects();
 
             // Update armor from equipped items
-            float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
-            gameSystems.Stats.Armor = totalArmor;
+           gameSystems.Stats.Update(deltaTime);
+if (hud != null)
+{
+    hud.Update(gameSystems.Stats, deltaTime);
+}
 
-            // Update stats
+// Update armor from equipped items
+float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
+gameSystems.Stats.Armor = totalArmor;            // Update stats
             gameSystems.Stats.Update(deltaTime);
             hud.Update(gameSystems.Stats, deltaTime);
 
@@ -492,58 +497,59 @@ namespace Aetheris
             }
         }
 
-        protected override void OnRenderFrame(FrameEventArgs e)
+       protected override void OnRenderFrame(FrameEventArgs e)
+{
+    base.OnRenderFrame(e);
+    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+    var projection = Matrix4.CreatePerspectiveFieldOfView(
+        OpenTK.Mathematics.MathHelper.DegreesToRadians(60f),
+        Size.X / (float)Size.Y,
+        0.1f,
+        1000f);
+    var view = player.GetViewMatrix();
+
+    // Render placed blocks (from game systems)
+    gameSystems?.Render(view, projection, player.Position);
+
+    // Render terrain
+    Renderer.Render(projection, view, player.Position);
+
+    // Render remote players
+    if (entityRenderer != null && NetworkController != null)
+    {
+        var remotePlayers = NetworkController.RemotePlayers;
+        if (remotePlayers != null && remotePlayers.Count > 0)
         {
-            base.OnRenderFrame(e);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-            var projection = Matrix4.CreatePerspectiveFieldOfView(
-                OpenTK.Mathematics.MathHelper.DegreesToRadians(60f),
-                Size.X / (float)Size.Y,
-                0.1f,
-                1000f);
-            var view = player.GetViewMatrix();
-
-            // Render placed blocks (from game systems)
-            gameSystems?.Render(view, projection, player.Position);
-
-            // Render terrain
-            Renderer.Render(projection, view, player.Position);
-
-            // Render remote players
-            if (entityRenderer != null && NetworkController != null)
-            {
-                var remotePlayers = NetworkController.RemotePlayers;
-                if (remotePlayers != null && remotePlayers.Count > 0)
-                {
-                    entityRenderer.RenderPlayers(
-                        remotePlayers as Dictionary<string, RemotePlayer>,
-                        Renderer.psxEffects,
-                        player.Position,
-                        Renderer.UsePSXEffects
-                    );
-                }
-            }
-
-            // Render block placement preview
-            RenderPlacementPreview(view, projection);
-
-            GL.BindVertexArray(0);
-            GL.UseProgram(0);
-
-            // Render UI
-            hud?.Render(gameSystems.Stats, Size);
-
-
-            inventoryUI?.Render(Size);
-
-            // Render tooltips
-            RenderTooltips();
-
-            chatSystem?.Render(Size);
-
-            SwapBuffers();
+            entityRenderer.RenderPlayers(
+                remotePlayers as Dictionary<string, RemotePlayer>,
+                Renderer.psxEffects,
+                player.Position,
+                Renderer.UsePSXEffects
+            );
         }
+    }
+
+    // Render block placement preview
+    RenderPlacementPreview(view, projection);
+
+    GL.BindVertexArray(0);
+    GL.UseProgram(0);
+
+    // CRITICAL: Render HUD AFTER 3D but BEFORE UI
+    hud?.Render(gameSystems.Stats, Size);
+
+    // Render inventory UI
+    inventoryUI?.Render(Size);
+
+    // Render tooltips
+    RenderTooltips();
+
+    // Render chat
+    chatSystem?.Render(Size);
+
+    SwapBuffers();
+}
 
         private void RenderPlacementPreview(Matrix4 view, Matrix4 projection)
         {

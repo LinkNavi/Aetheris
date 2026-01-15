@@ -176,7 +176,14 @@ namespace Aetheris
 
 private BlockType GetBlockTypeAtPosition(int x, int y, int z)
 {
-    // CRITICAL: Use WorldGen's method that checks modified blocks first
+    // FIXED: Use the correct GameWorld API
+    if (game?.clientWorld != null)
+    {
+        var blockData = game.clientWorld.GetBlockAtWorld(x, y, z);
+        return blockData.Type;
+    }
+    
+    // Fallback to WorldGen
     return WorldGen.GetBlockTypeAt(x, y, z);
 }
 

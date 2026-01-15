@@ -656,19 +656,20 @@ namespace Aetheris
         /// <summary>
         /// Get the block type at a position, checking modified blocks first
         /// </summary>
-        public static BlockType GetBlockTypeAt(int x, int y, int z)
-        {
-            // Check if this block was placed/modified
-            if (modifiedBlocks.TryGetValue((x, y, z), out var blockType))
-            {
-                return blockType;
-            }
-
-            // Fall back to procedural generation
-            var columnData = GetColumnData(x, z);
-            float density = SampleDensityFast(x, y, z, columnData);
-            return GetBlockType(x, y, z, density, columnData);
-        }
+       // In WorldGen.cs
+public static BlockType GetBlockTypeAt(int x, int y, int z)
+{
+    // Check if this block has been modified
+    if (modifiedBlocks.TryGetValue((x, y, z), out var type))
+    {
+        return type;
+    }
+    
+    // Otherwise, use procedural generation
+    float density = SampleDensity(x, y, z);
+    if (density <= 0.5f) return BlockType.Air;
+    return GetBlockType(x, y, z, density);
+}
 
         public static bool IsSolid(int x, int y, int z)
         {

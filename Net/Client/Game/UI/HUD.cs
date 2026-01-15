@@ -146,8 +146,8 @@ void main()
 
             GL.UseProgram(shaderProgram);
             
-            var projection = Matrix4.CreateOrthographicOffCenter(0, windowSize.X, windowSize.Y, 0, -1, 1);
-            int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
+           var projection = Matrix4.CreateOrthographicOffCenter(0, windowSize.X, windowSize.Y, 0, -1, 1);
+	   int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
             GL.UniformMatrix4(projLoc, false, ref projection);
 
             GL.BindVertexArray(vao);

@@ -207,35 +207,36 @@ namespace Aetheris
         // Terrain Modification Event Handler
         // ============================================================================
 
-        private void OnServerTerrainModified(TerrainModifyResult result)
+      // In Server.cs, OnServerTerrainModified method
+private void OnServerTerrainModified(TerrainModifyResult result)
+{
+    if (!result.Success) return;
+
+    Log($"[Server] Terrain modified: {result.BlocksRemoved} removed, {result.BlocksAdded} added, affecting {result.AffectedChunks.Length} chunks");
+
+    // CRITICAL: Invalidate affected chunks 
+    foreach (var (cx, cy, cz) in result.AffectedChunks)
+    {
+        var coord = new ChunkCoord(cx, cy, cz);
+
+        // Remove from mesh cache to force regeneration
+        if (meshCache.TryRemove(coord, out _))
         {
-            if (!result.Success) return;
-
-            Log($"[Server] Terrain modified: {result.BlocksRemoved} removed, {result.BlocksAdded} added, affecting {result.AffectedChunks.Length} chunks");
-
-            // CRITICAL: Invalidate affected chunks AND force regeneration
-            foreach (var (cx, cy, cz) in result.AffectedChunks)
-            {
-                var coord = new ChunkCoord(cx, cy, cz);
-
-                // Remove from mesh cache
-                if (meshCache.TryRemove(coord, out _))
-                {
-                    Interlocked.Decrement(ref cacheSize);
-                }
-
-                // Unload from chunk manager to force regeneration
-                chunkManager.UnloadChunk(coord);
-
-                // IMPORTANT: Also remove generation lock so it can be regenerated
-                if (generationLocks.TryRemove(coord, out var lockObj))
-                {
-                    lockObj.Dispose();
-                }
-
-                Log($"[Server] Invalidated chunk {coord} for regeneration");
-            }
+            Interlocked.Decrement(ref cacheSize);
         }
+
+        // IMPORTANT: Also unload from chunk manager
+        chunkManager.UnloadChunk(coord);
+
+        // Clear generation lock
+        if (generationLocks.TryRemove(coord, out var lockObj))
+        {
+            lockObj.Dispose();
+        }
+
+        Log($"[Server] Invalidated chunk {coord} for regeneration");
+    }
+}
 
         // ============================================================================
         // TCP Client Handler
