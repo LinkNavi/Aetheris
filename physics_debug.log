@@ -1,119 +1,1415 @@
-﻿[2026-01-16 04:02:28.935] [Logging] Started logging to 'physics_debug.log'
-[2026-01-16 04:02:28.936] [Game] WorldGen initialized
-[2026-01-16 04:02:28.943] [PSX Effects] Shaders compiled successfully
-[2026-01-16 04:02:28.943] [Game] Renderer initialized
-[2026-01-16 04:02:28.952] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2026-01-16 04:02:28.952] [Game] EntityRenderer initialized
-[2026-01-16 04:02:28.970] [Player] Spawned at (16, 37.1, 16)
-[2026-01-16 04:02:28.970] [Game] Player initialized at position: (16, 37.1, 16)
-[2026-01-16 04:02:28.971] [Game] Network controller initialized
-[2026-01-16 04:02:28.974] [Client] TCP broadcast listener started
-[2026-01-16 04:02:28.980] [ItemRegistry] Registered 33 items
-[2026-01-16 04:02:28.982] [Crafting] Registered 12 recipes
-[2026-01-16 04:02:28.988] [BlockRegistry] Registered 9 block types
-[2026-01-16 04:02:28.997] [GameSystems] Starter items added
-[2026-01-16 04:02:28.997] [GameSystems] All systems initialized with GameLogic integration
-[2026-01-16 04:02:29.473] [Client] Chunk update loop starting...
-[2026-01-16 04:02:29.610] [EnhancedHUD] Initialized with dark theme and animations
-[2026-01-16 04:02:29.610] [Game] EnhancedGameHUD created: True
-[2026-01-16 04:02:29.611] [OpenGLInventoryUI] Shaders compiled and linked successfully
-[2026-01-16 04:02:29.612] [OpenGLInventoryUI] Initialized
-[2026-01-16 04:02:29.612] [Game] OpenGLInventoryUI created: True
-[2026-01-16 04:02:29.612] [Game] All systems initialized
-[2026-01-16 04:02:29.613] [Game] Found atlas at: textures/atlas.png
-[2026-01-16 04:02:29.667] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2026-01-16 04:02:29.668] [AtlasManager] Using preferred tile size: 64
-[2026-01-16 04:02:29.668] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2026-01-16 04:02:29.673] [AtlasManager] Successfully uploaded to GL texture 1141
-[2026-01-16 04:02:29.674] [AtlasManager] Verified texture dimensions: 256x256
-[2026-01-16 04:02:29.676] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
-[2026-01-16 04:02:29.677] [Game] Loaded 0 chunks
-[2026-01-16 04:02:30.122] [Renderer] Uploaded chunk (0,0,0): VAO=10, VBO=12, 16506 vertices
-[2026-01-16 04:02:30.381] [Renderer] Uploaded chunk (0,0,1): VAO=11, VBO=13, 13995 vertices
-[2026-01-16 04:02:37.094] [Game] Mined Sand at (13, 35, 18)
-[2026-01-16 04:02:37.101] [BlockMod] Applied mine at world (13,35,18)
-[2026-01-16 04:02:37.104] [Prediction] Applied BlockMod[Mine] at (13,35,18) block=0 seq=0 locally
-[2026-01-16 04:02:37.105] [Client] Sent mine request for (13,35,18) seq=0
-[2026-01-16 04:02:37.105] [Game] Sent mine request to server (with prediction)
-[2026-01-16 04:02:37.107] [04:02:37.107] [Server] Received BlockMod[Mine] at (13,35,18) block=0 seq=0 from 127.0.0.1:36502
-[2026-01-16 04:02:37.109] [BlockMod] Applied mine at world (13,35,18)
-[2026-01-16 04:02:37.109] [04:02:37.109] [Server] Applied modification successfully
-[2026-01-16 04:02:37.118] [04:02:37.118] [Server] Broadcasted BlockMod[Mine] at (13,35,18) block=0 seq=0 to 1/1 clients
-[2026-01-16 04:02:37.119] [Client] Received broadcast: BlockMod[Mine] at (13,35,18) block=0 seq=0
-[2026-01-16 04:02:37.119] [BlockMod] Applied mine at world (13,35,18)
-[2026-01-16 04:02:37.122] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2026-01-16 04:02:37.123] [Renderer]   Deleted GPU: VAO=10, VBO=12
-[2026-01-16 04:02:37.123] [Renderer]   Cleared mesh cache
-[2026-01-16 04:02:38.391] [04:02:38.391] [Server] Tick 600 | Cache: 39/20000 | Requests: 41
-[2026-01-16 04:02:43.383] [04:02:43.382] [Server] Tick 900 | Cache: 39/20000 | Requests: 41
-[2026-01-16 04:02:45.269] [Game] Mined Sand at (13, 35, 17)
-[2026-01-16 04:02:45.269] [BlockMod] Applied mine at world (13,35,17)
-[2026-01-16 04:02:45.269] [Prediction] Applied BlockMod[Mine] at (13,35,17) block=0 seq=1 locally
-[2026-01-16 04:02:45.269] [Client] Sent mine request for (13,35,17) seq=1
-[2026-01-16 04:02:45.269] [Game] Sent mine request to server (with prediction)
-[2026-01-16 04:02:45.269] [04:02:45.269] [Server] Received BlockMod[Mine] at (13,35,17) block=0 seq=1 from 127.0.0.1:36502
-[2026-01-16 04:02:45.269] [BlockMod] Applied mine at world (13,35,17)
-[2026-01-16 04:02:45.269] [04:02:45.269] [Server] Applied modification successfully
-[2026-01-16 04:02:45.269] [04:02:45.269] [Server] Broadcasted BlockMod[Mine] at (13,35,17) block=0 seq=1 to 1/1 clients
-[2026-01-16 04:02:45.269] [Client] Received broadcast: BlockMod[Mine] at (13,35,17) block=0 seq=1
-[2026-01-16 04:02:45.270] [BlockMod] Applied mine at world (13,35,17)
-[2026-01-16 04:02:45.270] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2026-01-16 04:02:45.270] [Renderer]   Deleted GPU: VAO=36, VBO=38
-[2026-01-16 04:02:45.270] [Renderer]   Cleared mesh cache
-[2026-01-16 04:02:48.385] [04:02:48.385] [Server] Tick 1200 | Cache: 39/20000 | Requests: 43
-[2026-01-16 04:02:53.049] [Game] Mined Sand at (13, 35, 17)
-[2026-01-16 04:02:53.049] [BlockMod] Applied mine at world (13,35,17)
-[2026-01-16 04:02:53.049] [Prediction] Applied BlockMod[Mine] at (13,35,17) block=0 seq=2 locally
-[2026-01-16 04:02:53.049] [Client] Sent mine request for (13,35,17) seq=2
-[2026-01-16 04:02:53.049] [Game] Sent mine request to server (with prediction)
-[2026-01-16 04:02:53.049] [04:02:53.049] [Server] Received BlockMod[Mine] at (13,35,17) block=0 seq=2 from 127.0.0.1:36502
-[2026-01-16 04:02:53.049] [BlockMod] Applied mine at world (13,35,17)
-[2026-01-16 04:02:53.049] [04:02:53.049] [Server] Applied modification successfully
-[2026-01-16 04:02:53.049] [04:02:53.049] [Server] Broadcasted BlockMod[Mine] at (13,35,17) block=0 seq=2 to 1/1 clients
-[2026-01-16 04:02:53.049] [Client] Received broadcast: BlockMod[Mine] at (13,35,17) block=0 seq=2
-[2026-01-16 04:02:53.049] [BlockMod] Applied mine at world (13,35,17)
-[2026-01-16 04:02:53.049] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2026-01-16 04:02:53.049] [Renderer]   Deleted GPU: VAO=38, VBO=40
-[2026-01-16 04:02:53.049] [Renderer]   Cleared mesh cache
-[2026-01-16 04:02:53.391] [04:02:53.391] [Server] Tick 1500 | Cache: 39/20000 | Requests: 45
-[2026-01-16 04:02:55.575] [Game] Mined Sand at (14, 35, 18)
-[2026-01-16 04:02:55.575] [BlockMod] Applied mine at world (14,35,18)
-[2026-01-16 04:02:55.575] [Prediction] Applied BlockMod[Mine] at (14,35,18) block=0 seq=3 locally
-[2026-01-16 04:02:55.575] [Client] Sent mine request for (14,35,18) seq=3
-[2026-01-16 04:02:55.575] [Game] Sent mine request to server (with prediction)
-[2026-01-16 04:02:55.575] [04:02:55.575] [Server] Received BlockMod[Mine] at (14,35,18) block=0 seq=3 from 127.0.0.1:36502
-[2026-01-16 04:02:55.575] [BlockMod] Applied mine at world (14,35,18)
-[2026-01-16 04:02:55.575] [04:02:55.575] [Server] Applied modification successfully
-[2026-01-16 04:02:55.575] [04:02:55.575] [Server] Broadcasted BlockMod[Mine] at (14,35,18) block=0 seq=3 to 1/1 clients
-[2026-01-16 04:02:55.575] [Client] Received broadcast: BlockMod[Mine] at (14,35,18) block=0 seq=3
-[2026-01-16 04:02:55.575] [BlockMod] Applied mine at world (14,35,18)
-[2026-01-16 04:02:55.575] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2026-01-16 04:02:55.575] [Renderer]   Deleted GPU: VAO=40, VBO=42
-[2026-01-16 04:02:55.575] [Renderer]   Cleared mesh cache
-[2026-01-16 04:02:58.134] [Game] Selected hotbar slot 4
-[2026-01-16 04:02:58.385] [04:02:58.385] [Server] Tick 1800 | Cache: 39/20000 | Requests: 47
-[2026-01-16 04:02:58.610] [Game] Selected hotbar slot 5
-[2026-01-16 04:02:58.950] [Game] Selected hotbar slot 6
-[2026-01-16 04:02:59.589] [WorldGen] Placed solid Sand at (11, 35, 12) with 3x3x3 collision
-[2026-01-16 04:02:59.589] [BlockMod] Applied place Sand at world (11,35,12)
-[2026-01-16 04:02:59.589] [Prediction] Applied BlockMod[Place] at (11,35,12) block=4 seq=4 locally
-[2026-01-16 04:02:59.589] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2026-01-16 04:02:59.589] [Renderer]   Deleted GPU: VAO=42, VBO=44
-[2026-01-16 04:02:59.589] [Renderer]   Cleared mesh cache
-[2026-01-16 04:02:59.590] [Client] Sent place request for Sand at (11,35,12) seq=4
-[2026-01-16 04:02:59.590] [Game] Sent place request to server (with prediction)
-[2026-01-16 04:02:59.590] [04:02:59.590] [Server] Received BlockMod[Place] at (11,35,12) block=4 seq=4 from 127.0.0.1:36502
-[2026-01-16 04:02:59.590] [WorldGen] Placed solid Sand at (11, 35, 12) with 3x3x3 collision
-[2026-01-16 04:02:59.590] [BlockMod] Applied place Sand at world (11,35,12)
-[2026-01-16 04:02:59.590] [04:02:59.590] [Server] Applied modification successfully
-[2026-01-16 04:02:59.590] [04:02:59.590] [Server] Broadcasted BlockMod[Place] at (11,35,12) block=4 seq=4 to 1/1 clients
-[2026-01-16 04:02:59.590] [Client] Received broadcast: BlockMod[Place] at (11,35,12) block=4 seq=4
-[2026-01-16 04:02:59.590] [WorldGen] Placed solid Sand at (11, 35, 12) with 3x3x3 collision
-[2026-01-16 04:02:59.590] [BlockMod] Applied place Sand at world (11,35,12)
-[2026-01-16 04:02:59.591] [Prediction] Correcting place at Block(11, 35, 12)
-[2026-01-16 04:02:59.594] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2026-01-16 04:03:03.383] [04:03:03.383] [Server] Tick 2100 | Cache: 39/20000 | Requests: 50
-[2026-01-16 04:03:08.390] [04:03:08.390] [Server] Tick 2400 | Cache: 39/20000 | Requests: 50
-[2026-01-16 04:03:13.383] [04:03:13.383] [Server] Tick 2700 | Cache: 39/20000 | Requests: 50
-[2026-01-16 04:03:18.380] [04:03:18.380] [Server] Tick 3000 | Cache: 39/20000 | Requests: 50
-[2026-01-16 04:03:22.243] [OpenGLInventoryUI] Disposed
+﻿[2026-01-16 04:16:48.708] [Logging] Started logging to 'physics_debug.log'
+[2026-01-16 04:16:48.708] [Game] WorldGen initialized
+[2026-01-16 04:16:48.714] [PSX Effects] Shaders compiled successfully
+[2026-01-16 04:16:48.715] [Game] Renderer initialized
+[2026-01-16 04:16:48.723] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2026-01-16 04:16:48.723] [Game] EntityRenderer initialized
+[2026-01-16 04:16:48.741] [Player] Spawned at (16, 37.1, 16)
+[2026-01-16 04:16:48.741] [Game] Player initialized at position: (16, 37.1, 16)
+[2026-01-16 04:16:48.742] [Game] Network controller initialized
+[2026-01-16 04:16:48.745] [Client] TCP broadcast listener started
+[2026-01-16 04:16:48.752] [ItemRegistry] Registered 33 items
+[2026-01-16 04:16:48.754] [Crafting] Registered 12 recipes
+[2026-01-16 04:16:48.758] [BlockRegistry] Registered 9 block types
+[2026-01-16 04:16:48.769] [GameSystems] Starter items added
+[2026-01-16 04:16:48.769] [GameSystems] All systems initialized with GameLogic integration
+[2026-01-16 04:16:49.245] [Client] Chunk update loop starting...
+[2026-01-16 04:16:49.302] [EnhancedHUD] Initialized with dark theme and animations
+[2026-01-16 04:16:49.302] [Game] EnhancedGameHUD created: True
+[2026-01-16 04:16:49.303] [OpenGLInventoryUI] Shaders compiled and linked successfully
+[2026-01-16 04:16:49.303] [OpenGLInventoryUI] Initialized
+[2026-01-16 04:16:49.303] [Game] OpenGLInventoryUI created: True
+[2026-01-16 04:16:49.303] [Game] All systems initialized
+[2026-01-16 04:16:49.304] [Game] Found atlas at: textures/atlas.png
+[2026-01-16 04:16:49.342] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2026-01-16 04:16:49.342] [AtlasManager] Using preferred tile size: 64
+[2026-01-16 04:16:49.343] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2026-01-16 04:16:49.346] [AtlasManager] Successfully uploaded to GL texture 1141
+[2026-01-16 04:16:49.346] [AtlasManager] Verified texture dimensions: 256x256
+[2026-01-16 04:16:49.348] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
+[2026-01-16 04:16:49.349] [Game] Loaded 0 chunks
+[2026-01-16 04:16:49.801] [Renderer] Uploaded chunk (0,0,0): VAO=10, VBO=12, 16506 vertices
+[2026-01-16 04:16:50.007] [Renderer] Uploaded chunk (0,0,1): VAO=11, VBO=13, 13995 vertices
+[2026-01-16 04:16:52.030] [Game] Selected hotbar slot 2
+[2026-01-16 04:16:52.788] [Game] Selected hotbar slot 1
+[2026-01-16 04:16:53.159] [04:16:53.159] [Server] Tick 300 | Cache: 18/20000 | Requests: 18 | Grid: 0 cells (0 air, 0 solid)
+[2026-01-16 04:16:53.342] [Game] Selected hotbar slot 4
+[2026-01-16 04:16:54.008] [Game] Selected hotbar slot 6
+[2026-01-16 04:16:54.651] [Game] Selected hotbar slot 5
+[2026-01-16 04:16:55.588] [Game] Selected hotbar slot 1
+[2026-01-16 04:16:56.956] [Game] Mined Sand at (14, 35, 18)
+[2026-01-16 04:16:56.959] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:16:56.959] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:16:56.961] [Prediction] Applied BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=0 locally
+[2026-01-16 04:16:56.962] [Client] Sent mine request for (14,35,18) seq=0
+[2026-01-16 04:16:56.962] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:16:56.964] [04:16:56.964] [Server] Received BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=0 from 127.0.0.1:48868
+[2026-01-16 04:16:56.964] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:16:56.964] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:16:56.964] [04:16:56.964] [Server] Applied grid-based modification successfully
+[2026-01-16 04:16:56.969] [04:16:56.969] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:16:56.971] [04:16:56.971] [Server] Broadcasted BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=0 to 1/1 clients
+[2026-01-16 04:16:56.971] [Client] Received broadcast: BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=0
+[2026-01-16 04:16:56.971] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:16:56.971] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:16:56.973] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:16:56.974] [Renderer]   Deleted GPU: VAO=10, VBO=12
+[2026-01-16 04:16:56.974] [Renderer]   Cleared mesh cache
+[2026-01-16 04:16:58.171] [04:16:58.171] [Server] Tick 600 | Cache: 39/20000 | Requests: 41 | Grid: 1 cells (1 air, 0 solid)
+[2026-01-16 04:16:59.324] [Game] Mined Air at (14, 36, 17)
+[2026-01-16 04:16:59.324] [BlockGrid] Removed cell at grid (7,18,8) world (14,36,17)
+[2026-01-16 04:16:59.324] [BlockMod] Removed grid cell at world (14,36,17)
+[2026-01-16 04:16:59.324] [Prediction] Applied BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=1 locally
+[2026-01-16 04:16:59.324] [Client] Sent mine request for (14,36,17) seq=1
+[2026-01-16 04:16:59.324] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:16:59.324] [04:16:59.324] [Server] Received BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=1 from 127.0.0.1:48868
+[2026-01-16 04:16:59.324] [BlockGrid] Removed cell at grid (7,18,8) world (14,36,17)
+[2026-01-16 04:16:59.324] [BlockMod] Removed grid cell at world (14,36,17)
+[2026-01-16 04:16:59.324] [04:16:59.324] [Server] Applied grid-based modification successfully
+[2026-01-16 04:16:59.324] [04:16:59.324] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:16:59.325] [04:16:59.325] [Server] Broadcasted BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=1 to 1/1 clients
+[2026-01-16 04:16:59.325] [Client] Received broadcast: BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=1
+[2026-01-16 04:16:59.325] [BlockGrid] Removed cell at grid (7,18,8) world (14,36,17)
+[2026-01-16 04:16:59.325] [BlockMod] Removed grid cell at world (14,36,17)
+[2026-01-16 04:16:59.325] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:16:59.325] [Renderer]   Deleted GPU: VAO=36, VBO=38
+[2026-01-16 04:16:59.325] [Renderer]   Cleared mesh cache
+[2026-01-16 04:16:59.597] [Game] Mined Air at (14, 36, 17)
+[2026-01-16 04:16:59.597] [BlockGrid] Removed cell at grid (7,18,8) world (14,36,17)
+[2026-01-16 04:16:59.597] [BlockMod] Removed grid cell at world (14,36,17)
+[2026-01-16 04:16:59.597] [Prediction] Applied BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=2 locally
+[2026-01-16 04:16:59.597] [Client] Sent mine request for (14,36,17) seq=2
+[2026-01-16 04:16:59.597] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:16:59.597] [04:16:59.597] [Server] Received BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=2 from 127.0.0.1:48868
+[2026-01-16 04:16:59.597] [BlockGrid] Removed cell at grid (7,18,8) world (14,36,17)
+[2026-01-16 04:16:59.597] [BlockMod] Removed grid cell at world (14,36,17)
+[2026-01-16 04:16:59.597] [04:16:59.597] [Server] Applied grid-based modification successfully
+[2026-01-16 04:16:59.597] [04:16:59.597] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:16:59.597] [04:16:59.597] [Server] Broadcasted BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=2 to 1/1 clients
+[2026-01-16 04:16:59.597] [Client] Received broadcast: BlockMod[Mine] at world(14,36,17) grid(7,18,8) block=0 seq=2
+[2026-01-16 04:16:59.597] [BlockGrid] Removed cell at grid (7,18,8) world (14,36,17)
+[2026-01-16 04:16:59.597] [BlockMod] Removed grid cell at world (14,36,17)
+[2026-01-16 04:16:59.597] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:16:59.597] [Renderer]   Deleted GPU: VAO=38, VBO=40
+[2026-01-16 04:16:59.597] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:01.926] [Game] Mined Air at (14, 35, 18)
+[2026-01-16 04:17:01.926] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:01.926] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:01.926] [Prediction] Applied BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=3 locally
+[2026-01-16 04:17:01.926] [Client] Sent mine request for (14,35,18) seq=3
+[2026-01-16 04:17:01.926] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:01.926] [04:17:01.926] [Server] Received BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=3 from 127.0.0.1:48868
+[2026-01-16 04:17:01.926] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:01.926] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:01.926] [04:17:01.926] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:01.926] [04:17:01.926] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:01.926] [04:17:01.926] [Server] Broadcasted BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=3 to 1/1 clients
+[2026-01-16 04:17:01.926] [Client] Received broadcast: BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=3
+[2026-01-16 04:17:01.926] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:01.926] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:01.926] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:01.926] [Renderer]   Deleted GPU: VAO=40, VBO=42
+[2026-01-16 04:17:01.926] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:02.172] [Game] Mined Air at (14, 35, 18)
+[2026-01-16 04:17:02.172] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:02.172] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:02.172] [Prediction] Applied BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=4 locally
+[2026-01-16 04:17:02.172] [Client] Sent mine request for (14,35,18) seq=4
+[2026-01-16 04:17:02.173] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:02.173] [04:17:02.173] [Server] Received BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=4 from 127.0.0.1:48868
+[2026-01-16 04:17:02.173] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:02.173] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:02.173] [04:17:02.173] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:02.173] [04:17:02.173] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:02.173] [04:17:02.173] [Server] Broadcasted BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=4 to 1/1 clients
+[2026-01-16 04:17:02.173] [Client] Received broadcast: BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=4
+[2026-01-16 04:17:02.173] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:02.173] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:02.173] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:02.173] [Renderer]   Deleted GPU: VAO=41, VBO=43
+[2026-01-16 04:17:02.173] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:02.256] [Game] Mined Air at (14, 35, 18)
+[2026-01-16 04:17:02.256] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:02.256] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:02.256] [Prediction] Applied BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=5 locally
+[2026-01-16 04:17:02.256] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:02.342] [Client] Sent mine request for (14,35,18) seq=5
+[2026-01-16 04:17:02.342] [04:17:02.342] [Server] Received BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=5 from 127.0.0.1:48868
+[2026-01-16 04:17:02.342] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:02.342] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:02.342] [04:17:02.342] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:02.342] [04:17:02.342] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:02.342] [04:17:02.342] [Server] Broadcasted BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=5 to 1/1 clients
+[2026-01-16 04:17:02.342] [Client] Received broadcast: BlockMod[Mine] at world(14,35,18) grid(7,17,9) block=0 seq=5
+[2026-01-16 04:17:02.342] [BlockGrid] Removed cell at grid (7,17,9) world (14,35,18)
+[2026-01-16 04:17:02.342] [BlockMod] Removed grid cell at world (14,35,18)
+[2026-01-16 04:17:02.342] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:02.342] [Renderer]   Deleted GPU: VAO=42, VBO=44
+[2026-01-16 04:17:02.342] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:03.157] [04:17:03.157] [Server] Tick 900 | Cache: 39/20000 | Requests: 51 | Grid: 2 cells (2 air, 0 solid)
+[2026-01-16 04:17:05.549] [Game] Mined Sand at (14, 36, 18)
+[2026-01-16 04:17:05.549] [BlockGrid] Removed cell at grid (7,18,9) world (14,36,18)
+[2026-01-16 04:17:05.549] [BlockMod] Removed grid cell at world (14,36,18)
+[2026-01-16 04:17:05.549] [Prediction] Applied BlockMod[Mine] at world(14,36,18) grid(7,18,9) block=0 seq=6 locally
+[2026-01-16 04:17:05.549] [Client] Sent mine request for (14,36,18) seq=6
+[2026-01-16 04:17:05.549] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:05.550] [04:17:05.550] [Server] Received BlockMod[Mine] at world(14,36,18) grid(7,18,9) block=0 seq=6 from 127.0.0.1:48868
+[2026-01-16 04:17:05.550] [BlockGrid] Removed cell at grid (7,18,9) world (14,36,18)
+[2026-01-16 04:17:05.550] [BlockMod] Removed grid cell at world (14,36,18)
+[2026-01-16 04:17:05.550] [04:17:05.550] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:05.550] [04:17:05.550] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:05.550] [04:17:05.550] [Server] Broadcasted BlockMod[Mine] at world(14,36,18) grid(7,18,9) block=0 seq=6 to 1/1 clients
+[2026-01-16 04:17:05.550] [Client] Received broadcast: BlockMod[Mine] at world(14,36,18) grid(7,18,9) block=0 seq=6
+[2026-01-16 04:17:05.550] [BlockGrid] Removed cell at grid (7,18,9) world (14,36,18)
+[2026-01-16 04:17:05.550] [BlockMod] Removed grid cell at world (14,36,18)
+[2026-01-16 04:17:05.550] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:05.550] [Renderer]   Deleted GPU: VAO=46, VBO=48
+[2026-01-16 04:17:05.550] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:08.164] [04:17:08.164] [Server] Tick 1200 | Cache: 39/20000 | Requests: 53 | Grid: 3 cells (3 air, 0 solid)
+[2026-01-16 04:17:08.583] [Game] Selected hotbar slot 5
+[2026-01-16 04:17:08.977] [Game] Selected hotbar slot 6
+[2026-01-16 04:17:12.845] [BlockGrid] Placed Sand at grid (6,17,6) world (13,35,13)
+[2026-01-16 04:17:12.845] [BlockMod] Placed Sand grid cell at world (13,35,13)
+[2026-01-16 04:17:12.845] [Prediction] Applied BlockMod[Place] at world(13,35,13) grid(6,17,6) block=4 seq=7 locally
+[2026-01-16 04:17:12.845] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:12.845] [Renderer]   Deleted GPU: VAO=48, VBO=50
+[2026-01-16 04:17:12.845] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:12.845] [Client] Sent place request for Sand at (13,35,13) seq=7
+[2026-01-16 04:17:12.845] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:17:12.845] [04:17:12.845] [Server] Received BlockMod[Place] at world(13,35,13) grid(6,17,6) block=4 seq=7 from 127.0.0.1:48868
+[2026-01-16 04:17:12.845] [BlockGrid] Placed Sand at grid (6,17,6) world (13,35,13)
+[2026-01-16 04:17:12.845] [BlockMod] Placed Sand grid cell at world (13,35,13)
+[2026-01-16 04:17:12.845] [04:17:12.845] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:12.845] [04:17:12.845] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:12.845] [04:17:12.845] [Server] Broadcasted BlockMod[Place] at world(13,35,13) grid(6,17,6) block=4 seq=7 to 1/1 clients
+[2026-01-16 04:17:12.845] [Client] Received broadcast: BlockMod[Place] at world(13,35,13) grid(6,17,6) block=4 seq=7
+[2026-01-16 04:17:12.845] [BlockGrid] Placed Sand at grid (6,17,6) world (13,35,13)
+[2026-01-16 04:17:12.845] [BlockMod] Placed Sand grid cell at world (13,35,13)
+[2026-01-16 04:17:12.845] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:13.161] [04:17:13.161] [Server] Tick 1500 | Cache: 39/20000 | Requests: 56 | Grid: 4 cells (3 air, 1 solid)
+[2026-01-16 04:17:15.416] [BlockGrid] Placed Sand at grid (7,17,7) world (14,35,14)
+[2026-01-16 04:17:15.416] [BlockMod] Placed Sand grid cell at world (14,35,14)
+[2026-01-16 04:17:15.416] [Prediction] Applied BlockMod[Place] at world(14,35,14) grid(7,17,7) block=4 seq=8 locally
+[2026-01-16 04:17:15.416] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:15.416] [Renderer]   Deleted GPU: VAO=50, VBO=52
+[2026-01-16 04:17:15.416] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:15.416] [Client] Sent place request for Sand at (14,35,14) seq=8
+[2026-01-16 04:17:15.416] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:17:15.417] [04:17:15.417] [Server] Received BlockMod[Place] at world(14,35,14) grid(7,17,7) block=4 seq=8 from 127.0.0.1:48868
+[2026-01-16 04:17:15.417] [BlockGrid] Placed Sand at grid (7,17,7) world (14,35,14)
+[2026-01-16 04:17:15.417] [BlockMod] Placed Sand grid cell at world (14,35,14)
+[2026-01-16 04:17:15.417] [04:17:15.417] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:15.417] [04:17:15.417] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:15.417] [Client] Received broadcast: BlockMod[Place] at world(14,35,14) grid(7,17,7) block=4 seq=8
+[2026-01-16 04:17:15.417] [04:17:15.417] [Server] Broadcasted BlockMod[Place] at world(14,35,14) grid(7,17,7) block=4 seq=8 to 1/1 clients
+[2026-01-16 04:17:15.417] [BlockGrid] Placed Sand at grid (7,17,7) world (14,35,14)
+[2026-01-16 04:17:15.417] [BlockMod] Placed Sand grid cell at world (14,35,14)
+[2026-01-16 04:17:15.417] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:18.167] [04:17:18.167] [Server] Tick 1800 | Cache: 39/20000 | Requests: 59 | Grid: 5 cells (3 air, 2 solid)
+[2026-01-16 04:17:23.171] [04:17:23.171] [Server] Tick 2100 | Cache: 39/20000 | Requests: 59 | Grid: 5 cells (3 air, 2 solid)
+[2026-01-16 04:17:24.600] [Game] Mined Sand at (17, 36, 20)
+[2026-01-16 04:17:24.600] [BlockGrid] Removed cell at grid (8,18,10) world (17,36,20)
+[2026-01-16 04:17:24.600] [BlockMod] Removed grid cell at world (17,36,20)
+[2026-01-16 04:17:24.600] [Prediction] Applied BlockMod[Mine] at world(17,36,20) grid(8,18,10) block=0 seq=9 locally
+[2026-01-16 04:17:24.600] [Client] Sent mine request for (17,36,20) seq=9
+[2026-01-16 04:17:24.600] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:24.600] [04:17:24.600] [Server] Received BlockMod[Mine] at world(17,36,20) grid(8,18,10) block=0 seq=9 from 127.0.0.1:48868
+[2026-01-16 04:17:24.600] [BlockGrid] Removed cell at grid (8,18,10) world (17,36,20)
+[2026-01-16 04:17:24.600] [BlockMod] Removed grid cell at world (17,36,20)
+[2026-01-16 04:17:24.600] [04:17:24.600] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:24.601] [04:17:24.601] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:24.601] [04:17:24.601] [Server] Broadcasted BlockMod[Mine] at world(17,36,20) grid(8,18,10) block=0 seq=9 to 1/1 clients
+[2026-01-16 04:17:24.601] [Client] Received broadcast: BlockMod[Mine] at world(17,36,20) grid(8,18,10) block=0 seq=9
+[2026-01-16 04:17:24.601] [BlockGrid] Removed cell at grid (8,18,10) world (17,36,20)
+[2026-01-16 04:17:24.601] [BlockMod] Removed grid cell at world (17,36,20)
+[2026-01-16 04:17:24.601] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:24.601] [Renderer]   Deleted GPU: VAO=52, VBO=54
+[2026-01-16 04:17:24.601] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:26.562] [Game] Mined Sand at (18, 37, 20)
+[2026-01-16 04:17:26.563] [BlockGrid] Removed cell at grid (9,18,10) world (18,37,20)
+[2026-01-16 04:17:26.563] [BlockMod] Removed grid cell at world (18,37,20)
+[2026-01-16 04:17:26.563] [Prediction] Applied BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=10 locally
+[2026-01-16 04:17:26.563] [Client] Sent mine request for (18,37,20) seq=10
+[2026-01-16 04:17:26.563] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:26.563] [04:17:26.563] [Server] Received BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=10 from 127.0.0.1:48868
+[2026-01-16 04:17:26.563] [BlockGrid] Removed cell at grid (9,18,10) world (18,37,20)
+[2026-01-16 04:17:26.563] [BlockMod] Removed grid cell at world (18,37,20)
+[2026-01-16 04:17:26.563] [04:17:26.563] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:26.563] [04:17:26.563] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:26.563] [04:17:26.563] [Server] Broadcasted BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=10 to 1/1 clients
+[2026-01-16 04:17:26.563] [Client] Received broadcast: BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=10
+[2026-01-16 04:17:26.563] [BlockGrid] Removed cell at grid (9,18,10) world (18,37,20)
+[2026-01-16 04:17:26.563] [BlockMod] Removed grid cell at world (18,37,20)
+[2026-01-16 04:17:26.563] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:26.563] [Renderer]   Deleted GPU: VAO=54, VBO=56
+[2026-01-16 04:17:26.563] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:26.821] [Game] Mined Air at (18, 37, 20)
+[2026-01-16 04:17:26.822] [BlockGrid] Removed cell at grid (9,18,10) world (18,37,20)
+[2026-01-16 04:17:26.822] [BlockMod] Removed grid cell at world (18,37,20)
+[2026-01-16 04:17:26.822] [Prediction] Applied BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=11 locally
+[2026-01-16 04:17:26.822] [Client] Sent mine request for (18,37,20) seq=11
+[2026-01-16 04:17:26.822] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:26.822] [04:17:26.822] [Server] Received BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=11 from 127.0.0.1:48868
+[2026-01-16 04:17:26.822] [BlockGrid] Removed cell at grid (9,18,10) world (18,37,20)
+[2026-01-16 04:17:26.823] [BlockMod] Removed grid cell at world (18,37,20)
+[2026-01-16 04:17:26.823] [04:17:26.823] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:26.823] [04:17:26.823] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:26.823] [04:17:26.823] [Server] Broadcasted BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=11 to 1/1 clients
+[2026-01-16 04:17:26.823] [Client] Received broadcast: BlockMod[Mine] at world(18,37,20) grid(9,18,10) block=0 seq=11
+[2026-01-16 04:17:26.823] [BlockGrid] Removed cell at grid (9,18,10) world (18,37,20)
+[2026-01-16 04:17:26.823] [BlockMod] Removed grid cell at world (18,37,20)
+[2026-01-16 04:17:26.823] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:26.823] [Renderer]   Deleted GPU: VAO=56, VBO=58
+[2026-01-16 04:17:26.823] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:27.089] [Game] Mined Air at (19, 37, 21)
+[2026-01-16 04:17:27.089] [BlockGrid] Removed cell at grid (9,18,10) world (19,37,21)
+[2026-01-16 04:17:27.089] [BlockMod] Removed grid cell at world (19,37,21)
+[2026-01-16 04:17:27.089] [Prediction] Applied BlockMod[Mine] at world(19,37,21) grid(9,18,10) block=0 seq=12 locally
+[2026-01-16 04:17:27.089] [Client] Sent mine request for (19,37,21) seq=12
+[2026-01-16 04:17:27.089] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:27.089] [04:17:27.089] [Server] Received BlockMod[Mine] at world(19,37,21) grid(9,18,10) block=0 seq=12 from 127.0.0.1:48868
+[2026-01-16 04:17:27.089] [BlockGrid] Removed cell at grid (9,18,10) world (19,37,21)
+[2026-01-16 04:17:27.089] [BlockMod] Removed grid cell at world (19,37,21)
+[2026-01-16 04:17:27.089] [04:17:27.089] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:27.089] [04:17:27.089] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:27.089] [04:17:27.089] [Server] Broadcasted BlockMod[Mine] at world(19,37,21) grid(9,18,10) block=0 seq=12 to 1/1 clients
+[2026-01-16 04:17:27.089] [Client] Received broadcast: BlockMod[Mine] at world(19,37,21) grid(9,18,10) block=0 seq=12
+[2026-01-16 04:17:27.089] [BlockGrid] Removed cell at grid (9,18,10) world (19,37,21)
+[2026-01-16 04:17:27.089] [BlockMod] Removed grid cell at world (19,37,21)
+[2026-01-16 04:17:27.089] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:27.089] [Renderer]   Deleted GPU: VAO=58, VBO=60
+[2026-01-16 04:17:27.089] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:27.360] [Game] Mined Air at (20, 36, 21)
+[2026-01-16 04:17:27.360] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.360] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.360] [Prediction] Applied BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=13 locally
+[2026-01-16 04:17:27.360] [Client] Sent mine request for (20,36,21) seq=13
+[2026-01-16 04:17:27.360] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:27.360] [04:17:27.360] [Server] Received BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=13 from 127.0.0.1:48868
+[2026-01-16 04:17:27.360] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.360] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.360] [04:17:27.360] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:27.360] [04:17:27.360] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:27.361] [04:17:27.360] [Server] Broadcasted BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=13 to 1/1 clients
+[2026-01-16 04:17:27.361] [Client] Received broadcast: BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=13
+[2026-01-16 04:17:27.361] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.361] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.361] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:27.361] [Renderer]   Deleted GPU: VAO=60, VBO=62
+[2026-01-16 04:17:27.361] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:27.642] [Game] Mined Air at (20, 36, 21)
+[2026-01-16 04:17:27.642] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.642] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.642] [Prediction] Applied BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=14 locally
+[2026-01-16 04:17:27.642] [Client] Sent mine request for (20,36,21) seq=14
+[2026-01-16 04:17:27.642] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:27.642] [04:17:27.642] [Server] Received BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=14 from 127.0.0.1:48868
+[2026-01-16 04:17:27.642] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.642] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.643] [04:17:27.643] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:27.643] [04:17:27.643] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:27.643] [04:17:27.643] [Server] Broadcasted BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=14 to 1/1 clients
+[2026-01-16 04:17:27.643] [Client] Received broadcast: BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=14
+[2026-01-16 04:17:27.643] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.643] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.643] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:27.643] [Renderer]   Deleted GPU: VAO=62, VBO=64
+[2026-01-16 04:17:27.643] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:27.911] [Game] Mined Air at (20, 36, 21)
+[2026-01-16 04:17:27.912] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.912] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.912] [Prediction] Applied BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=15 locally
+[2026-01-16 04:17:27.912] [Client] Sent mine request for (20,36,21) seq=15
+[2026-01-16 04:17:27.912] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:27.912] [04:17:27.912] [Server] Received BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=15 from 127.0.0.1:48868
+[2026-01-16 04:17:27.912] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.912] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.912] [04:17:27.912] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:27.912] [04:17:27.912] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:27.912] [04:17:27.912] [Server] Broadcasted BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=15 to 1/1 clients
+[2026-01-16 04:17:27.912] [Client] Received broadcast: BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=15
+[2026-01-16 04:17:27.912] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:27.912] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:27.912] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:27.912] [Renderer]   Deleted GPU: VAO=64, VBO=66
+[2026-01-16 04:17:27.912] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:28.160] [04:17:28.160] [Server] Tick 2400 | Cache: 39/20000 | Requests: 73 | Grid: 8 cells (6 air, 2 solid)
+[2026-01-16 04:17:28.179] [Game] Mined Air at (20, 36, 21)
+[2026-01-16 04:17:28.179] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:28.179] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:28.179] [Prediction] Applied BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=16 locally
+[2026-01-16 04:17:28.179] [Client] Sent mine request for (20,36,21) seq=16
+[2026-01-16 04:17:28.179] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:28.179] [04:17:28.179] [Server] Received BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=16 from 127.0.0.1:48868
+[2026-01-16 04:17:28.179] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:28.179] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:28.179] [04:17:28.179] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:28.180] [04:17:28.180] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:28.180] [04:17:28.180] [Server] Broadcasted BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=16 to 1/1 clients
+[2026-01-16 04:17:28.180] [Client] Received broadcast: BlockMod[Mine] at world(20,36,21) grid(10,18,10) block=0 seq=16
+[2026-01-16 04:17:28.180] [BlockGrid] Removed cell at grid (10,18,10) world (20,36,21)
+[2026-01-16 04:17:28.180] [BlockMod] Removed grid cell at world (20,36,21)
+[2026-01-16 04:17:28.180] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:28.180] [Renderer]   Deleted GPU: VAO=66, VBO=68
+[2026-01-16 04:17:28.180] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:28.867] [Game] Mined Air at (22, 37, 22)
+[2026-01-16 04:17:28.868] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:28.868] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:28.868] [Prediction] Applied BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=17 locally
+[2026-01-16 04:17:28.868] [Client] Sent mine request for (22,37,22) seq=17
+[2026-01-16 04:17:28.868] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:28.868] [04:17:28.868] [Server] Received BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=17 from 127.0.0.1:48868
+[2026-01-16 04:17:28.868] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:28.868] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:28.868] [04:17:28.868] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:28.868] [04:17:28.868] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:28.868] [04:17:28.868] [Server] Broadcasted BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=17 to 1/1 clients
+[2026-01-16 04:17:28.868] [Client] Received broadcast: BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=17
+[2026-01-16 04:17:28.868] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:28.868] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:28.868] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:28.868] [Renderer]   Deleted GPU: VAO=68, VBO=70
+[2026-01-16 04:17:28.868] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:29.123] [Game] Mined Air at (22, 37, 22)
+[2026-01-16 04:17:29.123] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:29.123] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:29.123] [Prediction] Applied BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=18 locally
+[2026-01-16 04:17:29.123] [Client] Sent mine request for (22,37,22) seq=18
+[2026-01-16 04:17:29.123] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:29.123] [04:17:29.123] [Server] Received BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=18 from 127.0.0.1:48868
+[2026-01-16 04:17:29.123] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:29.123] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:29.123] [04:17:29.123] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:29.123] [04:17:29.123] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:29.123] [04:17:29.123] [Server] Broadcasted BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=18 to 1/1 clients
+[2026-01-16 04:17:29.123] [Client] Received broadcast: BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=18
+[2026-01-16 04:17:29.123] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:29.123] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:29.123] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:29.123] [Renderer]   Deleted GPU: VAO=70, VBO=72
+[2026-01-16 04:17:29.123] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:29.378] [Game] Mined Air at (22, 37, 22)
+[2026-01-16 04:17:29.378] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:29.378] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:29.378] [Prediction] Applied BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=19 locally
+[2026-01-16 04:17:29.378] [Client] Sent mine request for (22,37,22) seq=19
+[2026-01-16 04:17:29.378] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:29.378] [04:17:29.378] [Server] Received BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=19 from 127.0.0.1:48868
+[2026-01-16 04:17:29.378] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:29.378] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:29.378] [04:17:29.378] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:29.378] [04:17:29.378] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:29.378] [04:17:29.378] [Server] Broadcasted BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=19 to 1/1 clients
+[2026-01-16 04:17:29.378] [Client] Received broadcast: BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=19
+[2026-01-16 04:17:29.378] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:29.378] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:29.378] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:29.378] [Renderer]   Deleted GPU: VAO=72, VBO=74
+[2026-01-16 04:17:29.378] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:30.322] [Game] Mined Air at (22, 37, 22)
+[2026-01-16 04:17:30.322] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.322] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.322] [Prediction] Applied BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=20 locally
+[2026-01-16 04:17:30.322] [Client] Sent mine request for (22,37,22) seq=20
+[2026-01-16 04:17:30.322] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:30.323] [04:17:30.323] [Server] Received BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=20 from 127.0.0.1:48868
+[2026-01-16 04:17:30.323] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.323] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.323] [04:17:30.323] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:30.323] [04:17:30.323] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:30.323] [04:17:30.323] [Server] Broadcasted BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=20 to 1/1 clients
+[2026-01-16 04:17:30.323] [Client] Received broadcast: BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=20
+[2026-01-16 04:17:30.323] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.323] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.323] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:30.323] [Renderer]   Deleted GPU: VAO=74, VBO=76
+[2026-01-16 04:17:30.323] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:30.587] [Game] Mined Air at (22, 37, 22)
+[2026-01-16 04:17:30.587] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.587] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.587] [Prediction] Applied BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=21 locally
+[2026-01-16 04:17:30.587] [Client] Sent mine request for (22,37,22) seq=21
+[2026-01-16 04:17:30.587] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:30.588] [04:17:30.588] [Server] Received BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=21 from 127.0.0.1:48868
+[2026-01-16 04:17:30.588] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.588] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.588] [04:17:30.588] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:30.588] [04:17:30.588] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:30.588] [04:17:30.588] [Server] Broadcasted BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=21 to 1/1 clients
+[2026-01-16 04:17:30.588] [Client] Received broadcast: BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=21
+[2026-01-16 04:17:30.588] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.588] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.588] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:30.588] [Renderer]   Deleted GPU: VAO=76, VBO=78
+[2026-01-16 04:17:30.588] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:30.828] [Game] Mined Air at (22, 37, 22)
+[2026-01-16 04:17:30.828] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.828] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.828] [Prediction] Applied BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=22 locally
+[2026-01-16 04:17:30.828] [Client] Sent mine request for (22,37,22) seq=22
+[2026-01-16 04:17:30.828] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:30.828] [04:17:30.828] [Server] Received BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=22 from 127.0.0.1:48868
+[2026-01-16 04:17:30.828] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.828] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.828] [04:17:30.828] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:30.828] [04:17:30.828] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:30.828] [04:17:30.828] [Server] Broadcasted BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=22 to 1/1 clients
+[2026-01-16 04:17:30.828] [Client] Received broadcast: BlockMod[Mine] at world(22,37,22) grid(11,18,11) block=0 seq=22
+[2026-01-16 04:17:30.828] [BlockGrid] Removed cell at grid (11,18,11) world (22,37,22)
+[2026-01-16 04:17:30.828] [BlockMod] Removed grid cell at world (22,37,22)
+[2026-01-16 04:17:30.828] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:30.828] [Renderer]   Deleted GPU: VAO=78, VBO=80
+[2026-01-16 04:17:30.828] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:33.169] [04:17:33.169] [Server] Tick 2700 | Cache: 39/20000 | Requests: 87 | Grid: 9 cells (7 air, 2 solid)
+[2026-01-16 04:17:33.258] [Game] Mined Sand at (20, 36, 24)
+[2026-01-16 04:17:33.258] [BlockGrid] Removed cell at grid (10,18,12) world (20,36,24)
+[2026-01-16 04:17:33.258] [BlockMod] Removed grid cell at world (20,36,24)
+[2026-01-16 04:17:33.258] [Prediction] Applied BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=23 locally
+[2026-01-16 04:17:33.258] [Client] Sent mine request for (20,36,24) seq=23
+[2026-01-16 04:17:33.258] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:33.258] [04:17:33.258] [Server] Received BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=23 from 127.0.0.1:48868
+[2026-01-16 04:17:33.258] [BlockGrid] Removed cell at grid (10,18,12) world (20,36,24)
+[2026-01-16 04:17:33.258] [BlockMod] Removed grid cell at world (20,36,24)
+[2026-01-16 04:17:33.258] [04:17:33.258] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:33.258] [04:17:33.258] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:33.258] [04:17:33.258] [Server] Broadcasted BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=23 to 1/1 clients
+[2026-01-16 04:17:33.258] [Client] Received broadcast: BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=23
+[2026-01-16 04:17:33.258] [BlockGrid] Removed cell at grid (10,18,12) world (20,36,24)
+[2026-01-16 04:17:33.258] [BlockMod] Removed grid cell at world (20,36,24)
+[2026-01-16 04:17:33.258] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:33.258] [Renderer]   Deleted GPU: VAO=80, VBO=82
+[2026-01-16 04:17:33.258] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:33.525] [Game] Mined Air at (20, 36, 24)
+[2026-01-16 04:17:33.525] [BlockGrid] Removed cell at grid (10,18,12) world (20,36,24)
+[2026-01-16 04:17:33.525] [BlockMod] Removed grid cell at world (20,36,24)
+[2026-01-16 04:17:33.525] [Prediction] Applied BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=24 locally
+[2026-01-16 04:17:33.525] [Client] Sent mine request for (20,36,24) seq=24
+[2026-01-16 04:17:33.525] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:33.525] [04:17:33.525] [Server] Received BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=24 from 127.0.0.1:48868
+[2026-01-16 04:17:33.525] [BlockGrid] Removed cell at grid (10,18,12) world (20,36,24)
+[2026-01-16 04:17:33.526] [BlockMod] Removed grid cell at world (20,36,24)
+[2026-01-16 04:17:33.526] [04:17:33.526] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:33.526] [04:17:33.526] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:33.526] [04:17:33.526] [Server] Broadcasted BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=24 to 1/1 clients
+[2026-01-16 04:17:33.526] [Client] Received broadcast: BlockMod[Mine] at world(20,36,24) grid(10,18,12) block=0 seq=24
+[2026-01-16 04:17:33.526] [BlockGrid] Removed cell at grid (10,18,12) world (20,36,24)
+[2026-01-16 04:17:33.526] [BlockMod] Removed grid cell at world (20,36,24)
+[2026-01-16 04:17:33.526] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:33.526] [Renderer]   Deleted GPU: VAO=82, VBO=84
+[2026-01-16 04:17:33.526] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:34.718] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:34.718] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.718] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.719] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=25 locally
+[2026-01-16 04:17:34.719] [Client] Sent mine request for (25,39,27) seq=25
+[2026-01-16 04:17:34.719] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:34.719] [04:17:34.719] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=25 from 127.0.0.1:48868
+[2026-01-16 04:17:34.719] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.719] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.719] [04:17:34.719] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:34.719] [04:17:34.719] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:34.719] [04:17:34.719] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=25 to 1/1 clients
+[2026-01-16 04:17:34.719] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=25
+[2026-01-16 04:17:34.719] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.719] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.719] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:34.719] [Renderer]   Deleted GPU: VAO=84, VBO=86
+[2026-01-16 04:17:34.719] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:34.786] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:34.786] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.786] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.786] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=26 locally
+[2026-01-16 04:17:34.786] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:34.808] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:34.808] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.808] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.808] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=27 locally
+[2026-01-16 04:17:34.808] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:34.870] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:34.870] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.870] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.870] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=28 locally
+[2026-01-16 04:17:34.870] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:34.889] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:34.889] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.889] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.889] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=29 locally
+[2026-01-16 04:17:34.889] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:34.893] [Client] Sent mine request for (25,39,27) seq=26
+[2026-01-16 04:17:34.894] [Client] Sent mine request for (25,39,27) seq=27
+[2026-01-16 04:17:34.894] [Client] Sent mine request for (25,39,27) seq=28
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=26 from 127.0.0.1:48868
+[2026-01-16 04:17:34.894] [Client] Sent mine request for (25,39,27) seq=29
+[2026-01-16 04:17:34.894] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.894] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:34.894] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=26
+[2026-01-16 04:17:34.894] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=26 to 1/1 clients
+[2026-01-16 04:17:34.894] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=27 from 127.0.0.1:48868
+[2026-01-16 04:17:34.894] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:34.894] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.894] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:34.894] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=27
+[2026-01-16 04:17:34.894] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=27 to 1/1 clients
+[2026-01-16 04:17:34.894] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=28 from 127.0.0.1:48868
+[2026-01-16 04:17:34.894] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:34.894] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.894] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:34.894] [04:17:34.894] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:34.895] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=28
+[2026-01-16 04:17:34.895] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.895] [04:17:34.895] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=28 to 1/1 clients
+[2026-01-16 04:17:34.895] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.895] [04:17:34.895] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=29 from 127.0.0.1:48868
+[2026-01-16 04:17:34.895] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:34.895] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.895] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.895] [04:17:34.895] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:34.895] [04:17:34.895] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:34.895] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=29
+[2026-01-16 04:17:34.895] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.895] [04:17:34.895] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=29 to 1/1 clients
+[2026-01-16 04:17:34.895] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.895] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:34.922] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:34.922] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.922] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.922] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=30 locally
+[2026-01-16 04:17:34.922] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:34.993] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:34.993] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:34.993] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:34.993] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=31 locally
+[2026-01-16 04:17:34.993] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:35.073] [Client] Sent mine request for (25,39,27) seq=30
+[2026-01-16 04:17:35.073] [04:17:35.073] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=30 from 127.0.0.1:48868
+[2026-01-16 04:17:35.073] [Client] Sent mine request for (25,39,27) seq=31
+[2026-01-16 04:17:35.073] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.073] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.073] [04:17:35.073] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:35.073] [04:17:35.073] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:35.073] [04:17:35.073] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=30 to 1/1 clients
+[2026-01-16 04:17:35.073] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=30
+[2026-01-16 04:17:35.073] [04:17:35.073] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=31 from 127.0.0.1:48868
+[2026-01-16 04:17:35.073] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.073] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.073] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.073] [04:17:35.073] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:35.073] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.073] [04:17:35.073] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:35.073] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:35.074] [Renderer]   Deleted GPU: VAO=85, VBO=87
+[2026-01-16 04:17:35.074] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:35.074] [04:17:35.074] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=31 to 1/1 clients
+[2026-01-16 04:17:35.074] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=31
+[2026-01-16 04:17:35.074] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.074] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.074] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:35.093] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:35.093] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.093] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.093] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=32 locally
+[2026-01-16 04:17:35.093] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:35.158] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:35.158] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.158] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.158] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=33 locally
+[2026-01-16 04:17:35.158] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:35.238] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:35.238] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.238] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.238] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=34 locally
+[2026-01-16 04:17:35.238] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:35.256] [Client] Sent mine request for (25,39,27) seq=32
+[2026-01-16 04:17:35.256] [Client] Sent mine request for (25,39,27) seq=33
+[2026-01-16 04:17:35.256] [Client] Sent mine request for (25,39,27) seq=34
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=32 from 127.0.0.1:48868
+[2026-01-16 04:17:35.257] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.257] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=32 to 1/1 clients
+[2026-01-16 04:17:35.257] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=32
+[2026-01-16 04:17:35.257] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=33 from 127.0.0.1:48868
+[2026-01-16 04:17:35.257] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.257] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:35.257] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.257] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.257] [Renderer]   Deleted GPU: VAO=86, VBO=88
+[2026-01-16 04:17:35.257] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=33 to 1/1 clients
+[2026-01-16 04:17:35.257] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=33
+[2026-01-16 04:17:35.257] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=34 from 127.0.0.1:48868
+[2026-01-16 04:17:35.257] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.257] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:35.257] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.257] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:35.257] [04:17:35.257] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=34 to 1/1 clients
+[2026-01-16 04:17:35.257] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=34
+[2026-01-16 04:17:35.257] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:35.257] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:35.257] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.343] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.343] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.343] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.343] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=35 locally
+[2026-01-16 04:17:36.343] [Client] Sent mine request for (25,39,27) seq=35
+[2026-01-16 04:17:36.343] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.343] [04:17:36.343] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=35 from 127.0.0.1:48868
+[2026-01-16 04:17:36.343] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.343] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.343] [04:17:36.343] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.343] [04:17:36.343] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.344] [04:17:36.344] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=35 to 1/1 clients
+[2026-01-16 04:17:36.344] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=35
+[2026-01-16 04:17:36.344] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.344] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.344] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.344] [Renderer]   Deleted GPU: VAO=98, VBO=100
+[2026-01-16 04:17:36.344] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:36.414] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.414] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.414] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.414] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=36 locally
+[2026-01-16 04:17:36.414] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.444] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.444] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.444] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.444] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=37 locally
+[2026-01-16 04:17:36.444] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.503] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.503] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.503] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.503] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=38 locally
+[2026-01-16 04:17:36.503] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.519] [Client] Sent mine request for (25,39,27) seq=36
+[2026-01-16 04:17:36.519] [Client] Sent mine request for (25,39,27) seq=37
+[2026-01-16 04:17:36.519] [Client] Sent mine request for (25,39,27) seq=38
+[2026-01-16 04:17:36.519] [04:17:36.519] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=36 from 127.0.0.1:48868
+[2026-01-16 04:17:36.519] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.519] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.519] [04:17:36.519] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.519] [04:17:36.519] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.519] [04:17:36.519] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=36 to 1/1 clients
+[2026-01-16 04:17:36.519] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=36
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=37 from 127.0.0.1:48868
+[2026-01-16 04:17:36.520] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.520] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.520] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.520] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.520] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.520] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=37
+[2026-01-16 04:17:36.520] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.520] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=37 to 1/1 clients
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=38 from 127.0.0.1:48868
+[2026-01-16 04:17:36.520] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.520] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.520] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.520] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=38
+[2026-01-16 04:17:36.520] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.520] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.520] [04:17:36.520] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=38 to 1/1 clients
+[2026-01-16 04:17:36.520] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.534] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.534] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.534] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.534] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=39 locally
+[2026-01-16 04:17:36.535] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.613] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.613] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.613] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.613] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=40 locally
+[2026-01-16 04:17:36.613] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.681] [Client] Sent mine request for (25,39,27) seq=39
+[2026-01-16 04:17:36.681] [Client] Sent mine request for (25,39,27) seq=40
+[2026-01-16 04:17:36.681] [04:17:36.681] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=39 from 127.0.0.1:48868
+[2026-01-16 04:17:36.681] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.681] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.681] [04:17:36.681] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.682] [04:17:36.682] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.682] [04:17:36.682] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=39 to 1/1 clients
+[2026-01-16 04:17:36.682] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=39
+[2026-01-16 04:17:36.682] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.682] [04:17:36.682] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=40 from 127.0.0.1:48868
+[2026-01-16 04:17:36.682] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.682] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.682] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.682] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.682] [04:17:36.682] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.682] [Renderer]   Deleted GPU: VAO=99, VBO=101
+[2026-01-16 04:17:36.682] [04:17:36.682] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.682] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:36.682] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=40
+[2026-01-16 04:17:36.682] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.682] [04:17:36.682] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=40 to 1/1 clients
+[2026-01-16 04:17:36.682] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.682] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.683] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.683] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.683] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.683] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=41 locally
+[2026-01-16 04:17:36.683] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.749] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.749] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.749] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.749] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=42 locally
+[2026-01-16 04:17:36.749] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.822] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:36.823] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.823] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.823] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=43 locally
+[2026-01-16 04:17:36.823] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:36.857] [Client] Sent mine request for (25,39,27) seq=41
+[2026-01-16 04:17:36.857] [Client] Sent mine request for (25,39,27) seq=42
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=41 from 127.0.0.1:48868
+[2026-01-16 04:17:36.858] [Client] Sent mine request for (25,39,27) seq=43
+[2026-01-16 04:17:36.858] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.858] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=41 to 1/1 clients
+[2026-01-16 04:17:36.858] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=41
+[2026-01-16 04:17:36.858] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=42 from 127.0.0.1:48868
+[2026-01-16 04:17:36.858] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.858] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.858] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.858] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.858] [Renderer]   Deleted GPU: VAO=100, VBO=102
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.858] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=42 to 1/1 clients
+[2026-01-16 04:17:36.858] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=42
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=43 from 127.0.0.1:48868
+[2026-01-16 04:17:36.858] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.858] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.858] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.858] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:36.858] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:36.858] [04:17:36.858] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=43 to 1/1 clients
+[2026-01-16 04:17:36.858] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=43
+[2026-01-16 04:17:36.858] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:36.858] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:36.858] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:37.778] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:37.779] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.779] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.779] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=44 locally
+[2026-01-16 04:17:37.779] [Client] Sent mine request for (25,39,27) seq=44
+[2026-01-16 04:17:37.779] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:37.779] [04:17:37.779] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=44 from 127.0.0.1:48868
+[2026-01-16 04:17:37.779] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.779] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.779] [04:17:37.779] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:37.779] [04:17:37.779] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:37.779] [04:17:37.779] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=44 to 1/1 clients
+[2026-01-16 04:17:37.779] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=44
+[2026-01-16 04:17:37.779] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.779] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.779] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:37.779] [Renderer]   Deleted GPU: VAO=111, VBO=113
+[2026-01-16 04:17:37.779] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:37.847] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:37.847] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.847] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.847] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=45 locally
+[2026-01-16 04:17:37.847] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:37.881] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:37.881] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.881] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.881] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=46 locally
+[2026-01-16 04:17:37.881] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:37.940] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:37.940] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.940] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.940] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=47 locally
+[2026-01-16 04:17:37.940] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:37.949] [Client] Sent mine request for (25,39,27) seq=45
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=45 from 127.0.0.1:48868
+[2026-01-16 04:17:37.949] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.949] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:37.949] [Client] Sent mine request for (25,39,27) seq=46
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:37.949] [Client] Sent mine request for (25,39,27) seq=47
+[2026-01-16 04:17:37.949] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=45
+[2026-01-16 04:17:37.949] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=45 to 1/1 clients
+[2026-01-16 04:17:37.949] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.949] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=46 from 127.0.0.1:48868
+[2026-01-16 04:17:37.949] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.949] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:37.949] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=46
+[2026-01-16 04:17:37.949] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=46 to 1/1 clients
+[2026-01-16 04:17:37.949] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.949] [04:17:37.949] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=47 from 127.0.0.1:48868
+[2026-01-16 04:17:37.949] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:37.949] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.950] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.950] [04:17:37.950] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:37.950] [04:17:37.950] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:37.950] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=47
+[2026-01-16 04:17:37.950] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.950] [04:17:37.950] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=47 to 1/1 clients
+[2026-01-16 04:17:37.950] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.950] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:37.979] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:37.979] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:37.980] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:37.980] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=48 locally
+[2026-01-16 04:17:37.980] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:38.036] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:38.036] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.036] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.036] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=49 locally
+[2026-01-16 04:17:38.037] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:38.111] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:38.111] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.111] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.111] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=50 locally
+[2026-01-16 04:17:38.111] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:38.117] [Client] Sent mine request for (25,39,27) seq=48
+[2026-01-16 04:17:38.117] [Client] Sent mine request for (25,39,27) seq=49
+[2026-01-16 04:17:38.117] [Client] Sent mine request for (25,39,27) seq=50
+[2026-01-16 04:17:38.117] [04:17:38.117] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=48 from 127.0.0.1:48868
+[2026-01-16 04:17:38.117] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.117] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.117] [04:17:38.117] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:38.117] [04:17:38.117] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=48 to 1/1 clients
+[2026-01-16 04:17:38.118] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=48
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=49 from 127.0.0.1:48868
+[2026-01-16 04:17:38.118] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.118] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.118] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.118] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:38.118] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:38.118] [Renderer]   Deleted GPU: VAO=112, VBO=114
+[2026-01-16 04:17:38.118] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=49 to 1/1 clients
+[2026-01-16 04:17:38.118] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=49
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=50 from 127.0.0.1:48868
+[2026-01-16 04:17:38.118] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.118] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:38.118] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:38.118] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.118] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:38.118] [04:17:38.118] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=50 to 1/1 clients
+[2026-01-16 04:17:38.118] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=50
+[2026-01-16 04:17:38.118] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.118] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.118] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:38.187] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:38.187] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.187] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.187] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=51 locally
+[2026-01-16 04:17:38.187] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:38.256] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:38.256] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.256] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.257] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=52 locally
+[2026-01-16 04:17:38.257] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:38.293] [Client] Sent mine request for (25,39,27) seq=51
+[2026-01-16 04:17:38.293] [Client] Sent mine request for (25,39,27) seq=52
+[2026-01-16 04:17:38.293] [04:17:38.293] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=51 from 127.0.0.1:48868
+[2026-01-16 04:17:38.293] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.293] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.293] [04:17:38.293] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:38.293] [04:17:38.293] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:38.293] [04:17:38.293] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=51 to 1/1 clients
+[2026-01-16 04:17:38.293] [04:17:38.293] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=52 from 127.0.0.1:48868
+[2026-01-16 04:17:38.293] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=51
+[2026-01-16 04:17:38.293] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.293] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.293] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.293] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.293] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:38.294] [Renderer]   Deleted GPU: VAO=113, VBO=115
+[2026-01-16 04:17:38.294] [04:17:38.293] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:38.294] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:38.294] [04:17:38.294] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:38.294] [04:17:38.294] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=52 to 1/1 clients
+[2026-01-16 04:17:38.294] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=52
+[2026-01-16 04:17:38.294] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:38.294] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:38.294] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:39.846] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:39.846] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:39.846] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:39.846] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=53 locally
+[2026-01-16 04:17:39.846] [Client] Sent mine request for (25,39,27) seq=53
+[2026-01-16 04:17:39.846] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:39.846] [04:17:39.846] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=53 from 127.0.0.1:48868
+[2026-01-16 04:17:39.846] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:39.846] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:39.846] [04:17:39.846] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:39.846] [04:17:39.846] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:39.846] [04:17:39.846] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=53 to 1/1 clients
+[2026-01-16 04:17:39.846] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=53
+[2026-01-16 04:17:39.846] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:39.846] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:39.846] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:39.846] [Renderer]   Deleted GPU: VAO=124, VBO=126
+[2026-01-16 04:17:39.846] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:39.923] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:39.923] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:39.923] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:39.923] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=54 locally
+[2026-01-16 04:17:39.923] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:39.999] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:40.000] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.000] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.000] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=55 locally
+[2026-01-16 04:17:40.000] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:40.033] [Client] Sent mine request for (25,39,27) seq=54
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=54 from 127.0.0.1:48868
+[2026-01-16 04:17:40.034] [Client] Sent mine request for (25,39,27) seq=55
+[2026-01-16 04:17:40.034] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.034] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:40.034] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=54
+[2026-01-16 04:17:40.034] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=54 to 1/1 clients
+[2026-01-16 04:17:40.034] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=55 from 127.0.0.1:48868
+[2026-01-16 04:17:40.034] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:40.034] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.034] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:40.034] [04:17:40.034] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=55 to 1/1 clients
+[2026-01-16 04:17:40.034] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=55
+[2026-01-16 04:17:40.034] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.034] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.034] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:40.059] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:40.059] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.059] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.059] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=56 locally
+[2026-01-16 04:17:40.059] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:40.144] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:40.144] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.144] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.144] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=57 locally
+[2026-01-16 04:17:40.144] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:40.207] [Client] Sent mine request for (25,39,27) seq=56
+[2026-01-16 04:17:40.207] [Client] Sent mine request for (25,39,27) seq=57
+[2026-01-16 04:17:40.207] [04:17:40.207] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=56 from 127.0.0.1:48868
+[2026-01-16 04:17:40.208] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.208] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.208] [04:17:40.208] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:40.208] [04:17:40.208] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:40.208] [04:17:40.208] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=56 to 1/1 clients
+[2026-01-16 04:17:40.208] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=56
+[2026-01-16 04:17:40.208] [04:17:40.208] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=57 from 127.0.0.1:48868
+[2026-01-16 04:17:40.208] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.208] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.208] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.208] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.208] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:40.208] [04:17:40.208] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:40.208] [Renderer]   Deleted GPU: VAO=125, VBO=127
+[2026-01-16 04:17:40.208] [04:17:40.208] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:40.208] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:40.208] [04:17:40.208] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=57 to 1/1 clients
+[2026-01-16 04:17:40.208] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=57
+[2026-01-16 04:17:40.208] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.208] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.208] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:40.238] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:40.238] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.238] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.238] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=58 locally
+[2026-01-16 04:17:40.238] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:40.330] [Game] Mined Air at (25, 39, 27)
+[2026-01-16 04:17:40.330] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.330] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.330] [Prediction] Applied BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=59 locally
+[2026-01-16 04:17:40.330] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:40.375] [Client] Sent mine request for (25,39,27) seq=58
+[2026-01-16 04:17:40.375] [Client] Sent mine request for (25,39,27) seq=59
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=58 from 127.0.0.1:48868
+[2026-01-16 04:17:40.375] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.375] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:40.375] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=58
+[2026-01-16 04:17:40.375] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.375] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=58 to 1/1 clients
+[2026-01-16 04:17:40.375] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Received BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=59 from 127.0.0.1:48868
+[2026-01-16 04:17:40.375] [Renderer]   Deleted GPU: VAO=126, VBO=128
+[2026-01-16 04:17:40.375] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.375] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.375] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:40.375] [Client] Received broadcast: BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=59
+[2026-01-16 04:17:40.375] [BlockGrid] Removed cell at grid (12,19,13) world (25,39,27)
+[2026-01-16 04:17:40.375] [04:17:40.375] [Server] Broadcasted BlockMod[Mine] at world(25,39,27) grid(12,19,13) block=0 seq=59 to 1/1 clients
+[2026-01-16 04:17:40.375] [BlockMod] Removed grid cell at world (25,39,27)
+[2026-01-16 04:17:40.376] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:43.157] [04:17:43.157] [Server] Tick 3300 | Cache: 39/20000 | Requests: 142 | Grid: 11 cells (9 air, 2 solid)
+[2026-01-16 04:17:44.919] [Game] Selected hotbar slot 5
+[2026-01-16 04:17:45.470] [Game] Selected hotbar slot 6
+[2026-01-16 04:17:46.227] [BlockGrid] Placed Sand at grid (11,18,10) world (23,37,21)
+[2026-01-16 04:17:46.228] [BlockMod] Placed Sand grid cell at world (23,37,21)
+[2026-01-16 04:17:46.228] [Prediction] Applied BlockMod[Place] at world(23,37,21) grid(11,18,10) block=4 seq=60 locally
+[2026-01-16 04:17:46.228] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:46.228] [Renderer]   Deleted GPU: VAO=135, VBO=137
+[2026-01-16 04:17:46.228] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:46.228] [Client] Sent place request for Sand at (23,37,21) seq=60
+[2026-01-16 04:17:46.228] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:17:46.228] [04:17:46.228] [Server] Received BlockMod[Place] at world(23,37,21) grid(11,18,10) block=4 seq=60 from 127.0.0.1:48868
+[2026-01-16 04:17:46.228] [BlockGrid] Placed Sand at grid (11,18,10) world (23,37,21)
+[2026-01-16 04:17:46.228] [BlockMod] Placed Sand grid cell at world (23,37,21)
+[2026-01-16 04:17:46.228] [04:17:46.228] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:46.228] [04:17:46.228] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:46.228] [04:17:46.228] [Server] Broadcasted BlockMod[Place] at world(23,37,21) grid(11,18,10) block=4 seq=60 to 1/1 clients
+[2026-01-16 04:17:46.228] [Client] Received broadcast: BlockMod[Place] at world(23,37,21) grid(11,18,10) block=4 seq=60
+[2026-01-16 04:17:46.228] [BlockGrid] Placed Sand at grid (11,18,10) world (23,37,21)
+[2026-01-16 04:17:46.228] [BlockMod] Placed Sand grid cell at world (23,37,21)
+[2026-01-16 04:17:46.228] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:48.159] [04:17:48.159] [Server] Tick 3600 | Cache: 39/20000 | Requests: 145 | Grid: 12 cells (9 air, 3 solid)
+[2026-01-16 04:17:50.969] [Game] Mined Sand at (22, 36, 20)
+[2026-01-16 04:17:50.969] [BlockGrid] Removed cell at grid (11,18,10) world (22,36,20)
+[2026-01-16 04:17:50.969] [BlockMod] Removed grid cell at world (22,36,20)
+[2026-01-16 04:17:50.969] [Prediction] Applied BlockMod[Mine] at world(22,36,20) grid(11,18,10) block=0 seq=61 locally
+[2026-01-16 04:17:50.969] [Client] Sent mine request for (22,36,20) seq=61
+[2026-01-16 04:17:50.969] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:17:50.970] [04:17:50.970] [Server] Received BlockMod[Mine] at world(22,36,20) grid(11,18,10) block=0 seq=61 from 127.0.0.1:48868
+[2026-01-16 04:17:50.970] [BlockGrid] Removed cell at grid (11,18,10) world (22,36,20)
+[2026-01-16 04:17:50.970] [BlockMod] Removed grid cell at world (22,36,20)
+[2026-01-16 04:17:50.970] [04:17:50.970] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:50.970] [04:17:50.970] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:50.970] [04:17:50.970] [Server] Broadcasted BlockMod[Mine] at world(22,36,20) grid(11,18,10) block=0 seq=61 to 1/1 clients
+[2026-01-16 04:17:50.970] [Client] Received broadcast: BlockMod[Mine] at world(22,36,20) grid(11,18,10) block=0 seq=61
+[2026-01-16 04:17:50.970] [BlockGrid] Removed cell at grid (11,18,10) world (22,36,20)
+[2026-01-16 04:17:50.970] [BlockMod] Removed grid cell at world (22,36,20)
+[2026-01-16 04:17:50.970] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:50.970] [Renderer]   Deleted GPU: VAO=137, VBO=139
+[2026-01-16 04:17:50.970] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:53.169] [04:17:53.169] [Server] Tick 3900 | Cache: 39/20000 | Requests: 147 | Grid: 12 cells (10 air, 2 solid)
+[2026-01-16 04:17:53.220] [BlockGrid] Placed Sand at grid (11,18,10) world (22,37,21)
+[2026-01-16 04:17:53.220] [BlockMod] Placed Sand grid cell at world (22,37,21)
+[2026-01-16 04:17:53.220] [Prediction] Applied BlockMod[Place] at world(22,37,21) grid(11,18,10) block=4 seq=62 locally
+[2026-01-16 04:17:53.220] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:53.220] [Renderer]   Deleted GPU: VAO=139, VBO=141
+[2026-01-16 04:17:53.220] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:53.220] [Client] Sent place request for Sand at (22,37,21) seq=62
+[2026-01-16 04:17:53.220] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:17:53.220] [04:17:53.220] [Server] Received BlockMod[Place] at world(22,37,21) grid(11,18,10) block=4 seq=62 from 127.0.0.1:48868
+[2026-01-16 04:17:53.220] [BlockGrid] Placed Sand at grid (11,18,10) world (22,37,21)
+[2026-01-16 04:17:53.220] [BlockMod] Placed Sand grid cell at world (22,37,21)
+[2026-01-16 04:17:53.220] [04:17:53.220] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:53.220] [04:17:53.220] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:53.220] [04:17:53.220] [Server] Broadcasted BlockMod[Place] at world(22,37,21) grid(11,18,10) block=4 seq=62 to 1/1 clients
+[2026-01-16 04:17:53.220] [Client] Received broadcast: BlockMod[Place] at world(22,37,21) grid(11,18,10) block=4 seq=62
+[2026-01-16 04:17:53.220] [BlockGrid] Placed Sand at grid (11,18,10) world (22,37,21)
+[2026-01-16 04:17:53.220] [BlockMod] Placed Sand grid cell at world (22,37,21)
+[2026-01-16 04:17:53.220] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:58.161] [04:17:58.161] [Server] Tick 4200 | Cache: 39/20000 | Requests: 150 | Grid: 12 cells (9 air, 3 solid)
+[2026-01-16 04:17:58.185] [BlockGrid] Placed Sand at grid (12,18,10) world (24,36,20)
+[2026-01-16 04:17:58.185] [BlockMod] Placed Sand grid cell at world (24,36,20)
+[2026-01-16 04:17:58.185] [Prediction] Applied BlockMod[Place] at world(24,36,20) grid(12,18,10) block=4 seq=63 locally
+[2026-01-16 04:17:58.185] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:17:58.185] [Renderer]   Deleted GPU: VAO=141, VBO=143
+[2026-01-16 04:17:58.185] [Renderer]   Cleared mesh cache
+[2026-01-16 04:17:58.185] [Client] Sent place request for Sand at (24,36,20) seq=63
+[2026-01-16 04:17:58.185] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:17:58.185] [04:17:58.185] [Server] Received BlockMod[Place] at world(24,36,20) grid(12,18,10) block=4 seq=63 from 127.0.0.1:48868
+[2026-01-16 04:17:58.185] [BlockGrid] Placed Sand at grid (12,18,10) world (24,36,20)
+[2026-01-16 04:17:58.185] [BlockMod] Placed Sand grid cell at world (24,36,20)
+[2026-01-16 04:17:58.185] [04:17:58.185] [Server] Applied grid-based modification successfully
+[2026-01-16 04:17:58.185] [04:17:58.185] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:17:58.185] [04:17:58.185] [Server] Broadcasted BlockMod[Place] at world(24,36,20) grid(12,18,10) block=4 seq=63 to 1/1 clients
+[2026-01-16 04:17:58.185] [Client] Received broadcast: BlockMod[Place] at world(24,36,20) grid(12,18,10) block=4 seq=63
+[2026-01-16 04:17:58.185] [BlockGrid] Placed Sand at grid (12,18,10) world (24,36,20)
+[2026-01-16 04:17:58.185] [BlockMod] Placed Sand grid cell at world (24,36,20)
+[2026-01-16 04:17:58.185] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:18:03.172] [04:18:03.172] [Server] Tick 4500 | Cache: 39/20000 | Requests: 153 | Grid: 13 cells (9 air, 4 solid)
+[2026-01-16 04:18:04.672] [Game] Selected hotbar slot 1
+[2026-01-16 04:18:05.006] [Game] Selected hotbar slot 2
+[2026-01-16 04:18:05.784] [BlockGrid] Placed Stone at grid (12,18,9) world (24,36,19)
+[2026-01-16 04:18:05.784] [BlockMod] Placed Stone grid cell at world (24,36,19)
+[2026-01-16 04:18:05.784] [Prediction] Applied BlockMod[Place] at world(24,36,19) grid(12,18,9) block=1 seq=64 locally
+[2026-01-16 04:18:05.784] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:18:05.784] [Renderer]   Deleted GPU: VAO=143, VBO=145
+[2026-01-16 04:18:05.784] [Renderer]   Cleared mesh cache
+[2026-01-16 04:18:05.784] [Client] Sent place request for Stone at (24,36,19) seq=64
+[2026-01-16 04:18:05.784] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:18:05.784] [04:18:05.784] [Server] Received BlockMod[Place] at world(24,36,19) grid(12,18,9) block=1 seq=64 from 127.0.0.1:48868
+[2026-01-16 04:18:05.784] [BlockGrid] Placed Stone at grid (12,18,9) world (24,36,19)
+[2026-01-16 04:18:05.784] [BlockMod] Placed Stone grid cell at world (24,36,19)
+[2026-01-16 04:18:05.785] [04:18:05.785] [Server] Applied grid-based modification successfully
+[2026-01-16 04:18:05.785] [04:18:05.785] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:18:05.785] [04:18:05.785] [Server] Broadcasted BlockMod[Place] at world(24,36,19) grid(12,18,9) block=1 seq=64 to 1/1 clients
+[2026-01-16 04:18:05.785] [Client] Received broadcast: BlockMod[Place] at world(24,36,19) grid(12,18,9) block=1 seq=64
+[2026-01-16 04:18:05.785] [BlockGrid] Placed Stone at grid (12,18,9) world (24,36,19)
+[2026-01-16 04:18:05.785] [BlockMod] Placed Stone grid cell at world (24,36,19)
+[2026-01-16 04:18:05.785] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:18:08.159] [04:18:08.159] [Server] Tick 4800 | Cache: 39/20000 | Requests: 156 | Grid: 14 cells (9 air, 5 solid)
+[2026-01-16 04:18:11.731] [BlockGrid] Placed Stone at grid (11,18,9) world (22,36,18)
+[2026-01-16 04:18:11.731] [BlockMod] Placed Stone grid cell at world (22,36,18)
+[2026-01-16 04:18:11.731] [Prediction] Applied BlockMod[Place] at world(22,36,18) grid(11,18,9) block=1 seq=65 locally
+[2026-01-16 04:18:11.731] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:18:11.731] [Renderer]   Deleted GPU: VAO=145, VBO=147
+[2026-01-16 04:18:11.731] [Renderer]   Cleared mesh cache
+[2026-01-16 04:18:11.731] [Client] Sent place request for Stone at (22,36,18) seq=65
+[2026-01-16 04:18:11.731] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:18:11.732] [04:18:11.732] [Server] Received BlockMod[Place] at world(22,36,18) grid(11,18,9) block=1 seq=65 from 127.0.0.1:48868
+[2026-01-16 04:18:11.732] [BlockGrid] Placed Stone at grid (11,18,9) world (22,36,18)
+[2026-01-16 04:18:11.732] [BlockMod] Placed Stone grid cell at world (22,36,18)
+[2026-01-16 04:18:11.732] [04:18:11.732] [Server] Applied grid-based modification successfully
+[2026-01-16 04:18:11.732] [04:18:11.732] [Server] Invalidated chunk (0,0,0)
+[2026-01-16 04:18:11.732] [04:18:11.732] [Server] Broadcasted BlockMod[Place] at world(22,36,18) grid(11,18,9) block=1 seq=65 to 1/1 clients
+[2026-01-16 04:18:11.732] [Client] Received broadcast: BlockMod[Place] at world(22,36,18) grid(11,18,9) block=1 seq=65
+[2026-01-16 04:18:11.733] [BlockGrid] Placed Stone at grid (11,18,9) world (22,36,18)
+[2026-01-16 04:18:11.733] [BlockMod] Placed Stone grid cell at world (22,36,18)
+[2026-01-16 04:18:11.733] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:18:13.166] [04:18:13.166] [Server] Tick 5100 | Cache: 39/20000 | Requests: 159 | Grid: 15 cells (9 air, 6 solid)
+[2026-01-16 04:18:18.165] [04:18:18.165] [Server] Tick 5400 | Cache: 39/20000 | Requests: 159 | Grid: 15 cells (9 air, 6 solid)
+[2026-01-16 04:18:23.168] [04:18:23.168] [Server] Tick 5700 | Cache: 39/20000 | Requests: 159 | Grid: 15 cells (9 air, 6 solid)
+[2026-01-16 04:18:26.090] [Game] E key pressed detected!
+[2026-01-16 04:18:26.090] [Game] Inventory was closed, toggling...
+[2026-01-16 04:18:26.091] [OpenGLInventoryUI] Inventory opened
+[2026-01-16 04:18:26.091] [Game] Inventory toggle: opened
+[2026-01-16 04:18:26.092] [OpenGLInventoryUI] Rendering with openProgress=0.575, isOpen=True
+[2026-01-16 04:18:26.103] [OpenGLInventoryUI] Rendering with openProgress=0.634, isOpen=True
+[2026-01-16 04:18:26.115] [OpenGLInventoryUI] Rendering with openProgress=0.672, isOpen=True
+[2026-01-16 04:18:26.119] [OpenGLInventoryUI] Rendering with openProgress=0.701, isOpen=True
+[2026-01-16 04:18:26.129] [OpenGLInventoryUI] Rendering with openProgress=0.731, isOpen=True
+[2026-01-16 04:18:26.133] [OpenGLInventoryUI] Rendering with openProgress=0.750, isOpen=True
+[2026-01-16 04:18:26.143] [OpenGLInventoryUI] Rendering with openProgress=0.774, isOpen=True
+[2026-01-16 04:18:26.147] [OpenGLInventoryUI] Rendering with openProgress=0.790, isOpen=True
+[2026-01-16 04:18:26.152] [OpenGLInventoryUI] Rendering with openProgress=0.800, isOpen=True
+[2026-01-16 04:18:26.160] [OpenGLInventoryUI] Rendering with openProgress=0.819, isOpen=True
+[2026-01-16 04:18:26.164] [OpenGLInventoryUI] Rendering with openProgress=0.831, isOpen=True
+[2026-01-16 04:18:26.171] [OpenGLInventoryUI] Rendering with openProgress=0.840, isOpen=True
+[2026-01-16 04:18:26.178] [OpenGLInventoryUI] Rendering with openProgress=0.855, isOpen=True
+[2026-01-16 04:18:26.182] [OpenGLInventoryUI] Rendering with openProgress=0.865, isOpen=True
+[2026-01-16 04:18:26.188] [OpenGLInventoryUI] Rendering with openProgress=0.872, isOpen=True
+[2026-01-16 04:18:26.196] [OpenGLInventoryUI] Rendering with openProgress=0.884, isOpen=True
+[2026-01-16 04:18:26.200] [OpenGLInventoryUI] Rendering with openProgress=0.892, isOpen=True
+[2026-01-16 04:18:26.211] [OpenGLInventoryUI] Rendering with openProgress=0.904, isOpen=True
+[2026-01-16 04:18:26.215] [OpenGLInventoryUI] Rendering with openProgress=0.910, isOpen=True
+[2026-01-16 04:18:26.221] [OpenGLInventoryUI] Rendering with openProgress=0.915, isOpen=True
+[2026-01-16 04:18:26.228] [OpenGLInventoryUI] Rendering with openProgress=0.923, isOpen=True
+[2026-01-16 04:18:26.233] [OpenGLInventoryUI] Rendering with openProgress=0.929, isOpen=True
+[2026-01-16 04:18:26.243] [OpenGLInventoryUI] Rendering with openProgress=0.935, isOpen=True
+[2026-01-16 04:18:26.246] [OpenGLInventoryUI] Rendering with openProgress=0.940, isOpen=True
+[2026-01-16 04:18:26.253] [OpenGLInventoryUI] Rendering with openProgress=0.943, isOpen=True
+[2026-01-16 04:18:26.261] [OpenGLInventoryUI] Rendering with openProgress=0.948, isOpen=True
+[2026-01-16 04:18:26.265] [OpenGLInventoryUI] Rendering with openProgress=0.952, isOpen=True
+[2026-01-16 04:18:26.271] [OpenGLInventoryUI] Rendering with openProgress=0.954, isOpen=True
+[2026-01-16 04:18:26.278] [OpenGLInventoryUI] Rendering with openProgress=0.959, isOpen=True
+[2026-01-16 04:18:26.283] [OpenGLInventoryUI] Rendering with openProgress=0.962, isOpen=True
+[2026-01-16 04:18:26.293] [OpenGLInventoryUI] Rendering with openProgress=0.966, isOpen=True
+[2026-01-16 04:18:26.298] [OpenGLInventoryUI] Rendering with openProgress=0.968, isOpen=True
+[2026-01-16 04:18:26.304] [OpenGLInventoryUI] Rendering with openProgress=0.970, isOpen=True
+[2026-01-16 04:18:26.312] [OpenGLInventoryUI] Rendering with openProgress=0.973, isOpen=True
+[2026-01-16 04:18:26.316] [OpenGLInventoryUI] Rendering with openProgress=0.975, isOpen=True
+[2026-01-16 04:18:26.322] [OpenGLInventoryUI] Rendering with openProgress=0.976, isOpen=True
+[2026-01-16 04:18:26.329] [OpenGLInventoryUI] Rendering with openProgress=0.978, isOpen=True
+[2026-01-16 04:18:26.334] [OpenGLInventoryUI] Rendering with openProgress=0.980, isOpen=True
+[2026-01-16 04:18:26.344] [OpenGLInventoryUI] Rendering with openProgress=0.982, isOpen=True
+[2026-01-16 04:18:26.348] [OpenGLInventoryUI] Rendering with openProgress=0.983, isOpen=True
+[2026-01-16 04:18:26.354] [OpenGLInventoryUI] Rendering with openProgress=0.984, isOpen=True
+[2026-01-16 04:18:26.362] [OpenGLInventoryUI] Rendering with openProgress=0.985, isOpen=True
+[2026-01-16 04:18:26.366] [OpenGLInventoryUI] Rendering with openProgress=0.987, isOpen=True
+[2026-01-16 04:18:26.376] [OpenGLInventoryUI] Rendering with openProgress=0.988, isOpen=True
+[2026-01-16 04:18:26.380] [OpenGLInventoryUI] Rendering with openProgress=0.989, isOpen=True
+[2026-01-16 04:18:26.386] [OpenGLInventoryUI] Rendering with openProgress=0.989, isOpen=True
+[2026-01-16 04:18:26.393] [OpenGLInventoryUI] Rendering with openProgress=0.990, isOpen=True
+[2026-01-16 04:18:26.398] [OpenGLInventoryUI] Rendering with openProgress=0.991, isOpen=True
+[2026-01-16 04:18:26.404] [OpenGLInventoryUI] Rendering with openProgress=0.991, isOpen=True
+[2026-01-16 04:18:26.411] [OpenGLInventoryUI] Rendering with openProgress=0.992, isOpen=True
+[2026-01-16 04:18:26.416] [OpenGLInventoryUI] Rendering with openProgress=0.993, isOpen=True
+[2026-01-16 04:18:26.422] [OpenGLInventoryUI] Rendering with openProgress=0.993, isOpen=True
+[2026-01-16 04:18:26.429] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
+[2026-01-16 04:18:26.434] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
+[2026-01-16 04:18:26.444] [OpenGLInventoryUI] Rendering with openProgress=0.995, isOpen=True
+[2026-01-16 04:18:26.448] [OpenGLInventoryUI] Rendering with openProgress=0.995, isOpen=True
+[2026-01-16 04:18:26.454] [OpenGLInventoryUI] Rendering with openProgress=0.995, isOpen=True
+[2026-01-16 04:18:26.461] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
+[2026-01-16 04:18:26.466] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
+[2026-01-16 04:18:26.472] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
+[2026-01-16 04:18:26.479] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
+[2026-01-16 04:18:26.483] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
+[2026-01-16 04:18:26.494] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
+[2026-01-16 04:18:26.497] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
+[2026-01-16 04:18:26.503] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
+[2026-01-16 04:18:26.511] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
+[2026-01-16 04:18:26.515] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
+[2026-01-16 04:18:26.521] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
+[2026-01-16 04:18:26.529] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
+[2026-01-16 04:18:26.533] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
+[2026-01-16 04:18:26.543] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
+[2026-01-16 04:18:26.547] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.553] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.561] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.565] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.571] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.579] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.583] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.593] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.597] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.603] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.611] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.615] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.622] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.629] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
+[2026-01-16 04:18:26.633] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.643] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.647] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.653] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.661] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.665] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.671] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.678] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.682] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.693] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.697] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.705] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.708] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.713] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.718] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.728] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.732] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.738] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.746] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.750] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.760] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.764] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.771] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.778] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.782] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.793] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.797] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.803] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.811] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.815] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.821] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.829] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.833] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.843] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.847] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.853] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.861] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.865] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.871] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.879] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.883] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.892] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.897] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.902] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.910] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.914] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.921] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.928] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.933] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.943] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.946] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.954] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.962] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.966] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.976] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.980] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.986] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.993] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:26.997] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.003] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.011] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.015] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.021] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.029] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.032] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.043] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.047] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.055] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.058] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.063] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.067] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.077] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.081] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.087] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.094] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.099] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.106] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.112] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.116] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.125] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.129] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.135] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.140] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.145] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.149] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.159] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.164] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.169] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.177] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.181] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.187] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.194] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.199] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.205] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.213] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.217] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.227] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.231] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.237] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.245] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.249] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.259] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.264] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.269] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.277] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.281] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.287] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.295] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.299] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.309] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.313] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.319] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.327] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.331] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.337] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.345] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
+[2026-01-16 04:18:27.348] [Game] E key pressed detected!
+[2026-01-16 04:18:27.348] [Game] Inventory was open, toggling...
+[2026-01-16 04:18:27.348] [OpenGLInventoryUI] Inventory closed
+[2026-01-16 04:18:27.348] [Game] Inventory toggle: closed
+[2026-01-16 04:18:28.166] [04:18:28.166] [Server] Tick 6000 | Cache: 39/20000 | Requests: 159 | Grid: 15 cells (9 air, 6 solid)
+[2026-01-16 04:18:29.445] [OpenGLInventoryUI] Disposed

@@ -1,4 +1,4 @@
-// Net/Server/Server.cs - Refactored with length-prefixed packets
+// Net/Server/Server.cs - Refactored with grid-based block modification
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
@@ -135,7 +135,7 @@ namespace Aetheris
             serverWorld = new GameWorld(seed: ServerConfig.WORLD_SEED, name: "ServerWorld");
             serverWorld.OnTerrainModified += OnServerTerrainModified;
 
-            Log("[Server] GameWorld initialized");
+            Log("[Server] GameWorld initialized with grid-based block system");
 
             listener = new TcpListener(IPAddress.Any, ServerConfig.SERVER_PORT);
             listener.Start();
@@ -253,7 +253,7 @@ namespace Aetheris
         }
 
         // ============================================================================
-        // Block Modification Handler
+        // Block Modification Handler (Grid-Based)
         // ============================================================================
 
         private async Task HandleBlockModificationAsync(byte[] data, string clientId, CancellationToken token)
@@ -271,16 +271,20 @@ namespace Aetheris
 
                 Log($"[Server] Received {message} from {clientId}");
 
+                // Apply using grid-based system
                 bool success = message.ApplyToWorld(serverWorld);
 
                 if (success)
                 {
-                    Log($"[Server] Applied modification successfully");
+                    Log($"[Server] Applied grid-based modification successfully");
 
-                    var affectedChunks = NetworkHelpers.GetAffectedChunksRadius(
-                        message.X, message.Y, message.Z, 2f,
-                        ServerConfig.CHUNK_SIZE, ServerConfig.CHUNK_SIZE_Y);
+                    // Get affected chunks using grid system
+                    var affectedChunks = message.GetAffectedChunks(
+                        ServerConfig.CHUNK_SIZE, 
+                        ServerConfig.CHUNK_SIZE_Y, 
+                        ServerConfig.CHUNK_SIZE);
 
+                    // Invalidate affected chunks
                     foreach (var (cx, cy, cz) in affectedChunks)
                     {
                         var coord = new ChunkCoord(cx, cy, cz);
@@ -289,6 +293,8 @@ namespace Aetheris
                         chunkManager.UnloadChunk(coord);
                         generationLocks.TryRemove(coord, out var lockObj);
                         lockObj?.Dispose();
+                        
+                        Log($"[Server] Invalidated chunk ({cx},{cy},{cz})");
                     }
 
                     await BroadcastBlockModification(message);
@@ -653,7 +659,8 @@ namespace Aetheris
 
                 if (tickCount % (int)(TickRate * 5) == 0 && tickCount > 0)
                 {
-                    Log($"[Server] Tick {tickCount} | Cache: {cacheSize}/{MaxCachedMeshes} | Requests: {totalRequests}");
+                    var (totalMod, airCells, solidCells) = BlockGrid.GetStats();
+                    Log($"[Server] Tick {tickCount} | Cache: {cacheSize}/{MaxCachedMeshes} | Requests: {totalRequests} | Grid: {totalMod} cells ({airCells} air, {solidCells} solid)");
                 }
             }
         }

@@ -37,8 +37,7 @@ namespace Aetheris
     }
 
     /// <summary>
-    /// Block modification message (replaces separate BlockBreak/BlockPlace)
-    /// Uses GameLogic types for consistency
+    /// Block modification message using grid-based cube system
     /// </summary>
     public class BlockModificationMessage : INetworkMessage
     {
@@ -46,8 +45,8 @@ namespace Aetheris
 
         public enum ModificationType : byte
         {
-            Mine = 0,      // Remove terrain
-            Place = 1,     // Place block
+            Mine = 0,      // Remove grid cell (cube)
+            Place = 1,     // Place grid cell (cube)
             Damage = 2     // Damage block (progressive mining)
         }
 
@@ -106,22 +105,23 @@ namespace Aetheris
         }
 
         /// <summary>
-        /// Apply this modification to a GameWorld (used by both client and server)
+        /// Apply this modification using the GRID-BASED system for cube-style terrain
         /// </summary>
         public bool ApplyToWorld(Aetheris.GameLogic.GameWorld world)
         {
             switch (Operation)
             {
                 case ModificationType.Mine:
-                    // Apply to WorldGen density system (what marching cubes uses)
-                    WorldGen.RemoveBlock(X, Y, Z, radius: 1.5f, strength: 3f);
-                    Console.WriteLine($"[BlockMod] Applied mine at world ({X},{Y},{Z})");
+                    // GRID-BASED: Remove entire grid cell as a cube
+                    BlockGrid.RemoveBlock(X, Y, Z);
+                    Console.WriteLine($"[BlockMod] Removed grid cell at world ({X},{Y},{Z})");
                     return true;
 
                 case ModificationType.Place:
+                    // GRID-BASED: Place entire grid cell as a cube
                     var blockType = (BlockType)BlockTypeByte;
-                    WorldGen.PlaceSolidBlock(X, Y, Z, blockType);
-                    Console.WriteLine($"[BlockMod] Applied place {blockType} at world ({X},{Y},{Z})");
+                    BlockGrid.PlaceBlock(X, Y, Z, blockType);
+                    Console.WriteLine($"[BlockMod] Placed {blockType} grid cell at world ({X},{Y},{Z})");
                     return true;
 
                 case ModificationType.Damage:
@@ -132,10 +132,20 @@ namespace Aetheris
                     return false;
             }
         }
+        
+        /// <summary>
+        /// Get all chunks affected by this modification (for mesh regeneration)
+        /// </summary>
+        public List<(int cx, int cy, int cz)> GetAffectedChunks(int chunkSizeX = 32, int chunkSizeY = 96, int chunkSizeZ = 32)
+        {
+            var (gx, gy, gz) = BlockGrid.WorldToGrid(X, Y, Z);
+            return BlockGrid.GetAffectedChunks(gx, gy, gz, chunkSizeX, chunkSizeY, chunkSizeZ);
+        }
 
         public override string ToString()
         {
-            return $"BlockMod[{Operation}] at ({X},{Y},{Z}) block={BlockTypeByte} seq={ClientSequence}";
+            var (gx, gy, gz) = BlockGrid.WorldToGrid(X, Y, Z);
+            return $"BlockMod[{Operation}] at world({X},{Y},{Z}) grid({gx},{gy},{gz}) block={BlockTypeByte} seq={ClientSequence}";
         }
     }
 
@@ -292,7 +302,7 @@ namespace Aetheris
     }
 
     /// <summary>
-    /// Client-side prediction manager for block modifications
+    /// Client-side prediction manager for block modifications (grid-based)
     /// </summary>
     public class BlockPredictionManager
     {
@@ -308,14 +318,14 @@ namespace Aetheris
         }
 
         /// <summary>
-        /// Predict a block modification locally
+        /// Predict a block modification locally using grid-based system
         /// </summary>
         public uint PredictModification(BlockModificationMessage message)
         {
             message.ClientSequence = nextSequence++;
             message.ClientTimestamp = DateTime.UtcNow.Ticks;
 
-            // Apply modification locally (prediction)
+            // Apply modification locally (prediction) using grid system
             bool success = message.ApplyToWorld(clientWorld);
 
             if (success)
@@ -355,35 +365,26 @@ namespace Aetheris
                 }
             }
 
-            // Check if server result differs from our prediction
-            var pos = new Aetheris.GameLogic.BlockPos(
-                serverMessage.X,
-                serverMessage.Y,
-                serverMessage.Z
-            );
-
-            var clientBlock = clientWorld.GetBlock(pos);
-            var serverBlock = new Aetheris.GameLogic.BlockData
-            {
-                Type = (BlockType)serverMessage.BlockTypeByte,
-                Rotation = serverMessage.Rotation
-            };
-
-            // If mismatch, correct client state
+            // Grid-based reconciliation is simpler since cells are binary (air or solid)
+            // Just ensure our grid state matches the server
+            var (gx, gy, gz) = BlockGrid.WorldToGrid(serverMessage.X, serverMessage.Y, serverMessage.Z);
+            var currentCell = BlockGrid.GetCell(gx, gy, gz);
+            
             if (serverMessage.Operation == BlockModificationMessage.ModificationType.Mine)
             {
-                if (!clientBlock.IsAir)
+                if (currentCell.State != BlockGrid.CellState.Air)
                 {
-                    Console.WriteLine($"[Prediction] Correcting mine at {pos}");
-                    clientWorld.SetBlock(pos, Aetheris.GameLogic.BlockData.Air);
+                    Console.WriteLine($"[Prediction] Correcting mine at grid ({gx},{gy},{gz})");
+                    BlockGrid.RemoveBlock(serverMessage.X, serverMessage.Y, serverMessage.Z);
                 }
             }
             else if (serverMessage.Operation == BlockModificationMessage.ModificationType.Place)
             {
-                if (clientBlock.Type != serverBlock.Type)
+                var expectedType = (BlockType)serverMessage.BlockTypeByte;
+                if (currentCell.State != BlockGrid.CellState.Solid || currentCell.BlockType != expectedType)
                 {
-                    Console.WriteLine($"[Prediction] Correcting place at {pos}");
-                    clientWorld.SetBlock(pos, serverBlock);
+                    Console.WriteLine($"[Prediction] Correcting place at grid ({gx},{gy},{gz})");
+                    BlockGrid.PlaceBlock(serverMessage.X, serverMessage.Y, serverMessage.Z, expectedType);
                 }
             }
         }

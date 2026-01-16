@@ -151,47 +151,18 @@ namespace Aetheris
             wMountains = rawMountains / sum;
         }
         private static ConcurrentDictionary<(int, int, int), float> densityModifications = new();
+        
+        /// <summary>
+        /// Remove a block using the grid-based system (cube removal)
+        /// </summary>
         public static void RemoveBlock(int x, int y, int z, float radius = 1.5f, float strength = 3f)
         {
-            lock (modificationLock)
-            {
-                int iRadius = (int)Math.Ceiling(radius);
-
-                for (int dx = -iRadius; dx <= iRadius; dx++)
-                {
-                    for (int dy = -iRadius; dy <= iRadius; dy++)
-                    {
-                        for (int dz = -iRadius; dz <= iRadius; dz++)
-                        {
-                            int px = x + dx;
-                            int py = y + dy;
-                            int pz = z + dz;
-
-                            float dist = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
-
-                            if (dist <= radius)
-                            {
-                                float falloff = 1f - (dist / radius);
-                                falloff = falloff * falloff;
-
-                                float reduction = strength * falloff;
-
-                                var key = (px, py, pz);
-                                densityModifications.AddOrUpdate(
-                                    key,
-                                    -reduction,
-                                    (k, existing) => existing - reduction
-                                );
-                            }
-                        }
-                    }
-                }
-            }
+            // USE GRID-BASED SYSTEM: Remove entire grid cell as a cube
+            BlockGrid.RemoveBlock(x, y, z);
         }
 
         /// <summary>
-        /// Helper method to add density at a specific position
-        /// Used for placing individual blocks
+        /// Helper method to add density at a specific position (legacy - kept for compatibility)
         /// </summary>
         public static void AddDensityModification(int x, int y, int z, float strength)
         {
@@ -209,51 +180,30 @@ namespace Aetheris
 
         public static bool IsPlacedBlock(int x, int y, int z)
         {
+            // Check grid-based system first
+            var cell = BlockGrid.GetCellWorld(x, y, z);
+            if (cell.State == BlockGrid.CellState.Solid)
+                return true;
+            
+            // Legacy check
             lock (modificationLock)
             {
                 if (densityModifications.TryGetValue((x, y, z), out float mod))
                 {
-                    return mod > 2.0f; // Placed blocks have high positive density modification
+                    return mod > 2.0f;
                 }
             }
             return false;
         }
+        
+        /// <summary>
+        /// Add a block using the grid-based system (cube placement)
+        /// </summary>
         public static void AddBlock(int x, int y, int z, float radius = 1.5f, float strength = 3f)
         {
-            lock (modificationLock)
-            {
-                int iRadius = (int)Math.Ceiling(radius);
-
-                for (int dx = -iRadius; dx <= iRadius; dx++)
-                {
-                    for (int dy = -iRadius; dy <= iRadius; dy++)
-                    {
-                        for (int dz = -iRadius; dz <= iRadius; dz++)
-                        {
-                            int px = x + dx;
-                            int py = y + dy;
-                            int pz = z + dz;
-
-                            float dist = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
-
-                            if (dist <= radius)
-                            {
-                                float falloff = 1f - (dist / radius);
-                                falloff = falloff * falloff;
-
-                                float increase = strength * falloff;
-
-                                var key = (px, py, pz);
-                                densityModifications.AddOrUpdate(
-                                    key,
-                                    increase,
-                                    (k, existing) => existing + increase
-                                );
-                            }
-                        }
-                    }
-                }
-            }
+            // USE GRID-BASED SYSTEM: Place entire grid cell as a cube
+            // Default to stone if no type specified
+            BlockGrid.PlaceBlock(x, y, z, BlockType.Stone);
         }
 
 
@@ -319,23 +269,26 @@ namespace Aetheris
             return false;
         }
 
-        /// <summary>
-        /// Improved cave generation with continuous density field for seamless chunk boundaries
-        /// </summary>
-        // In WorldGen.cs - Replace the SampleDensityFast method with this version that includes modifications:
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float GetDensityModification(int x, int y, int z)
-        {
-            lock (modificationLock)
-            {
-                if (densityModifications.TryGetValue((x, y, z), out float mod))
-                    return mod;
-                return 0f;
-            }
-        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float SampleDensityFast(int x, int y, int z, in ColumnData columnData)
+        {
+            // GRID-BASED OVERRIDE: Check if this position is in a modified grid cell
+            // This gives flat cube faces for player modifications
+            float? gridOverride = BlockGrid.GetDensityOverride(x, y, z);
+            if (gridOverride.HasValue)
+            {
+                return gridOverride.Value;
+            }
+            
+            // Otherwise, use procedural terrain (smooth marching cubes)
+            return SampleDensityFastProcedural(x, y, z, columnData);
+        }
+        
+        /// <summary>
+        /// Original procedural density sampling (smooth terrain)
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float SampleDensityFastProcedural(int x, int y, int z, in ColumnData columnData)
         {
             // Base terrain density with smooth gradient
             float density;
@@ -350,18 +303,18 @@ namespace Aetheris
                 density = ISO + 1.2f + (depthBelowSurface * 0.012f);
             }
 
-            // Early return for air blocks (with modifications)
+            // Early return for air blocks
             if (y > columnData.SurfaceY + 2)
             {
-                return density + GetDensityModification(x, y, z);
+                return density;
             }
 
             if (columnData.CaveIntensity < 0.05f)
             {
-                return density + GetDensityModification(x, y, z);
+                return density;
             }
 
-            // Cave generation code here...
+            // Cave generation
             if (y > -150 && y < columnData.SurfaceY)
             {
                 float r1 = caveNoise1.GetNoise(x, y, z);
@@ -451,8 +404,7 @@ namespace Aetheris
                 density += approachDepth * approachDepth * 0.5f;
             }
 
-            // Apply modifications ONCE at the end
-            return density + GetDensityModification(x, y, z);
+            return density;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -461,13 +413,11 @@ namespace Aetheris
             if (!initialized) Initialize();
 
             var columnData = GetColumnData(x, z);
-            // SampleDensityFast already includes modifications
             return SampleDensityFast(x, y, z, columnData);
         }
 
         /// <summary>
         /// Smooth threshold function that creates continuous transitions
-        /// Prevents hard boundaries that cause gaps in marching cubes
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static float SmoothThreshold(float value, float threshold, float smoothness)
@@ -475,7 +425,6 @@ namespace Aetheris
             if (value < threshold - smoothness) return 0f;
             if (value > threshold + smoothness) return value - threshold;
 
-            // Smooth hermite interpolation in the transition zone
             float t = (value - (threshold - smoothness)) / (2f * smoothness);
             t = Clamp(t, 0f, 1f);
             float smooth = t * t * (3f - 2f * t);
@@ -485,6 +434,11 @@ namespace Aetheris
 
         public static BlockType GetBlockType(int x, int y, int z, float density, in ColumnData columnData)
         {
+            // Check grid-based override first
+            BlockType? gridType = BlockGrid.GetBlockTypeOverride(x, y, z);
+            if (gridType.HasValue)
+                return gridType.Value;
+            
             if (density <= ISO)
                 return BlockType.Air;
 
@@ -531,9 +485,6 @@ namespace Aetheris
             return BlockType.Stone;
         }
 
-
-
-
         // Legacy overloads
         public static BlockType GetBlockType(int x, int y, int z, float density)
         {
@@ -543,7 +494,12 @@ namespace Aetheris
 
         public static BlockType GetBlockType(int x, int y, int z)
         {
-            // Check modified blocks first
+            // Check grid-based override first
+            BlockType? gridType = BlockGrid.GetBlockTypeOverride(x, y, z);
+            if (gridType.HasValue)
+                return gridType.Value;
+            
+            // Check legacy modified blocks
             if (modifiedBlocks.TryGetValue((x, y, z), out var modifiedBlock))
                 return modifiedBlock;
 
@@ -553,123 +509,47 @@ namespace Aetheris
             return GetBlockType(x, y, z, density, columnData);
         }
 
+        /// <summary>
+        /// Place a solid block using the grid-based system
+        /// </summary>
         public static void PlaceSolidBlock(int x, int y, int z, BlockType blockType)
         {
-            lock (modificationLock)
-            {
-                // Set block type in modified blocks dictionary
-                modifiedBlocks[(x, y, z)] = blockType;
-
-                // CRITICAL: Set high density in a 3x3x3 area for solid collision
-                // This ensures the placed block has proper physics collision
-                for (int dx = -1; dx <= 1; dx++)
-                {
-                    for (int dy = -1; dy <= 1; dy++)
-                    {
-                        for (int dz = -1; dz <= 1; dz++)
-                        {
-                            int px = x + dx;
-                            int py = y + dy;
-                            int pz = z + dz;
-
-                            // Calculate distance from center
-                            float dist = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
-
-                            // Strong density at center, falloff at edges
-                            float strength = 50f * (1f - (dist / 2f));
-
-                            var key = (px, py, pz);
-                            densityModifications.AddOrUpdate(
-                                key,
-                                strength,
-                                (k, existing) => Math.Max(existing, strength)
-                            );
-                        }
-                    }
-                }
-
-                Console.WriteLine($"[WorldGen] Placed solid {blockType} at ({x}, {y}, {z}) with 3x3x3 collision");
-            }
-        }
-
-        public static void PlaceCubeBlock(int centerX, int centerY, int centerZ, BlockType blockType, float cubeSize = 1.0f)
-        {
-            lock (modificationLock)
-            {
-                // Define cube bounds
-                int halfSize = (int)Math.Ceiling(cubeSize / 2f);
-
-                // Set the block type for the center position
-                modifiedBlocks[(centerX, centerY, centerZ)] = blockType;
-
-                // Create a solid cube by setting very high density in a cube shape
-                for (int dx = -halfSize; dx <= halfSize; dx++)
-                {
-                    for (int dy = -halfSize; dy <= halfSize; dy++)
-                    {
-                        for (int dz = -halfSize; dz <= halfSize; dz++)
-                        {
-                            int px = centerX + dx;
-                            int py = centerY + dy;
-                            int pz = centerZ + dz;
-
-                            // Calculate distance from center (for cube, use max of abs values)
-                            float distX = Math.Abs(dx) / (float)halfSize;
-                            float distY = Math.Abs(dy) / (float)halfSize;
-                            float distZ = Math.Abs(dz) / (float)halfSize;
-                            float maxDist = Math.Max(Math.Max(distX, distY), distZ);
-
-                            // Cube falloff (sharp edges)
-                            float strength;
-                            if (maxDist < 0.8f)
-                            {
-                                // Core of the cube - very solid
-                                strength = 50f;
-                            }
-                            else
-                            {
-                                // Edge smoothing
-                                float edgeFalloff = 1f - ((maxDist - 0.8f) / 0.2f);
-                                strength = 50f * edgeFalloff;
-                            }
-
-                            if (strength > 0.1f)
-                            {
-                                var key = (px, py, pz);
-                                densityModifications.AddOrUpdate(
-                                    key,
-                                    strength,
-                                    (k, existing) => Math.Max(existing, strength) // Use max to ensure solidity
-                                );
-
-                                // Set block type for all voxels in the cube
-                                modifiedBlocks[key] = blockType;
-                            }
-                        }
-                    }
-                }
-
-                Console.WriteLine($"[WorldGen] Placed {blockType} cube at ({centerX}, {centerY}, {centerZ}) with size {cubeSize}");
-            }
+            // USE GRID-BASED SYSTEM: Place entire grid cell as a cube
+            BlockGrid.PlaceBlock(x, y, z, blockType);
+            
+            Console.WriteLine($"[WorldGen] Placed {blockType} cube at ({x}, {y}, {z})");
         }
 
         /// <summary>
-        /// Get the block type at a position, checking modified blocks first
+        /// Place a cube block (alias for PlaceSolidBlock with grid system)
         /// </summary>
-       // In WorldGen.cs
-public static BlockType GetBlockTypeAt(int x, int y, int z)
-{
-    // Check if this block has been modified
-    if (modifiedBlocks.TryGetValue((x, y, z), out var type))
-    {
-        return type;
-    }
-    
-    // Otherwise, use procedural generation
-    float density = SampleDensity(x, y, z);
-    if (density <= 0.5f) return BlockType.Air;
-    return GetBlockType(x, y, z, density);
-}
+        public static void PlaceCubeBlock(int centerX, int centerY, int centerZ, BlockType blockType, float cubeSize = 1.0f)
+        {
+            // USE GRID-BASED SYSTEM
+            PlaceSolidBlock(centerX, centerY, centerZ, blockType);
+        }
+
+        /// <summary>
+        /// Get the block type at a position, checking grid and modified blocks first
+        /// </summary>
+        public static BlockType GetBlockTypeAt(int x, int y, int z)
+        {
+            // Check grid-based override first
+            BlockType? gridType = BlockGrid.GetBlockTypeOverride(x, y, z);
+            if (gridType.HasValue)
+                return gridType.Value;
+            
+            // Check if this block has been modified (legacy)
+            if (modifiedBlocks.TryGetValue((x, y, z), out var type))
+            {
+                return type;
+            }
+            
+            // Otherwise, use procedural generation
+            float density = SampleDensity(x, y, z);
+            if (density <= 0.5f) return BlockType.Air;
+            return GetBlockType(x, y, z, density);
+        }
 
         public static bool IsSolid(int x, int y, int z)
         {
@@ -679,7 +559,6 @@ public static BlockType GetBlockTypeAt(int x, int y, int z)
         public static void PrintBiomeAt(int x, int z)
         {
             var columnData = GetColumnData(x, z);
-
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

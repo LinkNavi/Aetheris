@@ -98,14 +98,14 @@ namespace Aetheris
                 Console.WriteLine("[Game] Running in single-player mode (no network)");
             }
         }
-private void CheckGLError(string location)
-{
-    OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
-    if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError)
-    {
-        Console.WriteLine($"[OpenGL Error at {location}]: {error}");
-    }
-}
+        private void CheckGLError(string location)
+        {
+            OpenTK.Graphics.OpenGL4.ErrorCode error = GL.GetError();
+            if (error != OpenTK.Graphics.OpenGL4.ErrorCode.NoError)
+            {
+                Console.WriteLine($"[OpenGL Error at {location}]: {error}");
+            }
+        }
         protected override void OnLoad()
         {
             base.OnLoad();
@@ -131,7 +131,7 @@ private void CheckGLError(string location)
             // Initialize font renderer
             fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 48);
             fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
- tooltipfontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 18);
+            tooltipfontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 18);
             tooltipfontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
             // Initialize UI systems
             tooltipSystem = new TooltipSystem(tooltipfontRenderer);
@@ -399,15 +399,15 @@ private void CheckGLError(string location)
             totemManager?.ApplyTotemEffects();
 
             // Update armor from equipped items
-           gameSystems.Stats.Update(deltaTime);
-if (hud != null)
-{
-    hud.Update(deltaTime, gameSystems.Stats, player.Inventory);
-}
+            gameSystems.Stats.Update(deltaTime);
+            if (hud != null)
+            {
+                hud.Update(deltaTime, gameSystems.Stats, player.Inventory);
+            }
 
-// Update armor from equipped items
-float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
-gameSystems.Stats.Armor = totalArmor;            // Update stats
+            // Update armor from equipped items
+            float totalArmor = ArmorCalculator.CalculateTotalArmor(player.Inventory);
+            gameSystems.Stats.Armor = totalArmor;            // Update stats
             gameSystems.Stats.Update(deltaTime);
 
 
@@ -555,59 +555,59 @@ gameSystems.Stats.Armor = totalArmor;            // Update stats
             }
         }
 
-       protected override void OnRenderFrame(FrameEventArgs e)
-{
-    base.OnRenderFrame(e);
-    GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-    var projection = Matrix4.CreatePerspectiveFieldOfView(
-        OpenTK.Mathematics.MathHelper.DegreesToRadians(60f),
-        Size.X / (float)Size.Y,
-        0.1f,
-        1000f);
-    var view = player.GetViewMatrix();
-
-    // Render placed blocks (from game systems)
-    gameSystems?.Render(view, projection, player.Position);
-GL.Disable(EnableCap.CullFace);
-    // Render terrain
-    Renderer.Render(projection, view, player.Position);
-GL.Enable(EnableCap.CullFace);
-    // Render remote players
-    if (entityRenderer != null && NetworkController != null)
-    {
-        var remotePlayers = NetworkController.RemotePlayers;
-        if (remotePlayers != null && remotePlayers.Count > 0)
+        protected override void OnRenderFrame(FrameEventArgs e)
         {
-            entityRenderer.RenderPlayers(
-                remotePlayers as Dictionary<string, RemotePlayer>,
-                Renderer.psxEffects,
-                player.Position,
-                Renderer.UsePSXEffects
-            );
+            base.OnRenderFrame(e);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+            var projection = Matrix4.CreatePerspectiveFieldOfView(
+                OpenTK.Mathematics.MathHelper.DegreesToRadians(60f),
+                Size.X / (float)Size.Y,
+                0.1f,
+                1000f);
+            var view = player.GetViewMatrix();
+
+            // Render placed blocks (from game systems)
+            gameSystems?.Render(view, projection, player.Position);
+
+            // Render terrain
+            Renderer.Render(projection, view, player.Position);
+
+            // Render remote players
+            if (entityRenderer != null && NetworkController != null)
+            {
+                var remotePlayers = NetworkController.RemotePlayers;
+                if (remotePlayers != null && remotePlayers.Count > 0)
+                {
+                    entityRenderer.RenderPlayers(
+                        remotePlayers as Dictionary<string, RemotePlayer>,
+                        Renderer.psxEffects,
+                        player.Position,
+                        Renderer.UsePSXEffects
+                    );
+                }
+            }
+
+            // Render block placement preview
+            RenderPlacementPreview(view, projection);
+
+            GL.BindVertexArray(0);
+            GL.UseProgram(0);
+
+            // Render HUD with proper parameters
+            hud?.Render(gameSystems.Stats, player.Inventory, Size);
+
+            // Render inventory UI
+            inventoryUI?.Render(Size);
+
+            // Render tooltips
+            RenderTooltips();
+
+            // Render chat
+            chatSystem?.Render(Size);
+
+            SwapBuffers();
         }
-    }
-
-    // Render block placement preview
-    RenderPlacementPreview(view, projection);
-
-    GL.BindVertexArray(0);
-    GL.UseProgram(0);
-
-    // Render HUD with proper parameters
-    hud?.Render(gameSystems.Stats, player.Inventory, Size);
-    
-    // Render inventory UI
-    inventoryUI?.Render(Size);
-
-    // Render tooltips
-    RenderTooltips();
-
-    // Render chat
-    chatSystem?.Render(Size);
-
-    SwapBuffers();
-}
 
         private void RenderPlacementPreview(Matrix4 view, Matrix4 projection)
         {
@@ -679,12 +679,12 @@ GL.Enable(EnableCap.CullFace);
         // ============================================================================
         // Logging Setup
         // ============================================================================
-protected override void OnResize(ResizeEventArgs e)
-{
-    base.OnResize(e);
-    GL.Viewport(0, 0, Size.X, Size.Y);
-    hud?.Resize(Size.X, Size.Y);
-}
+        protected override void OnResize(ResizeEventArgs e)
+        {
+            base.OnResize(e);
+            GL.Viewport(0, 0, Size.X, Size.Y);
+            hud?.Resize(Size.X, Size.Y);
+        }
         private void SetupLogging()
         {
             try
