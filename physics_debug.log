@@ -1,867 +1,119 @@
-﻿[2026-01-16 03:46:46.521] [Logging] Started logging to 'physics_debug.log'
-[2026-01-16 03:46:46.521] [Game] WorldGen initialized
-[2026-01-16 03:46:46.530] [PSX Effects] Shaders compiled successfully
-[2026-01-16 03:46:46.530] [Game] Renderer initialized
-[2026-01-16 03:46:46.542] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
-[2026-01-16 03:46:46.543] [Game] EntityRenderer initialized
-[2026-01-16 03:46:46.559] [Player] Spawned at (16, 37.1, 16)
-[2026-01-16 03:46:46.559] [Game] Player initialized at position: (16, 37.1, 16)
-[2026-01-16 03:46:46.560] [Game] Network controller initialized
-[2026-01-16 03:46:46.562] [Client] TCP broadcast listener started
-[2026-01-16 03:46:46.571] [ItemRegistry] Registered 33 items
-[2026-01-16 03:46:46.573] [Crafting] Registered 12 recipes
-[2026-01-16 03:46:46.577] [BlockRegistry] Registered 9 block types
-[2026-01-16 03:46:46.588] [GameSystems] Starter items added
-[2026-01-16 03:46:46.588] [GameSystems] All systems initialized with GameLogic integration
-[2026-01-16 03:46:47.061] [Client] Chunk update loop starting...
-[2026-01-16 03:46:48.019] [EnhancedHUD] Initialized with dark theme and animations
-[2026-01-16 03:46:48.020] [Game] EnhancedGameHUD created: True
-[2026-01-16 03:46:48.020] [OpenGLInventoryUI] Shaders compiled and linked successfully
-[2026-01-16 03:46:48.021] [OpenGLInventoryUI] Initialized
-[2026-01-16 03:46:48.021] [Game] OpenGLInventoryUI created: True
-[2026-01-16 03:46:48.021] [Game] All systems initialized
-[2026-01-16 03:46:48.021] [Game] Found atlas at: textures/atlas.png
-[2026-01-16 03:46:48.061] [AtlasManager] Loaded image: textures/atlas.png (256x256)
-[2026-01-16 03:46:48.062] [AtlasManager] Using preferred tile size: 64
-[2026-01-16 03:46:48.062] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
-[2026-01-16 03:46:48.066] [AtlasManager] Successfully uploaded to GL texture 1141
-[2026-01-16 03:46:48.066] [AtlasManager] Verified texture dimensions: 256x256
-[2026-01-16 03:46:48.067] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
-[2026-01-16 03:46:48.068] [Game] Loaded 0 chunks
-[2026-01-16 03:46:48.468] [03:46:48.468] [[Generation]] (0,0,0): Render verts=16506, Collision verts=16506
-[2026-01-16 03:46:48.477] [03:46:48.477] [[Timing]] Chunk (0,0,0): Chunk=146.89ms Mesh=119.64ms Send=6.71ms Total=285.00ms
-[2026-01-16 03:46:48.520] [Renderer] Uploaded chunk (0,0,0): VAO=10, VBO=12, 16506 vertices
-[2026-01-16 03:46:48.744] [03:46:48.744] [[Generation]] (0,0,1): Render verts=13995, Collision verts=13995
-[2026-01-16 03:46:48.746] [03:46:48.746] [[Timing]] Chunk (0,0,1): Chunk=128.46ms Mesh=132.96ms Send=1.58ms Total=263.17ms
-[2026-01-16 03:46:48.780] [Renderer] Uploaded chunk (0,0,1): VAO=11, VBO=13, 13995 vertices
-[2026-01-16 03:46:48.938] [03:46:48.938] [[Generation]] (0,0,-1): Render verts=13143, Collision verts=13143
-[2026-01-16 03:46:48.941] [03:46:48.941] [[Timing]] Chunk (0,0,-1): Chunk=99.23ms Mesh=88.94ms Send=2.89ms Total=192.35ms
-[2026-01-16 03:46:49.162] [03:46:49.162] [[Generation]] (-1,0,0): Render verts=18186, Collision verts=18186
-[2026-01-16 03:46:49.166] [03:46:49.166] [[Timing]] Chunk (-1,0,0): Chunk=106.35ms Mesh=112.72ms Send=4.19ms Total=223.43ms
-[2026-01-16 03:46:49.373] [03:46:49.373] [[Generation]] (1,0,0): Render verts=13323, Collision verts=13323
-[2026-01-16 03:46:49.375] [03:46:49.375] [[Timing]] Chunk (1,0,0): Chunk=111.79ms Mesh=92.91ms Send=1.42ms Total=206.24ms
-[2026-01-16 03:46:49.573] [03:46:49.573] [[Generation]] (1,0,-1): Render verts=13056, Collision verts=13056
-[2026-01-16 03:46:49.576] [03:46:49.576] [[Timing]] Chunk (1,0,-1): Chunk=101.34ms Mesh=95.30ms Send=2.65ms Total=199.42ms
-[2026-01-16 03:46:49.774] [03:46:49.774] [[Generation]] (-1,0,-1): Render verts=12909, Collision verts=12909
-[2026-01-16 03:46:49.775] [03:46:49.775] [[Timing]] Chunk (-1,0,-1): Chunk=104.71ms Mesh=90.52ms Send=1.30ms Total=196.65ms
-[2026-01-16 03:46:50.026] [03:46:50.026] [[Generation]] (-1,0,1): Render verts=18120, Collision verts=18120
-[2026-01-16 03:46:50.028] [03:46:50.028] [[Timing]] Chunk (-1,0,1): Chunk=117.48ms Mesh=131.85ms Send=2.35ms Total=251.82ms
-[2026-01-16 03:46:50.242] [03:46:50.242] [[Generation]] (1,0,1): Render verts=13893, Collision verts=13893
-[2026-01-16 03:46:50.245] [03:46:50.245] [[Timing]] Chunk (1,0,1): Chunk=105.72ms Mesh=107.00ms Send=2.52ms Total=215.39ms
-[2026-01-16 03:46:50.421] [03:46:50.421] [[Generation]] (0,-1,0): Render verts=46158, Collision verts=46158
-[2026-01-16 03:46:50.427] [03:46:50.427] [[Timing]] Chunk (0,-1,0): Chunk=91.69ms Mesh=82.32ms Send=6.00ms Total=180.14ms
-[2026-01-16 03:46:50.603] [03:46:50.603] [[Generation]] (0,-1,1): Render verts=18219, Collision verts=18219
-[2026-01-16 03:46:50.605] [03:46:50.605] [[Timing]] Chunk (0,-1,1): Chunk=83.46ms Mesh=86.68ms Send=2.45ms Total=172.72ms
-[2026-01-16 03:46:50.820] [03:46:50.820] [[Generation]] (1,-1,0): Render verts=46677, Collision verts=46677
-[2026-01-16 03:46:50.828] [03:46:50.828] [[Timing]] Chunk (1,-1,0): Chunk=112.51ms Mesh=100.97ms Send=7.35ms Total=220.95ms
-[2026-01-16 03:46:51.025] [03:46:51.025] [[Generation]] (0,-1,-1): Render verts=22779, Collision verts=22779
-[2026-01-16 03:46:51.029] [03:46:51.029] [[Timing]] Chunk (0,-1,-1): Chunk=94.17ms Mesh=96.67ms Send=3.50ms Total=194.50ms
-[2026-01-16 03:46:51.209] [Game] E key pressed detected!
-[2026-01-16 03:46:51.210] [Game] Inventory was closed, toggling...
-[2026-01-16 03:46:51.210] [OpenGLInventoryUI] Inventory opened
-[2026-01-16 03:46:51.210] [Game] Inventory toggle: opened
-[2026-01-16 03:46:51.212] [OpenGLInventoryUI] Rendering with openProgress=1.372, isOpen=True
-[2026-01-16 03:46:51.216] [03:46:51.216] [[Generation]] (-1,-1,0): Render verts=47148, Collision verts=47148
-[2026-01-16 03:46:51.225] [03:46:51.225] [[Timing]] Chunk (-1,-1,0): Chunk=96.46ms Mesh=85.02ms Send=8.94ms Total=193.22ms
-[2026-01-16 03:46:51.225] [OpenGLInventoryUI] Rendering with openProgress=1.303, isOpen=True
-[2026-01-16 03:46:51.243] [OpenGLInventoryUI] Rendering with openProgress=1.270, isOpen=True
-[2026-01-16 03:46:51.279] [OpenGLInventoryUI] Rendering with openProgress=1.214, isOpen=True
-[2026-01-16 03:46:51.289] [OpenGLInventoryUI] Rendering with openProgress=1.118, isOpen=True
-[2026-01-16 03:46:51.303] [OpenGLInventoryUI] Rendering with openProgress=1.097, isOpen=True
-[2026-01-16 03:46:51.312] [OpenGLInventoryUI] Rendering with openProgress=1.091, isOpen=True
-[2026-01-16 03:46:51.319] [OpenGLInventoryUI] Rendering with openProgress=1.079, isOpen=True
-[2026-01-16 03:46:51.325] [OpenGLInventoryUI] Rendering with openProgress=1.073, isOpen=True
-[2026-01-16 03:46:51.338] [OpenGLInventoryUI] Rendering with openProgress=1.067, isOpen=True
-[2026-01-16 03:46:51.347] [OpenGLInventoryUI] Rendering with openProgress=1.056, isOpen=True
-[2026-01-16 03:46:51.357] [OpenGLInventoryUI] Rendering with openProgress=1.049, isOpen=True
-[2026-01-16 03:46:51.372] [OpenGLInventoryUI] Rendering with openProgress=1.041, isOpen=True
-[2026-01-16 03:46:51.389] [OpenGLInventoryUI] Rendering with openProgress=1.034, isOpen=True
-[2026-01-16 03:46:51.396] [OpenGLInventoryUI] Rendering with openProgress=1.030, isOpen=True
-[2026-01-16 03:46:51.412] [OpenGLInventoryUI] Rendering with openProgress=1.027, isOpen=True
-[2026-01-16 03:46:51.420] [OpenGLInventoryUI] Rendering with openProgress=1.022, isOpen=True
-[2026-01-16 03:46:51.427] [OpenGLInventoryUI] Rendering with openProgress=1.020, isOpen=True
-[2026-01-16 03:46:51.438] [OpenGLInventoryUI] Rendering with openProgress=1.018, isOpen=True
-[2026-01-16 03:46:51.443] [OpenGLInventoryUI] Rendering with openProgress=1.016, isOpen=True
-[2026-01-16 03:46:51.443] [03:46:51.443] [[Generation]] (-1,-1,1): Render verts=28041, Collision verts=28041
-[2026-01-16 03:46:51.450] [03:46:51.450] [[Timing]] Chunk (-1,-1,1): Chunk=103.02ms Mesh=108.28ms Send=7.37ms Total=218.83ms
-[2026-01-16 03:46:51.455] [OpenGLInventoryUI] Rendering with openProgress=1.015, isOpen=True
-[2026-01-16 03:46:51.486] [OpenGLInventoryUI] Rendering with openProgress=1.012, isOpen=True
-[2026-01-16 03:46:51.492] [OpenGLInventoryUI] Rendering with openProgress=1.008, isOpen=True
-[2026-01-16 03:46:51.507] [OpenGLInventoryUI] Rendering with openProgress=1.007, isOpen=True
-[2026-01-16 03:46:51.517] [OpenGLInventoryUI] Rendering with openProgress=1.006, isOpen=True
-[2026-01-16 03:46:51.527] [OpenGLInventoryUI] Rendering with openProgress=1.005, isOpen=True
-[2026-01-16 03:46:51.542] [OpenGLInventoryUI] Rendering with openProgress=1.005, isOpen=True
-[2026-01-16 03:46:51.551] [OpenGLInventoryUI] Rendering with openProgress=1.004, isOpen=True
-[2026-01-16 03:46:51.561] [OpenGLInventoryUI] Rendering with openProgress=1.003, isOpen=True
-[2026-01-16 03:46:51.567] [Game] E key pressed detected!
-[2026-01-16 03:46:51.567] [Game] Inventory was open, toggling...
-[2026-01-16 03:46:51.567] [OpenGLInventoryUI] Inventory closed
-[2026-01-16 03:46:51.567] [Game] Inventory toggle: closed
-[2026-01-16 03:46:51.674] [03:46:51.674] [[Generation]] (1,-1,-1): Render verts=8361, Collision verts=8361
-[2026-01-16 03:46:51.675] [03:46:51.675] [[Timing]] Chunk (1,-1,-1): Chunk=119.71ms Mesh=99.86ms Send=1.32ms Total=221.04ms
-[2026-01-16 03:46:51.880] [03:46:51.880] [[Generation]] (1,-1,1): Render verts=49929, Collision verts=49929
-[2026-01-16 03:46:51.888] [03:46:51.888] [[Timing]] Chunk (1,-1,1): Chunk=111.90ms Mesh=91.83ms Send=7.70ms Total=211.55ms
-[2026-01-16 03:46:52.082] [03:46:52.082] [[Generation]] (-1,-1,-1): Render verts=43515, Collision verts=43515
-[2026-01-16 03:46:52.089] [03:46:52.089] [[Timing]] Chunk (-1,-1,-1): Chunk=92.97ms Mesh=95.52ms Send=6.99ms Total=195.65ms
-[2026-01-16 03:46:52.284] [03:46:52.284] [[Generation]] (0,0,-2): Render verts=16290, Collision verts=16290
-[2026-01-16 03:46:52.287] [03:46:52.287] [[Timing]] Chunk (0,0,-2): Chunk=93.17ms Mesh=96.76ms Send=3.14ms Total=193.25ms
-[2026-01-16 03:46:52.569] [03:46:52.569] [[Generation]] (0,0,2): Render verts=15900, Collision verts=15900
-[2026-01-16 03:46:52.571] [03:46:52.571] [[Timing]] Chunk (0,0,2): Chunk=141.61ms Mesh=138.21ms Send=2.15ms Total=282.09ms
-[2026-01-16 03:46:52.788] [03:46:52.788] [[Generation]] (-2,0,0): Render verts=19455, Collision verts=19455
-[2026-01-16 03:46:52.791] [03:46:52.791] [[Timing]] Chunk (-2,0,0): Chunk=110.08ms Mesh=103.78ms Send=3.21ms Total=217.24ms
-[2026-01-16 03:46:53.013] [03:46:53.013] [[Generation]] (2,0,0): Render verts=15930, Collision verts=15930
-[2026-01-16 03:46:53.017] [03:46:53.017] [[Timing]] Chunk (2,0,0): Chunk=109.35ms Mesh=110.76ms Send=3.04ms Total=223.27ms
-[2026-01-16 03:46:53.090] [03:46:53.090] [[Generation]] (0,1,0): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.090] [03:46:53.090] [[Timing]] Chunk (0,1,0): Chunk=37.67ms Mesh=33.19ms Send=0.14ms Total=71.15ms
-[2026-01-16 03:46:53.153] [03:46:53.153] [[Generation]] (0,1,1): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.154] [03:46:53.154] [[Timing]] Chunk (0,1,1): Chunk=34.95ms Mesh=28.34ms Send=0.13ms Total=63.55ms
-[2026-01-16 03:46:53.215] [03:46:53.215] [[Generation]] (-1,1,0): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.215] [03:46:53.215] [[Timing]] Chunk (-1,1,0): Chunk=29.38ms Mesh=32.01ms Send=0.10ms Total=61.70ms
-[2026-01-16 03:46:53.279] [03:46:53.279] [[Generation]] (0,1,-1): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.279] [03:46:53.279] [[Timing]] Chunk (0,1,-1): Chunk=29.88ms Mesh=33.49ms Send=0.10ms Total=63.58ms
-[2026-01-16 03:46:53.295] [Game] E key pressed detected!
-[2026-01-16 03:46:53.295] [Game] Inventory was closed, toggling...
-[2026-01-16 03:46:53.295] [OpenGLInventoryUI] Inventory opened
-[2026-01-16 03:46:53.295] [Game] Inventory toggle: opened
-[2026-01-16 03:46:53.298] [OpenGLInventoryUI] Rendering with openProgress=1.175, isOpen=True
-[2026-01-16 03:46:53.305] [OpenGLInventoryUI] Rendering with openProgress=1.159, isOpen=True
-[2026-01-16 03:46:53.322] [OpenGLInventoryUI] Rendering with openProgress=1.140, isOpen=True
-[2026-01-16 03:46:53.328] [OpenGLInventoryUI] Rendering with openProgress=1.119, isOpen=True
-[2026-01-16 03:46:53.338] [OpenGLInventoryUI] Rendering with openProgress=1.103, isOpen=True
-[2026-01-16 03:46:53.349] [OpenGLInventoryUI] Rendering with openProgress=1.090, isOpen=True
-[2026-01-16 03:46:53.356] [03:46:53.356] [[Generation]] (1,1,0): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.357] [03:46:53.357] [[Timing]] Chunk (1,1,0): Chunk=38.06ms Mesh=38.82ms Send=0.17ms Total=77.28ms
-[2026-01-16 03:46:53.358] [OpenGLInventoryUI] Rendering with openProgress=1.081, isOpen=True
-[2026-01-16 03:46:53.367] [OpenGLInventoryUI] Rendering with openProgress=1.071, isOpen=True
-[2026-01-16 03:46:53.379] [OpenGLInventoryUI] Rendering with openProgress=1.063, isOpen=True
-[2026-01-16 03:46:53.388] [OpenGLInventoryUI] Rendering with openProgress=1.054, isOpen=True
-[2026-01-16 03:46:53.399] [OpenGLInventoryUI] Rendering with openProgress=1.048, isOpen=True
-[2026-01-16 03:46:53.407] [OpenGLInventoryUI] Rendering with openProgress=1.043, isOpen=True
-[2026-01-16 03:46:53.417] [OpenGLInventoryUI] Rendering with openProgress=1.037, isOpen=True
-[2026-01-16 03:46:53.427] [OpenGLInventoryUI] Rendering with openProgress=1.033, isOpen=True
-[2026-01-16 03:46:53.439] [OpenGLInventoryUI] Rendering with openProgress=1.030, isOpen=True
-[2026-01-16 03:46:53.440] [03:46:53.440] [[Generation]] (1,1,1): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.440] [03:46:53.440] [[Timing]] Chunk (1,1,1): Chunk=45.11ms Mesh=37.06ms Send=0.10ms Total=82.49ms
-[2026-01-16 03:46:53.444] [OpenGLInventoryUI] Rendering with openProgress=1.027, isOpen=True
-[2026-01-16 03:46:53.455] [OpenGLInventoryUI] Rendering with openProgress=1.025, isOpen=True
-[2026-01-16 03:46:53.460] [OpenGLInventoryUI] Rendering with openProgress=1.022, isOpen=True
-[2026-01-16 03:46:53.471] [OpenGLInventoryUI] Rendering with openProgress=1.020, isOpen=True
-[2026-01-16 03:46:53.476] [OpenGLInventoryUI] Rendering with openProgress=1.018, isOpen=True
-[2026-01-16 03:46:53.487] [OpenGLInventoryUI] Rendering with openProgress=1.016, isOpen=True
-[2026-01-16 03:46:53.491] [OpenGLInventoryUI] Rendering with openProgress=1.015, isOpen=True
-[2026-01-16 03:46:53.503] [OpenGLInventoryUI] Rendering with openProgress=1.013, isOpen=True
-[2026-01-16 03:46:53.508] [OpenGLInventoryUI] Rendering with openProgress=1.012, isOpen=True
-[2026-01-16 03:46:53.521] [OpenGLInventoryUI] Rendering with openProgress=1.011, isOpen=True
-[2026-01-16 03:46:53.524] [OpenGLInventoryUI] Rendering with openProgress=1.010, isOpen=True
-[2026-01-16 03:46:53.524] [03:46:53.524] [[Generation]] (-1,1,1): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.524] [03:46:53.524] [[Timing]] Chunk (-1,1,1): Chunk=44.88ms Mesh=39.14ms Send=0.15ms Total=84.36ms
-[2026-01-16 03:46:53.535] [OpenGLInventoryUI] Rendering with openProgress=1.009, isOpen=True
-[2026-01-16 03:46:53.540] [OpenGLInventoryUI] Rendering with openProgress=1.008, isOpen=True
-[2026-01-16 03:46:53.552] [OpenGLInventoryUI] Rendering with openProgress=1.007, isOpen=True
-[2026-01-16 03:46:53.556] [OpenGLInventoryUI] Rendering with openProgress=1.006, isOpen=True
-[2026-01-16 03:46:53.567] [OpenGLInventoryUI] Rendering with openProgress=1.006, isOpen=True
-[2026-01-16 03:46:53.574] [OpenGLInventoryUI] Rendering with openProgress=1.005, isOpen=True
-[2026-01-16 03:46:53.588] [OpenGLInventoryUI] Rendering with openProgress=1.005, isOpen=True
-[2026-01-16 03:46:53.593] [OpenGLInventoryUI] Rendering with openProgress=1.004, isOpen=True
-[2026-01-16 03:46:53.604] [OpenGLInventoryUI] Rendering with openProgress=1.004, isOpen=True
-[2026-01-16 03:46:53.609] [OpenGLInventoryUI] Rendering with openProgress=1.003, isOpen=True
-[2026-01-16 03:46:53.619] [03:46:53.619] [[Generation]] (1,1,-1): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.619] [03:46:53.619] [[Timing]] Chunk (1,1,-1): Chunk=49.22ms Mesh=44.81ms Send=0.09ms Total=94.22ms
-[2026-01-16 03:46:53.621] [OpenGLInventoryUI] Rendering with openProgress=1.003, isOpen=True
-[2026-01-16 03:46:53.625] [OpenGLInventoryUI] Rendering with openProgress=1.003, isOpen=True
-[2026-01-16 03:46:53.635] [OpenGLInventoryUI] Rendering with openProgress=1.002, isOpen=True
-[2026-01-16 03:46:53.644] [OpenGLInventoryUI] Rendering with openProgress=1.002, isOpen=True
-[2026-01-16 03:46:53.655] [OpenGLInventoryUI] Rendering with openProgress=1.002, isOpen=True
-[2026-01-16 03:46:53.659] [OpenGLInventoryUI] Rendering with openProgress=1.002, isOpen=True
-[2026-01-16 03:46:53.673] [OpenGLInventoryUI] Rendering with openProgress=1.002, isOpen=True
-[2026-01-16 03:46:53.680] [OpenGLInventoryUI] Rendering with openProgress=1.001, isOpen=True
-[2026-01-16 03:46:53.688] [OpenGLInventoryUI] Rendering with openProgress=1.001, isOpen=True
-[2026-01-16 03:46:53.698] [OpenGLInventoryUI] Rendering with openProgress=1.001, isOpen=True
-[2026-01-16 03:46:53.707] [OpenGLInventoryUI] Rendering with openProgress=1.001, isOpen=True
-[2026-01-16 03:46:53.713] [Game] E key pressed detected!
-[2026-01-16 03:46:53.713] [Game] Inventory was open, toggling...
-[2026-01-16 03:46:53.713] [OpenGLInventoryUI] Inventory closed
-[2026-01-16 03:46:53.713] [Game] Inventory toggle: closed
-[2026-01-16 03:46:53.715] [03:46:53.715] [[Generation]] (-1,1,-1): Render verts=0, Collision verts=0
-[2026-01-16 03:46:53.715] [03:46:53.715] [[Timing]] Chunk (-1,1,-1): Chunk=47.36ms Mesh=48.15ms Send=0.10ms Total=95.75ms
-[2026-01-16 03:46:53.905] [03:46:53.905] [[Generation]] (2,-1,0): Render verts=8961, Collision verts=8961
-[2026-01-16 03:46:53.908] [03:46:53.908] [[Timing]] Chunk (2,-1,0): Chunk=104.40ms Mesh=85.62ms Send=2.13ms Total=192.25ms
-[2026-01-16 03:46:54.089] [03:46:54.089] [[Generation]] (-2,-1,0): Render verts=38448, Collision verts=38448
-[2026-01-16 03:46:54.095] [03:46:54.095] [[Timing]] Chunk (-2,-1,0): Chunk=87.59ms Mesh=91.38ms Send=6.21ms Total=185.32ms
-[2026-01-16 03:46:54.172] [03:46:54.172] [[Generation]] (-2,1,0): Render verts=0, Collision verts=0
-[2026-01-16 03:46:54.172] [03:46:54.172] [[Timing]] Chunk (-2,1,0): Chunk=35.67ms Mesh=33.74ms Send=0.09ms Total=69.60ms
-[2026-01-16 03:46:54.196] [Game] E key pressed detected!
-[2026-01-16 03:46:54.196] [Game] Inventory was closed, toggling...
-[2026-01-16 03:46:54.196] [OpenGLInventoryUI] Inventory opened
-[2026-01-16 03:46:54.196] [Game] Inventory toggle: opened
-[2026-01-16 03:46:54.198] [OpenGLInventoryUI] Rendering with openProgress=0.744, isOpen=True
-[2026-01-16 03:46:54.216] [OpenGLInventoryUI] Rendering with openProgress=0.799, isOpen=True
-[2026-01-16 03:46:54.234] [OpenGLInventoryUI] Rendering with openProgress=0.843, isOpen=True
-[2026-01-16 03:46:54.245] [OpenGLInventoryUI] Rendering with openProgress=0.864, isOpen=True
-[2026-01-16 03:46:54.259] [OpenGLInventoryUI] Rendering with openProgress=0.877, isOpen=True
-[2026-01-16 03:46:54.265] [OpenGLInventoryUI] Rendering with openProgress=0.895, isOpen=True
-[2026-01-16 03:46:54.272] [OpenGLInventoryUI] Rendering with openProgress=0.905, isOpen=True
-[2026-01-16 03:46:54.284] [OpenGLInventoryUI] Rendering with openProgress=0.914, isOpen=True
-[2026-01-16 03:46:54.289] [OpenGLInventoryUI] Rendering with openProgress=0.922, isOpen=True
-[2026-01-16 03:46:54.309] [OpenGLInventoryUI] Rendering with openProgress=0.937, isOpen=True
-[2026-01-16 03:46:54.318] [OpenGLInventoryUI] Rendering with openProgress=0.947, isOpen=True
-[2026-01-16 03:46:54.342] [OpenGLInventoryUI] Rendering with openProgress=0.958, isOpen=True
-[2026-01-16 03:46:54.359] [OpenGLInventoryUI] Rendering with openProgress=0.969, isOpen=True
-[2026-01-16 03:46:54.370] [OpenGLInventoryUI] Rendering with openProgress=0.974, isOpen=True
-[2026-01-16 03:46:54.379] [OpenGLInventoryUI] Rendering with openProgress=0.977, isOpen=True
-[2026-01-16 03:46:54.385] [OpenGLInventoryUI] Rendering with openProgress=0.978, isOpen=True
-[2026-01-16 03:46:54.392] [OpenGLInventoryUI] Rendering with openProgress=0.980, isOpen=True
-[2026-01-16 03:46:54.395] [03:46:54.395] [[Generation]] (0,-1,-2): Render verts=20592, Collision verts=20592
-[2026-01-16 03:46:54.400] [03:46:54.400] [[Timing]] Chunk (0,-1,-2): Chunk=114.94ms Mesh=107.62ms Send=4.52ms Total=227.26ms
-[2026-01-16 03:46:54.402] [OpenGLInventoryUI] Rendering with openProgress=0.982, isOpen=True
-[2026-01-16 03:46:54.417] [OpenGLInventoryUI] Rendering with openProgress=0.983, isOpen=True
-[2026-01-16 03:46:54.422] [OpenGLInventoryUI] Rendering with openProgress=0.987, isOpen=True
-[2026-01-16 03:46:54.430] [OpenGLInventoryUI] Rendering with openProgress=0.988, isOpen=True
-[2026-01-16 03:46:54.440] [OpenGLInventoryUI] Rendering with openProgress=0.989, isOpen=True
-[2026-01-16 03:46:54.446] [OpenGLInventoryUI] Rendering with openProgress=0.990, isOpen=True
-[2026-01-16 03:46:54.453] [OpenGLInventoryUI] Rendering with openProgress=0.991, isOpen=True
-[2026-01-16 03:46:54.459] [OpenGLInventoryUI] Rendering with openProgress=0.992, isOpen=True
-[2026-01-16 03:46:54.475] [OpenGLInventoryUI] Rendering with openProgress=0.993, isOpen=True
-[2026-01-16 03:46:54.481] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
-[2026-01-16 03:46:54.486] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
-[2026-01-16 03:46:54.490] [03:46:54.490] [[Generation]] (0,1,-2): Render verts=0, Collision verts=0
-[2026-01-16 03:46:54.491] [03:46:54.491] [[Timing]] Chunk (0,1,-2): Chunk=42.84ms Mesh=45.95ms Send=0.36ms Total=89.32ms
-[2026-01-16 03:46:54.492] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
-[2026-01-16 03:46:54.506] [OpenGLInventoryUI] Rendering with openProgress=0.995, isOpen=True
-[2026-01-16 03:46:54.519] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
-[2026-01-16 03:46:54.537] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
-[2026-01-16 03:46:54.556] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
-[2026-01-16 03:46:54.567] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:54.577] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:54.594] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:54.607] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:54.613] [Game] E key pressed detected!
-[2026-01-16 03:46:54.613] [Game] Inventory was open, toggling...
-[2026-01-16 03:46:54.613] [OpenGLInventoryUI] Inventory closed
-[2026-01-16 03:46:54.613] [Game] Inventory toggle: closed
-[2026-01-16 03:46:54.651] [03:46:54.651] [[Generation]] (0,-1,2): Render verts=0, Collision verts=0
-[2026-01-16 03:46:54.651] [03:46:54.651] [[Timing]] Chunk (0,-1,2): Chunk=80.94ms Mesh=78.97ms Send=0.08ms Total=160.08ms
-[2026-01-16 03:46:54.721] [03:46:54.721] [[Generation]] (0,1,2): Render verts=0, Collision verts=0
-[2026-01-16 03:46:54.721] [03:46:54.721] [[Timing]] Chunk (0,1,2): Chunk=35.82ms Mesh=34.35ms Send=0.11ms Total=70.50ms
-[2026-01-16 03:46:54.786] [03:46:54.786] [[Generation]] (2,1,0): Render verts=0, Collision verts=0
-[2026-01-16 03:46:54.787] [03:46:54.787] [[Timing]] Chunk (2,1,0): Chunk=33.36ms Mesh=31.48ms Send=0.09ms Total=65.02ms
-[2026-01-16 03:46:55.014] [Game] E key pressed detected!
-[2026-01-16 03:46:55.015] [Game] Inventory was closed, toggling...
-[2026-01-16 03:46:55.015] [OpenGLInventoryUI] Inventory opened
-[2026-01-16 03:46:55.015] [Game] Inventory toggle: opened
-[2026-01-16 03:46:55.016] [OpenGLInventoryUI] Rendering with openProgress=0.292, isOpen=True
-[2026-01-16 03:46:55.020] [OpenGLInventoryUI] Rendering with openProgress=0.330, isOpen=True
-[2026-01-16 03:46:55.033] [OpenGLInventoryUI] Rendering with openProgress=0.415, isOpen=True
-[2026-01-16 03:46:55.037] [OpenGLInventoryUI] Rendering with openProgress=0.457, isOpen=True
-[2026-01-16 03:46:55.042] [OpenGLInventoryUI] Rendering with openProgress=0.490, isOpen=True
-[2026-01-16 03:46:55.052] [OpenGLInventoryUI] Rendering with openProgress=0.534, isOpen=True
-[2026-01-16 03:46:55.055] [OpenGLInventoryUI] Rendering with openProgress=0.571, isOpen=True
-[2026-01-16 03:46:55.063] [OpenGLInventoryUI] Rendering with openProgress=0.598, isOpen=True
-[2026-01-16 03:46:55.068] [OpenGLInventoryUI] Rendering with openProgress=0.634, isOpen=True
-[2026-01-16 03:46:55.073] [OpenGLInventoryUI] Rendering with openProgress=0.655, isOpen=True
-[2026-01-16 03:46:55.083] [OpenGLInventoryUI] Rendering with openProgress=0.685, isOpen=True
-[2026-01-16 03:46:55.086] [OpenGLInventoryUI] Rendering with openProgress=0.708, isOpen=True
-[2026-01-16 03:46:55.091] [OpenGLInventoryUI] Rendering with openProgress=0.726, isOpen=True
-[2026-01-16 03:46:55.102] [OpenGLInventoryUI] Rendering with openProgress=0.749, isOpen=True
-[2026-01-16 03:46:55.104] [OpenGLInventoryUI] Rendering with openProgress=0.768, isOpen=True
-[2026-01-16 03:46:55.110] [OpenGLInventoryUI] Rendering with openProgress=0.782, isOpen=True
-[2026-01-16 03:46:55.118] [OpenGLInventoryUI] Rendering with openProgress=0.798, isOpen=True
-[2026-01-16 03:46:55.121] [OpenGLInventoryUI] Rendering with openProgress=0.812, isOpen=True
-[2026-01-16 03:46:55.127] [OpenGLInventoryUI] Rendering with openProgress=0.824, isOpen=True
-[2026-01-16 03:46:55.136] [OpenGLInventoryUI] Rendering with openProgress=0.837, isOpen=True
-[2026-01-16 03:46:55.139] [OpenGLInventoryUI] Rendering with openProgress=0.849, isOpen=True
-[2026-01-16 03:46:55.145] [OpenGLInventoryUI] Rendering with openProgress=0.858, isOpen=True
-[2026-01-16 03:46:55.152] [OpenGLInventoryUI] Rendering with openProgress=0.867, isOpen=True
-[2026-01-16 03:46:55.155] [OpenGLInventoryUI] Rendering with openProgress=0.876, isOpen=True
-[2026-01-16 03:46:55.160] [OpenGLInventoryUI] Rendering with openProgress=0.884, isOpen=True
-[2026-01-16 03:46:55.169] [OpenGLInventoryUI] Rendering with openProgress=0.891, isOpen=True
-[2026-01-16 03:46:55.172] [OpenGLInventoryUI] Rendering with openProgress=0.899, isOpen=True
-[2026-01-16 03:46:55.177] [OpenGLInventoryUI] Rendering with openProgress=0.906, isOpen=True
-[2026-01-16 03:46:55.188] [OpenGLInventoryUI] Rendering with openProgress=0.913, isOpen=True
-[2026-01-16 03:46:55.191] [OpenGLInventoryUI] Rendering with openProgress=0.921, isOpen=True
-[2026-01-16 03:46:55.201] [OpenGLInventoryUI] Rendering with openProgress=0.927, isOpen=True
-[2026-01-16 03:46:55.203] [OpenGLInventoryUI] Rendering with openProgress=0.932, isOpen=True
-[2026-01-16 03:46:55.208] [OpenGLInventoryUI] Rendering with openProgress=0.936, isOpen=True
-[2026-01-16 03:46:55.221] [OpenGLInventoryUI] Rendering with openProgress=0.943, isOpen=True
-[2026-01-16 03:46:55.224] [OpenGLInventoryUI] Rendering with openProgress=0.947, isOpen=True
-[2026-01-16 03:46:55.234] [OpenGLInventoryUI] Rendering with openProgress=0.952, isOpen=True
-[2026-01-16 03:46:55.238] [OpenGLInventoryUI] Rendering with openProgress=0.956, isOpen=True
-[2026-01-16 03:46:55.242] [OpenGLInventoryUI] Rendering with openProgress=0.958, isOpen=True
-[2026-01-16 03:46:55.252] [OpenGLInventoryUI] Rendering with openProgress=0.962, isOpen=True
-[2026-01-16 03:46:55.255] [OpenGLInventoryUI] Rendering with openProgress=0.965, isOpen=True
-[2026-01-16 03:46:55.260] [OpenGLInventoryUI] Rendering with openProgress=0.967, isOpen=True
-[2026-01-16 03:46:55.268] [OpenGLInventoryUI] Rendering with openProgress=0.969, isOpen=True
-[2026-01-16 03:46:55.271] [OpenGLInventoryUI] Rendering with openProgress=0.971, isOpen=True
-[2026-01-16 03:46:55.276] [OpenGLInventoryUI] Rendering with openProgress=0.973, isOpen=True
-[2026-01-16 03:46:55.285] [OpenGLInventoryUI] Rendering with openProgress=0.974, isOpen=True
-[2026-01-16 03:46:55.288] [OpenGLInventoryUI] Rendering with openProgress=0.976, isOpen=True
-[2026-01-16 03:46:55.294] [OpenGLInventoryUI] Rendering with openProgress=0.978, isOpen=True
-[2026-01-16 03:46:55.302] [OpenGLInventoryUI] Rendering with openProgress=0.979, isOpen=True
-[2026-01-16 03:46:55.305] [OpenGLInventoryUI] Rendering with openProgress=0.981, isOpen=True
-[2026-01-16 03:46:55.311] [OpenGLInventoryUI] Rendering with openProgress=0.982, isOpen=True
-[2026-01-16 03:46:55.318] [OpenGLInventoryUI] Rendering with openProgress=0.983, isOpen=True
-[2026-01-16 03:46:55.322] [OpenGLInventoryUI] Rendering with openProgress=0.984, isOpen=True
-[2026-01-16 03:46:55.328] [OpenGLInventoryUI] Rendering with openProgress=0.986, isOpen=True
-[2026-01-16 03:46:55.334] [OpenGLInventoryUI] Rendering with openProgress=0.986, isOpen=True
-[2026-01-16 03:46:55.337] [OpenGLInventoryUI] Rendering with openProgress=0.987, isOpen=True
-[2026-01-16 03:46:55.342] [OpenGLInventoryUI] Rendering with openProgress=0.988, isOpen=True
-[2026-01-16 03:46:55.351] [OpenGLInventoryUI] Rendering with openProgress=0.989, isOpen=True
-[2026-01-16 03:46:55.353] [Game] E key pressed detected!
-[2026-01-16 03:46:55.353] [Game] Inventory was open, toggling...
-[2026-01-16 03:46:55.353] [OpenGLInventoryUI] Inventory closed
-[2026-01-16 03:46:55.353] [Game] Inventory toggle: closed
-[2026-01-16 03:46:55.733] [Game] E key pressed detected!
-[2026-01-16 03:46:55.733] [Game] Inventory was closed, toggling...
-[2026-01-16 03:46:55.733] [OpenGLInventoryUI] Inventory opened
-[2026-01-16 03:46:55.733] [Game] Inventory toggle: opened
-[2026-01-16 03:46:55.734] [OpenGLInventoryUI] Rendering with openProgress=0.271, isOpen=True
-[2026-01-16 03:46:55.739] [OpenGLInventoryUI] Rendering with openProgress=0.314, isOpen=True
-[2026-01-16 03:46:55.748] [OpenGLInventoryUI] Rendering with openProgress=0.352, isOpen=True
-[2026-01-16 03:46:55.752] [OpenGLInventoryUI] Rendering with openProgress=0.412, isOpen=True
-[2026-01-16 03:46:55.757] [OpenGLInventoryUI] Rendering with openProgress=0.450, isOpen=True
-[2026-01-16 03:46:55.767] [OpenGLInventoryUI] Rendering with openProgress=0.497, isOpen=True
-[2026-01-16 03:46:55.771] [OpenGLInventoryUI] Rendering with openProgress=0.541, isOpen=True
-[2026-01-16 03:46:55.777] [OpenGLInventoryUI] Rendering with openProgress=0.573, isOpen=True
-[2026-01-16 03:46:55.785] [OpenGLInventoryUI] Rendering with openProgress=0.599, isOpen=True
-[2026-01-16 03:46:55.788] [OpenGLInventoryUI] Rendering with openProgress=0.628, isOpen=True
-[2026-01-16 03:46:55.794] [OpenGLInventoryUI] Rendering with openProgress=0.653, isOpen=True
-[2026-01-16 03:46:55.801] [OpenGLInventoryUI] Rendering with openProgress=0.671, isOpen=True
-[2026-01-16 03:46:55.804] [OpenGLInventoryUI] Rendering with openProgress=0.694, isOpen=True
-[2026-01-16 03:46:55.810] [OpenGLInventoryUI] Rendering with openProgress=0.714, isOpen=True
-[2026-01-16 03:46:55.818] [OpenGLInventoryUI] Rendering with openProgress=0.733, isOpen=True
-[2026-01-16 03:46:55.821] [OpenGLInventoryUI] Rendering with openProgress=0.752, isOpen=True
-[2026-01-16 03:46:55.826] [OpenGLInventoryUI] Rendering with openProgress=0.767, isOpen=True
-[2026-01-16 03:46:55.834] [OpenGLInventoryUI] Rendering with openProgress=0.783, isOpen=True
-[2026-01-16 03:46:55.837] [OpenGLInventoryUI] Rendering with openProgress=0.798, isOpen=True
-[2026-01-16 03:46:55.842] [OpenGLInventoryUI] Rendering with openProgress=0.810, isOpen=True
-[2026-01-16 03:46:55.851] [OpenGLInventoryUI] Rendering with openProgress=0.824, isOpen=True
-[2026-01-16 03:46:55.854] [OpenGLInventoryUI] Rendering with openProgress=0.837, isOpen=True
-[2026-01-16 03:46:55.860] [OpenGLInventoryUI] Rendering with openProgress=0.847, isOpen=True
-[2026-01-16 03:46:55.868] [OpenGLInventoryUI] Rendering with openProgress=0.857, isOpen=True
-[2026-01-16 03:46:55.871] [OpenGLInventoryUI] Rendering with openProgress=0.867, isOpen=True
-[2026-01-16 03:46:55.876] [OpenGLInventoryUI] Rendering with openProgress=0.876, isOpen=True
-[2026-01-16 03:46:55.888] [OpenGLInventoryUI] Rendering with openProgress=0.888, isOpen=True
-[2026-01-16 03:46:55.891] [OpenGLInventoryUI] Rendering with openProgress=0.896, isOpen=True
-[2026-01-16 03:46:55.901] [OpenGLInventoryUI] Rendering with openProgress=0.905, isOpen=True
-[2026-01-16 03:46:55.904] [OpenGLInventoryUI] Rendering with openProgress=0.912, isOpen=True
-[2026-01-16 03:46:55.909] [OpenGLInventoryUI] Rendering with openProgress=0.918, isOpen=True
-[2026-01-16 03:46:55.919] [OpenGLInventoryUI] Rendering with openProgress=0.924, isOpen=True
-[2026-01-16 03:46:55.922] [OpenGLInventoryUI] Rendering with openProgress=0.930, isOpen=True
-[2026-01-16 03:46:55.932] [OpenGLInventoryUI] Rendering with openProgress=0.936, isOpen=True
-[2026-01-16 03:46:55.935] [OpenGLInventoryUI] Rendering with openProgress=0.941, isOpen=True
-[2026-01-16 03:46:55.940] [OpenGLInventoryUI] Rendering with openProgress=0.944, isOpen=True
-[2026-01-16 03:46:55.951] [OpenGLInventoryUI] Rendering with openProgress=0.948, isOpen=True
-[2026-01-16 03:46:55.953] [OpenGLInventoryUI] Rendering with openProgress=0.952, isOpen=True
-[2026-01-16 03:46:55.958] [OpenGLInventoryUI] Rendering with openProgress=0.955, isOpen=True
-[2026-01-16 03:46:55.967] [OpenGLInventoryUI] Rendering with openProgress=0.959, isOpen=True
-[2026-01-16 03:46:55.971] [OpenGLInventoryUI] Rendering with openProgress=0.962, isOpen=True
-[2026-01-16 03:46:55.976] [03:46:55.976] [[Server]] Tick 600 | Cache: 39/20000
-[2026-01-16 03:46:55.976] [OpenGLInventoryUI] Rendering with openProgress=0.964, isOpen=True
-[2026-01-16 03:46:55.984] [OpenGLInventoryUI] Rendering with openProgress=0.967, isOpen=True
-[2026-01-16 03:46:55.987] [OpenGLInventoryUI] Rendering with openProgress=0.969, isOpen=True
-[2026-01-16 03:46:55.993] [OpenGLInventoryUI] Rendering with openProgress=0.971, isOpen=True
-[2026-01-16 03:46:56.003] [OpenGLInventoryUI] Rendering with openProgress=0.974, isOpen=True
-[2026-01-16 03:46:56.006] [OpenGLInventoryUI] Rendering with openProgress=0.975, isOpen=True
-[2026-01-16 03:46:56.016] [OpenGLInventoryUI] Rendering with openProgress=0.978, isOpen=True
-[2026-01-16 03:46:56.019] [OpenGLInventoryUI] Rendering with openProgress=0.979, isOpen=True
-[2026-01-16 03:46:56.024] [OpenGLInventoryUI] Rendering with openProgress=0.980, isOpen=True
-[2026-01-16 03:46:56.034] [OpenGLInventoryUI] Rendering with openProgress=0.982, isOpen=True
-[2026-01-16 03:46:56.038] [OpenGLInventoryUI] Rendering with openProgress=0.983, isOpen=True
-[2026-01-16 03:46:56.043] [OpenGLInventoryUI] Rendering with openProgress=0.984, isOpen=True
-[2026-01-16 03:46:56.051] [OpenGLInventoryUI] Rendering with openProgress=0.985, isOpen=True
-[2026-01-16 03:46:56.054] [OpenGLInventoryUI] Rendering with openProgress=0.987, isOpen=True
-[2026-01-16 03:46:56.060] [OpenGLInventoryUI] Rendering with openProgress=0.987, isOpen=True
-[2026-01-16 03:46:56.068] [OpenGLInventoryUI] Rendering with openProgress=0.988, isOpen=True
-[2026-01-16 03:46:56.070] [OpenGLInventoryUI] Rendering with openProgress=0.989, isOpen=True
-[2026-01-16 03:46:56.076] [OpenGLInventoryUI] Rendering with openProgress=0.990, isOpen=True
-[2026-01-16 03:46:56.087] [OpenGLInventoryUI] Rendering with openProgress=0.990, isOpen=True
-[2026-01-16 03:46:56.091] [OpenGLInventoryUI] Rendering with openProgress=0.991, isOpen=True
-[2026-01-16 03:46:56.100] [OpenGLInventoryUI] Rendering with openProgress=0.992, isOpen=True
-[2026-01-16 03:46:56.103] [OpenGLInventoryUI] Rendering with openProgress=0.993, isOpen=True
-[2026-01-16 03:46:56.108] [OpenGLInventoryUI] Rendering with openProgress=0.993, isOpen=True
-[2026-01-16 03:46:56.117] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
-[2026-01-16 03:46:56.120] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
-[2026-01-16 03:46:56.125] [OpenGLInventoryUI] Rendering with openProgress=0.994, isOpen=True
-[2026-01-16 03:46:56.135] [OpenGLInventoryUI] Rendering with openProgress=0.995, isOpen=True
-[2026-01-16 03:46:56.137] [OpenGLInventoryUI] Rendering with openProgress=0.995, isOpen=True
-[2026-01-16 03:46:56.143] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
-[2026-01-16 03:46:56.151] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
-[2026-01-16 03:46:56.155] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
-[2026-01-16 03:46:56.160] [OpenGLInventoryUI] Rendering with openProgress=0.996, isOpen=True
-[2026-01-16 03:46:56.168] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
-[2026-01-16 03:46:56.172] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
-[2026-01-16 03:46:56.178] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
-[2026-01-16 03:46:56.184] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
-[2026-01-16 03:46:56.188] [OpenGLInventoryUI] Rendering with openProgress=0.997, isOpen=True
-[2026-01-16 03:46:56.193] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:56.201] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:56.204] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:56.210] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:56.218] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:56.221] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:56.226] [OpenGLInventoryUI] Rendering with openProgress=0.998, isOpen=True
-[2026-01-16 03:46:56.234] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.237] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.242] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.251] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.255] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.260] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.268] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.271] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.276] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.284] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.287] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.293] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.301] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.305] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.310] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.317] [OpenGLInventoryUI] Rendering with openProgress=0.999, isOpen=True
-[2026-01-16 03:46:56.321] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.326] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.334] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.338] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.343] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.351] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.355] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.360] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.367] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.371] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.376] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.385] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.388] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.394] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.401] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.405] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.410] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.418] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.421] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.427] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.435] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.438] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.443] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.451] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.454] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.459] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.469] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.473] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.483] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.486] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.491] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.501] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.504] [OpenGLInventoryUI] Rendering with openProgress=1.000, isOpen=True
-[2026-01-16 03:46:56.509] [Game] E key pressed detected!
-[2026-01-16 03:46:56.509] [Game] Inventory was open, toggling...
-[2026-01-16 03:46:56.509] [OpenGLInventoryUI] Inventory closed
-[2026-01-16 03:46:56.509] [Game] Inventory toggle: closed
-[2026-01-16 03:47:00.818] [Game] Mined Sand at (12, 34, 17)
-[2026-01-16 03:47:00.823] [BlockMod] Applied mine at world (12,34,17)
-[2026-01-16 03:47:00.825] [Prediction] Applied BlockMod[Mine] at (12,34,17) block=0 seq=0 locally
-[2026-01-16 03:47:00.826] [Client] Sent mine request for (12,34,17) seq=0
-[2026-01-16 03:47:00.826] [Game] Sent mine request to server (with prediction)
-[2026-01-16 03:47:00.979] [03:47:00.979] [[Server]] Tick 900 | Cache: 39/20000
-[2026-01-16 03:47:01.319] [Game] Mined Sand at (12, 34, 17)
-[2026-01-16 03:47:01.320] [BlockMod] Applied mine at world (12,34,17)
-[2026-01-16 03:47:01.320] [Prediction] Applied BlockMod[Mine] at (12,34,17) block=0 seq=1 locally
-[2026-01-16 03:47:01.320] [Client] Sent mine request for (12,34,17) seq=1
-[2026-01-16 03:47:01.320] [Game] Sent mine request to server (with prediction)
-[2026-01-16 03:47:01.321] [03:47:01.321] [Server] Received BlockMod[Mine] at (12,34,17) block=0 seq=0 from 127.0.0.1:54818
-[2026-01-16 03:47:01.321] [BlockMod] Applied mine at world (12,34,17)
-[2026-01-16 03:47:01.321] [03:47:01.321] [Server] Applied modification successfully
-[2026-01-16 03:47:01.328] [03:47:01.328] [Server] Broadcasted BlockMod[Mine] at (12,34,17) block=0 seq=0 to 1/1 clients
-[2026-01-16 03:47:01.576] [03:47:01.576] [[Generation]] (4352,0,16777216): Render verts=96, Collision verts=96
-[2026-01-16 03:47:01.576] [03:47:01.576] [[Timing]] Chunk (4352,0,16777216): Chunk=127.34ms Mesh=120.14ms Send=0.07ms Total=247.65ms
-[2026-01-16 03:47:05.672] [Game] Mined Sand at (14, 37, 21)
-[2026-01-16 03:47:05.672] [BlockMod] Applied mine at world (14,37,21)
-[2026-01-16 03:47:05.672] [Prediction] Applied BlockMod[Mine] at (14,37,21) block=0 seq=2 locally
-[2026-01-16 03:47:05.672] [Client] Sent mine request for (14,37,21) seq=2
-[2026-01-16 03:47:05.672] [Game] Sent mine request to server (with prediction)
-[2026-01-16 03:47:05.674] [03:47:05.674] [Server] Unknown TCP packet type: 14 from 127.0.0.1:54818
-[2026-01-16 03:47:05.674] [03:47:05.674] [Server] Unknown TCP packet type: 84 from 127.0.0.1:54818
-[2026-01-16 03:47:05.674] [03:47:05.674] [Server] Unknown TCP packet type: 222 from 127.0.0.1:54818
-[2026-01-16 03:47:05.674] [03:47:05.674] [Server] Unknown TCP packet type: 8 from 127.0.0.1:54818
-[2026-01-16 03:47:05.829] [03:47:05.829] [[Generation]] (314114048,1424241333,657630): Render verts=0, Collision verts=0
-[2026-01-16 03:47:05.829] [03:47:05.829] [[Timing]] Chunk (314114048,1424241333,657630): Chunk=81.45ms Mesh=73.99ms Send=0.11ms Total=155.66ms
-[2026-01-16 03:47:05.834] [03:47:05.834] [[Generation]] (2424832,1376256,0): Render verts=0, Collision verts=0
-[2026-01-16 03:47:05.834] [03:47:05.834] [[Timing]] Chunk (2424832,1376256,0): Chunk=88.72ms Mesh=71.48ms Send=0.06ms Total=160.33ms
-[2026-01-16 03:47:05.835] [03:47:05.835] [[Generation]] (33554432,1644167168,-466268852): Render verts=0, Collision verts=0
-[2026-01-16 03:47:05.835] [03:47:05.835] [[Timing]] Chunk (33554432,1644167168,-466268852): Chunk=94.76ms Mesh=66.13ms Send=0.08ms Total=161.03ms
-[2026-01-16 03:47:05.979] [03:47:05.979] [[Server]] Tick 1200 | Cache: 42/20000
-[2026-01-16 03:47:07.617] [Game] Mined Sand at (16, 37, 22)
-[2026-01-16 03:47:07.617] [BlockMod] Applied mine at world (16,37,22)
-[2026-01-16 03:47:07.617] [Prediction] Applied BlockMod[Mine] at (16,37,22) block=0 seq=3 locally
-[2026-01-16 03:47:07.618] [Client] Sent mine request for (16,37,22) seq=3
-[2026-01-16 03:47:07.618] [Game] Sent mine request to server (with prediction)
-[2026-01-16 03:47:10.627] [Game] Mined Sand at (15, 37, 22)
-[2026-01-16 03:47:10.627] [BlockMod] Applied mine at world (15,37,22)
-[2026-01-16 03:47:10.627] [Prediction] Applied BlockMod[Mine] at (15,37,22) block=0 seq=4 locally
-[2026-01-16 03:47:10.627] [Client] Sent mine request for (15,37,22) seq=4
-[2026-01-16 03:47:10.627] [Game] Sent mine request to server (with prediction)
-[2026-01-16 03:47:10.627] [03:47:10.627] [Server] Received BlockMod[Mine] at (16,37,22) block=0 seq=3 from 127.0.0.1:54818
-[2026-01-16 03:47:10.627] [BlockMod] Applied mine at world (16,37,22)
-[2026-01-16 03:47:10.627] [03:47:10.627] [Server] Applied modification successfully
-[2026-01-16 03:47:10.628] [03:47:10.628] [Server] Broadcasted BlockMod[Mine] at (16,37,22) block=0 seq=3 to 1/1 clients
-[2026-01-16 03:47:10.628] [Client] Received broadcast: BlockMod[Mine] at (12,34,17) block=0 seq=0
-[2026-01-16 03:47:10.628] [BlockMod] Applied mine at world (12,34,17)
-[2026-01-16 03:47:10.630] [Client] Invalidating 27 chunks around (12,34,17)
-[2026-01-16 03:47:10.632] [Client] ForceReloadChunk called for (-1, -1, -1)
-[2026-01-16 03:47:10.632] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.636] [Renderer] ClearChunkMesh: (-1, -1, -1)
-[2026-01-16 03:47:10.638] [Renderer]   Deleted GPU: VAO=27, VBO=29
-[2026-01-16 03:47:10.638] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.643] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.646] [Client] ForceReloadChunk called for (-1, -1, 0)
-[2026-01-16 03:47:10.646] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.647] [Renderer] ClearChunkMesh: (-1, -1, 0)
-[2026-01-16 03:47:10.647] [Renderer]   Deleted GPU: VAO=23, VBO=25
-[2026-01-16 03:47:10.647] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.647] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.647] [Client] ForceReloadChunk called for (-1, -1, 1)
-[2026-01-16 03:47:10.647] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.648] [Renderer] ClearChunkMesh: (-1, -1, 1)
-[2026-01-16 03:47:10.649] [Renderer]   Deleted GPU: VAO=24, VBO=26
-[2026-01-16 03:47:10.649] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.649] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.649] [Client] ForceReloadChunk called for (-1, 0, -1)
-[2026-01-16 03:47:10.649] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.649] [Renderer] ClearChunkMesh: (-1, 0, -1)
-[2026-01-16 03:47:10.649] [Renderer]   Deleted GPU: VAO=16, VBO=18
-[2026-01-16 03:47:10.649] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (-1, 0, 0)
-[2026-01-16 03:47:10.650] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.650] [Renderer] ClearChunkMesh: (-1, 0, 0)
-[2026-01-16 03:47:10.650] [Renderer]   Deleted GPU: VAO=13, VBO=15
-[2026-01-16 03:47:10.650] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (-1, 0, 1)
-[2026-01-16 03:47:10.650] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.650] [Renderer] ClearChunkMesh: (-1, 0, 1)
-[2026-01-16 03:47:10.650] [Renderer]   Deleted GPU: VAO=17, VBO=19
-[2026-01-16 03:47:10.650] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (-1, 1, -1)
-[2026-01-16 03:47:10.650] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.650] [Renderer] ClearChunkMesh: (-1, 1, -1)
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (-1, 1, 0)
-[2026-01-16 03:47:10.650] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.650] [Renderer] ClearChunkMesh: (-1, 1, 0)
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (-1, 1, 1)
-[2026-01-16 03:47:10.650] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.650] [Renderer] ClearChunkMesh: (-1, 1, 1)
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (0, -1, -1)
-[2026-01-16 03:47:10.650] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.650] [Renderer] ClearChunkMesh: (0, -1, -1)
-[2026-01-16 03:47:10.650] [Renderer]   Deleted GPU: VAO=22, VBO=24
-[2026-01-16 03:47:10.650] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (0, -1, 0)
-[2026-01-16 03:47:10.650] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.650] [Renderer] ClearChunkMesh: (0, -1, 0)
-[2026-01-16 03:47:10.650] [Renderer]   Deleted GPU: VAO=19, VBO=21
-[2026-01-16 03:47:10.650] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.650] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.650] [Client] ForceReloadChunk called for (0, -1, 1)
-[2026-01-16 03:47:10.651] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.651] [Renderer] ClearChunkMesh: (0, -1, 1)
-[2026-01-16 03:47:10.651] [Renderer]   Deleted GPU: VAO=20, VBO=22
-[2026-01-16 03:47:10.651] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.652] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.652] [Client] ForceReloadChunk called for (0, 0, -1)
-[2026-01-16 03:47:10.652] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.652] [Renderer] ClearChunkMesh: (0, 0, -1)
-[2026-01-16 03:47:10.652] [Renderer]   Deleted GPU: VAO=12, VBO=14
-[2026-01-16 03:47:10.652] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.652] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.652] [Client] ForceReloadChunk called for (0, 0, 0)
-[2026-01-16 03:47:10.653] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.653] [Renderer] ClearChunkMesh: (0, 0, 0)
-[2026-01-16 03:47:10.653] [Renderer]   Deleted GPU: VAO=10, VBO=12
-[2026-01-16 03:47:10.653] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.653] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.653] [Client] ForceReloadChunk called for (0, 0, 1)
-[2026-01-16 03:47:10.653] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.653] [Renderer] ClearChunkMesh: (0, 0, 1)
-[2026-01-16 03:47:10.653] [Renderer]   Deleted GPU: VAO=11, VBO=13
-[2026-01-16 03:47:10.653] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.653] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.653] [Client] ForceReloadChunk called for (0, 1, -1)
-[2026-01-16 03:47:10.653] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.653] [Renderer] ClearChunkMesh: (0, 1, -1)
-[2026-01-16 03:47:10.654] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.654] [Client] ForceReloadChunk called for (0, 1, 0)
-[2026-01-16 03:47:10.654] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.654] [Renderer] ClearChunkMesh: (0, 1, 0)
-[2026-01-16 03:47:10.654] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.654] [Client] ForceReloadChunk called for (0, 1, 1)
-[2026-01-16 03:47:10.654] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.654] [Renderer] ClearChunkMesh: (0, 1, 1)
-[2026-01-16 03:47:10.654] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.654] [Client] ForceReloadChunk called for (1, -1, -1)
-[2026-01-16 03:47:10.654] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.654] [Renderer] ClearChunkMesh: (1, -1, -1)
-[2026-01-16 03:47:10.654] [Renderer]   Deleted GPU: VAO=25, VBO=27
-[2026-01-16 03:47:10.654] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.654] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.654] [Client] ForceReloadChunk called for (1, -1, 0)
-[2026-01-16 03:47:10.654] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.654] [Renderer] ClearChunkMesh: (1, -1, 0)
-[2026-01-16 03:47:10.654] [Renderer]   Deleted GPU: VAO=21, VBO=23
-[2026-01-16 03:47:10.654] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.654] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.654] [Client] ForceReloadChunk called for (1, -1, 1)
-[2026-01-16 03:47:10.654] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.654] [Renderer] ClearChunkMesh: (1, -1, 1)
-[2026-01-16 03:47:10.654] [Renderer]   Deleted GPU: VAO=26, VBO=28
-[2026-01-16 03:47:10.654] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.654] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.654] [Client] ForceReloadChunk called for (1, 0, -1)
-[2026-01-16 03:47:10.654] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.654] [Renderer] ClearChunkMesh: (1, 0, -1)
-[2026-01-16 03:47:10.654] [Renderer]   Deleted GPU: VAO=15, VBO=17
-[2026-01-16 03:47:10.654] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.655] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.655] [Client] ForceReloadChunk called for (1, 0, 0)
-[2026-01-16 03:47:10.655] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.655] [Renderer] ClearChunkMesh: (1, 0, 0)
-[2026-01-16 03:47:10.655] [Renderer]   Deleted GPU: VAO=14, VBO=16
-[2026-01-16 03:47:10.655] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.655] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.655] [Client] ForceReloadChunk called for (1, 0, 1)
-[2026-01-16 03:47:10.655] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.655] [Renderer] ClearChunkMesh: (1, 0, 1)
-[2026-01-16 03:47:10.655] [Renderer]   Deleted GPU: VAO=18, VBO=20
-[2026-01-16 03:47:10.655] [Renderer]   Cleared mesh cache
-[2026-01-16 03:47:10.655] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.655] [Client] ForceReloadChunk called for (1, 1, -1)
-[2026-01-16 03:47:10.655] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.655] [Renderer] ClearChunkMesh: (1, 1, -1)
-[2026-01-16 03:47:10.655] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.655] [Client] ForceReloadChunk called for (1, 1, 0)
-[2026-01-16 03:47:10.655] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.655] [Renderer] ClearChunkMesh: (1, 1, 0)
-[2026-01-16 03:47:10.655] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.655] [Client] ForceReloadChunk called for (1, 1, 1)
-[2026-01-16 03:47:10.655] [Client]   - Was loaded: True
-[2026-01-16 03:47:10.655] [Renderer] ClearChunkMesh: (1, 1, 1)
-[2026-01-16 03:47:10.655] [Client]   - Re-queued for reload
-[2026-01-16 03:47:10.656] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.656] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.656] [Client] Unknown broadcast packet type: EntityUpdate
-[2026-01-16 03:47:10.656] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.656] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.657] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.657] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.657] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.658] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.658] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.658] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 3
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: ChunkRequest
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 142
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 40
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 118
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 54
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 228
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 84
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 222
-[2026-01-16 03:47:10.659] [Client] Unknown broadcast packet type: 8
-[2026-01-16 03:47:10.662] [03:47:10.662] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.662] [03:47:10.662] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.662] [03:47:10.662] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.662] [03:47:10.662] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.662] [03:47:10.662] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.663] [03:47:10.663] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.663] [03:47:10.663] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.666] [03:47:10.666] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.666] [03:47:10.666] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.667] [03:47:10.667] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.667] [03:47:10.667] [Server] Unknown TCP packet type: 255 from 127.0.0.1:54818
-[2026-01-16 03:47:10.667] [03:47:10.667] [[Cache]] Hit for (-1,0,0)
-[2026-01-16 03:47:10.667] [03:47:10.667] [[Cache]] Hit for (-1,-1,0)
-[2026-01-16 03:47:10.668] [03:47:10.668] [[Cache]] Hit for (-1,-1,1)
-[2026-01-16 03:47:10.668] [03:47:10.668] [[Cache]] Hit for (-1,0,-1)
-[2026-01-16 03:47:10.678] [03:47:10.678] [[Timing]] Chunk (-1,0,-1): Chunk=0.00ms Mesh=0.00ms Send=6.40ms Total=10.52ms
-[2026-01-16 03:47:10.687] [03:47:10.687] [[Timing]] Chunk (-1,0,0): Chunk=0.00ms Mesh=0.00ms Send=18.55ms Total=20.02ms
-[2026-01-16 03:47:10.694] [03:47:10.694] [[Timing]] Chunk (-1,-1,1): Chunk=0.00ms Mesh=0.00ms Send=22.31ms Total=26.50ms
-[2026-01-16 03:47:10.694] [03:47:10.694] [[Cache]] Hit for (-1,0,1)
-[2026-01-16 03:47:10.700] [03:47:10.699] [[Timing]] Chunk (-1,-1,0): Chunk=0.00ms Mesh=0.00ms Send=30.89ms Total=32.05ms
-[2026-01-16 03:47:10.700] [03:47:10.700] [[Timing]] Chunk (-1,0,1): Chunk=0.00ms Mesh=0.00ms Send=5.84ms Total=5.90ms
-[2026-01-16 03:47:10.701] [03:47:10.700] [[Cache]] Hit for (-1,1,-1)
-[2026-01-16 03:47:10.701] [03:47:10.701] [[Timing]] Chunk (-1,1,-1): Chunk=0.00ms Mesh=0.00ms Send=0.04ms Total=1.77ms
-[2026-01-16 03:47:10.720] [03:47:10.720] [[Cache]] Hit for (0,-1,0)
-[2026-01-16 03:47:10.729] [03:47:10.729] [[Cache]] Hit for (-1,1,0)
-[2026-01-16 03:47:10.731] [03:47:10.731] [[Timing]] Chunk (-1,1,0): Chunk=0.00ms Mesh=0.00ms Send=0.08ms Total=1.51ms
-[2026-01-16 03:47:10.731] [03:47:10.731] [[Cache]] Hit for (0,-1,1)
-[2026-01-16 03:47:10.734] [03:47:10.734] [[Timing]] Chunk (0,-1,0): Chunk=0.00ms Mesh=0.00ms Send=13.53ms Total=13.81ms
-[2026-01-16 03:47:10.734] [03:47:10.734] [[Cache]] Hit for (0,-1,-1)
-[2026-01-16 03:47:10.738] [03:47:10.738] [[Cache]] Hit for (-1,1,1)
-[2026-01-16 03:47:10.738] [03:47:10.738] [[Timing]] Chunk (0,-1,1): Chunk=0.00ms Mesh=0.00ms Send=7.31ms Total=7.34ms
-[2026-01-16 03:47:10.739] [03:47:10.739] [[Timing]] Chunk (0,-1,-1): Chunk=0.00ms Mesh=0.00ms Send=5.17ms Total=5.21ms
-[2026-01-16 03:47:10.740] [03:47:10.740] [[Timing]] Chunk (-1,1,1): Chunk=0.00ms Mesh=0.00ms Send=1.84ms Total=1.91ms
-[2026-01-16 03:47:10.751] [03:47:10.751] [[Cache]] Hit for (0,0,-1)
-[2026-01-16 03:47:10.755] [03:47:10.755] [[Timing]] Chunk (0,0,-1): Chunk=0.00ms Mesh=0.00ms Send=4.28ms Total=4.51ms
-[2026-01-16 03:47:10.758] [03:47:10.758] [[Cache]] Hit for (0,1,0)
-[2026-01-16 03:47:10.758] [03:47:10.758] [[Timing]] Chunk (0,1,0): Chunk=0.00ms Mesh=0.00ms Send=0.09ms Total=0.18ms
-[2026-01-16 03:47:10.758] [03:47:10.758] [[Cache]] Hit for (0,1,-1)
-[2026-01-16 03:47:10.758] [03:47:10.758] [[Timing]] Chunk (0,1,-1): Chunk=0.00ms Mesh=0.00ms Send=0.05ms Total=0.07ms
-[2026-01-16 03:47:10.758] [03:47:10.758] [[Cache]] Hit for (0,0,1)
-[2026-01-16 03:47:10.759] [03:47:10.759] [[Cache]] Hit for (1,-1,-1)
-[2026-01-16 03:47:10.762] [03:47:10.762] [[Timing]] Chunk (1,-1,-1): Chunk=0.00ms Mesh=0.00ms Send=2.43ms Total=2.50ms
-[2026-01-16 03:47:10.762] [03:47:10.762] [[Timing]] Chunk (0,0,1): Chunk=0.00ms Mesh=0.00ms Send=3.53ms Total=3.55ms
-[2026-01-16 03:47:10.762] [03:47:10.762] [[Cache]] Hit for (0,1,1)
-[2026-01-16 03:47:10.762] [03:47:10.762] [[Timing]] Chunk (0,1,1): Chunk=0.00ms Mesh=0.00ms Send=0.14ms Total=0.28ms
-[2026-01-16 03:47:10.767] [03:47:10.767] [[Cache]] Hit for (1,0,-1)
-[2026-01-16 03:47:10.770] [03:47:10.770] [[Timing]] Chunk (1,0,-1): Chunk=0.00ms Mesh=0.00ms Send=3.74ms Total=3.82ms
-[2026-01-16 03:47:10.771] [03:47:10.771] [[Cache]] Hit for (1,-1,1)
-[2026-01-16 03:47:10.775] [03:47:10.775] [[Cache]] Hit for (1,0,0)
-[2026-01-16 03:47:10.781] [03:47:10.781] [[Cache]] Hit for (1,-1,0)
-[2026-01-16 03:47:10.782] [03:47:10.782] [[Timing]] Chunk (1,0,0): Chunk=0.00ms Mesh=0.00ms Send=7.34ms Total=7.47ms
-[2026-01-16 03:47:10.791] [03:47:10.791] [[Timing]] Chunk (1,-1,1): Chunk=0.00ms Mesh=0.00ms Send=19.57ms Total=20.13ms
-[2026-01-16 03:47:10.799] [03:47:10.799] [[Cache]] Hit for (1,0,1)
-[2026-01-16 03:47:10.802] [03:47:10.802] [[Timing]] Chunk (1,-1,0): Chunk=0.00ms Mesh=0.00ms Send=20.96ms Total=21.05ms
-[2026-01-16 03:47:10.804] [03:47:10.804] [[Timing]] Chunk (1,0,1): Chunk=0.00ms Mesh=0.00ms Send=4.38ms Total=4.63ms
-[2026-01-16 03:47:10.822] [03:47:10.822] [[Cache]] Hit for (1,1,1)
-[2026-01-16 03:47:10.822] [03:47:10.822] [[Timing]] Chunk (1,1,1): Chunk=0.00ms Mesh=0.00ms Send=0.07ms Total=0.18ms
-[2026-01-16 03:47:10.822] [03:47:10.822] [[Cache]] Hit for (1,1,0)
-[2026-01-16 03:47:10.822] [03:47:10.822] [[Timing]] Chunk (1,1,0): Chunk=0.00ms Mesh=0.00ms Send=0.05ms Total=0.07ms
-[2026-01-16 03:47:10.822] [03:47:10.822] [[Cache]] Hit for (1,1,-1)
-[2026-01-16 03:47:10.822] [03:47:10.822] [[Timing]] Chunk (1,1,-1): Chunk=0.00ms Mesh=0.00ms Send=0.08ms Total=0.10ms
-[2026-01-16 03:47:10.823] [03:47:10.823] [[Cache]] Hit for (0,0,1)
-[2026-01-16 03:47:10.826] [03:47:10.826] [[Timing]] Chunk (0,0,1): Chunk=0.00ms Mesh=0.00ms Send=3.68ms Total=3.74ms
-[2026-01-16 03:47:10.827] [03:47:10.827] [[Cache]] Hit for (0,0,-1)
-[2026-01-16 03:47:10.829] [03:47:10.829] [[Timing]] Chunk (0,0,-1): Chunk=0.00ms Mesh=0.00ms Send=2.63ms Total=2.81ms
-[2026-01-16 03:47:10.850] [03:47:10.850] [[Cache]] Hit for (1,0,-1)
-[2026-01-16 03:47:10.854] [03:47:10.854] [[Timing]] Chunk (1,0,-1): Chunk=0.00ms Mesh=0.00ms Send=4.13ms Total=4.23ms
-[2026-01-16 03:47:10.854] [03:47:10.854] [[Cache]] Hit for (1,0,0)
-[2026-01-16 03:47:10.857] [03:47:10.857] [[Timing]] Chunk (1,0,0): Chunk=0.00ms Mesh=0.00ms Send=2.45ms Total=2.50ms
-[2026-01-16 03:47:10.858] [03:47:10.858] [[Cache]] Hit for (1,0,1)
-[2026-01-16 03:47:10.862] [03:47:10.862] [[Timing]] Chunk (1,0,1): Chunk=0.00ms Mesh=0.00ms Send=3.41ms Total=3.47ms
-[2026-01-16 03:47:10.864] [03:47:10.864] [[Cache]] Hit for (1,-1,0)
-[2026-01-16 03:47:10.868] [03:47:10.868] [[Cache]] Hit for (1,-1,-1)
-[2026-01-16 03:47:10.869] [03:47:10.869] [[Timing]] Chunk (1,-1,-1): Chunk=0.00ms Mesh=0.00ms Send=1.26ms Total=1.32ms
-[2026-01-16 03:47:10.875] [03:47:10.875] [[Cache]] Hit for (1,-1,1)
-[2026-01-16 03:47:10.879] [03:47:10.879] [[Timing]] Chunk (1,-1,0): Chunk=0.00ms Mesh=0.00ms Send=14.79ms Total=14.88ms
-[2026-01-16 03:47:10.885] [03:47:10.885] [[Cache]] Hit for (0,1,0)
-[2026-01-16 03:47:10.886] [03:47:10.886] [[Timing]] Chunk (1,-1,1): Chunk=0.00ms Mesh=0.00ms Send=11.22ms Total=11.30ms
-[2026-01-16 03:47:10.886] [03:47:10.886] [[Timing]] Chunk (0,1,0): Chunk=0.00ms Mesh=0.00ms Send=0.71ms Total=0.84ms
-[2026-01-16 03:47:10.894] [03:47:10.894] [[Cache]] Hit for (0,1,-1)
-[2026-01-16 03:47:10.894] [03:47:10.894] [[Cache]] Hit for (0,1,1)
-[2026-01-16 03:47:10.894] [03:47:10.894] [[Timing]] Chunk (0,1,-1): Chunk=0.00ms Mesh=0.00ms Send=0.15ms Total=0.37ms
-[2026-01-16 03:47:10.894] [03:47:10.894] [[Timing]] Chunk (0,1,1): Chunk=0.00ms Mesh=0.00ms Send=0.22ms Total=0.34ms
-[2026-01-16 03:47:10.895] [03:47:10.895] [[Cache]] Hit for (1,1,0)
-[2026-01-16 03:47:10.895] [03:47:10.895] [[Cache]] Hit for (1,1,-1)
-[2026-01-16 03:47:10.895] [03:47:10.895] [[Timing]] Chunk (1,1,-1): Chunk=0.00ms Mesh=0.00ms Send=0.10ms Total=0.26ms
-[2026-01-16 03:47:10.895] [03:47:10.895] [[Timing]] Chunk (1,1,0): Chunk=0.00ms Mesh=0.00ms Send=0.09ms Total=0.49ms
-[2026-01-16 03:47:10.895] [03:47:10.895] [[Cache]] Hit for (1,1,1)
-[2026-01-16 03:47:10.895] [03:47:10.895] [[Timing]] Chunk (1,1,1): Chunk=0.00ms Mesh=0.00ms Send=0.08ms Total=0.17ms
-[2026-01-16 03:47:10.906] [03:47:10.906] [[Generation]] (1734934528,1424242753,-16774946): Render verts=0, Collision verts=0
-[2026-01-16 03:47:10.908] [03:47:10.908] [[Timing]] Chunk (1734934528,1424242753,-16774946): Chunk=125.30ms Mesh=118.13ms Send=0.09ms Total=245.47ms
-[2026-01-16 03:47:11.027] [03:47:11.027] [[Generation]] (5632,0,67108864): Render verts=0, Collision verts=0
-[2026-01-16 03:47:11.028] [03:47:11.028] [[Timing]] Chunk (5632,0,67108864): Chunk=282.70ms Mesh=116.92ms Send=0.24ms Total=400.20ms
-[2026-01-16 03:47:11.126] [03:47:11.126] [[Generation]] (0,0,0): Render verts=16692, Collision verts=16692
-[2026-01-16 03:47:11.126] [03:47:11.126] [[Cache]] Hit after lock for (0,0,0)
-[2026-01-16 03:47:11.129] [03:47:11.129] [[Timing]] Chunk (0,0,0): Chunk=0.00ms Mesh=0.00ms Send=2.77ms Total=299.09ms
-[2026-01-16 03:47:11.129] [03:47:11.129] [[Timing]] Chunk (0,0,0): Chunk=262.89ms Mesh=111.40ms Send=3.52ms Total=377.94ms
-[2026-01-16 03:47:15.975] [03:47:15.975] [[Server]] Tick 1800 | Cache: 45/20000
-[2026-01-16 03:47:20.978] [03:47:20.978] [[Server]] Tick 2100 | Cache: 45/20000
-[2026-01-16 03:47:24.910] [03:47:24.910] [[Generation]] (-2,-1,-1): Render verts=2202, Collision verts=2202
-[2026-01-16 03:47:24.910] [03:47:24.910] [[Timing]] Chunk (-2,-1,-1): Chunk=270.41ms Mesh=298.38ms Send=0.60ms Total=569.52ms
-[2026-01-16 03:47:25.060] [03:47:25.060] [[Generation]] (-2,0,-1): Render verts=17817, Collision verts=17817
-[2026-01-16 03:47:25.066] [03:47:25.066] [[Timing]] Chunk (-2,0,-1): Chunk=312.14ms Mesh=406.98ms Send=5.44ms Total=724.74ms
-[2026-01-16 03:47:25.134] [03:47:25.134] [[Generation]] (-1,0,-2): Render verts=12501, Collision verts=12501
-[2026-01-16 03:47:25.139] [03:47:25.139] [[Timing]] Chunk (-1,0,-2): Chunk=469.00ms Mesh=322.45ms Send=4.70ms Total=796.34ms
-[2026-01-16 03:47:25.394] [03:47:25.394] [[Generation]] (-2,-1,1): Render verts=38139, Collision verts=38139
-[2026-01-16 03:47:25.398] [03:47:25.398] [[Generation]] (-2,1,-1): Render verts=0, Collision verts=0
-[2026-01-16 03:47:25.398] [03:47:25.398] [[Timing]] Chunk (-2,1,-1): Chunk=138.77ms Mesh=190.57ms Send=0.11ms Total=329.56ms
-[2026-01-16 03:47:25.410] [03:47:25.410] [[Timing]] Chunk (-2,-1,1): Chunk=495.67ms Mesh=557.37ms Send=15.61ms Total=1068.79ms
-[2026-01-16 03:47:25.416] [03:47:25.416] [[Generation]] (-2,1,1): Render verts=0, Collision verts=0
-[2026-01-16 03:47:25.416] [03:47:25.416] [[Timing]] Chunk (-2,1,1): Chunk=135.56ms Mesh=139.40ms Send=0.02ms Total=275.08ms
-[2026-01-16 03:47:25.584] [03:47:25.584] [[Generation]] (-3,0,0): Render verts=16095, Collision verts=16095
-[2026-01-16 03:47:25.591] [03:47:25.591] [[Timing]] Chunk (-3,0,0): Chunk=737.98ms Mesh=503.67ms Send=7.56ms Total=1249.46ms
-[2026-01-16 03:47:25.785] [03:47:25.785] [[Generation]] (-2,0,1): Render verts=14919, Collision verts=14919
-[2026-01-16 03:47:25.791] [03:47:25.791] [[Timing]] Chunk (-2,0,1): Chunk=927.84ms Mesh=516.67ms Send=4.93ms Total=1449.66ms
-[2026-01-16 03:47:25.879] [03:47:25.879] [[Generation]] (-3,1,0): Render verts=0, Collision verts=0
-[2026-01-16 03:47:25.880] [03:47:25.880] [[Timing]] Chunk (-3,1,0): Chunk=96.97ms Mesh=128.46ms Send=0.16ms Total=227.21ms
-[2026-01-16 03:47:25.901] [03:47:25.901] [[Generation]] (-1,1,-2): Render verts=0, Collision verts=0
-[2026-01-16 03:47:25.901] [03:47:25.901] [[Timing]] Chunk (-1,1,-2): Chunk=144.07ms Mesh=139.12ms Send=0.10ms Total=283.45ms
-[2026-01-16 03:47:25.919] [03:47:25.919] [[Generation]] (-1,0,2): Render verts=18738, Collision verts=18738
-[2026-01-16 03:47:25.923] [03:47:25.923] [[Timing]] Chunk (-1,0,2): Chunk=437.55ms Mesh=570.36ms Send=4.46ms Total=1012.64ms
-[2026-01-16 03:47:25.985] [03:47:25.985] [[Server]] Tick 2400 | Cache: 56/20000
-[2026-01-16 03:47:26.043] [03:47:26.043] [[Generation]] (-3,-1,0): Render verts=1845, Collision verts=1845
-[2026-01-16 03:47:26.044] [03:47:26.044] [[Timing]] Chunk (-3,-1,0): Chunk=356.65ms Mesh=288.15ms Send=0.72ms Total=645.65ms
-[2026-01-16 03:47:26.116] [03:47:26.116] [[Generation]] (-1,1,2): Render verts=0, Collision verts=0
-[2026-01-16 03:47:26.116] [03:47:26.116] [[Timing]] Chunk (-1,1,2): Chunk=135.85ms Mesh=75.96ms Send=0.14ms Total=212.24ms
-[2026-01-16 03:47:26.178] [03:47:26.178] [[Generation]] (-1,-1,-2): Render verts=36354, Collision verts=36354
-[2026-01-16 03:47:26.184] [03:47:26.184] [[Generation]] (-1,-1,2): Render verts=1290, Collision verts=1290
-[2026-01-16 03:47:26.184] [03:47:26.184] [[Timing]] Chunk (-1,-1,2): Chunk=254.25ms Mesh=137.91ms Send=0.20ms Total=392.45ms
-[2026-01-16 03:47:26.185] [03:47:26.185] [[Timing]] Chunk (-1,-1,-2): Chunk=516.44ms Mesh=241.16ms Send=7.35ms Total=765.07ms
-[2026-01-16 03:47:30.982] [03:47:30.982] [[Server]] Tick 2700 | Cache: 60/20000
-[2026-01-16 03:47:35.968] [03:47:35.968] [[Server]] Tick 3000 | Cache: 60/20000
-[2026-01-16 03:47:40.968] [03:47:40.968] [[Server]] Tick 3300 | Cache: 60/20000
-[2026-01-16 03:47:45.972] [03:47:45.972] [[Server]] Tick 3600 | Cache: 60/20000
-[2026-01-16 03:47:50.970] [03:47:50.970] [[Server]] Tick 3900 | Cache: 60/20000
-[2026-01-16 03:47:55.981] [03:47:55.981] [[Server]] Tick 4200 | Cache: 60/20000
-[2026-01-16 03:48:00.978] [03:48:00.978] [[Server]] Tick 4500 | Cache: 60/20000
-[2026-01-16 03:48:05.977] [03:48:05.977] [[Server]] Tick 4800 | Cache: 60/20000
-[2026-01-16 03:48:10.969] [03:48:10.969] [[Server]] Tick 5100 | Cache: 60/20000
-[2026-01-16 03:48:15.968] [03:48:15.968] [[Server]] Tick 5400 | Cache: 60/20000
-[2026-01-16 03:48:15.985] [03:48:15.985] [[Server]] Tick 5400 | Cache: 60/20000
-[2026-01-16 03:48:20.984] [03:48:20.984] [[Server]] Tick 5700 | Cache: 60/20000
-[2026-01-16 03:48:25.969] [03:48:25.969] [[Server]] Tick 6000 | Cache: 60/20000
-[2026-01-16 03:48:30.977] [03:48:30.977] [[Server]] Tick 6300 | Cache: 60/20000
-[2026-01-16 03:48:35.985] [03:48:35.985] [[Server]] Tick 6600 | Cache: 60/20000
-[2026-01-16 03:48:40.972] [03:48:40.972] [[Server]] Tick 6900 | Cache: 60/20000
-[2026-01-16 03:48:45.978] [03:48:45.978] [[Server]] Tick 7200 | Cache: 60/20000
-[2026-01-16 03:48:50.981] [03:48:50.981] [[Server]] Tick 7500 | Cache: 60/20000
-[2026-01-16 03:48:55.976] [03:48:55.976] [[Server]] Tick 7800 | Cache: 60/20000
-[2026-01-16 03:49:00.985] [03:49:00.985] [[Server]] Tick 8100 | Cache: 60/20000
-[2026-01-16 03:49:05.987] [03:49:05.987] [[Server]] Tick 8400 | Cache: 60/20000
-[2026-01-16 03:49:10.972] [03:49:10.972] [[Server]] Tick 8700 | Cache: 60/20000
-[2026-01-16 03:49:15.978] [03:49:15.978] [[Server]] Tick 9000 | Cache: 60/20000
-[2026-01-16 03:49:18.075] [Stats] Player died from Starvation
-[2026-01-16 03:49:18.075] [GameSystems] Player died! Respawning...
-[2026-01-16 03:49:20.976] [03:49:20.976] [[Server]] Tick 9300 | Cache: 60/20000
-[2026-01-16 03:49:25.979] [03:49:25.979] [[Server]] Tick 9600 | Cache: 60/20000
-[2026-01-16 03:49:30.984] [03:49:30.984] [[Server]] Tick 9900 | Cache: 60/20000
-[2026-01-16 03:49:35.973] [03:49:35.973] [[Server]] Tick 10200 | Cache: 60/20000
-[2026-01-16 03:49:40.985] [03:49:40.985] [[Server]] Tick 10500 | Cache: 60/20000
-[2026-01-16 03:49:45.976] [03:49:45.976] [[Server]] Tick 10800 | Cache: 60/20000
-[2026-01-16 03:49:50.979] [03:49:50.979] [[Server]] Tick 11100 | Cache: 60/20000
-[2026-01-16 03:49:55.983] [03:49:55.983] [[Server]] Tick 11400 | Cache: 60/20000
-[2026-01-16 03:50:00.979] [03:50:00.979] [[Server]] Tick 11700 | Cache: 60/20000
-[2026-01-16 03:50:05.985] [03:50:05.985] [[Server]] Tick 12000 | Cache: 60/20000
-[2026-01-16 03:50:10.976] [03:50:10.976] [[Server]] Tick 12300 | Cache: 60/20000
-[2026-01-16 03:50:15.975] [03:50:15.975] [[Server]] Tick 12600 | Cache: 60/20000
-[2026-01-16 03:50:20.987] [03:50:20.987] [[Server]] Tick 12900 | Cache: 60/20000
-[2026-01-16 03:50:25.976] [03:50:25.976] [[Server]] Tick 13200 | Cache: 60/20000
-[2026-01-16 03:50:30.983] [03:50:30.983] [[Server]] Tick 13500 | Cache: 60/20000
-[2026-01-16 03:50:35.975] [03:50:35.975] [[Server]] Tick 13800 | Cache: 60/20000
-[2026-01-16 03:50:35.992] [03:50:35.992] [[Server]] Tick 13800 | Cache: 60/20000
-[2026-01-16 03:50:40.978] [03:50:40.978] [[Server]] Tick 14100 | Cache: 60/20000
-[2026-01-16 03:50:45.992] [03:50:45.992] [[Server]] Tick 14400 | Cache: 60/20000
-[2026-01-16 03:50:50.989] [03:50:50.989] [[Server]] Tick 14700 | Cache: 60/20000
-[2026-01-16 03:50:55.981] [03:50:55.981] [[Server]] Tick 15000 | Cache: 60/20000
-[2026-01-16 03:51:00.989] [03:51:00.989] [[Server]] Tick 15300 | Cache: 60/20000
-[2026-01-16 03:51:05.978] [03:51:05.978] [[Server]] Tick 15600 | Cache: 60/20000
-[2026-01-16 03:51:10.994] [03:51:10.994] [[Server]] Tick 15900 | Cache: 60/20000
-[2026-01-16 03:51:15.989] [03:51:15.989] [[Server]] Tick 16200 | Cache: 60/20000
-[2026-01-16 03:51:20.989] [03:51:20.989] [[Server]] Tick 16500 | Cache: 60/20000
-[2026-01-16 03:51:25.992] [03:51:25.992] [[Server]] Tick 16800 | Cache: 60/20000
-[2026-01-16 03:51:30.989] [03:51:30.989] [[Server]] Tick 17100 | Cache: 60/20000
-[2026-01-16 03:51:35.980] [03:51:35.980] [[Server]] Tick 17400 | Cache: 60/20000
-[2026-01-16 03:51:40.991] [03:51:40.991] [[Server]] Tick 17700 | Cache: 60/20000
-[2026-01-16 03:51:45.982] [03:51:45.982] [[Server]] Tick 18000 | Cache: 60/20000
-[2026-01-16 03:51:48.079] [Stats] Player died from Starvation
-[2026-01-16 03:51:48.079] [GameSystems] Player died! Respawning...
-[2026-01-16 03:51:50.983] [03:51:50.983] [[Server]] Tick 18300 | Cache: 60/20000
-[2026-01-16 03:51:55.981] [03:51:55.981] [[Server]] Tick 18600 | Cache: 60/20000
-[2026-01-16 03:52:00.993] [03:52:00.993] [[Server]] Tick 18900 | Cache: 60/20000
-[2026-01-16 03:52:05.996] [03:52:05.996] [[Server]] Tick 19200 | Cache: 60/20000
-[2026-01-16 03:52:10.983] [03:52:10.983] [[Server]] Tick 19500 | Cache: 60/20000
-[2026-01-16 03:52:15.986] [03:52:15.986] [[Server]] Tick 19800 | Cache: 60/20000
+﻿[2026-01-16 04:02:28.935] [Logging] Started logging to 'physics_debug.log'
+[2026-01-16 04:02:28.936] [Game] WorldGen initialized
+[2026-01-16 04:02:28.943] [PSX Effects] Shaders compiled successfully
+[2026-01-16 04:02:28.943] [Game] Renderer initialized
+[2026-01-16 04:02:28.952] [EntityRenderer] Generated player mesh: 480 vertices, VAO=1, VBO=1
+[2026-01-16 04:02:28.952] [Game] EntityRenderer initialized
+[2026-01-16 04:02:28.970] [Player] Spawned at (16, 37.1, 16)
+[2026-01-16 04:02:28.970] [Game] Player initialized at position: (16, 37.1, 16)
+[2026-01-16 04:02:28.971] [Game] Network controller initialized
+[2026-01-16 04:02:28.974] [Client] TCP broadcast listener started
+[2026-01-16 04:02:28.980] [ItemRegistry] Registered 33 items
+[2026-01-16 04:02:28.982] [Crafting] Registered 12 recipes
+[2026-01-16 04:02:28.988] [BlockRegistry] Registered 9 block types
+[2026-01-16 04:02:28.997] [GameSystems] Starter items added
+[2026-01-16 04:02:28.997] [GameSystems] All systems initialized with GameLogic integration
+[2026-01-16 04:02:29.473] [Client] Chunk update loop starting...
+[2026-01-16 04:02:29.610] [EnhancedHUD] Initialized with dark theme and animations
+[2026-01-16 04:02:29.610] [Game] EnhancedGameHUD created: True
+[2026-01-16 04:02:29.611] [OpenGLInventoryUI] Shaders compiled and linked successfully
+[2026-01-16 04:02:29.612] [OpenGLInventoryUI] Initialized
+[2026-01-16 04:02:29.612] [Game] OpenGLInventoryUI created: True
+[2026-01-16 04:02:29.612] [Game] All systems initialized
+[2026-01-16 04:02:29.613] [Game] Found atlas at: textures/atlas.png
+[2026-01-16 04:02:29.667] [AtlasManager] Loaded image: textures/atlas.png (256x256)
+[2026-01-16 04:02:29.668] [AtlasManager] Using preferred tile size: 64
+[2026-01-16 04:02:29.668] [AtlasManager] Detected: tileSize=64, tilesPerRow=4, tilesPerCol=4
+[2026-01-16 04:02:29.673] [AtlasManager] Successfully uploaded to GL texture 1141
+[2026-01-16 04:02:29.674] [AtlasManager] Verified texture dimensions: 256x256
+[2026-01-16 04:02:29.676] [Renderer] AtlasManager loaded atlas: textures/atlas.png (GL id 1141)
+[2026-01-16 04:02:29.677] [Game] Loaded 0 chunks
+[2026-01-16 04:02:30.122] [Renderer] Uploaded chunk (0,0,0): VAO=10, VBO=12, 16506 vertices
+[2026-01-16 04:02:30.381] [Renderer] Uploaded chunk (0,0,1): VAO=11, VBO=13, 13995 vertices
+[2026-01-16 04:02:37.094] [Game] Mined Sand at (13, 35, 18)
+[2026-01-16 04:02:37.101] [BlockMod] Applied mine at world (13,35,18)
+[2026-01-16 04:02:37.104] [Prediction] Applied BlockMod[Mine] at (13,35,18) block=0 seq=0 locally
+[2026-01-16 04:02:37.105] [Client] Sent mine request for (13,35,18) seq=0
+[2026-01-16 04:02:37.105] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:02:37.107] [04:02:37.107] [Server] Received BlockMod[Mine] at (13,35,18) block=0 seq=0 from 127.0.0.1:36502
+[2026-01-16 04:02:37.109] [BlockMod] Applied mine at world (13,35,18)
+[2026-01-16 04:02:37.109] [04:02:37.109] [Server] Applied modification successfully
+[2026-01-16 04:02:37.118] [04:02:37.118] [Server] Broadcasted BlockMod[Mine] at (13,35,18) block=0 seq=0 to 1/1 clients
+[2026-01-16 04:02:37.119] [Client] Received broadcast: BlockMod[Mine] at (13,35,18) block=0 seq=0
+[2026-01-16 04:02:37.119] [BlockMod] Applied mine at world (13,35,18)
+[2026-01-16 04:02:37.122] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:02:37.123] [Renderer]   Deleted GPU: VAO=10, VBO=12
+[2026-01-16 04:02:37.123] [Renderer]   Cleared mesh cache
+[2026-01-16 04:02:38.391] [04:02:38.391] [Server] Tick 600 | Cache: 39/20000 | Requests: 41
+[2026-01-16 04:02:43.383] [04:02:43.382] [Server] Tick 900 | Cache: 39/20000 | Requests: 41
+[2026-01-16 04:02:45.269] [Game] Mined Sand at (13, 35, 17)
+[2026-01-16 04:02:45.269] [BlockMod] Applied mine at world (13,35,17)
+[2026-01-16 04:02:45.269] [Prediction] Applied BlockMod[Mine] at (13,35,17) block=0 seq=1 locally
+[2026-01-16 04:02:45.269] [Client] Sent mine request for (13,35,17) seq=1
+[2026-01-16 04:02:45.269] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:02:45.269] [04:02:45.269] [Server] Received BlockMod[Mine] at (13,35,17) block=0 seq=1 from 127.0.0.1:36502
+[2026-01-16 04:02:45.269] [BlockMod] Applied mine at world (13,35,17)
+[2026-01-16 04:02:45.269] [04:02:45.269] [Server] Applied modification successfully
+[2026-01-16 04:02:45.269] [04:02:45.269] [Server] Broadcasted BlockMod[Mine] at (13,35,17) block=0 seq=1 to 1/1 clients
+[2026-01-16 04:02:45.269] [Client] Received broadcast: BlockMod[Mine] at (13,35,17) block=0 seq=1
+[2026-01-16 04:02:45.270] [BlockMod] Applied mine at world (13,35,17)
+[2026-01-16 04:02:45.270] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:02:45.270] [Renderer]   Deleted GPU: VAO=36, VBO=38
+[2026-01-16 04:02:45.270] [Renderer]   Cleared mesh cache
+[2026-01-16 04:02:48.385] [04:02:48.385] [Server] Tick 1200 | Cache: 39/20000 | Requests: 43
+[2026-01-16 04:02:53.049] [Game] Mined Sand at (13, 35, 17)
+[2026-01-16 04:02:53.049] [BlockMod] Applied mine at world (13,35,17)
+[2026-01-16 04:02:53.049] [Prediction] Applied BlockMod[Mine] at (13,35,17) block=0 seq=2 locally
+[2026-01-16 04:02:53.049] [Client] Sent mine request for (13,35,17) seq=2
+[2026-01-16 04:02:53.049] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:02:53.049] [04:02:53.049] [Server] Received BlockMod[Mine] at (13,35,17) block=0 seq=2 from 127.0.0.1:36502
+[2026-01-16 04:02:53.049] [BlockMod] Applied mine at world (13,35,17)
+[2026-01-16 04:02:53.049] [04:02:53.049] [Server] Applied modification successfully
+[2026-01-16 04:02:53.049] [04:02:53.049] [Server] Broadcasted BlockMod[Mine] at (13,35,17) block=0 seq=2 to 1/1 clients
+[2026-01-16 04:02:53.049] [Client] Received broadcast: BlockMod[Mine] at (13,35,17) block=0 seq=2
+[2026-01-16 04:02:53.049] [BlockMod] Applied mine at world (13,35,17)
+[2026-01-16 04:02:53.049] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:02:53.049] [Renderer]   Deleted GPU: VAO=38, VBO=40
+[2026-01-16 04:02:53.049] [Renderer]   Cleared mesh cache
+[2026-01-16 04:02:53.391] [04:02:53.391] [Server] Tick 1500 | Cache: 39/20000 | Requests: 45
+[2026-01-16 04:02:55.575] [Game] Mined Sand at (14, 35, 18)
+[2026-01-16 04:02:55.575] [BlockMod] Applied mine at world (14,35,18)
+[2026-01-16 04:02:55.575] [Prediction] Applied BlockMod[Mine] at (14,35,18) block=0 seq=3 locally
+[2026-01-16 04:02:55.575] [Client] Sent mine request for (14,35,18) seq=3
+[2026-01-16 04:02:55.575] [Game] Sent mine request to server (with prediction)
+[2026-01-16 04:02:55.575] [04:02:55.575] [Server] Received BlockMod[Mine] at (14,35,18) block=0 seq=3 from 127.0.0.1:36502
+[2026-01-16 04:02:55.575] [BlockMod] Applied mine at world (14,35,18)
+[2026-01-16 04:02:55.575] [04:02:55.575] [Server] Applied modification successfully
+[2026-01-16 04:02:55.575] [04:02:55.575] [Server] Broadcasted BlockMod[Mine] at (14,35,18) block=0 seq=3 to 1/1 clients
+[2026-01-16 04:02:55.575] [Client] Received broadcast: BlockMod[Mine] at (14,35,18) block=0 seq=3
+[2026-01-16 04:02:55.575] [BlockMod] Applied mine at world (14,35,18)
+[2026-01-16 04:02:55.575] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:02:55.575] [Renderer]   Deleted GPU: VAO=40, VBO=42
+[2026-01-16 04:02:55.575] [Renderer]   Cleared mesh cache
+[2026-01-16 04:02:58.134] [Game] Selected hotbar slot 4
+[2026-01-16 04:02:58.385] [04:02:58.385] [Server] Tick 1800 | Cache: 39/20000 | Requests: 47
+[2026-01-16 04:02:58.610] [Game] Selected hotbar slot 5
+[2026-01-16 04:02:58.950] [Game] Selected hotbar slot 6
+[2026-01-16 04:02:59.589] [WorldGen] Placed solid Sand at (11, 35, 12) with 3x3x3 collision
+[2026-01-16 04:02:59.589] [BlockMod] Applied place Sand at world (11,35,12)
+[2026-01-16 04:02:59.589] [Prediction] Applied BlockMod[Place] at (11,35,12) block=4 seq=4 locally
+[2026-01-16 04:02:59.589] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:02:59.589] [Renderer]   Deleted GPU: VAO=42, VBO=44
+[2026-01-16 04:02:59.589] [Renderer]   Cleared mesh cache
+[2026-01-16 04:02:59.590] [Client] Sent place request for Sand at (11,35,12) seq=4
+[2026-01-16 04:02:59.590] [Game] Sent place request to server (with prediction)
+[2026-01-16 04:02:59.590] [04:02:59.590] [Server] Received BlockMod[Place] at (11,35,12) block=4 seq=4 from 127.0.0.1:36502
+[2026-01-16 04:02:59.590] [WorldGen] Placed solid Sand at (11, 35, 12) with 3x3x3 collision
+[2026-01-16 04:02:59.590] [BlockMod] Applied place Sand at world (11,35,12)
+[2026-01-16 04:02:59.590] [04:02:59.590] [Server] Applied modification successfully
+[2026-01-16 04:02:59.590] [04:02:59.590] [Server] Broadcasted BlockMod[Place] at (11,35,12) block=4 seq=4 to 1/1 clients
+[2026-01-16 04:02:59.590] [Client] Received broadcast: BlockMod[Place] at (11,35,12) block=4 seq=4
+[2026-01-16 04:02:59.590] [WorldGen] Placed solid Sand at (11, 35, 12) with 3x3x3 collision
+[2026-01-16 04:02:59.590] [BlockMod] Applied place Sand at world (11,35,12)
+[2026-01-16 04:02:59.591] [Prediction] Correcting place at Block(11, 35, 12)
+[2026-01-16 04:02:59.594] [Renderer] ClearChunkMesh: (0, 0, 0)
+[2026-01-16 04:03:03.383] [04:03:03.383] [Server] Tick 2100 | Cache: 39/20000 | Requests: 50
+[2026-01-16 04:03:08.390] [04:03:08.390] [Server] Tick 2400 | Cache: 39/20000 | Requests: 50
+[2026-01-16 04:03:13.383] [04:03:13.383] [Server] Tick 2700 | Cache: 39/20000 | Requests: 50
+[2026-01-16 04:03:18.380] [04:03:18.380] [Server] Tick 3000 | Cache: 39/20000 | Requests: 50
+[2026-01-16 04:03:22.243] [OpenGLInventoryUI] Disposed

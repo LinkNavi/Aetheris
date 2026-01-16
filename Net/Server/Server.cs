@@ -1,4 +1,4 @@
-// Net/Server/Server.cs - Refactored to use GameLogic
+// Net/Server/Server.cs - Refactored with length-prefixed packets
 using System;
 using System.Buffers;
 using System.Collections.Concurrent;
@@ -16,42 +16,34 @@ namespace Aetheris
 {
     public partial class Server
     {
-        // Core systems
         private TcpListener? listener;
         private CancellationTokenSource? cts;
         private readonly ChunkManager chunkManager = new();
-        private GameWorld? serverWorld;  // NEW: Server's authoritative world state
+        private GameWorld? serverWorld;
 
-        // Mesh cache
         private readonly ConcurrentDictionary<ChunkCoord, (float[] renderMesh, CollisionMesh collisionMesh)> meshCache = new();
         private readonly ConcurrentDictionary<ChunkCoord, SemaphoreSlim> generationLocks = new();
         private const int MaxCachedMeshes = 20000;
         private int cacheSize = 0;
 
-        // Network
         private readonly ConcurrentDictionary<string, NetworkStream> broadcastStreams = new();
         private UdpClient? udpServer;
         private readonly int UDP_PORT = ServerConfig.SERVER_PORT + 1;
 
-        // Player state
         private readonly ConcurrentDictionary<string, PlayerState> playerStates = new();
 
-        // Server tick
         private const double TickRate = 60.0;
         private const double TickDuration = 1000.0 / TickRate;
         private long tickCount = 0;
 
-        // Performance tracking
         private long totalRequests = 0;
         private double totalChunkGenTime = 0;
         private double totalMeshGenTime = 0;
         private double totalSendTime = 0;
         private readonly object perfLock = new();
 
-        // Logging
         private StreamWriter? logWriter;
         private readonly object logLock = new();
-        private readonly SemaphoreSlim sendSemaphore = new SemaphoreSlim(1, 1);
 
         private class PlayerState
         {
@@ -94,7 +86,6 @@ namespace Aetheris
                 float horizontalDistance = new Vector3(movement.X, 0, movement.Z).Length();
                 float verticalDistance = Math.Abs(movement.Y);
 
-                float currentSpeed = distance / deltaTime;
                 float horizontalSpeed = horizontalDistance / deltaTime;
                 float verticalSpeed = verticalDistance / deltaTime;
 
@@ -102,33 +93,21 @@ namespace Aetheris
                 if (recentSpeeds.Count > 5) recentSpeeds.Dequeue();
 
                 bool isValid = true;
-                string reason = "";
 
                 if (verticalSpeed > VERTICAL_SPEED_MAX)
-                {
                     isValid = false;
-                    reason = $"excessive vertical speed: {verticalSpeed:F2} m/s";
-                }
                 else if (horizontalSpeed > BHOP_MAX_SPEED)
-                {
                     isValid = false;
-                    reason = $"excessive horizontal speed: {horizontalSpeed:F2} m/s";
-                }
 
                 if (!isValid)
                 {
                     violationCount++;
-
                     if (violationCount >= MAX_VIOLATIONS)
                     {
-                        Console.WriteLine($"[AntiCheat] Player {PlayerId} validation failed: {reason}");
                         violationCount = Math.Max(0, violationCount - 2);
                         return false;
                     }
-                    else
-                    {
-                        isValid = true;
-                    }
+                    isValid = true;
                 }
                 else
                 {
@@ -143,31 +122,20 @@ namespace Aetheris
 
                 return isValid;
             }
-
-            public void ResetValidation()
-            {
-                recentPositions.Clear();
-                recentSpeeds.Clear();
-                violationCount = 0;
-                LastValidatedPosition = Position;
-            }
         }
 
         public async Task RunServerAsync()
         {
             SetupLogging();
 
-            Log("[[Server]] Initializing world generation...");
+            Log("[Server] Initializing world generation...");
             WorldGen.Initialize();
             WorldGen.SetModificationsEnabled(true);
 
-            // Initialize server's authoritative GameWorld
             serverWorld = new GameWorld(seed: ServerConfig.WORLD_SEED, name: "ServerWorld");
-
-            // Wire up event handlers
             serverWorld.OnTerrainModified += OnServerTerrainModified;
 
-            Log("[[Server]] GameWorld initialized with terrain modification events");
+            Log("[Server] GameWorld initialized");
 
             listener = new TcpListener(IPAddress.Any, ServerConfig.SERVER_PORT);
             listener.Start();
@@ -176,9 +144,9 @@ namespace Aetheris
 
             udpServer = new UdpClient(UDP_PORT);
             _ = Task.Run(() => HandleUdpLoop(cts.Token));
-            Log($"[[Server]] UDP listening on port {UDP_PORT}");
+            Log($"[Server] UDP listening on port {UDP_PORT}");
 
-            Log($"[[Server]] Listening on port {ServerConfig.SERVER_PORT} @ {TickRate} TPS");
+            Log($"[Server] Listening on port {ServerConfig.SERVER_PORT} @ {TickRate} TPS");
 
             _ = Task.Run(() => ServerTickLoop(cts.Token));
             _ = Task.Run(() => CacheCleanupLoop(cts.Token));
@@ -194,7 +162,7 @@ namespace Aetheris
             }
             catch (OperationCanceledException)
             {
-                Log("[[Server]] Shutting down...");
+                Log("[Server] Shutting down...");
             }
             finally
             {
@@ -203,43 +171,23 @@ namespace Aetheris
             }
         }
 
-        // ============================================================================
-        // Terrain Modification Event Handler
-        // ============================================================================
-
-        // In Server.cs, OnServerTerrainModified method
         private void OnServerTerrainModified(TerrainModifyResult result)
         {
             if (!result.Success) return;
 
-            Log($"[Server] Terrain modified: {result.BlocksRemoved} removed, {result.BlocksAdded} added, affecting {result.AffectedChunks.Length} chunks");
-
-            // CRITICAL: Invalidate affected chunks 
             foreach (var (cx, cy, cz) in result.AffectedChunks)
             {
                 var coord = new ChunkCoord(cx, cy, cz);
-
-                // Remove from mesh cache to force regeneration
                 if (meshCache.TryRemove(coord, out _))
-                {
                     Interlocked.Decrement(ref cacheSize);
-                }
-
-                // IMPORTANT: Also unload from chunk manager
                 chunkManager.UnloadChunk(coord);
-
-                // Clear generation lock
                 if (generationLocks.TryRemove(coord, out var lockObj))
-                {
                     lockObj.Dispose();
-                }
-
-                Log($"[Server] Invalidated chunk {coord} for regeneration");
             }
         }
 
         // ============================================================================
-        // TCP Client Handler
+        // TCP Client Handler with Length-Prefixed Packets
         // ============================================================================
 
         private async Task HandleClientAsync(TcpClient client, CancellationToken token)
@@ -251,63 +199,45 @@ namespace Aetheris
 
                 Log($"[Server] Client connected: {clientId}");
 
-                // First byte determines stream purpose
-                var firstByte = new byte[1];
-                int read = await stream.ReadAsync(firstByte, 0, 1, token);
-
-                if (read == 0)
-                {
-                    Log($"[Server] Client {clientId} disconnected immediately");
-                    return;
-                }
-
-                // If first byte is 0xFF, this is a broadcast listener
-                if (firstByte[0] == 0xFF)
-                {
-                    Log($"[Server] Client {clientId} registered as broadcast listener");
-                    broadcastStreams[clientId] = stream;
-
-                    try
-                    {
-                        while (!token.IsCancellationRequested && client.Connected)
-                        {
-                            await Task.Delay(1000, token);
-                        }
-                    }
-                    finally
-                    {
-                        broadcastStreams.TryRemove(clientId, out _);
-                        Log($"[Server] Broadcast listener {clientId} disconnected");
-                    }
-                    return;
-                }
-
-                // Normal request/response stream
-                PacketType packetType = (PacketType)firstByte[0];
-
                 try
                 {
                     while (!token.IsCancellationRequested && client.Connected)
                     {
+                        // Read length-prefixed packet
+                        var data = await PacketIO.ReadPacketAsync(stream, token);
+                        
+                        if (data.Length == 0) continue;
+
+                        PacketType packetType = (PacketType)data[0];
+
+                        // Check for broadcast listener registration
+                        if (packetType == PacketType.KeepAlive && data.Length >= 2 && data[1] == 0xFF)
+                        {
+                            Log($"[Server] Client {clientId} registered as broadcast listener");
+                            broadcastStreams[clientId] = stream;
+
+                            // Keep connection alive
+                            while (!token.IsCancellationRequested && client.Connected)
+                            {
+                                await Task.Delay(1000, token);
+                            }
+                            break;
+                        }
+
                         switch (packetType)
                         {
                             case PacketType.ChunkRequest:
-                                await HandleChunkRequestAsync(stream, clientId, token);
+                                await HandleChunkRequestAsync(stream, data, clientId, token);
                                 break;
 
                             case PacketType.BlockModification:
-                                await HandleBlockModificationAsync(stream, clientId, token);
+                                await HandleBlockModificationAsync(data, clientId, token);
                                 break;
 
                             default:
-                                Log($"[Server] Unknown TCP packet type: {packetType} from {clientId}");
+                                Log($"[Server] Unknown packet type: {packetType} from {clientId}");
                                 break;
                         }
-
-                        // Read next packet type
-                        int bytesRead = await stream.ReadAsync(firstByte, 0, 1, token);
-                        if (bytesRead == 0) break;
-                        packetType = (PacketType)firstByte[0];
                     }
                 }
                 catch (Exception ex) when (!(ex is OperationCanceledException))
@@ -316,24 +246,25 @@ namespace Aetheris
                 }
                 finally
                 {
+                    broadcastStreams.TryRemove(clientId, out _);
                     Log($"[Server] Client disconnected: {clientId}");
                 }
             }
         }
 
         // ============================================================================
-        // Block Modification Handler (NEW - Uses GameLogic)
+        // Block Modification Handler
         // ============================================================================
 
-        private async Task HandleBlockModificationAsync(NetworkStream stream, string clientId, CancellationToken token)
+        private async Task HandleBlockModificationAsync(byte[] data, string clientId, CancellationToken token)
         {
             try
             {
-                var buf = new byte[39];
-                await ReadFullAsync(stream, buf, 0, 39, token);
-
-                using var ms = new MemoryStream(buf);
+                using var ms = new MemoryStream(data);
                 using var reader = new BinaryReader(ms);
+
+                // Skip packet type
+                reader.ReadByte();
 
                 var message = new BlockModificationMessage();
                 message.Deserialize(reader);
@@ -346,8 +277,7 @@ namespace Aetheris
                 {
                     Log($"[Server] Applied modification successfully");
 
-                    // CRITICAL: Manually invalidate affected chunks
-                    var affectedChunks = Aetheris.GameLogic.NetworkHelpers.GetAffectedChunksRadius(
+                    var affectedChunks = NetworkHelpers.GetAffectedChunksRadius(
                         message.X, message.Y, message.Z, 2f,
                         ServerConfig.CHUNK_SIZE, ServerConfig.CHUNK_SIZE_Y);
 
@@ -362,10 +292,6 @@ namespace Aetheris
                     }
 
                     await BroadcastBlockModification(message);
-                }
-                else
-                {
-                    Log($"[Server] Failed to apply modification");
                 }
             }
             catch (Exception ex)
@@ -385,8 +311,7 @@ namespace Aetheris
             {
                 try
                 {
-                    await kvp.Value.WriteAsync(packet, 0, packet.Length);
-                    await kvp.Value.FlushAsync();
+                    await PacketIO.WritePacketAsync(kvp.Value, packet);
                     successCount++;
                 }
                 catch (Exception ex)
@@ -408,72 +333,100 @@ namespace Aetheris
         // Chunk Request Handler
         // ============================================================================
 
-        private async Task HandleChunkRequestAsync(NetworkStream stream, string clientId, CancellationToken token)
+        private async Task HandleChunkRequestAsync(NetworkStream stream, byte[] data, string clientId, CancellationToken token)
         {
-            var coord = await ReadChunkRequestAsync(stream, token);
-            if (!coord.HasValue)
-                return;
-
-            _ = Task.Run(async () =>
+            if (data.Length < 13)
             {
-                var requestSw = Stopwatch.StartNew();
-                double chunkTime = 0, meshTime = 0, sendTime = 0;
+                Log($"[Server] Invalid chunk request from {clientId}");
+                return;
+            }
 
-                try
-                {
-                    var result = await GetOrGenerateMeshAsync(coord.Value, token);
-                    chunkTime = result.chunkGenTime;
-                    meshTime = result.meshGenTime;
+            int cx = BitConverter.ToInt32(data, 1);
+            int cy = BitConverter.ToInt32(data, 5);
+            int cz = BitConverter.ToInt32(data, 9);
 
-                    var sendSw = Stopwatch.StartNew();
-                    await SendBothMeshesAsync(stream, result.renderMesh, result.collisionMesh, coord.Value, token);
-                    sendTime = sendSw.Elapsed.TotalMilliseconds;
+            var coord = new ChunkCoord(cx, cy, cz);
 
-                    lock (perfLock)
-                    {
-                        totalRequests++;
-                        totalChunkGenTime += chunkTime;
-                        totalMeshGenTime += meshTime;
-                        totalSendTime += sendTime;
-                    }
+            var requestSw = Stopwatch.StartNew();
 
-                    double totalTime = requestSw.Elapsed.TotalMilliseconds;
-                    Log($"[[Timing]] Chunk {coord.Value}: Chunk={chunkTime:F2}ms Mesh={meshTime:F2}ms Send={sendTime:F2}ms Total={totalTime:F2}ms");
-                }
-                catch (Exception ex)
-                {
-                    Log($"[[Server]] Error handling chunk {coord.Value}: {ex.Message}");
-                }
-            }, token);
-        }
-
-        private async Task<ChunkCoord?> ReadChunkRequestAsync(NetworkStream stream, CancellationToken token)
-        {
-            var buf = ArrayPool<byte>.Shared.Rent(12);
             try
             {
-                int totalRead = 0;
-                while (totalRead < 12)
+                var result = await GetOrGenerateMeshAsync(coord, token);
+
+                // Send render mesh
+                await SendRenderMeshAsync(stream, result.renderMesh, token);
+
+                // Send collision mesh
+                await SendCollisionMeshAsync(stream, result.collisionMesh, token);
+
+                lock (perfLock)
                 {
-                    int bytesRead = await stream.ReadAsync(buf, totalRead, 12 - totalRead, token);
-                    if (bytesRead == 0)
-                        return null;
-                    totalRead += bytesRead;
+                    totalRequests++;
+                    totalChunkGenTime += result.chunkGenTime;
+                    totalMeshGenTime += result.meshGenTime;
                 }
-
-                int cx = BitConverter.ToInt32(buf, 0);
-                int cy = BitConverter.ToInt32(buf, 4);
-                int cz = BitConverter.ToInt32(buf, 8);
-
-                return new ChunkCoord(cx, cy, cz);
             }
-            catch
+            catch (Exception ex)
             {
-                return null;
+                Log($"[Server] Error handling chunk {coord}: {ex.Message}");
+            }
+        }
+
+        private async Task SendRenderMeshAsync(NetworkStream stream, float[] renderMesh, CancellationToken token)
+        {
+            int vertexCount = renderMesh.Length / 7;
+            int payloadSize = sizeof(int) + renderMesh.Length * sizeof(float);
+
+            var payload = ArrayPool<byte>.Shared.Rent(payloadSize);
+            try
+            {
+                Array.Copy(BitConverter.GetBytes(vertexCount), 0, payload, 0, sizeof(int));
+                Buffer.BlockCopy(renderMesh, 0, payload, sizeof(int), renderMesh.Length * sizeof(float));
+
+                await PacketIO.WritePacketAsync(stream, payload.AsSpan(0, payloadSize).ToArray());
             }
             finally
             {
-                ArrayPool<byte>.Shared.Return(buf);
+                ArrayPool<byte>.Shared.Return(payload);
+            }
+        }
+
+        private async Task SendCollisionMeshAsync(NetworkStream stream, CollisionMesh collisionMesh, CancellationToken token)
+        {
+            int vertexCount = collisionMesh.Vertices.Count;
+            int indexCount = collisionMesh.Indices.Count;
+            int payloadSize = sizeof(int) * 2 + vertexCount * sizeof(float) * 3 + indexCount * sizeof(int);
+
+            var payload = ArrayPool<byte>.Shared.Rent(payloadSize);
+            try
+            {
+                int offset = 0;
+                Array.Copy(BitConverter.GetBytes(vertexCount), 0, payload, offset, sizeof(int));
+                offset += sizeof(int);
+                Array.Copy(BitConverter.GetBytes(indexCount), 0, payload, offset, sizeof(int));
+                offset += sizeof(int);
+
+                foreach (var v in collisionMesh.Vertices)
+                {
+                    Array.Copy(BitConverter.GetBytes(v.X), 0, payload, offset, sizeof(float));
+                    offset += sizeof(float);
+                    Array.Copy(BitConverter.GetBytes(v.Y), 0, payload, offset, sizeof(float));
+                    offset += sizeof(float);
+                    Array.Copy(BitConverter.GetBytes(v.Z), 0, payload, offset, sizeof(float));
+                    offset += sizeof(float);
+                }
+
+                foreach (var idx in collisionMesh.Indices)
+                {
+                    Array.Copy(BitConverter.GetBytes(idx), 0, payload, offset, sizeof(int));
+                    offset += sizeof(int);
+                }
+
+                await PacketIO.WritePacketAsync(stream, payload.AsSpan(0, payloadSize).ToArray());
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(payload);
             }
         }
 
@@ -482,7 +435,6 @@ namespace Aetheris
         {
             if (meshCache.TryGetValue(coord, out var cached))
             {
-                Log($"[[Cache]] Hit for {coord}");
                 return (cached.renderMesh, cached.collisionMesh, 0, 0);
             }
 
@@ -493,7 +445,6 @@ namespace Aetheris
             {
                 if (meshCache.TryGetValue(coord, out cached))
                 {
-                    Log($"[[Cache]] Hit after lock for {coord}");
                     return (cached.renderMesh, cached.collisionMesh, 0, 0);
                 }
 
@@ -509,83 +460,11 @@ namespace Aetheris
                 meshCache[coord] = (renderMesh, collisionMesh);
                 Interlocked.Increment(ref cacheSize);
 
-                Log($"[[Generation]] {coord}: Render verts={renderMesh.Length / 7}, Collision verts={collisionMesh.Vertices.Count}");
-
                 return (renderMesh, collisionMesh, chunkGenTime, meshGenTime);
             }
             finally
             {
                 lockObj.Release();
-            }
-        }
-
-        private async Task SendBothMeshesAsync(
-            NetworkStream stream, float[] renderMesh, CollisionMesh collisionMesh,
-            ChunkCoord coord, CancellationToken token)
-        {
-            int renderVertexCount = renderMesh.Length / 7;
-            int renderPayloadSize = sizeof(int) + renderMesh.Length * sizeof(float);
-
-            int collisionVertexCount = collisionMesh.Vertices.Count;
-            int collisionIndexCount = collisionMesh.Indices.Count;
-            int collisionPayloadSize = sizeof(int) * 2 +
-                                       collisionVertexCount * sizeof(float) * 3 +
-                                       collisionIndexCount * sizeof(int);
-
-            var renderPayload = ArrayPool<byte>.Shared.Rent(renderPayloadSize);
-            var collisionPayload = ArrayPool<byte>.Shared.Rent(collisionPayloadSize);
-
-            try
-            {
-                // Pack render mesh
-                Array.Copy(BitConverter.GetBytes(renderVertexCount), 0, renderPayload, 0, sizeof(int));
-                Buffer.BlockCopy(renderMesh, 0, renderPayload, sizeof(int), renderMesh.Length * sizeof(float));
-
-                // Pack collision mesh
-                int offset = 0;
-                Array.Copy(BitConverter.GetBytes(collisionVertexCount), 0, collisionPayload, offset, sizeof(int));
-                offset += sizeof(int);
-                Array.Copy(BitConverter.GetBytes(collisionIndexCount), 0, collisionPayload, offset, sizeof(int));
-                offset += sizeof(int);
-
-                foreach (var v in collisionMesh.Vertices)
-                {
-                    Array.Copy(BitConverter.GetBytes(v.X), 0, collisionPayload, offset, sizeof(float));
-                    offset += sizeof(float);
-                    Array.Copy(BitConverter.GetBytes(v.Y), 0, collisionPayload, offset, sizeof(float));
-                    offset += sizeof(float);
-                    Array.Copy(BitConverter.GetBytes(v.Z), 0, collisionPayload, offset, sizeof(float));
-                    offset += sizeof(float);
-                }
-
-                foreach (var idx in collisionMesh.Indices)
-                {
-                    Array.Copy(BitConverter.GetBytes(idx), 0, collisionPayload, offset, sizeof(int));
-                    offset += sizeof(int);
-                }
-
-                await sendSemaphore.WaitAsync(token);
-                try
-                {
-                    var renderLenBytes = BitConverter.GetBytes(renderPayloadSize);
-                    await stream.WriteAsync(renderLenBytes, 0, renderLenBytes.Length, token);
-                    await stream.WriteAsync(renderPayload, 0, renderPayloadSize, token);
-
-                    var collisionLenBytes = BitConverter.GetBytes(collisionPayloadSize);
-                    await stream.WriteAsync(collisionLenBytes, 0, collisionLenBytes.Length, token);
-                    await stream.WriteAsync(collisionPayload, 0, collisionPayloadSize, token);
-
-                    await stream.FlushAsync(token);
-                }
-                finally
-                {
-                    sendSemaphore.Release();
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(renderPayload);
-                ArrayPool<byte>.Shared.Return(collisionPayload);
             }
         }
 
@@ -605,13 +484,10 @@ namespace Aetheris
                     HandleUdpPacket(result.Buffer, result.RemoteEndPoint);
                 }
             }
-            catch (OperationCanceledException)
-            {
-                Log("[[UDP]] Loop cancelled");
-            }
+            catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                Log($"[[UDP]] Error: {ex.Message}");
+                Log($"[UDP] Error: {ex.Message}");
             }
         }
 
@@ -621,13 +497,11 @@ namespace Aetheris
 
             PacketType packetType = (PacketType)data[0];
 
-            // CRITICAL FIX: Only accept UDP packet types over UDP
             if (packetType != PacketType.PlayerPosition &&
                 packetType != PacketType.KeepAlive &&
                 packetType != PacketType.EntityUpdate &&
                 packetType != PacketType.PositionAck)
             {
-                // Silently ignore non-UDP packets (likely TCP bleed)
                 return;
             }
 
@@ -639,16 +513,13 @@ namespace Aetheris
                         HandlePlayerPositionPacket(data, remoteEndPoint);
                         break;
                     case PacketType.KeepAlive:
-                        HandleKeepAlivePacket(data, remoteEndPoint);
-                        break;
-                    default:
-                        // Should never reach here due to check above
+                        _ = udpServer?.SendAsync(data, data.Length, remoteEndPoint);
                         break;
                 }
             }
             catch (Exception ex)
             {
-                Log($"[[UDP]] Error handling packet: {ex.Message}");
+                Log($"[UDP] Error handling packet: {ex.Message}");
             }
         }
 
@@ -667,7 +538,6 @@ namespace Aetheris
             float velZ = BitConverter.ToSingle(data, 25);
             float yaw = BitConverter.ToSingle(data, 29);
             float pitch = BitConverter.ToSingle(data, 33);
-            byte inputFlags = data[37];
 
             var state = playerStates.GetOrAdd(playerKey, _ => new PlayerState
             {
@@ -690,10 +560,6 @@ namespace Aetheris
                 state.Velocity = new Vector3(velX, velY, velZ);
                 state.Rotation = new Vector2(yaw, pitch);
                 state.LastProcessedSequence = sequence;
-            }
-            else
-            {
-                newPosition = state.Position;
             }
 
             state.LastUpdate = now;
@@ -724,10 +590,7 @@ namespace Aetheris
             {
                 await udpServer.SendAsync(packet, packet.Length, state.EndPoint);
             }
-            catch (Exception ex)
-            {
-                Log($"[UDP] Error sending ack to {state.PlayerId}: {ex.Message}");
-            }
+            catch { }
         }
 
         private async Task BroadcastPlayerState(string excludePlayer, PlayerState state)
@@ -756,27 +619,9 @@ namespace Aetheris
                     {
                         await udpServer!.SendAsync(packet, packet.Length, player.Value.EndPoint);
                     }
-                    catch (Exception ex)
-                    {
-                        Log($"[UDP] Error broadcasting to {player.Key}: {ex.Message}");
-                    }
+                    catch { }
                 }
             }
-        }
-
-        private void HandleKeepAlivePacket(byte[] data, IPEndPoint remoteEndPoint)
-        {
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await udpServer!.SendAsync(data, data.Length, remoteEndPoint);
-                }
-                catch (Exception ex)
-                {
-                    Log($"[[UDP]] Error sending keep-alive: {ex.Message}");
-                }
-            });
         }
 
         // ============================================================================
@@ -806,20 +651,9 @@ namespace Aetheris
                     await Task.Delay((int)sleepTime, token);
                 }
 
-                if (tickCount % (int)(TickRate * 5) == 0)
+                if (tickCount % (int)(TickRate * 5) == 0 && tickCount > 0)
                 {
-                    lock (perfLock)
-                    {
-                        if (totalRequests > 0)
-                        {
-                            double avgChunk = totalChunkGenTime / totalRequests;
-                            double avgMesh = totalMeshGenTime / totalRequests;
-                            double avgSend = totalSendTime / totalRequests;
-                            double avgTotal = avgChunk + avgMesh + avgSend;
-
-                            Log($"[[Server]] Tick {tickCount} | Cache: {cacheSize}/{MaxCachedMeshes}");
-                        }
-                    }
+                    Log($"[Server] Tick {tickCount} | Cache: {cacheSize}/{MaxCachedMeshes} | Requests: {totalRequests}");
                 }
             }
         }
@@ -834,8 +668,6 @@ namespace Aetheris
 
                     if (cacheSize > MaxCachedMeshes)
                     {
-                        var cleanupSw = Stopwatch.StartNew();
-
                         int toRemove = cacheSize / 4;
                         int removed = 0;
 
@@ -850,37 +682,20 @@ namespace Aetheris
                             }
                         }
 
-                        Log($"[[Cache Cleanup]] Removed {removed} meshes in {cleanupSw.Elapsed.TotalMilliseconds:F2}ms, {cacheSize} remaining");
+                        Log($"[Cache] Removed {removed} meshes, {cacheSize} remaining");
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
+                catch (OperationCanceledException) { break; }
                 catch (Exception ex)
                 {
-                    Log($"[[Server]] Cache cleanup error: {ex.Message}");
+                    Log($"[Server] Cache cleanup error: {ex.Message}");
                 }
             }
         }
 
         // ============================================================================
-        // Utility Methods
+        // Utility
         // ============================================================================
-
-        private static async Task ReadFullAsync(NetworkStream stream, byte[] buffer, int offset, int count, CancellationToken token)
-        {
-            int totalRead = 0;
-            while (totalRead < count)
-            {
-                int bytesRead = await stream.ReadAsync(buffer, offset + totalRead, count - totalRead, token);
-                if (bytesRead == 0)
-                {
-                    throw new IOException("Connection closed unexpectedly");
-                }
-                totalRead += bytesRead;
-            }
-        }
 
         private void SetupLogging()
         {
@@ -891,7 +706,7 @@ namespace Aetheris
             try
             {
                 logWriter = new StreamWriter(logPath, append: false) { AutoFlush = true };
-                Log($"[[Server]] Log file created: {logPath}");
+                Log($"[Server] Log file created: {logPath}");
             }
             catch (Exception ex)
             {
@@ -910,12 +725,8 @@ namespace Aetheris
                 {
                     Console.WriteLine(logMessage);
                     logWriter?.WriteLine(logMessage);
-                    logWriter?.Flush();
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[ERROR] Failed to write to log file: {ex.Message}");
-                }
+                catch { }
             }
         }
 
@@ -923,7 +734,6 @@ namespace Aetheris
         {
             cts?.Cancel();
             listener?.Stop();
-            sendSemaphore?.Dispose();
 
             foreach (var lockObj in generationLocks.Values)
             {
