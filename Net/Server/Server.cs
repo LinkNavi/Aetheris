@@ -26,6 +26,8 @@ namespace Aetheris
         private const int MaxCachedMeshes = 20000;
         private int cacheSize = 0;
 
+        private TreeSpawner? treeSpawner;
+        private readonly HashSet<(int, int)> generatedChunks = new();
         private readonly ConcurrentDictionary<string, NetworkStream> broadcastStreams = new();
         private UdpClient? udpServer;
         private readonly int UDP_PORT = ServerConfig.SERVER_PORT + 1;
@@ -124,54 +126,71 @@ namespace Aetheris
             }
         }
 
-        public async Task RunServerAsync()
+      public async Task RunServerAsync()
+    {
+        SetupLogging();
+
+        Log("[Server] Initializing world generation...");
+        WorldGen.Initialize();
+        WorldGen.SetModificationsEnabled(true);
+        
+        // **CRITICAL: Initialize prefab registry BEFORE creating GameWorld**
+        PrefabRegistry.Initialize();
+        Log($"[Server] PrefabRegistry initialized with {PrefabRegistry.GetAll().Count()} prefabs");
+
+        serverWorld = new GameWorld(seed: ServerConfig.WORLD_SEED, name: "ServerWorld");
+        serverWorld.OnTerrainModified += OnServerTerrainModified;
+
+        // Initialize tree spawner
+        treeSpawner = new TreeSpawner(serverWorld, ServerConfig.WORLD_SEED);
+        Log("[Server] TreeSpawner initialized");
+        
+        // Test tree spawner
+        var testDef = PrefabRegistry.Get(2000);
+        if (testDef != null)
         {
-            SetupLogging();
-
-            Log("[Server] Initializing world generation...");
-            WorldGen.Initialize();
-            WorldGen.SetModificationsEnabled(true);
-
-            serverWorld = new GameWorld(seed: ServerConfig.WORLD_SEED, name: "ServerWorld");
-            serverWorld.OnTerrainModified += OnServerTerrainModified;
-
-            Log("[Server] GameWorld initialized with grid-based block system");
-
-            listener = new TcpListener(IPAddress.Any, ServerConfig.SERVER_PORT);
-            listener.Start();
-            listener.Server.NoDelay = true;
-            cts = new CancellationTokenSource();
-
-            udpServer = new UdpClient(UDP_PORT);
-            _ = Task.Run(() => HandleUdpLoop(cts.Token));
-            Log($"[Server] UDP listening on port {UDP_PORT}");
-
-            Log($"[Server] Listening on port {ServerConfig.SERVER_PORT} @ {TickRate} TPS");
-
-            _ = Task.Run(() => ServerTickLoop(cts.Token));
-            _ = Task.Run(() => CacheCleanupLoop(cts.Token));
-
-            try
-            {
-                while (!cts.Token.IsCancellationRequested)
-                {
-                    var client = await listener.AcceptTcpClientAsync();
-                    client.NoDelay = true;
-                    _ = Task.Run(() => HandleClientAsync(client, cts.Token), cts.Token);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                Log("[Server] Shutting down...");
-            }
-            finally
-            {
-                logWriter?.Close();
-                logWriter?.Dispose();
-            }
+            Log($"[Server] Tree prefab test: {testDef.Name} loaded successfully");
+        }
+        else
+        {
+            Log("[Server] ERROR: Tree prefab 2000 not found!");
         }
 
-        private void OnServerTerrainModified(TerrainModifyResult result)
+        Log("[Server] GameWorld initialized with grid-based block system");
+
+        listener = new TcpListener(IPAddress.Any, ServerConfig.SERVER_PORT);
+        listener.Start();
+        listener.Server.NoDelay = true;
+        cts = new CancellationTokenSource();
+
+        udpServer = new UdpClient(UDP_PORT);
+        _ = Task.Run(() => HandleUdpLoop(cts.Token));
+        Log($"[Server] UDP listening on port {UDP_PORT}");
+
+        Log($"[Server] Listening on port {ServerConfig.SERVER_PORT} @ {TickRate} TPS");
+
+        _ = Task.Run(() => ServerTickLoop(cts.Token));
+        _ = Task.Run(() => CacheCleanupLoop(cts.Token));
+
+        try
+        {
+            while (!cts.Token.IsCancellationRequested)
+            {
+                var client = await listener.AcceptTcpClientAsync();
+                client.NoDelay = true;
+                _ = Task.Run(() => HandleClientAsync(client, cts.Token), cts.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Log("[Server] Shutting down...");
+        }
+        finally
+        {
+            logWriter?.Close();
+            logWriter?.Dispose();
+        }
+    }        private void OnServerTerrainModified(TerrainModifyResult result)
         {
             if (!result.Success) return;
 
@@ -205,7 +224,7 @@ namespace Aetheris
                     {
                         // Read length-prefixed packet
                         var data = await PacketIO.ReadPacketAsync(stream, token);
-                        
+
                         if (data.Length == 0) continue;
 
                         PacketType packetType = (PacketType)data[0];
@@ -270,8 +289,55 @@ namespace Aetheris
                 message.Deserialize(reader);
 
                 Log($"[Server] Received {message} from {clientId}");
+                // **NEW: Check if this position has a tree prefab**
+                var blockPos = new BlockPos(message.X, message.Y, message.Z);
+                var prefab = serverWorld?.GetPrefabAt(blockPos);
 
-                // Apply using grid-based system
+                if (prefab != null && message.Operation == BlockModificationMessage.ModificationType.Mine)
+                {
+                    // Mining a tree - remove the entire prefab
+                    Log($"[Server] Removing tree prefab at {blockPos}");
+                    bool removed = serverWorld.RemovePrefab(blockPos);
+
+                    if (removed)
+                    {
+                        // Get affected chunks for the entire tree area
+                        var prefabDef = PrefabRegistry.Get(prefab.PrefabId);
+                        if (prefabDef != null)
+                        {
+                            var affectedChunks = new HashSet<(int, int, int)>();
+
+                            // Invalidate chunks covered by the tree
+                            for (int dx = 0; dx < prefabDef.BlockSize.x; dx++)
+                            {
+                                for (int dy = 0; dy < prefabDef.BlockSize.y; dy++)
+                                {
+                                    for (int dz = 0; dz < prefabDef.BlockSize.z; dz++)
+                                    {
+                                        var pos = blockPos.Offset(dx, dy, dz);
+                                        var chunk = pos.GetChunk();
+                                        affectedChunks.Add(chunk);
+                                    }
+                                }
+                            }
+
+                            foreach (var (cx, cy, cz) in affectedChunks)
+                            {
+                                var coord = new ChunkCoord(cx, cy, cz);
+                                if (meshCache.TryRemove(coord, out _))
+                                    Interlocked.Decrement(ref cacheSize);
+                                chunkManager.UnloadChunk(coord);
+                                generationLocks.TryRemove(coord, out var lockObj);
+                                lockObj?.Dispose();
+
+                                Log($"[Server] Invalidated chunk ({cx},{cy},{cz}) for tree removal");
+                            }
+                        }
+
+                        await BroadcastBlockModification(message);
+                        return;
+                    }
+                }       // Apply using grid-based system
                 bool success = message.ApplyToWorld(serverWorld);
 
                 if (success)
@@ -280,9 +346,9 @@ namespace Aetheris
 
                     // Get affected chunks using grid system
                     var affectedChunks = message.GetAffectedChunks(
-                        ServerConfig.CHUNK_SIZE, 
-                        ServerConfig.CHUNK_SIZE_Y, 
-                        ServerConfig.CHUNK_SIZE);
+                            ServerConfig.CHUNK_SIZE,
+                            ServerConfig.CHUNK_SIZE_Y,
+                            ServerConfig.CHUNK_SIZE);
 
                     // Invalidate affected chunks
                     foreach (var (cx, cy, cz) in affectedChunks)
@@ -293,7 +359,7 @@ namespace Aetheris
                         chunkManager.UnloadChunk(coord);
                         generationLocks.TryRemove(coord, out var lockObj);
                         lockObj?.Dispose();
-                        
+
                         Log($"[Server] Invalidated chunk ({cx},{cy},{cz})");
                     }
 
@@ -458,9 +524,32 @@ namespace Aetheris
                 var chunk = await Task.Run(() => chunkManager.GetOrGenerateChunk(coord), token);
                 double chunkGenTime = chunkSw.Elapsed.TotalMilliseconds;
 
+                // **NEW: Spawn trees in this chunk if not already generated**
+                // Only spawn for surface chunks (cy == 0 or cy == 1)
+                if (coord.Y >= 0 && coord.Y <= 1)
+                {
+                    var chunkKey = (coord.X, coord.Z);
+                    if (!generatedChunks.Contains(chunkKey))
+                    {
+                        generatedChunks.Add(chunkKey);
+
+                        if (treeSpawner != null)
+                        {
+                            Log($"[Server] Spawning trees for chunk ({coord.X}, {coord.Z})");
+                            treeSpawner.SpawnTreesInChunk(coord.X, coord.Z);
+                            int treeCount = treeSpawner.GetSpawnedTreeCount();
+                            Log($"[Server] Total trees spawned: {treeCount}");
+                        }
+                        else
+                        {
+                            Log("[Server] WARNING: treeSpawner is null!");
+                        }
+                    }
+                }
+
                 var meshSw = Stopwatch.StartNew();
                 var (renderMesh, collisionMesh) = await Task.Run(() =>
-                    MarchingCubes.GenerateMeshes(chunk, coord, chunkManager, isoLevel: 0.5f), token);
+                        MarchingCubes.GenerateMeshes(chunk, coord, chunkManager, isoLevel: 0.5f), token);
                 double meshGenTime = meshSw.Elapsed.TotalMilliseconds;
 
                 meshCache[coord] = (renderMesh, collisionMesh);
@@ -473,6 +562,7 @@ namespace Aetheris
                 lockObj.Release();
             }
         }
+
 
         // ============================================================================
         // UDP Handlers
@@ -504,9 +594,9 @@ namespace Aetheris
             PacketType packetType = (PacketType)data[0];
 
             if (packetType != PacketType.PlayerPosition &&
-                packetType != PacketType.KeepAlive &&
-                packetType != PacketType.EntityUpdate &&
-                packetType != PacketType.PositionAck)
+                    packetType != PacketType.KeepAlive &&
+                    packetType != PacketType.EntityUpdate &&
+                    packetType != PacketType.PositionAck)
             {
                 return;
             }

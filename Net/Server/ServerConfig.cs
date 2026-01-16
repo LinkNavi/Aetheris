@@ -6,5 +6,5 @@ class ServerConfig
     public static int RENDER_DISTANCE = 2;
     public static int SIMULATION_DISTANCE= 8;
     public static int STEP = 1;
-    public static int WORLD_SEED = 69420;
+    public static int WORLD_SEED = 1273;
 }

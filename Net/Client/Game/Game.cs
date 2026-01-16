@@ -34,7 +34,9 @@ namespace Aetheris
         private ChatSystem? chatSystem;
 
         private FontRenderer? tooltipfontRenderer;
+
         private FontRenderer? fontRenderer;
+        private FontRenderer? chatfontRenderer;
         private TooltipSystem? tooltipSystem;
         private BlockPlacementPreview? blockPreview;
 
@@ -133,11 +135,13 @@ namespace Aetheris
             fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
             tooltipfontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 18);
             tooltipfontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
+   chatfontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 18);
+            chatfontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
             // Initialize UI systems
             tooltipSystem = new TooltipSystem(tooltipfontRenderer);
 
 
-            chatSystem = new ChatSystem(fontRenderer);
+            chatSystem = new ChatSystem(chatfontRenderer);
             blockPreview = new BlockPlacementPreview();
 
             hud = new EnhancedGameHUD(fontRenderer);
@@ -502,22 +506,89 @@ namespace Aetheris
             }
         }
 
-        private void HandleDebugCommands()
+      private void HandleDebugCommands()
+{
+    if (KeyboardState.IsKeyPressed(Keys.H))
+    {
+        gameSystems.Stats.Heal(20f);
+        chatSystem?.AddMessage("Healed +20 HP", ChatMessageType.Success);
+    }
+
+    if (KeyboardState.IsKeyPressed(Keys.J))
+    {
+        gameSystems.Stats.TakeDamage(10f);
+        chatSystem?.AddMessage("Took 10 damage", ChatMessageType.Error);
+    }
+    
+    // **NEW: Tree spawning debug command**
+    if (KeyboardState.IsKeyPressed(Keys.T))
+    {
+        // Try to spawn a tree at player's position
+        var pos = player.Position;
+        int x = (int)Math.Floor(pos.X);
+        int y = (int)Math.Floor(pos.Y);
+        int z = (int)Math.Floor(pos.Z);
+        
+        // Test if prefab registry is initialized
+        PrefabRegistry.Initialize();
+        var treeDef = PrefabRegistry.Get(2000); // Oak tree
+        
+        if (treeDef == null)
         {
-            if (KeyboardState.IsKeyPressed(Keys.H))
+            chatSystem?.AddMessage("ERROR: Tree prefab not registered!", ChatMessageType.Error);
+            Console.WriteLine("[DEBUG] PrefabRegistry test failed - tree 2000 not found");
+        }
+        else
+        {
+            chatSystem?.AddMessage($"Tree prefab found: {treeDef.Name}", ChatMessageType.Success);
+            Console.WriteLine($"[DEBUG] Tree prefab test: {treeDef.Name}, size={treeDef.BlockSize}");
+            
+            // Try to spawn it
+            if (clientWorld != null)
             {
-                gameSystems.Stats.Heal(20f);
-
-                chatSystem?.AddMessage("Healed +20 HP", ChatMessageType.Success);
-            }
-
-            if (KeyboardState.IsKeyPressed(Keys.J))
-            {
-                gameSystems.Stats.TakeDamage(10f);
-
-                chatSystem?.AddMessage("Took 10 damage", ChatMessageType.Error);
+                var treePos = new Aetheris.GameLogic.BlockPos(x, y + 2, z);
+                var result = clientWorld.PlacePrefab(2000, treePos, 0, "debug");
+                
+                if (result.Success)
+                {
+                    chatSystem?.AddMessage($"Spawned tree at {treePos}!", ChatMessageType.Success);
+                    Console.WriteLine($"[DEBUG] Tree spawned successfully at {treePos}");
+                }
+                else
+                {
+                    chatSystem?.AddMessage($"Failed: {result.Error}", ChatMessageType.Error);
+                    Console.WriteLine($"[DEBUG] Tree spawn failed: {result.Error}");
+                }
             }
         }
+    }
+    
+    // **NEW: List nearby prefabs**
+    if (KeyboardState.IsKeyPressed(Keys.P))
+    {
+        if (clientWorld != null)
+        {
+            var playerBlockPos = Aetheris.GameLogic.BlockPos.FromWorld(
+                player.Position.X, 
+                player.Position.Y, 
+                player.Position.Z);
+            
+            var nearbyPrefabs = clientWorld.GetPrefabsInRange(playerBlockPos, 50);
+            int count = 0;
+            
+            foreach (var prefab in nearbyPrefabs)
+            {
+                count++;
+                var def = PrefabRegistry.Get(prefab.PrefabId);
+                string name = def?.Name ?? $"Unknown ({prefab.PrefabId})";
+                Console.WriteLine($"[DEBUG] Prefab: {name} at {prefab.Position}");
+            }
+            
+            chatSystem?.AddMessage($"Found {count} prefabs nearby", ChatMessageType.System);
+            Console.WriteLine($"[DEBUG] Total nearby prefabs: {count}");
+        }
+    }
+}
 
         private void ShowStats()
         {

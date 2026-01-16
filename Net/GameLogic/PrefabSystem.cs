@@ -107,117 +107,25 @@ namespace Aetheris.GameLogic
 
         private static void RegisterBuiltInPrefabs()
         {
-            // Basic wooden frame (1x1x1)
-            Register(new PrefabDefinition
-            {
-                PrefabId = 1000,
-                Name = "Wooden Frame",
-                Description = "Basic building block",
-                ModelPath = "models/blocks/wooden_frame.glb",
-                BlockSize = (1, 1, 1),
-                CollisionSize = (2f, 2f, 2f),
-                PlacedBlockType = BlockType.Wood,
-                PlacementItemId = 1000,
-                Category = "building",
-                Tags = new[] { "wood", "frame", "basic" }
-            });
+         
 
-            // Stone block (1x1x1)
-            Register(new PrefabDefinition
-            {
-                PrefabId = 1001,
-                Name = "Stone Block",
-                Description = "Solid stone building block",
-                ModelPath = "models/blocks/stone_block.glb",
-                BlockSize = (1, 1, 1),
-                CollisionSize = (2f, 2f, 2f),
-                PlacedBlockType = BlockType.Stone,
-                PlacementItemId = 1001,
-                Category = "building",
-                Tags = new[] { "stone", "solid", "basic" }
-            });
-
-            // Ramp (1x1x1)
-            Register(new PrefabDefinition
-            {
-                PrefabId = 1010,
-                Name = "Wooden Ramp",
-                Description = "Sloped wooden surface",
-                ModelPath = "models/blocks/wooden_ramp.glb",
-                BlockSize = (1, 1, 1),
-                CollisionSize = (2f, 2f, 2f),
-                PlacedBlockType = BlockType.Wood,
-                PlacementItemId = 1010,
-                CanRotate = true,
-                RotationStates = 4,
-                Category = "building",
-                Tags = new[] { "wood", "ramp", "slope" }
-            });
-
-            // Pillar (1x2x1)
-            Register(new PrefabDefinition
-            {
-                PrefabId = 1020,
-                Name = "Stone Pillar",
-                Description = "Tall stone pillar",
-                ModelPath = "models/blocks/stone_pillar.glb",
-                BlockSize = (1, 2, 1),
-                CollisionSize = (2f, 4f, 2f),
-                PlacedBlockType = BlockType.Stone,
-                PlacementItemId = 1020,
-                Category = "decoration",
-                Tags = new[] { "stone", "pillar", "tall" }
-            });
-
-            // Door frame (1x2x1)
-            Register(new PrefabDefinition
-            {
-                PrefabId = 1030,
-                Name = "Wooden Door Frame",
-                Description = "Frame for a door",
-                ModelPath = "models/blocks/door_frame.glb",
-                BlockSize = (1, 2, 1),
-                CollisionSize = (2f, 4f, 0.4f),
-                PlacedBlockType = BlockType.Wood,
-                PlacementItemId = 1030,
-                CanRotate = true,
-                RotationStates = 4,
-                Category = "building",
-                Tags = new[] { "wood", "door", "frame" }
-            });
-
-            // Workbench (2x1x1)
-            Register(new PrefabDefinition
-            {
-                PrefabId = 1100,
-                Name = "Workbench",
-                Description = "Crafting station",
-                ModelPath = "models/furniture/workbench.glb",
-                BlockSize = (2, 1, 1),
-                CollisionSize = (4f, 2f, 2f),
-                PlacedBlockType = BlockType.Wood,
-                PlacementItemId = 1100,
-                CanRotate = true,
-                RotationStates = 4,
-                Category = "crafting",
-                Tags = new[] { "crafting", "workbench", "furniture" }
-            });
-
-            // Torch (decorative, no block collision)
-            Register(new PrefabDefinition
-            {
-                PrefabId = 1200,
-                Name = "Torch",
-                Description = "Light source",
-                ModelPath = "models/decoration/torch.glb",
-                BlockSize = (1, 1, 1),
-                CollisionSize = (0.3f, 0.5f, 0.3f),
-                ModelScale = 0.5f,
-                PlacedBlockType = BlockType.Wood,
-                PlacementItemId = 1200,
-                Category = "lighting",
-                Tags = new[] { "light", "torch", "decoration" }
-            });
+   Register(new PrefabDefinition
+    {
+        PrefabId = 2000,
+        Name = "Oak Tree",
+        Description = "Natural oak tree",
+        ModelPath = "assets/models/oaktree.glb",
+        BlockSize = (2, 4, 2),  // Takes up 2x4x2 grid cells
+        CollisionSize = (4f, 8f, 4f),  // World units for collision
+        PlacedBlockType = BlockType.Wood,
+        PlacementItemId = 0,  // Can't be placed by players - world gen only
+        CanRotate = true,
+        RotationStates = 4,
+        Category = "nature",
+        Tags = new[] { "tree", "wood", "nature", "mineable" },
+        ModelScale = 1.5f,
+        ModelOffset = (0f, 0f, 0f)
+    });
         }
 
         private static void LoadPrefabsFromDirectory(string path)
@@ -422,7 +330,7 @@ namespace Aetheris.GameLogic
                 }
             }
 
-            return hasSupport;
+            return true;
         }
 
         /// <summary>
