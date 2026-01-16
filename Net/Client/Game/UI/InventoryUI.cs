@@ -21,6 +21,7 @@ namespace Aetheris.UI
         private int hoveredSlot = -1;
         private int draggedSlot = -1;
         private ItemStack draggedItem = ItemStack.Empty;
+        private Vector2i lastWindowSize = new Vector2i(1920, 1080);
 
         // Animation states
         private float openProgress = 0f;
@@ -38,13 +39,13 @@ namespace Aetheris.UI
         private const float CORNER_RADIUS = 8f;
 
         // Colors - Dark theme matching HUD
-        private static readonly Vector4 BG_DARK = new Vector4(0.08f, 0.08f, 0.1f, 0.96f);
-        private static readonly Vector4 BG_MEDIUM = new Vector4(0.12f, 0.12f, 0.15f, 0.95f);
-        private static readonly Vector4 BORDER_COLOR = new Vector4(0.25f, 0.25f, 0.3f, 0.9f);
+        private static readonly Vector4 BG_DARK = new Vector4(0.08f, 0.08f, 0.1f, 0.98f); // Increased alpha
+        private static readonly Vector4 BG_MEDIUM = new Vector4(0.12f, 0.12f, 0.15f, 0.98f); // Increased alpha
+        private static readonly Vector4 BORDER_COLOR = new Vector4(0.25f, 0.25f, 0.3f, 1f);
         private static readonly Vector4 ACCENT_COLOR = new Vector4(0.4f, 0.6f, 1f, 1f);
-        private static readonly Vector4 SLOT_BG = new Vector4(0.15f, 0.15f, 0.18f, 0.95f);
-        private static readonly Vector4 SLOT_HOVER = new Vector4(0.2f, 0.2f, 0.25f, 0.95f);
-        private static readonly Vector4 SLOT_SELECTED = new Vector4(0.3f, 0.28f, 0.2f, 0.95f);
+        private static readonly Vector4 SLOT_BG = new Vector4(0.15f, 0.15f, 0.18f, 0.98f); // Increased alpha
+        private static readonly Vector4 SLOT_HOVER = new Vector4(0.2f, 0.2f, 0.25f, 0.98f); // Increased alpha
+        private static readonly Vector4 SLOT_SELECTED = new Vector4(0.3f, 0.28f, 0.2f, 0.98f); // Increased alpha
         private static readonly Vector4 SECTION_TITLE_COLOR = new Vector4(0.7f, 0.8f, 1f, 1f);
 
         public OpenGLInventoryUI(Inventory inventory, FontRenderer? fontRenderer)
@@ -84,15 +85,40 @@ namespace Aetheris.UI
             int vertexShader = GL.CreateShader(ShaderType.VertexShader);
             GL.ShaderSource(vertexShader, vertexShaderSource);
             GL.CompileShader(vertexShader);
+            
+            GL.GetShader(vertexShader, ShaderParameter.CompileStatus, out int vsStatus);
+            if (vsStatus == 0)
+            {
+                string error = GL.GetShaderInfoLog(vertexShader);
+                Console.WriteLine($"[OpenGLInventoryUI] Vertex shader error: {error}");
+            }
 
             int fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
             GL.ShaderSource(fragmentShader, fragmentShaderSource);
             GL.CompileShader(fragmentShader);
+            
+            GL.GetShader(fragmentShader, ShaderParameter.CompileStatus, out int fsStatus);
+            if (fsStatus == 0)
+            {
+                string error = GL.GetShaderInfoLog(fragmentShader);
+                Console.WriteLine($"[OpenGLInventoryUI] Fragment shader error: {error}");
+            }
 
             shaderProgram = GL.CreateProgram();
             GL.AttachShader(shaderProgram, vertexShader);
             GL.AttachShader(shaderProgram, fragmentShader);
             GL.LinkProgram(shaderProgram);
+            
+            GL.GetProgram(shaderProgram, GetProgramParameterName.LinkStatus, out int linkStatus);
+            if (linkStatus == 0)
+            {
+                string error = GL.GetProgramInfoLog(shaderProgram);
+                Console.WriteLine($"[OpenGLInventoryUI] Shader link error: {error}");
+            }
+            else
+            {
+                Console.WriteLine("[OpenGLInventoryUI] Shaders compiled and linked successfully");
+            }
 
             GL.DeleteShader(vertexShader);
             GL.DeleteShader(fragmentShader);
@@ -116,7 +142,16 @@ namespace Aetheris.UI
         {
             // Animate window open/close
             float targetProgress = isOpen ? 1f : 0f;
-            openProgress = MathHelper.Lerp(openProgress, targetProgress, deltaTime * 12f);
+            
+            // Instant close, smooth open
+            if (!isOpen && openProgress > 0)
+            {
+                openProgress = 0f; // Instant close
+            }
+            else
+            {
+                openProgress = MathHelper.Lerp(openProgress, targetProgress, deltaTime * 12f);
+            }
 
             if (!isOpen && openProgress < 0.01f)
                 return;
@@ -253,16 +288,27 @@ namespace Aetheris.UI
         public void Render(Vector2i windowSize)
         {
             if (openProgress < 0.01f)
+            {
+                // Successfully skipped rendering (closed)
                 return;
+            }
+
+            Console.WriteLine($"[OpenGLInventoryUI] Rendering with openProgress={openProgress:F3}, isOpen={isOpen}");
+
+            // Store window size for use in draw functions
+            lastWindowSize = windowSize;
 
             // Save GL state
             GL.GetInteger(GetPName.Blend, out int blendEnabled);
             GL.GetInteger(GetPName.DepthTest, out int depthEnabled);
             GL.GetInteger(GetPName.CurrentProgram, out int oldProgram);
 
+            // CRITICAL: Force correct GL state for 2D rendering
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.Disable(EnableCap.DepthTest);
+            GL.DepthMask(false); // Don't write to depth buffer
+            GL.Disable(EnableCap.CullFace); // Don't cull faces for 2D
 
             var projection = Matrix4.CreateOrthographicOffCenter(0, windowSize.X, windowSize.Y, 0, -1, 1);
 
@@ -286,13 +332,19 @@ namespace Aetheris.UI
             windowX += WINDOW_WIDTH * (1f - scale) / 2f;
             windowY += WINDOW_HEIGHT * (1f - scale) / 2f;
 
-            // Semi-transparent background overlay
-            Vector4 overlayColor = new Vector4(0, 0, 0, 0.5f * openProgress);
-            DrawRect(0, 0, windowSize.X, windowSize.Y, overlayColor);
+            // Semi-transparent background overlay (DISABLED - blocks tooltips)
+            // Vector4 overlayColor = new Vector4(0, 0, 0, 0.6f * openProgress);
+            // DrawRect(0, 0, windowSize.X, windowSize.Y, overlayColor);
 
-            // Main window background
+            // Main window background - draw multiple layers for visibility
             Vector4 bgColor = BG_DARK;
             bgColor.W *= openProgress;
+            
+            // Draw a solid backing first
+            Vector4 solidBg = new Vector4(0.05f, 0.05f, 0.08f, 1f * openProgress);
+            DrawRect(windowX, windowY, WINDOW_WIDTH, WINDOW_HEIGHT, solidBg);
+            
+            // Then the styled background
             DrawRoundedRect(windowX, windowY, WINDOW_WIDTH, WINDOW_HEIGHT, 12f, bgColor);
 
             // Window border
@@ -334,6 +386,7 @@ namespace Aetheris.UI
             // Restore GL state
             if (blendEnabled == 0) GL.Disable(EnableCap.Blend);
             if (depthEnabled != 0) GL.Enable(EnableCap.DepthTest);
+            GL.DepthMask(true); // Restore depth writes
         }
 
         private float RenderHotbarSection(float windowX, float currentY)
@@ -347,6 +400,9 @@ namespace Aetheris.UI
             }
             currentY += 30;
 
+            // IMPORTANT: Reset shader and projection after font rendering
+            GL.UseProgram(shaderProgram);
+            
             // Render slots
             RenderSlotGrid(windowX + PADDING, currentY, 0, Inventory.HOTBAR_SIZE, 9, true);
             
@@ -363,6 +419,9 @@ namespace Aetheris.UI
             }
             currentY += 30;
 
+            // IMPORTANT: Reset shader after font rendering
+            GL.UseProgram(shaderProgram);
+            
             // Render slots
             RenderSlotGrid(windowX + PADDING, currentY, Inventory.HOTBAR_SIZE, Inventory.MAIN_SIZE, 9, false);
             
@@ -381,6 +440,9 @@ namespace Aetheris.UI
                 fontRenderer.DrawText("ARMOR", new Vector2(leftColumnX, currentY), 0.45f, armorColor);
             }
             
+            // IMPORTANT: Reset shader after font rendering
+            GL.UseProgram(shaderProgram);
+            
             string[] armorLabels = { "Head", "Chest", "Legs", "Feet" };
             RenderSlotGrid(leftColumnX, currentY + 30, 
                 Inventory.HOTBAR_SIZE + Inventory.MAIN_SIZE, Inventory.ARMOR_SIZE, 4, false, armorLabels);
@@ -391,6 +453,9 @@ namespace Aetheris.UI
                 Vector4 totemColor = new Vector4(1f, 0.8f, 1f, openProgress);
                 fontRenderer.DrawText("TOTEMS", new Vector2(rightColumnX, currentY), 0.45f, totemColor);
             }
+            
+            // IMPORTANT: Reset shader after font rendering
+            GL.UseProgram(shaderProgram);
             
             string[] totemLabels = { "Totem 1", "Totem 2", "Totem 3", "Totem 4", "Totem 5" };
             RenderSlotGrid(rightColumnX, currentY + 30, 
@@ -553,6 +618,14 @@ namespace Aetheris.UI
         // Drawing primitives
         private void DrawRect(float x, float y, float width, float height, Vector4 color)
         {
+            // CRITICAL: Ensure our shader is active before drawing
+            GL.UseProgram(shaderProgram);
+            
+            // CRITICAL: Set projection matrix every time (FontRenderer changes it)
+            var projection = Matrix4.CreateOrthographicOffCenter(0, lastWindowSize.X, lastWindowSize.Y, 0, -1, 1);
+            int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
+            GL.UniformMatrix4(projLoc, false, ref projection);
+            
             float[] vertices = {
                 x, y, color.X, color.Y, color.Z, color.W,
                 x + width, y, color.X, color.Y, color.Z, color.W,
@@ -563,6 +636,7 @@ namespace Aetheris.UI
                 x, y + height, color.X, color.Y, color.Z, color.W,
             };
 
+            GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
@@ -570,8 +644,23 @@ namespace Aetheris.UI
 
         private void DrawRoundedRect(float x, float y, float width, float height, float radius, Vector4 color)
         {
-            // Simplified rounded rect (just draw regular rect for now)
+            // Draw main rectangle
             DrawRect(x, y, width, height, color);
+            
+            // Optional: Add corner highlights for rounded effect
+            if (radius > 2f)
+            {
+                Vector4 cornerColor = new Vector4(color.X * 1.1f, color.Y * 1.1f, color.Z * 1.1f, color.W * 0.3f);
+                
+                // Top-left corner
+                DrawRect(x, y, radius, radius, cornerColor);
+                // Top-right corner  
+                DrawRect(x + width - radius, y, radius, radius, cornerColor);
+                // Bottom-left corner
+                DrawRect(x, y + height - radius, radius, radius, cornerColor);
+                // Bottom-right corner
+                DrawRect(x + width - radius, y + height - radius, radius, radius, cornerColor);
+            }
         }
 
         private void DrawRoundedRectOutline(float x, float y, float width, float height, float radius, float thickness, Vector4 color)
@@ -588,6 +677,9 @@ namespace Aetheris.UI
 
         private void DrawCircle(float centerX, float centerY, float radius, Vector4 color)
         {
+            // CRITICAL: Ensure our shader is active
+            GL.UseProgram(shaderProgram);
+            
             int segments = 12;
             float[] vertices = new float[segments * 3 * 6];
             int idx = 0;
@@ -619,6 +711,7 @@ namespace Aetheris.UI
                 vertices[idx++] = color.W;
             }
 
+            GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
             GL.DrawArrays(PrimitiveType.Triangles, 0, segments * 3);
@@ -634,9 +727,12 @@ namespace Aetheris.UI
                 draggedSlot = -1;
                 draggedItem = ItemStack.Empty;
                 hoveredSlot = -1;
+                Console.WriteLine("[OpenGLInventoryUI] Inventory closed");
             }
-            
-            Console.WriteLine($"[OpenGLInventoryUI] Inventory {(isOpen ? "opened" : "closed")}");
+            else
+            {
+                Console.WriteLine("[OpenGLInventoryUI] Inventory opened");
+            }
         }
 
         public bool IsInventoryOpen() => isOpen;

@@ -182,6 +182,7 @@ void main()
         
         private void RenderBackground(Vector2 position, float width, float height, Vector2i screenSize)
         {
+            // CRITICAL: Ensure shader is active and set projection
             GL.UseProgram(shaderProgram);
             
             var projection = Matrix4.CreateOrthographicOffCenter(0, screenSize.X, screenSize.Y, 0, -1, 1);
@@ -202,6 +203,7 @@ void main()
             
             GL.Enable(EnableCap.Blend);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.Disable(EnableCap.DepthTest); // Critical for 2D UI
             
             GL.BindVertexArray(backgroundVAO);
             GL.BindBuffer(BufferTarget.ArrayBuffer, backgroundVBO);
@@ -209,7 +211,7 @@ void main()
             
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             
-            // Border
+            // Border (reuse shader that's already active)
             RenderBorder(position, width, height, screenSize);
             
             GL.BindVertexArray(0);
@@ -217,6 +219,8 @@ void main()
         
         private void RenderBorder(Vector2 position, float width, float height, Vector2i screenSize)
         {
+            // Shader and projection should already be set from RenderBackground
+            // But ensure bgColor uniform is updated for border
             Vector4 borderColor = new Vector4(0.5f, 0.5f, 0.6f, 0.8f * fadeAlpha);
             GL.Uniform4(GL.GetUniformLocation(shaderProgram, "bgColor"), ref borderColor);
             

@@ -32,6 +32,8 @@ namespace Aetheris
         private OpenGLInventoryUI? inventoryUI;
 
         private ChatSystem? chatSystem;
+
+        private FontRenderer? tooltipfontRenderer;
         private FontRenderer? fontRenderer;
         private TooltipSystem? tooltipSystem;
         private BlockPlacementPreview? blockPreview;
@@ -129,9 +131,10 @@ private void CheckGLError(string location)
             // Initialize font renderer
             fontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 48);
             fontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
-
+ tooltipfontRenderer = new FontRenderer("assets/fonts/Roboto-Regular.ttf", 18);
+            tooltipfontRenderer.SetProjection(Matrix4.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
             // Initialize UI systems
-            tooltipSystem = new TooltipSystem(fontRenderer);
+            tooltipSystem = new TooltipSystem(tooltipfontRenderer);
 
 
             chatSystem = new ChatSystem(fontRenderer);
@@ -263,11 +266,20 @@ private void CheckGLError(string location)
             };
         }
 
+        private float inventoryToggleCooldown = 0f;
+        private const float INVENTORY_TOGGLE_DELAY = 0.2f; // 200ms cooldown
+
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
 
             float deltaTime = (float)e.Time;
+
+            // Update cooldown
+            if (inventoryToggleCooldown > 0)
+            {
+                inventoryToggleCooldown -= deltaTime;
+            }
 
             Renderer.ProcessPendingUploads();
 
@@ -279,20 +291,27 @@ private void CheckGLError(string location)
 
             // CRITICAL FIX: Check for inventory toggle BEFORE other UI checks
             bool inventoryJustOpened = false;
-            if (KeyboardState.IsKeyPressed(Keys.E))
+            if (KeyboardState.IsKeyPressed(Keys.E) && inventoryToggleCooldown <= 0)
             {
+                Console.WriteLine("[Game] E key pressed detected!");
                 if (inventoryUI != null)
                 {
                     bool wasOpen = inventoryUI.IsInventoryOpen();
-                    inventoryUI.ToggleInventory(); // Add this method to InventoryUI
+                    Console.WriteLine($"[Game] Inventory was {(wasOpen ? "open" : "closed")}, toggling...");
+                    inventoryUI.ToggleInventory();
                     inventoryJustOpened = !wasOpen;
+                    inventoryToggleCooldown = INVENTORY_TOGGLE_DELAY; // Set cooldown
                     Console.WriteLine($"[Game] Inventory toggle: {(inventoryJustOpened ? "opened" : "closed")}");
+                }
+                else
+                {
+                    Console.WriteLine("[Game] ERROR: inventoryUI is null!");
                 }
             }
 
-            // Update inventory UI
+            // Update inventory UI (always update for animations, even when closing)
             bool inventoryOpen = inventoryUI?.IsInventoryOpen() ?? false;
-            if (inventoryUI != null && inventoryOpen)
+            if (inventoryUI != null)
             {
                 inventoryUI.Update(KeyboardState, MouseState, Size, deltaTime);
             }

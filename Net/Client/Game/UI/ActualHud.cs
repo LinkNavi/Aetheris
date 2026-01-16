@@ -13,6 +13,7 @@ namespace Aetheris.UI
         private int vao;
         private int vbo;
         private readonly FontRenderer? fontRenderer;
+        private Vector2i lastWindowSize = new Vector2i(1920, 1080);
 
         // Animation states
         private float healthPulse = 0f;
@@ -30,20 +31,20 @@ namespace Aetheris.UI
         private float displayHunger = 100f;
 
         // Colors - Dark theme
-        private static readonly Vector4 BG_DARK = new Vector4(0.08f, 0.08f, 0.1f, 0.92f);
-        private static readonly Vector4 BG_MEDIUM = new Vector4(0.12f, 0.12f, 0.15f, 0.95f);
-        private static readonly Vector4 BORDER_COLOR = new Vector4(0.25f, 0.25f, 0.3f, 0.9f);
+        private static readonly Vector4 BG_DARK = new Vector4(0.08f, 0.08f, 0.1f, 0.95f);
+        private static readonly Vector4 BG_MEDIUM = new Vector4(0.12f, 0.12f, 0.15f, 0.98f);
+        private static readonly Vector4 BORDER_COLOR = new Vector4(0.25f, 0.25f, 0.3f, 0.95f);
         private static readonly Vector4 ACCENT_COLOR = new Vector4(0.4f, 0.6f, 1f, 1f);
         
-        private static readonly Vector4 HEALTH_BG = new Vector4(0.15f, 0.05f, 0.05f, 0.85f);
+        private static readonly Vector4 HEALTH_BG = new Vector4(0.15f, 0.05f, 0.05f, 0.92f);
         private static readonly Vector4 HEALTH_FILL = new Vector4(0.95f, 0.25f, 0.25f, 1f);
         private static readonly Vector4 HEALTH_GLOW = new Vector4(1f, 0.4f, 0.4f, 0.6f);
         
-        private static readonly Vector4 ARMOR_BG = new Vector4(0.05f, 0.1f, 0.15f, 0.85f);
+        private static readonly Vector4 ARMOR_BG = new Vector4(0.05f, 0.1f, 0.15f, 0.92f);
         private static readonly Vector4 ARMOR_FILL = new Vector4(0.3f, 0.6f, 0.95f, 1f);
         private static readonly Vector4 ARMOR_GLOW = new Vector4(0.5f, 0.8f, 1f, 0.5f);
         
-        private static readonly Vector4 HUNGER_BG = new Vector4(0.15f, 0.1f, 0.05f, 0.85f);
+        private static readonly Vector4 HUNGER_BG = new Vector4(0.15f, 0.1f, 0.05f, 0.92f);
         private static readonly Vector4 HUNGER_FILL = new Vector4(1f, 0.7f, 0.3f, 1f);
         private static readonly Vector4 HUNGER_GLOW = new Vector4(1f, 0.85f, 0.5f, 0.5f);
 
@@ -162,6 +163,9 @@ namespace Aetheris.UI
 
         public void Render(PlayerStats stats, Inventory inventory, Vector2i windowSize)
         {
+            // Store for use in draw functions
+            lastWindowSize = windowSize;
+            
             // Save GL state
             GL.GetInteger(GetPName.Blend, out int blendEnabled);
             GL.GetInteger(GetPName.DepthTest, out int depthEnabled);
@@ -488,6 +492,14 @@ namespace Aetheris.UI
 
         private void DrawRect(float x, float y, float width, float height, Vector4 color)
         {
+            // CRITICAL: Ensure our shader is active before drawing
+            GL.UseProgram(shaderProgram);
+            
+            // CRITICAL: Set projection matrix (FontRenderer changes it)
+            var projection = Matrix4.CreateOrthographicOffCenter(0, lastWindowSize.X, lastWindowSize.Y, 0, -1, 1);
+            int projLoc = GL.GetUniformLocation(shaderProgram, "projection");
+            GL.UniformMatrix4(projLoc, false, ref projection);
+            
             float[] vertices = {
                 x, y, color.X, color.Y, color.Z, color.W,
                 x + width, y, color.X, color.Y, color.Z, color.W,
@@ -498,6 +510,7 @@ namespace Aetheris.UI
                 x, y + height, color.X, color.Y, color.Z, color.W,
             };
 
+            GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
@@ -524,6 +537,9 @@ namespace Aetheris.UI
 
         private void DrawCircle(float centerX, float centerY, float radius, Vector4 color)
         {
+            // CRITICAL: Ensure our shader is active
+            GL.UseProgram(shaderProgram);
+            
             int segments = 16;
             float[] vertices = new float[segments * 3 * 6];
             int idx = 0;
@@ -555,6 +571,7 @@ namespace Aetheris.UI
                 vertices[idx++] = color.W;
             }
 
+            GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
             GL.DrawArrays(PrimitiveType.Triangles, 0, segments * 3);
@@ -562,6 +579,8 @@ namespace Aetheris.UI
 
         private void DrawGradientRect(float x, float y, float width, float height, Vector4 topColor, Vector4 bottomColor)
         {
+            GL.UseProgram(shaderProgram);
+            
             float[] vertices = {
                 x, y, topColor.X, topColor.Y, topColor.Z, topColor.W,
                 x + width, y, topColor.X, topColor.Y, topColor.Z, topColor.W,
@@ -572,6 +591,7 @@ namespace Aetheris.UI
                 x, y + height, bottomColor.X, bottomColor.Y, bottomColor.Z, bottomColor.W,
             };
 
+            GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
@@ -579,6 +599,8 @@ namespace Aetheris.UI
 
         private void DrawGradientRectH(float x, float y, float width, float height, Vector4 leftColor, Vector4 rightColor)
         {
+            GL.UseProgram(shaderProgram);
+            
             float[] vertices = {
                 x, y, leftColor.X, leftColor.Y, leftColor.Z, leftColor.W,
                 x + width, y, rightColor.X, rightColor.Y, rightColor.Z, rightColor.W,
@@ -589,6 +611,7 @@ namespace Aetheris.UI
                 x, y + height, leftColor.X, leftColor.Y, leftColor.Z, leftColor.W,
             };
 
+            GL.BindVertexArray(vao);
             GL.BindBuffer(BufferTarget.ArrayBuffer, vbo);
             GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.DynamicDraw);
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
