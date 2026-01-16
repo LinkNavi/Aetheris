@@ -646,7 +646,7 @@ namespace Aetheris
             }
         }
 
-        // ============================================================================
+      // ============================================================================
         // Chunk Request/Response with Length-Prefixed Packets
         // ============================================================================
 
@@ -694,6 +694,10 @@ namespace Aetheris
                     var collisionData = await PacketIO.ReadPacketAsync(streamRequest!, token);
                     CollisionMesh collisionMesh = ParseCollisionMesh(collisionData);
 
+                    // Receive prefab data
+                    var prefabData = await PacketIO.ReadPacketAsync(streamRequest!, token);
+                    ParseAndLoadPrefabs(prefabData, cx, cy, cz);
+
                     return (renderMesh, collisionMesh);
                 }
                 catch (Exception ex)
@@ -718,6 +722,51 @@ namespace Aetheris
             }
 
             throw new Exception($"Failed to request chunk ({cx},{cy},{cz}) after {MAX_RETRIES} attempts");
+        }
+
+        private void ParseAndLoadPrefabs(byte[] data, int chunkX, int chunkY, int chunkZ)
+        {
+            if (data.Length < 4 || clientWorld == null)
+                return;
+
+            try
+            {
+                using var ms = new System.IO.MemoryStream(data);
+                using var reader = new System.IO.BinaryReader(ms);
+
+                int prefabCount = reader.ReadInt32();
+
+                if (prefabCount == 0)
+                    return;
+
+                Console.WriteLine($"[Client] Loading {prefabCount} prefabs for chunk ({chunkX},{chunkY},{chunkZ})");
+
+                for (int i = 0; i < prefabCount; i++)
+                {
+                    int prefabId = reader.ReadInt32();
+                    int posX = reader.ReadInt32();
+                    int posY = reader.ReadInt32();
+                    int posZ = reader.ReadInt32();
+                    byte rotation = reader.ReadByte();
+                    string placedBy = reader.ReadString();
+
+                    var pos = new GameLogic.BlockPos(posX, posY, posZ);
+                    var result = clientWorld.PlacePrefab(prefabId, pos, rotation, placedBy);
+
+                    if (result.Success)
+                    {
+                        Console.WriteLine($"[Client] Loaded prefab {prefabId} at {pos}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[Client] Failed to load prefab {prefabId}: {result.Error}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Client] Error parsing prefab data: {ex.Message}");
+            }
         }
 
         private float[] ParseRenderMesh(byte[] data)
