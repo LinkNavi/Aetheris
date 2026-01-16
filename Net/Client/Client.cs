@@ -205,39 +205,36 @@ namespace Aetheris
             }
         }
 
-        private async Task HandleBlockModificationBroadcastAsync(CancellationToken token)
-        {
-            try
-            {
-                // Read full message (minus the packet type which was already read)
-                var buf = new byte[39]; // Total message size - 1 byte for type
-                await ReadFullAsync(streamBroadcast!, buf, 0, 39, token);
+       private async Task HandleBlockModificationBroadcastAsync(CancellationToken token)
+{
+    try
+    {
+        var buf = new byte[39];
+        await ReadFullAsync(streamBroadcast!, buf, 0, 39, token);
 
-                using var ms = new System.IO.MemoryStream(buf);
-                using var reader = new System.IO.BinaryReader(ms);
+        using var ms = new System.IO.MemoryStream(buf);
+        using var reader = new System.IO.BinaryReader(ms);
 
-                var message = new BlockModificationMessage();
-                message.Deserialize(reader);
+        var message = new BlockModificationMessage();
+        message.Deserialize(reader);
 
-                Console.WriteLine($"[Client] Received broadcast: {message}");
+        Console.WriteLine($"[Client] Received broadcast: {message}");
 
-                // Reconcile with our prediction
-                if (predictionManager != null)
-                {
-                    predictionManager.ReconcileModification(message);
-                }
+        // Apply to client world (WorldGen)
+        message.ApplyToWorld(clientWorld);
 
-                // Invalidate affected chunks for mesh regeneration
-                InvalidateChunksAroundBlock(message.X, message.Y, message.Z);
+        // Reconcile prediction
+        predictionManager?.ReconcileModification(message);
 
-                Console.WriteLine($"[Client] Processed block modification broadcast");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Client] Error in HandleBlockModificationBroadcastAsync: {ex.Message}");
-                throw;
-            }
-        }
+        // NOW invalidate chunks
+        InvalidateChunksAroundBlock(message.X, message.Y, message.Z);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Client] Error: {ex.Message}");
+        throw;
+    }
+}
 
         // ============================================================================
         // Block Modification API (Client-side prediction)
@@ -249,46 +246,43 @@ namespace Aetheris
         /// <summary>
         /// Mine a block with client-side prediction
         /// </summary>
-        public async Task MineBlockAsync(int x, int y, int z)
-        {
-            if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected || predictionManager == null)
-            {
-                Console.WriteLine("[Client] Cannot mine block - not connected");
-                return;
-            }
+      public async Task MineBlockAsync(int x, int y, int z)
+{
+    if (streamRequest == null || tcpRequest == null || !tcpRequest.Connected || predictionManager == null)
+    {
+        Console.WriteLine("[Client] Cannot mine block - not connected");
+        return;
+    }
 
-            // Create modification message
-            var message = new BlockModificationMessage(
-                BlockModificationMessage.ModificationType.Mine,
-                x, y, z
-            );
+    var message = new BlockModificationMessage(
+        BlockModificationMessage.ModificationType.Mine,
+        x, y, z
+    );
 
-            // Apply prediction locally FIRST
-            uint sequence = predictionManager.PredictModification(message);
+    // Apply prediction locally
+    uint sequence = predictionManager.PredictModification(message);
 
-            // CRITICAL FIX: Invalidate chunks immediately for visual feedback
-            Console.WriteLine($"[Client] Applied mine prediction at ({x},{y},{z}), invalidating chunks...");
-            InvalidateChunksAroundBlock(x, y, z);
+    // DON'T invalidate chunks here - wait for server broadcast
+    // InvalidateChunksAroundBlock(x, y, z);  // REMOVE THIS
 
-            // Send to server
-            await networkSemaphore.WaitAsync();
-            try
-            {
-                byte[] packet = NetworkMessageSerializer.Serialize(message);
-                await streamRequest.WriteAsync(packet, 0, packet.Length);
-                await streamRequest.FlushAsync();
-
-                Console.WriteLine($"[Client] Sent mine request for ({x},{y},{z}) seq={sequence}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[Client] Error sending mine request: {ex.Message}");
-            }
-            finally
-            {
-                networkSemaphore.Release();
-            }
-        }
+    // Send to server
+    await networkSemaphore.WaitAsync();
+    try
+    {
+        byte[] packet = NetworkMessageSerializer.Serialize(message);
+        await streamRequest.WriteAsync(packet, 0, packet.Length);
+        await streamRequest.FlushAsync();
+        Console.WriteLine($"[Client] Sent mine request for ({x},{y},{z}) seq={sequence}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Client] Error sending mine request: {ex.Message}");
+    }
+    finally
+    {
+        networkSemaphore.Release();
+    }
+}
 
         /// <summary>
         /// Place a block with client-side prediction

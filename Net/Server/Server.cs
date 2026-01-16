@@ -207,36 +207,36 @@ namespace Aetheris
         // Terrain Modification Event Handler
         // ============================================================================
 
-      // In Server.cs, OnServerTerrainModified method
-private void OnServerTerrainModified(TerrainModifyResult result)
-{
-    if (!result.Success) return;
-
-    Log($"[Server] Terrain modified: {result.BlocksRemoved} removed, {result.BlocksAdded} added, affecting {result.AffectedChunks.Length} chunks");
-
-    // CRITICAL: Invalidate affected chunks 
-    foreach (var (cx, cy, cz) in result.AffectedChunks)
-    {
-        var coord = new ChunkCoord(cx, cy, cz);
-
-        // Remove from mesh cache to force regeneration
-        if (meshCache.TryRemove(coord, out _))
+        // In Server.cs, OnServerTerrainModified method
+        private void OnServerTerrainModified(TerrainModifyResult result)
         {
-            Interlocked.Decrement(ref cacheSize);
+            if (!result.Success) return;
+
+            Log($"[Server] Terrain modified: {result.BlocksRemoved} removed, {result.BlocksAdded} added, affecting {result.AffectedChunks.Length} chunks");
+
+            // CRITICAL: Invalidate affected chunks 
+            foreach (var (cx, cy, cz) in result.AffectedChunks)
+            {
+                var coord = new ChunkCoord(cx, cy, cz);
+
+                // Remove from mesh cache to force regeneration
+                if (meshCache.TryRemove(coord, out _))
+                {
+                    Interlocked.Decrement(ref cacheSize);
+                }
+
+                // IMPORTANT: Also unload from chunk manager
+                chunkManager.UnloadChunk(coord);
+
+                // Clear generation lock
+                if (generationLocks.TryRemove(coord, out var lockObj))
+                {
+                    lockObj.Dispose();
+                }
+
+                Log($"[Server] Invalidated chunk {coord} for regeneration");
+            }
         }
-
-        // IMPORTANT: Also unload from chunk manager
-        chunkManager.UnloadChunk(coord);
-
-        // Clear generation lock
-        if (generationLocks.TryRemove(coord, out var lockObj))
-        {
-            lockObj.Dispose();
-        }
-
-        Log($"[Server] Invalidated chunk {coord} for regeneration");
-    }
-}
 
         // ============================================================================
         // TCP Client Handler
@@ -329,7 +329,6 @@ private void OnServerTerrainModified(TerrainModifyResult result)
         {
             try
             {
-                // Read remaining message bytes (39 bytes after packet type)
                 var buf = new byte[39];
                 await ReadFullAsync(stream, buf, 0, 39, token);
 
@@ -341,18 +340,27 @@ private void OnServerTerrainModified(TerrainModifyResult result)
 
                 Log($"[Server] Received {message} from {clientId}");
 
-                // Apply modification to server's authoritative world
-                bool success = false;
-                if (serverWorld != null)
-                {
-                    success = message.ApplyToWorld(serverWorld);
-                }
+                bool success = message.ApplyToWorld(serverWorld);
 
                 if (success)
                 {
                     Log($"[Server] Applied modification successfully");
 
-                    // Broadcast to ALL clients (including sender for reconciliation)
+                    // CRITICAL: Manually invalidate affected chunks
+                    var affectedChunks = Aetheris.GameLogic.NetworkHelpers.GetAffectedChunksRadius(
+                        message.X, message.Y, message.Z, 2f,
+                        ServerConfig.CHUNK_SIZE, ServerConfig.CHUNK_SIZE_Y);
+
+                    foreach (var (cx, cy, cz) in affectedChunks)
+                    {
+                        var coord = new ChunkCoord(cx, cy, cz);
+                        if (meshCache.TryRemove(coord, out _))
+                            Interlocked.Decrement(ref cacheSize);
+                        chunkManager.UnloadChunk(coord);
+                        generationLocks.TryRemove(coord, out var lockObj);
+                        lockObj?.Dispose();
+                    }
+
                     await BroadcastBlockModification(message);
                 }
                 else

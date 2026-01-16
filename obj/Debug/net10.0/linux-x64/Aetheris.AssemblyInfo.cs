@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Aetheris")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+31003bbc4cc1b20dc62a6e03ec6f0000d085b16b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c526c680485601950eb3d57912733aba4789b1ed")]
 [assembly: System.Reflection.AssemblyProductAttribute("Aetheris")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Aetheris")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

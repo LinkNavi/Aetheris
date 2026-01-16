@@ -569,10 +569,10 @@ gameSystems.Stats.Armor = totalArmor;            // Update stats
 
     // Render placed blocks (from game systems)
     gameSystems?.Render(view, projection, player.Position);
-
+GL.Disable(EnableCap.CullFace);
     // Render terrain
     Renderer.Render(projection, view, player.Position);
-
+GL.Enable(EnableCap.CullFace);
     // Render remote players
     if (entityRenderer != null && NetworkController != null)
     {

@@ -14,10 +14,10 @@ namespace Aetheris
         ChunkRequest = 0,
         ChunkResponse = 1,
         InventorySync = 2,
-        
+
         // TCP Broadcasts (Server -> All Clients)
         BlockModification = 10,
-        
+
         // UDP Real-time
         PlayerPosition = 20,
         PlayerInput = 21,
@@ -43,14 +43,14 @@ namespace Aetheris
     public class BlockModificationMessage : INetworkMessage
     {
         public PacketType Type => PacketType.BlockModification;
-        
+
         public enum ModificationType : byte
         {
             Mine = 0,      // Remove terrain
             Place = 1,     // Place block
             Damage = 2     // Damage block (progressive mining)
         }
-        
+
         public ModificationType Operation { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
@@ -58,14 +58,14 @@ namespace Aetheris
         public byte BlockTypeByte { get; set; }  // Only used for Place
         public byte Rotation { get; set; }        // Only used for Place
         public int Damage { get; set; }           // Only used for Damage
-        
+
         // Client-side prediction
         public uint ClientSequence { get; set; }
         public long ClientTimestamp { get; set; }
-        
+
         public BlockModificationMessage() { }
-        
-        public BlockModificationMessage(ModificationType operation, int x, int y, int z, 
+
+        public BlockModificationMessage(ModificationType operation, int x, int y, int z,
             byte blockType = 0, byte rotation = 0, uint sequence = 0)
         {
             Operation = operation;
@@ -77,7 +77,7 @@ namespace Aetheris
             ClientSequence = sequence;
             ClientTimestamp = DateTime.UtcNow.Ticks;
         }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             writer.Write((byte)Type);
@@ -91,7 +91,7 @@ namespace Aetheris
             writer.Write(ClientSequence);
             writer.Write(ClientTimestamp);
         }
-        
+
         public void Deserialize(BinaryReader reader)
         {
             Operation = (ModificationType)reader.ReadByte();
@@ -104,33 +104,35 @@ namespace Aetheris
             ClientSequence = reader.ReadUInt32();
             ClientTimestamp = reader.ReadInt64();
         }
-        
+
         /// <summary>
         /// Apply this modification to a GameWorld (used by both client and server)
         /// </summary>
         public bool ApplyToWorld(Aetheris.GameLogic.GameWorld world)
         {
-            var pos = new Aetheris.GameLogic.BlockPos(X, Y, Z);
-            
             switch (Operation)
             {
                 case ModificationType.Mine:
-                    var mineResult = world.MineBlock(pos);
-                    return mineResult.Success;
-                    
+                    // Apply to WorldGen density system (what marching cubes uses)
+                    WorldGen.RemoveBlock(X, Y, Z, radius: 1.5f, strength: 3f);
+                    Console.WriteLine($"[BlockMod] Applied mine at world ({X},{Y},{Z})");
+                    return true;
+
                 case ModificationType.Place:
                     var blockType = (BlockType)BlockTypeByte;
-                    var placeResult = world.PlaceBlock(pos, blockType, Rotation);
-                    return placeResult.Success;
-                    
+                    WorldGen.PlaceSolidBlock(X, Y, Z, blockType);
+                    Console.WriteLine($"[BlockMod] Applied place {blockType} at world ({X},{Y},{Z})");
+                    return true;
+
                 case ModificationType.Damage:
+                    var pos = Aetheris.GameLogic.BlockPos.FromWorld(X, Y, Z);
                     return world.Modifier.DamageBlock(pos, Damage);
-                    
+
                 default:
                     return false;
             }
         }
-        
+
         public override string ToString()
         {
             return $"BlockMod[{Operation}] at ({X},{Y},{Z}) block={BlockTypeByte} seq={ClientSequence}";
@@ -143,11 +145,11 @@ namespace Aetheris
     public class ChunkRequestMessage : INetworkMessage
     {
         public PacketType Type => PacketType.ChunkRequest;
-        
+
         public int ChunkX { get; set; }
         public int ChunkY { get; set; }
         public int ChunkZ { get; set; }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             writer.Write((byte)Type);
@@ -155,7 +157,7 @@ namespace Aetheris
             writer.Write(ChunkY);
             writer.Write(ChunkZ);
         }
-        
+
         public void Deserialize(BinaryReader reader)
         {
             ChunkX = reader.ReadInt32();
@@ -170,14 +172,14 @@ namespace Aetheris
     public class PlayerPositionMessage : INetworkMessage
     {
         public PacketType Type => PacketType.PlayerPosition;
-        
+
         public uint Sequence { get; set; }
         public Vector3 Position { get; set; }
         public Vector3 Velocity { get; set; }
         public float Yaw { get; set; }
         public float Pitch { get; set; }
         public byte InputFlags { get; set; }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             writer.Write((byte)Type);
@@ -192,7 +194,7 @@ namespace Aetheris
             writer.Write(Pitch);
             writer.Write(InputFlags);
         }
-        
+
         public void Deserialize(BinaryReader reader)
         {
             Sequence = reader.ReadUInt32();
@@ -218,13 +220,13 @@ namespace Aetheris
     public class PositionAckMessage : INetworkMessage
     {
         public PacketType Type => PacketType.PositionAck;
-        
+
         public uint AcknowledgedSequence { get; set; }
         public Vector3 AuthoritativePosition { get; set; }
         public Vector3 AuthoritativeVelocity { get; set; }
         public float Yaw { get; set; }
         public float Pitch { get; set; }
-        
+
         public void Serialize(BinaryWriter writer)
         {
             writer.Write((byte)Type);
@@ -238,7 +240,7 @@ namespace Aetheris
             writer.Write(Yaw);
             writer.Write(Pitch);
         }
-        
+
         public void Deserialize(BinaryReader reader)
         {
             AcknowledgedSequence = reader.ReadUInt32();
@@ -269,20 +271,20 @@ namespace Aetheris
             message.Serialize(writer);
             return ms.ToArray();
         }
-        
+
         public static T Deserialize<T>(byte[] data) where T : INetworkMessage, new()
         {
             using var ms = new MemoryStream(data);
             using var reader = new BinaryReader(ms);
-            
+
             // Skip packet type byte (already read)
             reader.ReadByte();
-            
+
             var message = new T();
             message.Deserialize(reader);
             return message;
         }
-        
+
         public static PacketType ReadPacketType(byte[] data)
         {
             return data.Length > 0 ? (PacketType)data[0] : PacketType.ChunkRequest;
@@ -297,14 +299,14 @@ namespace Aetheris
         private readonly Aetheris.GameLogic.GameWorld clientWorld;
         private readonly Queue<BlockModificationMessage> pendingModifications = new();
         private uint nextSequence = 0;
-        
+
         private const int MAX_PENDING = 64;
-        
+
         public BlockPredictionManager(Aetheris.GameLogic.GameWorld world)
         {
             clientWorld = world;
         }
-        
+
         /// <summary>
         /// Predict a block modification locally
         /// </summary>
@@ -312,27 +314,27 @@ namespace Aetheris
         {
             message.ClientSequence = nextSequence++;
             message.ClientTimestamp = DateTime.UtcNow.Ticks;
-            
+
             // Apply modification locally (prediction)
             bool success = message.ApplyToWorld(clientWorld);
-            
+
             if (success)
             {
                 // Store for reconciliation
                 pendingModifications.Enqueue(message);
-                
+
                 // Limit queue size
                 while (pendingModifications.Count > MAX_PENDING)
                 {
                     pendingModifications.Dequeue();
                 }
-                
+
                 Console.WriteLine($"[Prediction] Applied {message} locally");
             }
-            
+
             return message.ClientSequence;
         }
-        
+
         /// <summary>
         /// Reconcile with server's authoritative modification
         /// </summary>
@@ -342,7 +344,7 @@ namespace Aetheris
             while (pendingModifications.Count > 0)
             {
                 var pending = pendingModifications.Peek();
-                
+
                 if (pending.ClientSequence <= serverMessage.ClientSequence)
                 {
                     pendingModifications.Dequeue();
@@ -352,21 +354,21 @@ namespace Aetheris
                     break;
                 }
             }
-            
+
             // Check if server result differs from our prediction
             var pos = new Aetheris.GameLogic.BlockPos(
-                serverMessage.X, 
-                serverMessage.Y, 
+                serverMessage.X,
+                serverMessage.Y,
                 serverMessage.Z
             );
-            
+
             var clientBlock = clientWorld.GetBlock(pos);
             var serverBlock = new Aetheris.GameLogic.BlockData
             {
                 Type = (BlockType)serverMessage.BlockTypeByte,
                 Rotation = serverMessage.Rotation
             };
-            
+
             // If mismatch, correct client state
             if (serverMessage.Operation == BlockModificationMessage.ModificationType.Mine)
             {
@@ -385,7 +387,7 @@ namespace Aetheris
                 }
             }
         }
-        
+
         public int PendingCount => pendingModifications.Count;
     }
 }
