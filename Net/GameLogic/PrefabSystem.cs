@@ -341,23 +341,30 @@ namespace Aetheris.GameLogic
             return prefabs.TryGetValue(position, out var placed) ? placed : null;
         }
 
-        /// <summary>
-        /// Get all prefabs in range
-        /// </summary>
-        public IEnumerable<PlacedPrefab> GetInRange(BlockPos center, int radius)
+ /// <summary>
+/// Get all prefabs in range (thread-safe)
+/// </summary>
+public IEnumerable<PlacedPrefab> GetInRange(BlockPos center, int radius)
+{
+    // Create a snapshot to avoid concurrent modification
+    PlacedPrefab[] snapshot;
+    lock (prefabs)
+    {
+        snapshot = prefabs.Values.ToArray();
+    }
+    
+    foreach (var prefab in snapshot)
+    {
+        int dx = prefab.Position.X - center.X;
+        int dy = prefab.Position.Y - center.Y;
+        int dz = prefab.Position.Z - center.Z;
+        
+        if (Math.Abs(dx) <= radius && Math.Abs(dy) <= radius && Math.Abs(dz) <= radius)
         {
-            foreach (var kvp in prefabs)
-            {
-                int dx = kvp.Key.X - center.X;
-                int dy = kvp.Key.Y - center.Y;
-                int dz = kvp.Key.Z - center.Z;
-                
-                if (Math.Abs(dx) <= radius && Math.Abs(dy) <= radius && Math.Abs(dz) <= radius)
-                {
-                    yield return kvp.Value;
-                }
-            }
+            yield return prefab;
         }
+    }
+}
 
         /// <summary>
         /// Get all placed prefabs

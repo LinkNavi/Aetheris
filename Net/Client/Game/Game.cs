@@ -141,6 +141,12 @@ private PrefabRenderer? prefabRenderer;
             tooltipSystem = new TooltipSystem(tooltipfontRenderer);
 
 
+    // **ADD THIS LINE - Initialize PrefabRegistry on client**
+    PrefabRegistry.Initialize();
+
+    // **ADD THIS LINE - Create PrefabRenderer**
+    prefabRenderer = new PrefabRenderer();
+    Console.WriteLine("[Game] PrefabRenderer initialized");
             chatSystem = new ChatSystem(chatfontRenderer);
             blockPreview = new BlockPlacementPreview();
 
