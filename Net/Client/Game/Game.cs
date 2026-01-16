@@ -27,7 +27,7 @@ namespace Aetheris
         private EnhancedGameHUD? hud;
         // Game systems
         private GameSystems gameSystems = null!;
-
+private PrefabRenderer? prefabRenderer;
         // UI systems
         private OpenGLInventoryUI? inventoryUI;
 
@@ -325,7 +325,10 @@ namespace Aetheris
             // Update tooltip
             bool showTooltip = inventoryUI != null && inventoryUI.IsInventoryOpen() && inventoryUI.GetHoveredSlot() >= 0;
             tooltipSystem?.Update(deltaTime, showTooltip);
-
+if (gameSystems.PrefabMining != null)
+{
+    gameSystems.PrefabMining.Update(deltaTime, MouseState.IsButtonDown(MouseButton.Left));
+}
             // Gameplay updates (only when not in UI)
             if (!inventoryOpen && !chatOpen)
             {
@@ -643,7 +646,16 @@ namespace Aetheris
 
             // Render terrain
             Renderer.Render(projection, view, player.Position);
-
+if (prefabRenderer != null && clientWorld != null)
+{
+    prefabRenderer.RenderPrefabs(
+        clientWorld,
+        player.Position,
+        view,
+        projection,
+        maxRenderDistance: renderDistance * ClientConfig.CHUNK_SIZE
+    );
+}
             // Render remote players
             if (entityRenderer != null && NetworkController != null)
             {
@@ -727,7 +739,7 @@ namespace Aetheris
             chatSystem?.Dispose();
             entityRenderer?.Dispose();
             gameSystems?.Dispose();
-
+prefabRenderer?.Dispose();
             try
             {
                 if (originalConsoleOut != null)

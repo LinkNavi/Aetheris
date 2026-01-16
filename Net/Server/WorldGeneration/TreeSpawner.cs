@@ -86,13 +86,13 @@ namespace Aetheris
             }
             
             // If we got here, we should spawn a tree
-            Console.WriteLine($"[TreeSpawner] PASSED density check at ({x}, {z}): roll={roll:F3}, density={density:F3}, biome={columnData.Biome}");
+         //   Console.WriteLine($"[TreeSpawner] PASSED density check at ({x}, {z}): roll={roll:F3}, density={density:F3}, biome={columnData.Biome}");
             
             // Choose tree type based on biome
             int treeId = ChooseTreeType(columnData.Biome, surfaceY);
             if (treeId == 0)
             {
-                Console.WriteLine($"[TreeSpawner] No tree type for biome {columnData.Biome}");
+          //      Console.WriteLine($"[TreeSpawner] No tree type for biome {columnData.Biome}");
                 return;
             }
             
@@ -103,14 +103,14 @@ namespace Aetheris
                 return;
             }
             
-            Console.WriteLine($"[TreeSpawner] Chose {treeDef.Name}, checking placement...");
+      //      Console.WriteLine($"[TreeSpawner] Chose {treeDef.Name}, checking placement...");
             
             // Find a good Y position by checking a range around the surface
             int bestY = FindBestTreeHeight(x, z, surfaceY, treeDef.BlockSize);
             
             if (bestY == -1)
             {
-                Console.WriteLine($"[TreeSpawner] Could not find suitable height near surface {surfaceY}");
+            //    Console.WriteLine($"[TreeSpawner] Could not find suitable height near surface {surfaceY}");
                 return;
             }
             
@@ -118,13 +118,13 @@ namespace Aetheris
             var treePos = new BlockPos(x, bestY, z);
             byte rotation = (byte)(random.Next(0, 4)); // Random rotation
             
-            Console.WriteLine($"[TreeSpawner] Placing {treeDef.Name} at {treePos}");
+          //  Console.WriteLine($"[TreeSpawner] Placing {treeDef.Name} at {treePos}");
             
             var result = world.Prefabs.Place(treeId, treePos, rotation, "worldgen");
             
             if (result.Success)
             {
-                Console.WriteLine($"[TreeSpawner] ✓ SUCCESS: Spawned {treeDef.Name} at ({x}, {bestY}, {z}) in {columnData.Biome} biome");
+         //       Console.WriteLine($"[TreeSpawner] ✓ SUCCESS: Spawned {treeDef.Name} at ({x}, {bestY}, {z}) in {columnData.Biome} biome");
             }
             else
             {

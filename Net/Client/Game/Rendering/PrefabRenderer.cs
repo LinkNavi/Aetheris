@@ -1,4 +1,4 @@
-// Net/Client/Game/Rendering/PrefabRenderer.cs - Render GLB prefab models in the world
+// Net/Client/Game/Rendering/PrefabRenderer.cs - Fixed version
 using System;
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL4;
@@ -20,11 +20,17 @@ namespace Aetheris
         private int locProjection, locView, locModel;
         private int locLightDir, locLightColor, locAmbient;
         private int locCameraPos, locFogDecay, locFogColor;
+        private int locBaseColor;
+        
+        // Fallback cube mesh for when models don't load
+        private int fallbackVao, fallbackVbo;
+        private int fallbackVertexCount;
         
         public PrefabRenderer()
         {
             modelLoader = new GLBModelLoader();
             InitializeShader();
+            InitializeFallbackMesh();
         }
         
         /// <summary>
@@ -47,7 +53,7 @@ namespace Aetheris
             
             Vector3 lightDir = new Vector3(0.5f, 1f, 0.3f);
             Vector3 lightColor = new Vector3(1f, 1f, 1f);
-            Vector3 ambient = new Vector3(0.3f, 0.3f, 0.3f);
+            Vector3 ambient = new Vector3(0.4f, 0.4f, 0.4f);
             Vector3 fogColor = new Vector3(0.5f, 0.6f, 0.7f);
             
             GL.Uniform3(locLightDir, ref lightDir);
@@ -76,25 +82,36 @@ namespace Aetheris
                 
                 if (distance > maxRenderDistance) continue;
                 
-                // Load model
+                // Try to load model
                 var model = modelLoader.LoadModel(prefabDef.ModelPath);
-                if (model == null) continue;
+                bool usingFallback = (model == null);
                 
                 // Calculate model matrix
                 Matrix4 modelMatrix = CalculatePrefabTransform(prefab, prefabDef);
                 GL.UniformMatrix4(locModel, false, ref modelMatrix);
                 
-                // Render the model
-                GL.BindVertexArray(model.VAO);
+                // Set color based on prefab type
+                Vector4 baseColor = GetPrefabColor(prefabDef);
+                GL.Uniform4(locBaseColor, ref baseColor);
                 
-                if (model.UseIndices)
+                // Render the model or fallback
+                if (usingFallback)
                 {
-                    GL.DrawElements(PrimitiveType.Triangles, model.IndexCount, 
-                        DrawElementsType.UnsignedInt, 0);
+                    RenderFallbackCube();
                 }
                 else
                 {
-                    GL.DrawArrays(PrimitiveType.Triangles, 0, model.VertexCount);
+                    GL.BindVertexArray(model.VAO);
+                    
+                    if (model.UseIndices)
+                    {
+                        GL.DrawElements(PrimitiveType.Triangles, model.IndexCount, 
+                            DrawElementsType.UnsignedInt, 0);
+                    }
+                    else
+                    {
+                        GL.DrawArrays(PrimitiveType.Triangles, 0, model.VertexCount);
+                    }
                 }
                 
                 rendered++;
@@ -106,6 +123,124 @@ namespace Aetheris
             {
                 Console.WriteLine($"[PrefabRenderer] Rendered {rendered} prefabs this frame");
             }
+        }
+        
+        private Vector4 GetPrefabColor(PrefabDefinition def)
+        {
+            // Color based on prefab type
+            if (def.Category == "nature" || HasTag(def, "tree"))
+            {
+                return new Vector4(0.3f, 0.6f, 0.2f, 1f); // Green for trees
+            }
+            else if (def.Category == "ores" || HasTag(def, "ore"))
+            {
+                // Color based on ore type
+                if (HasTag(def, "ore_coal")) return new Vector4(0.2f, 0.2f, 0.2f, 1f);
+                if (HasTag(def, "ore_iron")) return new Vector4(0.7f, 0.6f, 0.5f, 1f);
+                if (HasTag(def, "ore_copper")) return new Vector4(0.8f, 0.5f, 0.3f, 1f);
+                if (HasTag(def, "ore_diamond")) return new Vector4(0.4f, 0.8f, 1f, 1f);
+                return new Vector4(0.6f, 0.6f, 0.6f, 1f); // Default gray
+            }
+            
+            return new Vector4(0.8f, 0.8f, 0.8f, 1f); // Default
+        }
+        
+        private bool HasTag(PrefabDefinition def, string tag)
+        {
+            foreach (var t in def.Tags)
+            {
+                if (t == tag) return true;
+            }
+            return false;
+        }
+        
+        private void RenderFallbackCube()
+        {
+            GL.BindVertexArray(fallbackVao);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, fallbackVertexCount);
+        }
+        
+        private void InitializeFallbackMesh()
+        {
+            // Create a simple cube mesh as fallback
+            float s = 1f;
+            float[] vertices = {
+                // Front face
+                -s, -s,  s,  0, 0, 1,  0, 0,
+                 s, -s,  s,  0, 0, 1,  1, 0,
+                 s,  s,  s,  0, 0, 1,  1, 1,
+                -s, -s,  s,  0, 0, 1,  0, 0,
+                 s,  s,  s,  0, 0, 1,  1, 1,
+                -s,  s,  s,  0, 0, 1,  0, 1,
+                
+                // Back face
+                 s, -s, -s,  0, 0, -1,  0, 0,
+                -s, -s, -s,  0, 0, -1,  1, 0,
+                -s,  s, -s,  0, 0, -1,  1, 1,
+                 s, -s, -s,  0, 0, -1,  0, 0,
+                -s,  s, -s,  0, 0, -1,  1, 1,
+                 s,  s, -s,  0, 0, -1,  0, 1,
+                
+                // Top face
+                -s,  s,  s,  0, 1, 0,  0, 0,
+                 s,  s,  s,  0, 1, 0,  1, 0,
+                 s,  s, -s,  0, 1, 0,  1, 1,
+                -s,  s,  s,  0, 1, 0,  0, 0,
+                 s,  s, -s,  0, 1, 0,  1, 1,
+                -s,  s, -s,  0, 1, 0,  0, 1,
+                
+                // Bottom face
+                -s, -s, -s,  0, -1, 0,  0, 0,
+                 s, -s, -s,  0, -1, 0,  1, 0,
+                 s, -s,  s,  0, -1, 0,  1, 1,
+                -s, -s, -s,  0, -1, 0,  0, 0,
+                 s, -s,  s,  0, -1, 0,  1, 1,
+                -s, -s,  s,  0, -1, 0,  0, 1,
+                
+                // Right face
+                 s, -s,  s,  1, 0, 0,  0, 0,
+                 s, -s, -s,  1, 0, 0,  1, 0,
+                 s,  s, -s,  1, 0, 0,  1, 1,
+                 s, -s,  s,  1, 0, 0,  0, 0,
+                 s,  s, -s,  1, 0, 0,  1, 1,
+                 s,  s,  s,  1, 0, 0,  0, 1,
+                
+                // Left face
+                -s, -s, -s,  -1, 0, 0,  0, 0,
+                -s, -s,  s,  -1, 0, 0,  1, 0,
+                -s,  s,  s,  -1, 0, 0,  1, 1,
+                -s, -s, -s,  -1, 0, 0,  0, 0,
+                -s,  s,  s,  -1, 0, 0,  1, 1,
+                -s,  s, -s,  -1, 0, 0,  0, 1,
+            };
+            
+            fallbackVertexCount = 36;
+            
+            fallbackVao = GL.GenVertexArray();
+            fallbackVbo = GL.GenBuffer();
+            
+            GL.BindVertexArray(fallbackVao);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, fallbackVbo);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), 
+                vertices, BufferUsageHint.StaticDraw);
+            
+            int stride = 8 * sizeof(float);
+            
+            // Position
+            GL.EnableVertexAttribArray(0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, stride, 0);
+            
+            // Normal
+            GL.EnableVertexAttribArray(1);
+            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, stride, 3 * sizeof(float));
+            
+            // UV
+            GL.EnableVertexAttribArray(2);
+            GL.VertexAttribPointer(2, 2, VertexAttribPointerType.Float, false, stride, 6 * sizeof(float));
+            
+            GL.BindVertexArray(0);
+            
+            Console.WriteLine("[PrefabRenderer] Initialized fallback cube mesh");
         }
         
         private Matrix4 CalculatePrefabTransform(PlacedPrefab prefab, PrefabDefinition def)
@@ -182,6 +317,7 @@ uniform vec3 uAmbient;
 uniform vec3 uCameraPos;
 uniform float uFogDecay;
 uniform vec3 uFogColor;
+uniform vec4 uBaseColor;
 
 void main()
 {
@@ -191,8 +327,8 @@ void main()
     float diff = max(dot(normal, normalize(uLightDir)), 0.0);
     vec3 diffuse = diff * uLightColor;
     
-    // Simple texture color (or use a default green for trees)
-    vec3 baseColor = vec3(0.3, 0.6, 0.2); // Green for trees
+    // Use base color (set per prefab type)
+    vec3 baseColor = uBaseColor.rgb;
     
     // Combine lighting
     vec3 result = (uAmbient + diffuse) * baseColor;
@@ -228,6 +364,7 @@ void main()
             locCameraPos = GL.GetUniformLocation(shaderProgram, "uCameraPos");
             locFogDecay = GL.GetUniformLocation(shaderProgram, "uFogDecay");
             locFogColor = GL.GetUniformLocation(shaderProgram, "uFogColor");
+            locBaseColor = GL.GetUniformLocation(shaderProgram, "uBaseColor");
             
             Console.WriteLine("[PrefabRenderer] Shader initialized");
         }
@@ -254,6 +391,14 @@ void main()
             if (shaderProgram != 0)
             {
                 GL.DeleteProgram(shaderProgram);
+            }
+            if (fallbackVao != 0)
+            {
+                GL.DeleteVertexArray(fallbackVao);
+            }
+            if (fallbackVbo != 0)
+            {
+                GL.DeleteBuffer(fallbackVbo);
             }
         }
     }

@@ -16,6 +16,7 @@ namespace Aetheris
         public BlockBreakingSystem BreakingSystem { get; private set; } = null!;
         public CraftingManager Crafting { get; private set; } = null!;
         
+public PrefabMiningSystem? PrefabMining { get; private set; }
         private bool initialized;
         private Player? player;
         private Game? game;
@@ -46,7 +47,21 @@ namespace Aetheris
             PlacementSystem = new BlockPlacementSystem(player, game, client);
             BreakingSystem = new BlockBreakingSystem(PlacedBlocks, Inventory);
             Crafting = new CraftingManager(Inventory);
-            
+            PrefabMining = new PrefabMiningSystem(
+    player, 
+    game, 
+    clientWorld, 
+    client,
+    (itemId, count) => {
+        bool added = Inventory.AddItem(itemId, count);
+        if (added)
+        {
+            var itemDef = ItemRegistry.Get(itemId);
+            string itemName = itemDef?.Name ?? $"Item {itemId}";
+            Console.WriteLine($"[PrefabMining] Collected {count}x {itemName}");
+        }
+    }
+);
             // Wire up events
             Stats.OnDeath += OnPlayerDeath;
             
