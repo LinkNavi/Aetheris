@@ -430,7 +430,7 @@ namespace Aetheris
 
                 // Send collision mesh
                 await SendCollisionMeshAsync(stream, result.collisionMesh, token);
-
+await SendPrefabDataAsync(stream, cx, cy, cz, token);
                 lock (perfLock)
                 {
                     totalRequests++;
@@ -443,7 +443,72 @@ namespace Aetheris
                 Log($"[Server] Error handling chunk {coord}: {ex.Message}");
             }
         }
-
+private async Task SendPrefabDataAsync(NetworkStream stream, int cx, int cy, int cz, CancellationToken token)
+{
+    if (serverWorld == null)
+    {
+        // Send empty prefab list
+        await PacketIO.WritePacketAsync(stream, new byte[] { 0, 0, 0, 0 }, token);
+        return;
+    }
+    
+    // Get prefabs in this chunk
+    var chunkPrefabs = new List<PlacedPrefab>();
+    
+    // Calculate chunk bounds in block coordinates
+    int minBx = cx * (ServerConfig.CHUNK_SIZE / GridConfig.BLOCK_SIZE);
+    int maxBx = (cx + 1) * (ServerConfig.CHUNK_SIZE / GridConfig.BLOCK_SIZE);
+    int minBy = cy * (ServerConfig.CHUNK_SIZE_Y / GridConfig.BLOCK_SIZE);
+    int maxBy = (cy + 1) * (ServerConfig.CHUNK_SIZE_Y / GridConfig.BLOCK_SIZE);
+    int minBz = cz * (ServerConfig.CHUNK_SIZE / GridConfig.BLOCK_SIZE);
+    int maxBz = (cz + 1) * (ServerConfig.CHUNK_SIZE / GridConfig.BLOCK_SIZE);
+    
+    // Search for prefabs in chunk
+    var centerPos = new BlockPos(
+        (minBx + maxBx) / 2,
+        (minBy + maxBy) / 2,
+        (minBz + maxBz) / 2
+    );
+    
+    int searchRadius = Math.Max(
+        Math.Max(maxBx - minBx, maxBy - minBy),
+        maxBz - minBz
+    );
+    
+    foreach (var prefab in serverWorld.GetPrefabsInRange(centerPos, searchRadius))
+    {
+        // Check if prefab overlaps this chunk
+        if (prefab.Position.X >= minBx && prefab.Position.X < maxBx &&
+            prefab.Position.Y >= minBy && prefab.Position.Y < maxBy &&
+            prefab.Position.Z >= minBz && prefab.Position.Z < maxBz)
+        {
+            chunkPrefabs.Add(prefab);
+        }
+    }
+    
+    // Serialize prefab data
+    using var ms = new MemoryStream();
+    using var writer = new BinaryWriter(ms);
+    
+    writer.Write(chunkPrefabs.Count);
+    
+    foreach (var prefab in chunkPrefabs)
+    {
+        writer.Write(prefab.PrefabId);
+        writer.Write(prefab.Position.X);
+        writer.Write(prefab.Position.Y);
+        writer.Write(prefab.Position.Z);
+        writer.Write(prefab.Rotation);
+        writer.Write(prefab.PlacedBy ?? "");
+    }
+    
+    await PacketIO.WritePacketAsync(stream, ms.ToArray(), token);
+    
+    if (chunkPrefabs.Count > 0)
+    {
+        Log($"[Server] Sent {chunkPrefabs.Count} prefabs for chunk ({cx},{cy},{cz})");
+    }
+}
         private async Task SendRenderMeshAsync(NetworkStream stream, float[] renderMesh, CancellationToken token)
         {
             int vertexCount = renderMesh.Length / 7;
