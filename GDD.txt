@@ -1,0 +1,411 @@
+================================================================
+                        AETHERIS
+                  Game Design Document (Draft)
+================================================================
+
+----------------------------------------------------------------
+OVERVIEW
+----------------------------------------------------------------
+Aetheris is a first-person survival game with moderate challenge
+and steady progression. Death is punishing but fair. The world
+rewards exploration and experimentation. Your "class" is defined
+entirely by the weapons and totems you carry — there is no class
+selection screen.
+
+----------------------------------------------------------------
+CLASS SYSTEM
+----------------------------------------------------------------
+There are 8 recognized archetypes, but they aren't chosen from
+a menu. You become your class by what you equip. No weapon
+locks — any build can use any weapon, but totems reward
+specialization. No innate passives — everything comes from
+totems and weapons.
+
+TOTEMS are the core identity system. You can carry up to 5.
+They augment your stats, unlock active skills, and modify your
+attack timing. Some totems only activate meaningfully with
+certain weapon types.
+
+REVIVAL TOKENS
+  Found in the world only — cannot be crafted.
+  Cannot be stacked, one held at a time.
+  No cooldown — scarcity is the balance mechanic.
+  Can be used on self (bypasses corpse beacon, keep all items)
+  or on a dead teammate (they revive with full loot intact).
+
+-- ROGUE --
+  Totem:   Shade Totem (required for build identity)
+  Weapons: Daggers, short bows
+  Cannot parry. Shade Totem disables it entirely.
+  In exchange: dodge rolls travel farther and have longer
+  I-frames than any other build. Punishes enemies between
+  their attacks. Fragile if caught standing still.
+
+-- KNIGHT --
+  Totem:   Shield totems, counter totems
+  Weapons: Sword, Spear
+  The parry specialist. Shield bash interrupts enemy attacks
+  and staggers them, opening a counter window. Totems can
+  extend the counter window or buff counter damage. Slowest
+  dodge roll of any build but highest damage ceiling when
+  playing reactively. Rewards reading enemy patterns.
+
+-- SWORDMAGE --
+  Totem:   Infusion totems
+  Weapons: Sword, Staff
+  Mid-combat weapon infusion — totem skill temporarily coats
+  a melee weapon with a magic element (fire, frost, void,
+  etc.), changing its passive trait and adding elemental
+  damage for a limited time. Swapping totems mid-fight changes
+  what infusion is available. High skill ceiling, strong burst
+  windows.
+
+-- SUMMONER --
+  Totem:   Bond totems
+  Weapons: Staff, any
+  Finds eggs and cores hidden throughout the world. Eggs hatch
+  into permanent companions with their own AI, health pool,
+  and loose level scaling. Max 2 permanent companions.
+  Permanent companions are permadeath — losing one is a
+  meaningful setback, they do not respawn.
+  Bond totems also unlock temporary companions on a time limit,
+  with no cap on how many can be active. Temp companions act
+  as fodder and distraction. Weakest solo early, strongest in
+  sustained fights mid to late game.
+
+-- ARCHER --
+  Totem:   Quiver totems, sight totems
+  Weapons: Bow
+  Pure ranged. Totem skills add effects to arrows — pierce,
+  split shot, elemental coating, trap arrows. Drawing the bow
+  drains stamina so resource management is critical. Sight
+  totems extend range and reduce sway. Weakest in enclosed
+  spaces, devastating in open terrain and the Aether.
+
+-- CLERIC --
+  Totem:   Blessing totems, ward totems
+  Weapons: Staff, Mace
+  Team support anchor. Carries Revival Tokens found in the
+  world to revive dead teammates, bypassing the corpse beacon.
+  Ward totems place damage-absorbing fields. Blessing totems
+  buff nearby allies' sanity and stamina regen. Solo Cleric is
+  viable but slower — pays off heavily in server groups.
+
+-- APOTHECARY --
+  Totem:   Brew totems
+  Weapons: Dagger, any
+  Field alchemist. Brew totems unlock on-the-fly splash potion
+  crafting from carried ingredients — no workbench needed.
+  Potions heal, poison, disorient, slow, or apply elemental
+  effects to a target area. The only build with reliable AoE
+  damage outside of magic. Strong sanity tools. Weak in direct
+  melee but excellent at controlling a fight's tempo.
+
+-- MONK --
+  Totem:   Discipline totems
+  Weapons: Spear, Fists (unarmed — highest base attack speed)
+  The only build with a unique resource meter: the DISCIPLINE
+  METER. Fills by landing hits and successfully parrying.
+  Spent to instantly clear sanity buildup or trigger a heal.
+  Cannot be used offensively — purely a survival resource.
+  A Monk who whiffs and eats hits bleeds the meter dry.
+  Pairs best with high attack speed weapons to fill quickly.
+
+----------------------------------------------------------------
+CORE MECHANICS
+----------------------------------------------------------------
+
+COMBAT
+  - All attacks have start lag and end lag, tuned per weapon
+    and active totems.
+  - Parry window is tight — skill rewarded, not spam.
+  - Dodge roll has I-frames. Rogue builds get longer rolls and
+    longer I-frames via the Shade Totem.
+  - Stamina gates sprinting, dodging, and heavy attacks.
+
+DEATH & CORPSE SYSTEM
+  - On death, your corpse becomes an Undead Knight.
+  - A beacon spawns at your death location.
+  - You respawn with nothing — bare hands.
+  - To recover your items, find the beacon and slay your old
+    corpse.
+  - On a multiplayer server, if another player kills your
+    Undead Knight first, they get your loot.
+
+SURVIVAL METERS
+  - Hunger & Thirst — deplete over time. At low levels they
+    drain stamina and sanity.
+  - Stamina — governs dodges, sprints, and heavy attacks.
+    Regenerates out of combat.
+  - Sanity — drains in dark areas and caves, and on certain
+    hits. At 0% a Corruption Event triggers.
+
+CORRUPTION EVENT
+  When sanity hits 0%:
+    - Mobs aggro from farther away.
+    - Phantom enemies appear that deal real damage.
+    - HUD and audio distort.
+  Reset sanity by eating specific foods, using Cleric totems,
+  or sleeping.
+
+----------------------------------------------------------------
+MOBS
+----------------------------------------------------------------
+
+WYVERN
+  A weaker cousin of the dragon. Dives and swoops to attack.
+  To stun it, build or place a wall in its flight path, then
+  attack while it's grounded.
+  Drops: Wyvern Wing (needed to craft the glide item).
+  Spawns: Open overworld and cliff areas.
+
+UNDEAD KNIGHT
+  Rare but dangerous. Can parry and dodge the player's attacks.
+  Spawns weaker undead mobs around it as protection.
+  Scales with player level.
+  Drops: High-tier loot.
+  Note: Your death corpse becomes a version of this.
+
+HEADCRAWLER (name pending)
+  A fast, erratic creature that lunges without warning.
+  Low health but deals sanity damage on hit.
+  Spawns alone in caves.
+  Purpose: Makes caves feel unsafe even at high level.
+
+----------------------------------------------------------------
+PROGRESSION
+----------------------------------------------------------------
+
+== OVERWORLD ==
+The starting layer. Familiar but deceptively dangerous.
+
+  1. Bare Hands — punch trees, gather flint
+  2. Flint Tools — basic axe, knife, small game hunting
+  3. Stone Tools — full early kit, build shelter
+  4. First Minor Boss — field guardian or corrupted beast;
+     drops a key crafting material
+  5. First Workbench — unlocks mid-tier recipes
+  6. Iron-Equivalent Tools — better weapons and gathering
+  7. First Overworld Dungeon — structured encounters,
+     mini-bosses, first totem exposure
+  8. First Forge — unlocks weapon smithing and alloys
+  9. First Alloy — stronger than iron
+ 10. Caves unlocked
+
+== CAVES ==
+Dark, claustrophobic, resource-rich. Sanity drains faster here.
+
+  - Headcrawlers make early caves dangerous
+  - New ore tiers found only underground
+  - Second Workbench tier found inside cave dungeon
+  - Cave Boss — drops a crafting material and reveals the
+    Aether Structure location on the map
+  - Deeper caves have bioluminescent zones with unique
+    crafting materials
+  - Second Forge tier — unlocks advanced alloys
+
+== AETHER ==
+A sky realm. Floaty, bright, deceptively peaceful.
+Platforms drift and shift. Gravity is reduced.
+
+  - Activate by finding and powering the Aether Structure
+    (revealed after clearing the Cave dungeon)
+  - Dodge rolls go farther, falls are slower
+  - Wyvern variants are common here — the Wyvern Wing glider
+    is near-mandatory
+  - Aether Dungeon has a vertical layout requiring gliding
+    and platforming skill
+  - Aether-exclusive totems drop here — highest sanity buffs
+    in the game
+
+  THE CELESTIAL LOCK (Aether Gate into the Final Dimension):
+
+  Boss 1 — The Aether Warden
+    A massive aerial guardian. Standard weapons work here.
+    On death it drops the AETHER CORE.
+
+  Crafting the Gate Weapons
+    Take the Aether Core to the Aether Forge.
+    It splits into 3 weapons:
+
+      Skyblade        — melee, fast, bonus damage on aerial
+                        targets. Suits Knight / Monk / Rogue.
+      Starcaller Bow  — ranged, arrows pierce multiple enemies.
+                        Suits Archer.
+      Voidweave Staff — magic catalyst, enables full-power
+                        spellcasting. Suits Summoner /
+                        Swordmage / Cleric.
+
+    Apothecary builds support whoever wields the three weapons
+    rather than needing a gate weapon themselves.
+
+  Boss 2 — The Final Sentinel
+    Sits at the threshold between the Aether and the Final
+    Dimension. Completely immune to everything EXCEPT the three
+    gate weapons. No chip damage, no totem effects, no magic
+    not cast through the Voidweave Staff.
+
+    Forces server groups to coordinate across all three
+    archetypes. Solo players must craft all three and
+    weapon-swap mid-fight.
+
+    Drops: VOID SHARD — activates the Final Dimension structure.
+
+== FINAL DIMENSION (name TBD) ==
+The endgame. Alien, hostile, visually distinct from everything
+prior.
+
+  - Sanity drains constantly — Cleric and Apothecary shine here
+  - All previous mob types appear as corrupted variants
+  - Final Dungeon — the longest in the game, designed for a
+    server group
+  - Final Boss — drops end-game materials and triggers the
+    win condition
+
+  WIN CONDITION:
+    Craft the AETHERIC CORE and place it at the world's spawn
+    point. This permanently stabilizes the corruption for that
+    server. It's a server-wide event — everyone benefits or
+    competes for it.
+
+----------------------------------------------------------------
+MULTIPLAYER
+----------------------------------------------------------------
+  - Persistent world servers (like Minecraft / Rust)
+  - PvP or PvE server flags
+  - Other players can loot your Undead Knight if they kill it
+  - The Aetheric Core win condition affects the whole server
+  - Sanity corruption events are local to each player
+
+----------------------------------------------------------------
+WEAPON FORGING SYSTEM
+----------------------------------------------------------------
+
+THE PROCESS
+  Ores are smelted into liquid at a forge and poured into part
+  casts. Casts are molds for specific weapon parts — find or
+  unlock the cast pattern, fill it with molten material, and
+  assemble the parts into a finished weapon.
+
+  Higher tier ores require higher tier forges to smelt. You
+  cannot cheat progression by carrying ore forward — the forge
+  is the gate, not the ore.
+
+FORGE TIERS
+  Tier 1 (Overworld, early)       — smelts Overworld Groups 1 & 2
+  Tier 2 (Overworld, post-dungeon)— smelts Overworld Group 3
+                                    and Cave Group 1
+  Tier 3 (Caves)                  — smelts Cave Groups 2 & 3
+                                    and Aether Group 1
+  Tier 4 (Aether)                 — smelts Aether Groups 2 & 3
+                                    and Final Dimension ores
+
+WEAPON PARTS BY TYPE
+  Each part is cast separately and contributes its own stats.
+
+  Sword   — Blade, Guard, Handle
+  Bow     — Limbs, Grip, String Anchor
+  Staff   — Focus Gem, Shaft, Base
+  Axe     — Head, Beard, Handle
+  Dagger  — Blade, Grip (2 parts, simplest weapon)
+  Spear   — Head, Pole, Butt Cap
+
+WHAT PARTS CONTRIBUTE
+  Every part pulls from its material's stat pool:
+
+  Durability           — how long before the weapon needs repair
+  Attack Speed         — affects start and end lag
+  Passive Trait        — a single passive effect tied to the ore
+  Synergy Bonus        — if two or more parts share the same ore
+                         GROUP (not the same ore), a bonus trait
+                         activates on top of individual stats
+
+  Synergy rewards mixing within a group without forcing one
+  correct combo. Two different ores from the same group will
+  always synergize. Two ores from different groups never will.
+
+ORE GROUPS
+  Groups within the same dimension are lateral — no best option,
+  just different strengths and traits. Groups in higher
+  dimensions are strictly stronger than those below.
+
+  -- OVERWORLD --
+
+  Group 1 (early)
+    Ashfen    — high durability, trait: minor lifesteal
+    Greyveil  — balanced stats, trait: slow on hit
+
+  Group 2 (mid)
+    Duskram   — high attack speed, trait: bleed on hit
+    Emberrak  — high durability, trait: stamina cost reduction
+
+  Group 3 (late)
+    Scorvite  — very high attack speed, trait: burn on hit
+    Thornvel  — very high durability, trait: extended bleed
+
+  -- CAVES --
+
+  Group 1
+    Murkvein  — high durability, trait: blindness on hit
+    Gloomite  — high attack speed, trait: sanity drain aura
+
+  Group 2
+    Vaulmar   — balanced, trait: echo damage (delayed 2nd hit)
+    Hollowfen — high durability, trait: lifesteal
+
+  Group 3
+    Abyssram  — high attack speed, trait: fear on hit
+    Cryptveil — high durability, trait: stacking poison
+
+  -- AETHER --
+
+  Group 1
+    Driftfen  — high attack speed, trait: float on kill
+    Veilstone — high durability, trait: reduced fall damage
+
+  Group 2
+    Stormveil — balanced, trait: chain lightning on hit
+    Skyvein   — high attack speed, trait: aerial damage bonus
+
+  Group 3
+    Solenvite — high attack speed, trait: sanity restore on kill
+    Voidglass — high durability, trait: damage scales with height
+
+  -- FINAL DIMENSION --
+
+  Group 1
+    Corrveil  — high attack speed, trait: corruption burst
+    Ashvoid   — high durability, trait: health drain aura
+
+  Group 2
+    Voidheart — balanced, trait: nullify enemy passive on hit
+    Nullvite  — high attack speed, trait: stamina refill on kill
+
+  Group 3 (endgame)
+    Aethramite — high durability, trait: all damage types at once
+    Voidram    — high attack speed, trait: instant kill threshold
+
+SYNERGY EXAMPLE
+  Sword with Ashfen Blade + Ashfen Guard + Greyveil Handle:
+    Each part gives its individual trait, PLUS the Group 1
+    overworld synergy bonus activates — e.g. 10% chance to
+    trigger all three traits simultaneously on a hit.
+
+  Swap the Guard for a Duskram Guard (Group 2):
+    No synergy. But you gain bleed on hit from the Guard slot,
+    which may suit your build better. Neither is wrong.
+
+----------------------------------------------------------------
+THINGS NOT YET DECIDED
+----------------------------------------------------------------
+  - Cave Boss identity and fight gimmick
+  - Final Dimension name
+  - Full totem list (what each of the base totems does)
+  - Whether food also restores sanity/stamina or is purely
+    survival
+  - Temperature and weather (could complement each dimension
+    naturally — caves are cold, Aether has thin air, etc.)
+
+================================================================
+                     END OF DOCUMENT
+================================================================
