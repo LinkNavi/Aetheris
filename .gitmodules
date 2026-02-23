@@ -1,0 +1,6 @@
+[submodule "subprojects/FastNoise2"]
+	path = subprojects/FastNoise2
+	url = https://github.com/Auburn/FastNoise2.git
+[submodule "thirdparty/FastSIMD"]
+	path = thirdparty/FastSIMD
+	url = https://github.com/Auburn/FastSIMD.git
