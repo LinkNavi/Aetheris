@@ -17,6 +17,7 @@ struct ChunkMesh {
     std::vector<Vertex>   vertices;
     std::vector<uint32_t> indices;
 };
+
 #include <functional>
 struct ChunkCoordHash {
     size_t operator()(const ChunkCoord& c) const {
@@ -27,9 +28,10 @@ struct ChunkCoordHash {
         return h;
     }
 };
-// Scalar field — server fills this, shared code meshes it
+
 struct ChunkData {
     ChunkCoord coord;
-    static constexpr int SIZE = 32;
-    float values[SIZE][SIZE][SIZE];
+    static constexpr int SIZE   = 32;
+    static constexpr int PADDED = SIZE + 1; // 1-voxel overlap on +X/+Y/+Z faces
+    float values[PADDED][PADDED][PADDED];
 };

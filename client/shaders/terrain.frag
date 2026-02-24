@@ -11,7 +11,11 @@ layout(push_constant) uniform PC {
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec3  n        = normalize(fragNormal);
+vec3 an = abs(fragNormal);
+vec3 n;
+if (an.x > an.y && an.x > an.z)      n = vec3(sign(fragNormal.x), 0, 0);
+else if (an.y > an.x && an.y > an.z) n = vec3(0, sign(fragNormal.y), 0);
+else                                  n = vec3(0, 0, sign(fragNormal.z));
     vec3  sunDir   = normalize(vec3(0.6, 1.0, 0.4));
     float diffuse  = max(dot(n, sunDir), 0.0) * sunIntensity;
     float ambient  = mix(0.05, 0.2, sunIntensity);

@@ -136,23 +136,23 @@ void ChunkManager::flushReady(ENetHost* host) {
 
 float ChunkManager::findSpawnY(float wx, float wz) {
     constexpr int N = ChunkData::SIZE;
-    for (int worldY = 200; worldY > -100; worldY--) {
-        int cy  = (int)std::floor((float)worldY       / N);
-        int cy1 = (int)std::floor((float)(worldY - 1) / N);
+    int lx = ((int)wx % N + N) % N;
+    int lz = ((int)wz % N + N) % N;
 
-        ChunkCoord cc { (int)std::floor(wx/N), cy,  (int)std::floor(wz/N) };
+    for (int worldY = 400; worldY > -200; worldY--) {
+        int cy  = (int)std::floor((float)worldY / N);
+        int ly  = ((worldY % N) + N) % N;
+        int cy1 = (int)std::floor((float)(worldY + 1) / N);
+        int ly1 = (((worldY + 1) % N) + N) % N;
+
+        ChunkCoord cc0{ (int)std::floor(wx/N), cy,  (int)std::floor(wz/N) };
         ChunkCoord cc1{ (int)std::floor(wx/N), cy1, (int)std::floor(wz/N) };
 
-        ChunkData d0 = generateChunk(cc);
-        ChunkData d1 = generateChunk(cc1);
+        float vSolid = generateChunk(cc0).values[lx][ly][lz];
+        float vAir   = generateChunk(cc1).values[lx][ly1][lz];
 
-        int lx  = ((int)wx % N + N) % N;
-        int lz  = ((int)wz % N + N) % N;
-        int ly0 = ((worldY       % N) + N) % N;
-        int ly1 = (((worldY - 1) % N) + N) % N;
-
-        if (d0.values[lx][ly0][lz] >= 0.f && d1.values[lx][ly1][lz] < 0.f)
-            return (float)worldY + Config::PLAYER_HEIGHT + 1.f;
+        if (vSolid < 0.f && vAir >= 0.f)
+            return (float)(worldY + 1) + 2.0f;
     }
-    return 60.f;
+    return 120.f;
 }

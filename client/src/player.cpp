@@ -46,40 +46,6 @@ bool PlayerController::aabbTriTest(glm::vec3 mn, glm::vec3 mx,
     return true;
 }
 
-// ── Spawn gate ────────────────────────────────────────────────────────────────
-// We only require the 3×3 column of chunks at and below the spawn point
-// (down 1 chunk vertically), plus 1 chunk above.  This is the minimal set
-// needed for the player to land safely without falling through the world.
-// On slow hardware this halves the wait time vs waiting for all 27.
-
-void PlayerController::buildRequiredChunks(glm::vec3 pos) {
-    _requiredChunks.clear();
-    int sz = ChunkData::SIZE;
-    int cx = (int)std::floor(pos.x / sz);
-    int cy = (int)std::floor(pos.y / sz);
-    int cz = (int)std::floor(pos.z / sz);
-    // 3×3 XZ footprint, Y from 1 below to 1 above spawn chunk
-    for (int dx = -1; dx <= 1; dx++)
-    for (int dz = -1; dz <= 1; dz++)
-    for (int dy = -1; dy <= 1; dy++)
-        _requiredChunks.insert({cx+dx, cy+dy, cz+dz});
-}
-
-bool PlayerController::spawnChunksReady() const {
-    if (_requiredChunks.empty()) return false;
-    for (const auto& cc : _requiredChunks)
-        if (_triSoups.find(cc) == _triSoups.end()) return false;
-    return true;
-}
-
-float PlayerController::spawnProgress() const {
-    if (_spawned || _requiredChunks.empty()) return _spawned ? 1.f : 0.f;
-    int have = 0;
-    for (const auto& cc : _requiredChunks)
-        if (_triSoups.count(cc)) have++;
-    return (float)have / (float)_requiredChunks.size();
-}
-
 // ── PlayerController ──────────────────────────────────────────────────────────
 
 PlayerController::PlayerController(entt::registry& reg, Camera& cam)
@@ -120,6 +86,37 @@ void PlayerController::setSpawnPosition(glm::vec3 pos) {
     _spawned         = false;
     _triSoups.clear();
     buildRequiredChunks(pos);
+}
+
+void PlayerController::buildRequiredChunks(glm::vec3 pos) {
+    _requiredChunks.clear();
+    int sz = ChunkData::SIZE;
+    int cx = (int)std::floor(pos.x / sz);
+    int cy = (int)std::floor(pos.y / sz);
+    int cz = (int)std::floor(pos.z / sz);
+    for (int dx = -1; dx <= 1; dx++)
+    for (int dz = -1; dz <= 1; dz++)
+    for (int dy = -1; dy <= 1; dy++)
+        _requiredChunks.insert({cx+dx, cy+dy, cz+dz});
+}
+
+bool PlayerController::spawnChunksReady() const {
+    if (!_hasPendingSpawn) return false;
+    int N = ChunkData::SIZE;
+    // Only require the chunk at and one below spawn
+    ChunkCoord atSpawn   { (int)std::floor(_pendingSpawn.x / N),
+                           (int)std::floor(_pendingSpawn.y / N),
+                           (int)std::floor(_pendingSpawn.z / N) };
+    ChunkCoord belowSpawn{ atSpawn.x, atSpawn.y - 1, atSpawn.z };
+    return _triSoups.count(atSpawn) && _triSoups.count(belowSpawn);
+}
+
+float PlayerController::spawnProgress() const {
+    if (_spawned || _requiredChunks.empty()) return _spawned ? 1.f : 0.f;
+    int have = 0;
+    for (const auto& cc : _requiredChunks)
+        if (_triSoups.count(cc)) have++;
+    return (float)have / (float)_requiredChunks.size();
 }
 
 glm::vec3 PlayerController::position() const {
@@ -169,18 +166,16 @@ static glm::vec3 accelerate(glm::vec3 vel, glm::vec3 dir, float speed, float acc
 }
 
 void PlayerController::update(float dt, const Input& input) {
-    // ── Spawn gate ─────────────────────────────────────────────────────────────
-    // Wait until all chunks in _requiredChunks (the 3×3 column around the
-    // spawn point) are present in _triSoups.  Chunks outside that set that
-    // happen to arrive early do NOT count — this prevents spawning in air
-    // because random far chunks loaded first.
+    // ── Spawn gate ────────────────────────────────────────────────────────────
     if (!_spawned) {
-        if (_hasPendingSpawn && spawnChunksReady()) {
+        if (spawnChunksReady()) {
             _reg.get<CTransform>(_player).pos = _pendingSpawn;
             _reg.get<CVelocity> (_player).vel = {0.f, 0.f, 0.f};
             _hasPendingSpawn = false;
             _spawned         = true;
         } else {
+            // Still update camera so it's not frozen
+            _cam.applyMouse(input.mouseDelta());
             return;
         }
     }

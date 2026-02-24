@@ -54,7 +54,7 @@ private:
 
     bool      _spawned         = false;
     bool      _hasPendingSpawn = false;
-    glm::vec3 _pendingSpawn    {0.f, 80.f, 0.f};
+    glm::vec3 _pendingSpawn    {0.f, 120.f, 0.f};
 
     // Exact set of chunk coords that must be present before spawning.
     // Computed from the spawn position — only the 3x3 column directly

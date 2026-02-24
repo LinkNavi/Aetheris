@@ -24,8 +24,9 @@ struct PendingUpload {
     std::vector<uint32_t> indices;
 };
 
-static constexpr uint32_t MEGA_VERTEX_CAP = 1 << 17; // 131 072 verts
-static constexpr uint32_t MEGA_INDEX_CAP  = 1 << 19; // 524 288 indices
+// NEW
+static constexpr uint32_t MEGA_VERTEX_CAP = 1 << 21; // 2M verts
+static constexpr uint32_t MEGA_INDEX_CAP  = 1 << 21; // 2M indices
 
 // ── MegaBuffer ────────────────────────────────────────────────────────────────
 // Members and methods use different names to avoid C++ name-collision errors:
