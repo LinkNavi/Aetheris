@@ -4,6 +4,7 @@
 #include "day_night.h"
 #include "input.h"
 #include "log.h"
+#include "mesh_builder.h"
 #include "net_common.h"
 #include "packets.h"
 #include "player.h"
@@ -20,18 +21,19 @@ int main(int argc, char** argv) {
     Log::installCrashHandlers();
     Log::info("Client starting");
 
-    // ── Window & Vulkan ───────────────────────────────────────────────────────
-    Window window(1280, 720, "Aetheris");
+    Window   window(1280, 720, "Aetheris");
     VkContext ctx = vk_init(window.handle());
 
-    // ── Input / Camera / ECS / Player ─────────────────────────────────────────
-    Input input(window.handle());
-    Camera camera;
-    entt::registry reg;
+    Input            input(window.handle());
+    Camera           camera;
+    entt::registry   reg;
     PlayerController player(reg, camera);
-    DayNight dayNight;
+    DayNight         dayNight;
 
-    // ── Network ───────────────────────────────────────────────────────────────
+    // One worker thread for mesh building on a 2-core Chromebook:
+    // main thread stays free for render + input, worker does deserialize+march.
+    MeshBuilder meshBuilder(1);
+
     Net::init();
     Net::Host host;
 
@@ -40,10 +42,7 @@ int main(int argc, char** argv) {
     addr.port = Config::SERVER_PORT;
 
     ENetPeer* server = enet_host_connect(host.get(), &addr, 2, 0);
-    if (!server) {
-        Log::err("enet_host_connect failed");
-        return 1;
-    }
+    if (!server) { Log::err("enet_host_connect failed"); return 1; }
 
     {
         ENetEvent ev;
@@ -51,7 +50,7 @@ int main(int argc, char** argv) {
             ev.type == ENET_EVENT_TYPE_CONNECT) {
             Log::info("Connected to server");
         } else {
-            Log::err("Connection to server failed");
+            Log::err("Connection failed");
             return 1;
         }
     }
@@ -59,6 +58,8 @@ int main(int argc, char** argv) {
     using Clock = std::chrono::steady_clock;
     auto  prev     = Clock::now();
     float netAccum = 0.f;
+
+    std::vector<ChunkMesh> readyMeshes;
 
     while (!window.shouldClose()) {
         auto  now = Clock::now();
@@ -68,7 +69,7 @@ int main(int argc, char** argv) {
 
         input.beginFrame();
 
-        // ── Receive ───────────────────────────────────────────────────────────
+        // ── Receive packets (fast — no mesh work here) ────────────────────────
         ENetEvent ev;
         while (enet_host_service(host.get(), &ev, 0) > 0) {
             if (ev.type == ENET_EVENT_TYPE_RECEIVE) {
@@ -76,10 +77,8 @@ int main(int argc, char** argv) {
                 size_t         len = ev.packet->dataLength;
 
                 if (len > 0 && d[0] == (uint8_t)PacketID::ChunkData) {
-                    auto      pkt  = ChunkDataPacket::deserialize(d, len);
-                    ChunkMesh mesh = pkt.toMesh();
-                    player.addChunkMesh(mesh);
-                    vk_upload_chunk(ctx, mesh);
+                    // Hand off to worker — returns immediately
+                    meshBuilder.submit(d, len);
                 }
                 else if (len > 0 && d[0] == (uint8_t)PacketID::SpawnPosition) {
                     auto sp = SpawnPositionPacket::deserialize(d, len);
@@ -90,17 +89,27 @@ int main(int argc, char** argv) {
             }
         }
 
+        // ── Poll finished meshes (up to 4 per frame to avoid stutter) ─────────
+        // On a slow device even 4 mesh integrations per frame is conservative;
+        // tune upward if chunks arrive slowly and you want faster pop-in.
+        readyMeshes.clear();
+        meshBuilder.poll(readyMeshes, 4);
+        for (auto& mesh : readyMeshes) {
+            player.addChunkMesh(mesh);
+            vk_upload_chunk(ctx, mesh); // queued internally, flushed in vk_draw
+        }
+
         // ── Update ────────────────────────────────────────────────────────────
         player.update(dt, input);
         dayNight.update(dt);
 
-        // ── Respawn on R ──────────────────────────────────────────────────────
+        // ── Respawn ───────────────────────────────────────────────────────────
         if (input.keyPressed(GLFW_KEY_R)) {
             Net::sendReliable(server, RespawnRequestPacket{}.serialize());
             enet_host_flush(host.get());
         }
 
-        // ── Send position (throttled) ─────────────────────────────────────────
+        // ── Send position (20 Hz) ─────────────────────────────────────────────
         netAccum += dt;
         if (netAccum >= 0.05f) {
             netAccum = 0.f;
@@ -122,6 +131,6 @@ int main(int argc, char** argv) {
     enet_host_flush(host.get());
     vk_destroy(ctx);
     Net::deinit();
-    Log::info("Client shutdown clean");
+    Log::info("Client shutdown");
     Log::shutdown();
 }

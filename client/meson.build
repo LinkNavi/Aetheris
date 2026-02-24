@@ -18,6 +18,7 @@ terrain_frag_spv = custom_target('terrain_frag_spv',
 # ── Client executable ─────────────────────────────────────────────────────────
 client_src = files(
   'src/main.cpp',
+  'src/mesh_builder.cpp',
   'src/window.cpp',
   'src/vk_init.cpp',
   'src/input.cpp',

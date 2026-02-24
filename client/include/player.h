@@ -2,6 +2,7 @@
 #include <entt/entt.hpp>
 #include <glm/vec3.hpp>
 #include <unordered_map>
+#include <unordered_set>
 #include "chunk.h"
 #include "camera.h"
 #include "input.h"
@@ -9,41 +10,22 @@
 
 // ── ECS Components ────────────────────────────────────────────────────────────
 
-struct CTransform {
-    glm::vec3 pos{0.f};
-};
-
-struct CVelocity {
-    glm::vec3 vel{0.f};
-};
-
-struct CAABB {
-    glm::vec3 half{ Config::PLAYER_WIDTH  * 0.5f,
-                    Config::PLAYER_HEIGHT * 0.5f,
-                    Config::PLAYER_WIDTH  * 0.5f };
-};
-
-struct CGrounded {
-    bool grounded = false;
-};
-
+struct CTransform { glm::vec3 pos{0.f}; };
+struct CVelocity  { glm::vec3 vel{0.f}; };
+struct CAABB      { glm::vec3 half{ Config::PLAYER_WIDTH  * 0.5f,
+                                    Config::PLAYER_HEIGHT * 0.5f,
+                                    Config::PLAYER_WIDTH  * 0.5f }; };
+struct CGrounded  { bool grounded = false; };
 struct CStamina {
-    float current         = 100.f;
-    float max             = 100.f;
-    float regenRate       = 15.f;  // per second
-    float sprintCost      = 20.f;  // per second
-    float jumpCost        = 15.f;  // flat per jump
-    bool  depleted        = false;
+    float current = 100.f, max = 100.f;
+    float regenRate = 15.f, sprintCost = 20.f, jumpCost = 15.f;
+    bool  depleted = false;
     float depleteCooldown = 0.f;
 };
 
-// ── Per-chunk CPU triangle soup ───────────────────────────────────────────────
+struct ChunkTriSoup { std::vector<glm::vec3> tris; };
 
-struct ChunkTriSoup {
-    std::vector<glm::vec3> tris;
-};
-
-// ── Player controller ─────────────────────────────────────────────────────────
+// ── PlayerController ──────────────────────────────────────────────────────────
 
 class PlayerController {
 public:
@@ -58,7 +40,9 @@ public:
     entt::entity entity()    const { return _player; }
     bool         isSpawned() const { return _spawned; }
 
-    // Expose stamina for HUD
+    // 0..1 progress loading spawn chunks (for loading screen)
+    float spawnProgress() const;
+
     const CStamina& stamina() const { return _reg.get<CStamina>(_player); }
 
 private:
@@ -69,14 +53,21 @@ private:
     std::unordered_map<ChunkCoord, ChunkTriSoup, ChunkCoordHash> _triSoups;
 
     bool      _spawned         = false;
-    int       _chunksNeeded    = 27;
     bool      _hasPendingSpawn = false;
     glm::vec3 _pendingSpawn    {0.f, 80.f, 0.f};
+
+    // Exact set of chunk coords that must be present before spawning.
+    // Computed from the spawn position — only the 3x3 column directly
+    // around and below the spawn point, NOT any 27 arbitrary chunks.
+    std::unordered_set<ChunkCoord, ChunkCoordHash> _requiredChunks;
+
+    void buildRequiredChunks(glm::vec3 pos);
+    bool spawnChunksReady()  const;
 
     void resolveCollision(CTransform& tf, CVelocity& vel,
                           const CAABB& box, CGrounded& grounded);
 
-    bool aabbTriTest(glm::vec3 aabbMin, glm::vec3 aabbMax,
+    bool aabbTriTest(glm::vec3 mn, glm::vec3 mx,
                      glm::vec3 a, glm::vec3 b, glm::vec3 c,
                      glm::vec3& outMTV) const;
 };
