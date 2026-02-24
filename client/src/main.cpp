@@ -1,6 +1,9 @@
+#include "asset_path.h"
 #include "camera.h"
 #include "config.h"
+#include "day_night.h"
 #include "input.h"
+#include "log.h"
 #include "net_common.h"
 #include "packets.h"
 #include "player.h"
@@ -10,9 +13,13 @@
 #include <chrono>
 #include <enet/enet.h>
 #include <entt/entt.hpp>
-#include <iostream>
 
-int main() {
+int main(int argc, char** argv) {
+    AssetPath::init(argv[0]);
+    Log::init("aetheris_client.log");
+    Log::installCrashHandlers();
+    Log::info("Client starting");
+
     // ── Window & Vulkan ───────────────────────────────────────────────────────
     Window window(1280, 720, "Aetheris");
     VkContext ctx = vk_init(window.handle());
@@ -22,6 +29,7 @@ int main() {
     Camera camera;
     entt::registry reg;
     PlayerController player(reg, camera);
+    DayNight dayNight;
 
     // ── Network ───────────────────────────────────────────────────────────────
     Net::init();
@@ -33,7 +41,7 @@ int main() {
 
     ENetPeer* server = enet_host_connect(host.get(), &addr, 2, 0);
     if (!server) {
-        std::cerr << "[client] enet_host_connect failed\n";
+        Log::err("enet_host_connect failed");
         return 1;
     }
 
@@ -41,9 +49,9 @@ int main() {
         ENetEvent ev;
         if (enet_host_service(host.get(), &ev, 5000) > 0 &&
             ev.type == ENET_EVENT_TYPE_CONNECT) {
-            std::cout << "[client] connected to server\n";
+            Log::info("Connected to server");
         } else {
-            std::cerr << "[client] connection failed\n";
+            Log::err("Connection to server failed");
             return 1;
         }
     }
@@ -84,6 +92,7 @@ int main() {
 
         // ── Update ────────────────────────────────────────────────────────────
         player.update(dt, input);
+        dayNight.update(dt);
 
         // ── Respawn on R ──────────────────────────────────────────────────────
         if (input.keyPressed(GLFW_KEY_R)) {
@@ -106,11 +115,13 @@ int main() {
         window.getSize(w, h);
         float     aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
         glm::mat4 vp     = camera.viewProj(aspect);
-        vk_draw(ctx, vp);
+        vk_draw(ctx, vp, dayNight.sunIntensity(), dayNight.skyColor());
     }
 
     enet_peer_disconnect(server, 0);
     enet_host_flush(host.get());
     vk_destroy(ctx);
     Net::deinit();
+    Log::info("Client shutdown clean");
+    Log::shutdown();
 }

@@ -48,6 +48,12 @@ int main() {
                 else if (len > 0 && d[0] == (uint8_t)PacketID::RespawnRequest) {
                     float spawnY = chunks.findSpawnY(0.f, 0.f);
                     positions[ev.peer] = {0.f, spawnY, 0.f};
+
+                    // Reset sent set so chunks are re-delivered to client
+                    chunks.resetClient(ev.peer);
+                    chunks.sendInitialChunks(ev.peer, 0.f, spawnY, 0.f, 2, 2);
+                    enet_host_flush(host.get());
+
                     SpawnPositionPacket sp{0.f, spawnY, 0.f};
                     Net::sendReliable(ev.peer, sp.serialize());
                     enet_host_flush(host.get());

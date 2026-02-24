@@ -1,4 +1,6 @@
 #include "vk_context.h"
+#include "asset_path.h"
+#include "log.h"
 #include <stdexcept>
 #include <fstream>
 #include <vector>
@@ -37,12 +39,10 @@ static VkShaderModule makeModule(VkDevice dev, const std::vector<uint32_t>& code
     return mod;
 }
 
-// Reuses the persistent staging buffer — no alloc/free per chunk
 static void uploadBuffer(VkContext& ctx,
                          VkBufferUsageFlags usage,
                          const void* data, VkDeviceSize size,
                          VkBuffer& outBuffer, VmaAllocation& outAlloc) {
-    // Grow staging buffer if data is larger than current capacity (rare)
     if (size > ctx.stagingSize) {
         vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
         ctx.stagingSize = size * 2;
@@ -126,7 +126,6 @@ static void createDepthResources(VkContext& ctx) {
 VkContext vk_init(GLFWwindow* window) {
     VkContext ctx;
 
-    // Validation layers OFF — significant CPU overhead on low-end hardware
     auto inst = vkb::InstanceBuilder{}
         .set_app_name("Aetheris")
         .request_validation_layers(false)
@@ -174,7 +173,6 @@ VkContext vk_init(GLFWwindow* window) {
     vmaInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     check(vmaCreateAllocator(&vmaInfo, &ctx.allocator), "Failed to create VMA allocator");
 
-    // Command pool before staging buffer and depth resources
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.queueFamilyIndex = ctx.graphicsQueueFamily;
@@ -182,7 +180,6 @@ VkContext vk_init(GLFWwindow* window) {
     check(vkCreateCommandPool(ctx.device.device, &poolInfo, nullptr, &ctx.commandPool),
           "Failed to create command pool");
 
-    // Persistent staging buffer — reused for every chunk upload
     {
         VkBufferCreateInfo sCI{};
         sCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -270,8 +267,11 @@ VkContext vk_init(GLFWwindow* window) {
     }
 
     // ── Pipeline ──────────────────────────────────────────────────────────────
-    auto vertCode = loadSpv("client/shaders/terrain_vert.spv");
-    auto fragCode = loadSpv("client/shaders/terrain_frag.spv");
+    // Shaders are loaded from next to the executable via AssetPath
+    auto vertCode = loadSpv(AssetPath::get("terrain_vert.spv").c_str());
+    auto fragCode = loadSpv(AssetPath::get("terrain_frag.spv").c_str());
+    Log::info("Shaders loaded");
+
     VkShaderModule vertMod = makeModule(ctx.device.device, vertCode);
     VkShaderModule fragMod = makeModule(ctx.device.device, fragCode);
 
@@ -348,10 +348,11 @@ VkContext vk_init(GLFWwindow* window) {
     blend.attachmentCount = 1;
     blend.pAttachments    = &blendAttachment;
 
+    // Push constant: mat4 MVP + vec4 params (x=sunIntensity)
     VkPushConstantRange pushRange{};
-    pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
     pushRange.offset     = 0;
-    pushRange.size       = sizeof(glm::mat4);
+    pushRange.size       = sizeof(glm::mat4) + sizeof(glm::vec4);
 
     VkPipelineLayoutCreateInfo layoutci{};
     layoutci.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -405,11 +406,20 @@ VkContext vk_init(GLFWwindow* window) {
         check(vkCreateFence(ctx.device.device, &fenceInfo, nullptr, &ctx.inFlight[i]), "fence");
     }
 
+    Log::info("Vulkan initialised");
     return ctx;
 }
 
 void vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh) {
     if (mesh.vertices.empty()) return;
+
+    auto existing = ctx.chunks.find(mesh.coord);
+    if (existing != ctx.chunks.end()) {
+        vkDeviceWaitIdle(ctx.device.device);
+        vmaDestroyBuffer(ctx.allocator, existing->second.vertexBuffer, existing->second.vertexAlloc);
+        vmaDestroyBuffer(ctx.allocator, existing->second.indexBuffer,  existing->second.indexAlloc);
+        ctx.chunks.erase(existing);
+    }
 
     GpuChunk gpu{};
     gpu.indexCount = static_cast<uint32_t>(mesh.indices.size());
@@ -425,7 +435,22 @@ void vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh) {
     ctx.chunks[mesh.coord] = gpu;
 }
 
-void vk_draw(VkContext& ctx, const glm::mat4& viewProj) {
+void vk_remove_chunk(VkContext& ctx, ChunkCoord coord) {
+    auto it = ctx.chunks.find(coord);
+    if (it == ctx.chunks.end()) return;
+    vkDeviceWaitIdle(ctx.device.device);
+    vmaDestroyBuffer(ctx.allocator, it->second.vertexBuffer, it->second.vertexAlloc);
+    vmaDestroyBuffer(ctx.allocator, it->second.indexBuffer,  it->second.indexAlloc);
+    ctx.chunks.erase(it);
+}
+
+struct TerrainPC {
+    glm::mat4 mvp;
+    glm::vec4 params; // x=sunIntensity
+};
+
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj,
+             float sunIntensity, glm::vec3 skyColor) {
     uint32_t frame = ctx.currentFrame;
 
     vkWaitForFences(ctx.device.device, 1, &ctx.inFlight[frame], VK_TRUE, UINT64_MAX);
@@ -442,7 +467,7 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj) {
     vkBeginCommandBuffer(cmd, &beginInfo);
 
     VkClearValue clearValues[2]{};
-    clearValues[0].color        = {{0.1f, 0.1f, 0.15f, 1.0f}};
+    clearValues[0].color        = {{skyColor.r, skyColor.g, skyColor.b, 1.0f}};
     clearValues[1].depthStencil = {1.0f, 0};
 
     VkRenderPassBeginInfo rpBegin{};
@@ -460,12 +485,12 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj) {
     struct Plane { glm::vec3 n; float d; };
     Plane planes[6];
     const glm::mat4& m = viewProj;
-    planes[0] = {{ m[0][3]+m[0][0], m[1][3]+m[1][0], m[2][3]+m[2][0] }, m[3][3]+m[3][0] }; // left
-    planes[1] = {{ m[0][3]-m[0][0], m[1][3]-m[1][0], m[2][3]-m[2][0] }, m[3][3]-m[3][0] }; // right
-    planes[2] = {{ m[0][3]+m[0][1], m[1][3]+m[1][1], m[2][3]+m[2][1] }, m[3][3]+m[3][1] }; // bottom
-    planes[3] = {{ m[0][3]-m[0][1], m[1][3]-m[1][1], m[2][3]-m[2][1] }, m[3][3]-m[3][1] }; // top
-    planes[4] = {{ m[0][3]+m[0][2], m[1][3]+m[1][2], m[2][3]+m[2][2] }, m[3][3]+m[3][2] }; // near
-    planes[5] = {{ m[0][3]-m[0][2], m[1][3]-m[1][2], m[2][3]-m[2][2] }, m[3][3]-m[3][2] }; // far
+    planes[0] = {{ m[0][3]+m[0][0], m[1][3]+m[1][0], m[2][3]+m[2][0] }, m[3][3]+m[3][0] };
+    planes[1] = {{ m[0][3]-m[0][0], m[1][3]-m[1][0], m[2][3]-m[2][0] }, m[3][3]-m[3][0] };
+    planes[2] = {{ m[0][3]+m[0][1], m[1][3]+m[1][1], m[2][3]+m[2][1] }, m[3][3]+m[3][1] };
+    planes[3] = {{ m[0][3]-m[0][1], m[1][3]-m[1][1], m[2][3]-m[2][1] }, m[3][3]-m[3][1] };
+    planes[4] = {{ m[0][3]+m[0][2], m[1][3]+m[1][2], m[2][3]+m[2][2] }, m[3][3]+m[3][2] };
+    planes[5] = {{ m[0][3]-m[0][2], m[1][3]-m[1][2], m[2][3]-m[2][2] }, m[3][3]-m[3][2] };
 
     auto chunkVisible = [&](ChunkCoord coord) -> bool {
         glm::vec3 mn = glm::vec3(coord.x, coord.y, coord.z) * (float)ChunkData::SIZE;
@@ -488,10 +513,14 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj) {
             glm::vec3(coord.x * ChunkData::SIZE,
                       coord.y * ChunkData::SIZE,
                       coord.z * ChunkData::SIZE));
-        glm::mat4 mvp = viewProj * model;
 
-        vkCmdPushConstants(cmd, ctx.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
-                           0, sizeof(glm::mat4), &mvp);
+        TerrainPC pc{};
+        pc.mvp    = viewProj * model;
+        pc.params = glm::vec4(sunIntensity, 0.f, 0.f, 0.f);
+
+        vkCmdPushConstants(cmd, ctx.pipelineLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0, sizeof(TerrainPC), &pc);
 
         VkDeviceSize offset = 0;
         vkCmdBindVertexBuffers(cmd, 0, 1, &gpu.vertexBuffer, &offset);

@@ -18,6 +18,7 @@ class ChunkManager {
 public:
     void addClient(ENetPeer* peer);
     void removeClient(ENetPeer* peer);
+    void resetClient(ENetPeer* peer);  // clears sentChunks so chunks are resent
     void updateClient(ENetPeer* peer, float wx, float wy, float wz);
     void sendInitialChunks(ENetPeer* peer, float wx, float wy, float wz,
                            int radiusXZ, int radiusY);

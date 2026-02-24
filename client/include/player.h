@@ -27,10 +27,20 @@ struct CGrounded {
     bool grounded = false;
 };
 
+struct CStamina {
+    float current         = 100.f;
+    float max             = 100.f;
+    float regenRate       = 15.f;  // per second
+    float sprintCost      = 20.f;  // per second
+    float jumpCost        = 15.f;  // flat per jump
+    bool  depleted        = false;
+    float depleteCooldown = 0.f;
+};
+
 // ── Per-chunk CPU triangle soup ───────────────────────────────────────────────
 
 struct ChunkTriSoup {
-    std::vector<glm::vec3> tris; // flat: every 3 = one triangle, world space
+    std::vector<glm::vec3> tris;
 };
 
 // ── Player controller ─────────────────────────────────────────────────────────
@@ -41,12 +51,15 @@ public:
 
     void addChunkMesh(const ChunkMesh& mesh);
     void removeChunk(ChunkCoord coord);
-    void setSpawnPosition(glm::vec3 pos); // stores pending, applied at gate release
+    void setSpawnPosition(glm::vec3 pos);
     void update(float dt, const Input& input);
 
     glm::vec3    position()  const;
     entt::entity entity()    const { return _player; }
     bool         isSpawned() const { return _spawned; }
+
+    // Expose stamina for HUD
+    const CStamina& stamina() const { return _reg.get<CStamina>(_player); }
 
 private:
     entt::registry& _reg;
@@ -55,11 +68,10 @@ private:
 
     std::unordered_map<ChunkCoord, ChunkTriSoup, ChunkCoordHash> _triSoups;
 
-    // Spawn gate — hold player until enough chunks arrive, then teleport to surface
-    bool      _spawned          = false;
-    int       _chunksNeeded     = 27; // full 3x3x3 must be present
-    bool      _hasPendingSpawn  = false;
-    glm::vec3 _pendingSpawn     {0.f, 80.f, 0.f};
+    bool      _spawned         = false;
+    int       _chunksNeeded    = 27;
+    bool      _hasPendingSpawn = false;
+    glm::vec3 _pendingSpawn    {0.f, 80.f, 0.f};
 
     void resolveCollision(CTransform& tf, CVelocity& vel,
                           const CAABB& box, CGrounded& grounded);

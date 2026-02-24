@@ -1,7 +1,7 @@
 #include "player.h"
-#include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <cmath>
+#include <glm/gtc/matrix_transform.hpp>
 
 // ── SAT helpers ───────────────────────────────────────────────────────────────
 
@@ -18,8 +18,8 @@ static bool axisTest(glm::vec3 axis, glm::vec3 centre, glm::vec3 half,
     float pa = glm::dot(n, a - centre);
     float pb = glm::dot(n, b - centre);
     float pc = glm::dot(n, c - centre);
-    float triMin = std::min({pa,pb,pc});
-    float triMax = std::max({pa,pb,pc});
+    float triMin = std::min({pa, pb, pc});
+    float triMax = std::max({pa, pb, pc});
     float r = projectAABB(n, half);
     if (triMin > r || triMax < -r) return false;
     float overlap = std::min(r - triMin, triMax + r);
@@ -62,6 +62,7 @@ PlayerController::PlayerController(entt::registry& reg, Camera& cam)
     reg.emplace<CVelocity>(_player);
     reg.emplace<CAABB>(_player);
     reg.emplace<CGrounded>(_player);
+    reg.emplace<CStamina>(_player);
 }
 
 void PlayerController::addChunkMesh(const ChunkMesh& mesh) {
@@ -87,9 +88,11 @@ void PlayerController::removeChunk(ChunkCoord coord) {
 
 void PlayerController::setSpawnPosition(glm::vec3 pos) {
     if (_spawned) {
-        // Immediate teleport for respawn
-        _reg.get<CTransform>(_player).pos = pos;
-        _reg.get<CVelocity> (_player).vel = {0.f, 0.f, 0.f};
+        _pendingSpawn    = pos;
+        _hasPendingSpawn = true;
+        _spawned         = false;
+        _chunksNeeded    = 27;
+        _triSoups.clear();
     } else {
         _pendingSpawn    = pos;
         _hasPendingSpawn = true;
@@ -164,6 +167,25 @@ void PlayerController::update(float dt, const Input& input) {
     auto& vel = _reg.get<CVelocity> (_player);
     auto& box = _reg.get<CAABB>     (_player);
     auto& gr  = _reg.get<CGrounded> (_player);
+    auto& sta = _reg.get<CStamina>  (_player);
+
+    // ── Chunk unload ──────────────────────────────────────────────────────────
+    {
+        int cx = (int)std::floor(tf.pos.x / ChunkData::SIZE);
+        int cy = (int)std::floor(tf.pos.y / ChunkData::SIZE);
+        int cz = (int)std::floor(tf.pos.z / ChunkData::SIZE);
+        auto it = _triSoups.begin();
+        while (it != _triSoups.end()) {
+            const auto& cc = it->first;
+            if (std::abs(cc.x - cx) > Config::CHUNK_RADIUS_XZ + 1 ||
+                std::abs(cc.y - cy) > Config::CHUNK_RADIUS_Y  + 1 ||
+                std::abs(cc.z - cz) > Config::CHUNK_RADIUS_XZ + 1) {
+                it = _triSoups.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
 
     _cam.applyMouse(input.mouseDelta());
 
@@ -181,7 +203,26 @@ void PlayerController::update(float dt, const Input& input) {
     float wishLen = glm::length(wishDir);
     if (wishLen > 0.001f) wishDir /= wishLen;
 
-    bool  sprinting = input.key(GLFW_KEY_LEFT_SHIFT);
+    // ── Stamina ───────────────────────────────────────────────────────────────
+    if (sta.depleted) {
+        sta.depleteCooldown -= dt;
+        if (sta.depleteCooldown <= 0.f) sta.depleted = false;
+    }
+
+    bool sprinting = input.key(GLFW_KEY_LEFT_SHIFT) && !sta.depleted && sta.current > 0.f;
+
+    if (sprinting && wishLen > 0.001f) {
+        sta.current -= sta.sprintCost * dt;
+        if (sta.current <= 0.f) {
+            sta.current         = 0.f;
+            sta.depleted        = true;
+            sta.depleteCooldown = 1.5f;
+            sprinting           = false;
+        }
+    } else if (!sta.depleted) {
+        sta.current = std::min(sta.current + sta.regenRate * dt, sta.max);
+    }
+
     float wishSpeed = (wishLen > 0.001f)
         ? Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f)
         : 0.f;
@@ -198,8 +239,11 @@ void PlayerController::update(float dt, const Input& input) {
         }
         hVel = accelerate(hVel, wishDir, wishSpeed, Config::GROUND_ACCEL, dt);
         if (yVel < 0.f) yVel = 0.f;
-        if (input.key(GLFW_KEY_SPACE)) {
-            yVel = Config::JUMP_VEL;
+
+        // Jump costs stamina
+        if (input.key(GLFW_KEY_SPACE) && !sta.depleted && sta.current >= sta.jumpCost) {
+            sta.current -= sta.jumpCost;
+            yVel        = Config::JUMP_VEL;
             gr.grounded = false;
         }
     } else {

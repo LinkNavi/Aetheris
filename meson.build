@@ -2,10 +2,22 @@ project('Aetheris', 'cpp',
   version : '0.1.0',
   default_options : ['cpp_std=c++20', 'warning_level=2', 'optimization=2'])
 
-vulkan_dep = dependency('vulkan')
-glm_dep    = dependency('glm')
-enet_dep   = dependency('libenet')
+cc = meson.get_compiler('cpp')
 
+# ── Core deps ─────────────────────────────────────────────────────────────────
+vulkan_dep = dependency('vulkan')
+glm_dep    = dependency('glm', fallback : ['glm', 'glm_dep'])
+enet_dep   = dependency('libenet', fallback : ['libenet', 'enet_dep'])
+glfw_dep   = dependency('glfw3',   fallback : ['glfw',    'glfw_dep'])
+
+# ── Windows-only link deps ────────────────────────────────────────────────────
+platform_deps = []
+if host_machine.system() == 'windows'
+  platform_deps += cc.find_library('ws2_32')
+  platform_deps += cc.find_library('winmm')
+endif
+
+# ── Third-party include dirs ──────────────────────────────────────────────────
 vkb_inc        = include_directories('thirdparty/vk-bootstrap/src')
 vma_inc        = include_directories('thirdparty/VulkanMemoryAllocator/include')
 vk_headers_inc = include_directories('thirdparty/Vulkan-Headers/include')

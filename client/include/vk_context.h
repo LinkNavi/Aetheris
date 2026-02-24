@@ -8,8 +8,6 @@
 #include <unordered_map>
 #include "chunk.h"
 
-
-
 struct GpuChunk {
     VkBuffer      vertexBuffer;
     VkBuffer      indexBuffer;
@@ -22,13 +20,16 @@ struct VkContext {
     vkb::Instance    instance;
     vkb::Device      device;
     vkb::Swapchain   swapchain;
-VkImage       depthImage;
-VkImageView   depthImageView;
-VmaAllocation depthAlloc;
-VkBuffer      stagingBuffer = VK_NULL_HANDLE;
-VmaAllocation stagingAlloc  = nullptr;
-void*         stagingMapped = nullptr;
-VkDeviceSize  stagingSize   = 32 * 1024 * 1024; // 32 MB
+
+    VkImage       depthImage;
+    VkImageView   depthImageView;
+    VmaAllocation depthAlloc;
+
+    VkBuffer      stagingBuffer = VK_NULL_HANDLE;
+    VmaAllocation stagingAlloc  = nullptr;
+    void*         stagingMapped = nullptr;
+    VkDeviceSize  stagingSize   = 32 * 1024 * 1024; // 32 MB
+
     VkSurfaceKHR     surface;
     VkQueue          graphicsQueue;
     uint32_t         graphicsQueueFamily;
@@ -58,5 +59,8 @@ VkDeviceSize  stagingSize   = 32 * 1024 * 1024; // 32 MB
 
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
-void      vk_draw(VkContext& ctx, const glm::mat4& viewProj); // <-- takes VP from caller
+// sunIntensity: 0=night, 1=noon. skyColor: RGB clear color.
+void      vk_draw(VkContext& ctx, const glm::mat4& viewProj,
+                  float sunIntensity, glm::vec3 skyColor);
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
+void      vk_remove_chunk(VkContext& ctx, ChunkCoord coord);

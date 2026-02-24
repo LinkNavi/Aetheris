@@ -1,5 +1,3 @@
-enet_dep = dependency('libenet')
-
 server_src = files(
   'src/main.cpp',
   'src/chunk_manager.cpp',
@@ -7,4 +5,5 @@ server_src = files(
 
 executable('server', server_src,
   include_directories : ['include'],
-  dependencies : [glm_dep, enet_dep, shared_dep])
+  dependencies        : [glm_dep, enet_dep, platform_deps, shared_dep],
+  install             : true)

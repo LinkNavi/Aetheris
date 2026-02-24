@@ -40,6 +40,13 @@ void ChunkManager::removeClient(ENetPeer* peer) {
         _clients.end());
 }
 
+void ChunkManager::resetClient(ENetPeer* peer) {
+    ClientState* cs = findClient(peer);
+    if (!cs) return;
+    cs->sentChunks.clear();
+    cs->lastChunk = {INT_MIN, INT_MIN, INT_MIN};
+}
+
 void ChunkManager::sendInitialChunks(ENetPeer* peer, float wx, float wy, float wz,
                                       int radiusXZ, int radiusY) {
     ClientState* cs = findClient(peer);
@@ -96,7 +103,6 @@ float ChunkManager::findSpawnY(float wx, float wz) {
         float v0 = d0.values[lx][ly0][lz];
         float v1 = d1.values[lx][ly1][lz];
 
-        // air above, solid below = surface
         if (v0 >= 0.f && v1 < 0.f) {
             return (float)worldY + Config::PLAYER_HEIGHT + 1.f;
         }
