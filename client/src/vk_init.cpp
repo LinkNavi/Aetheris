@@ -460,7 +460,7 @@ VkContext vk_init(GLFWwindow *window) {
   raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   raster.polygonMode = VK_POLYGON_MODE_FILL;
   raster.cullMode = VK_CULL_MODE_BACK_BIT;
-  raster.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+  raster.frontFace = VK_FRONT_FACE_CLOCKWISE;
   raster.lineWidth = 1.f;
 
   VkPipelineMultisampleStateCreateInfo ms{};

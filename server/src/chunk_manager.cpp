@@ -135,24 +135,5 @@ void ChunkManager::flushReady(ENetHost* host) {
 // ── findSpawnY ────────────────────────────────────────────────────────────────
 
 float ChunkManager::findSpawnY(float wx, float wz) {
-    constexpr int N = ChunkData::SIZE;
-    int lx = ((int)wx % N + N) % N;
-    int lz = ((int)wz % N + N) % N;
-
-    for (int worldY = 400; worldY > -200; worldY--) {
-        int cy  = (int)std::floor((float)worldY / N);
-        int ly  = ((worldY % N) + N) % N;
-        int cy1 = (int)std::floor((float)(worldY + 1) / N);
-        int ly1 = (((worldY + 1) % N) + N) % N;
-
-        ChunkCoord cc0{ (int)std::floor(wx/N), cy,  (int)std::floor(wz/N) };
-        ChunkCoord cc1{ (int)std::floor(wx/N), cy1, (int)std::floor(wz/N) };
-
-        float vSolid = generateChunk(cc0).values[lx][ly][lz];
-        float vAir   = generateChunk(cc1).values[lx][ly1][lz];
-
-        if (vSolid < 0.f && vAir >= 0.f)
-            return (float)(worldY + 1) + 2.0f;
-    }
-    return 120.f;
+    return sampleSurfaceY(wx, wz);
 }

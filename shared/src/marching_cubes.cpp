@@ -302,17 +302,9 @@ static const int edgePairs[12][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 0},
                                      {4, 5}, {5, 6}, {6, 7}, {7, 4},
                                      {0, 4}, {1, 5}, {2, 6}, {3, 7}};
 
-static glm::vec3 interp(float iso, glm::vec3 p0, float v0, glm::vec3 p1,
-                        float v1) {
-  if (std::abs(v1 - v0) < 1e-6f)
-    return (p0 + p1) * 0.5f;
-  float t = (iso - v0) / (v1 - v0);
-  glm::vec3 result = p0 + t * (p1 - p0);
-  float snap = 0.5f;
-  result.x = std::round(result.x / snap) * snap;
-  result.y = std::round(result.y / snap) * snap;
-  result.z = std::round(result.z / snap) * snap;
-  return result;
+static glm::vec3 interp(float iso, glm::vec3 p0, float v0, glm::vec3 p1, float v1) {
+    // Snap to whichever corner is inside (closer to iso)
+    return (std::abs(v0 - iso) < std::abs(v1 - iso)) ? p0 : p1;
 }
 
 ChunkMesh marchChunk(const ChunkData &chunk) {
