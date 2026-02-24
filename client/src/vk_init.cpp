@@ -37,12 +37,10 @@ static VkShaderModule makeModule(VkDevice dev, const std::vector<uint32_t>& code
     return mod;
 }
 
-// Creates a GPU buffer and uploads data to it via a staging buffer
 static void uploadBuffer(VkContext& ctx,
                          VkBufferUsageFlags usage,
                          const void* data, VkDeviceSize size,
                          VkBuffer& outBuffer, VmaAllocation& outAlloc) {
-    // Staging buffer (CPU visible)
     VkBufferCreateInfo stagingCI{};
     stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     stagingCI.size  = size;
@@ -61,7 +59,6 @@ static void uploadBuffer(VkContext& ctx,
     memcpy(mapped, data, size);
     vmaUnmapMemory(ctx.allocator, stagingAlloc);
 
-    // Device-local buffer
     VkBufferCreateInfo bufCI{};
     bufCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufCI.size  = size;
@@ -73,7 +70,6 @@ static void uploadBuffer(VkContext& ctx,
     vmaCreateBuffer(ctx.allocator, &bufCI, &bufAllocCI,
                     &outBuffer, &outAlloc, nullptr);
 
-    // Copy via command buffer
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool        = ctx.commandPool;
@@ -104,10 +100,39 @@ static void uploadBuffer(VkContext& ctx,
     vmaDestroyBuffer(ctx.allocator, stagingBuf, stagingAlloc);
 }
 
+// Declared before vk_init so it can be called inside it
+static void createDepthResources(VkContext& ctx) {
+    VkImageCreateInfo imgCI{};
+    imgCI.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imgCI.imageType     = VK_IMAGE_TYPE_2D;
+    imgCI.format        = VK_FORMAT_D32_SFLOAT;
+    imgCI.extent        = {ctx.swapchain.extent.width, ctx.swapchain.extent.height, 1};
+    imgCI.mipLevels     = 1;
+    imgCI.arrayLayers   = 1;
+    imgCI.samples       = VK_SAMPLE_COUNT_1_BIT;
+    imgCI.tiling        = VK_IMAGE_TILING_OPTIMAL;
+    imgCI.usage         = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+    VmaAllocationCreateInfo allocCI{};
+    allocCI.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    vmaCreateImage(ctx.allocator, &imgCI, &allocCI,
+                   &ctx.depthImage, &ctx.depthAlloc, nullptr);
+
+    VkImageViewCreateInfo viewCI{};
+    viewCI.sType                           = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewCI.image                           = ctx.depthImage;
+    viewCI.viewType                        = VK_IMAGE_VIEW_TYPE_2D;
+    viewCI.format                          = VK_FORMAT_D32_SFLOAT;
+    viewCI.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_DEPTH_BIT;
+    viewCI.subresourceRange.levelCount     = 1;
+    viewCI.subresourceRange.layerCount     = 1;
+    check(vkCreateImageView(ctx.device.device, &viewCI, nullptr, &ctx.depthImageView),
+          "depth image view");
+}
+
 VkContext vk_init(GLFWwindow* window) {
     VkContext ctx;
 
-    // ── Instance ──────────────────────────────────────────────────────────────
     auto inst = vkb::InstanceBuilder{}
         .set_app_name("Aetheris")
         .request_validation_layers(true)
@@ -117,11 +142,9 @@ VkContext vk_init(GLFWwindow* window) {
     if (!inst) throw std::runtime_error(inst.error().message());
     ctx.instance = inst.value();
 
-    // ── Surface ───────────────────────────────────────────────────────────────
     check(glfwCreateWindowSurface(ctx.instance.instance, window, nullptr, &ctx.surface),
           "Failed to create window surface");
 
-    // ── Physical + Logical Device ─────────────────────────────────────────────
     auto phys = vkb::PhysicalDeviceSelector{ctx.instance}
         .set_surface(ctx.surface)
         .set_minimum_version(1, 3)
@@ -137,7 +160,6 @@ VkContext vk_init(GLFWwindow* window) {
     ctx.graphicsQueue       = gq.value();
     ctx.graphicsQueueFamily = ctx.device.get_queue_index(vkb::QueueType::graphics).value();
 
-    // ── Swapchain ─────────────────────────────────────────────────────────────
     int w, h;
     glfwGetFramebufferSize(window, &w, &h);
 
@@ -152,7 +174,6 @@ VkContext vk_init(GLFWwindow* window) {
     ctx.swapImages     = ctx.swapchain.get_images().value();
     ctx.swapImageViews = ctx.swapchain.get_image_views().value();
 
-    // ── VMA ───────────────────────────────────────────────────────────────────
     VmaAllocatorCreateInfo vmaInfo{};
     vmaInfo.instance         = ctx.instance.instance;
     vmaInfo.physicalDevice   = ctx.device.physical_device.physical_device;
@@ -160,7 +181,7 @@ VkContext vk_init(GLFWwindow* window) {
     vmaInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     check(vmaCreateAllocator(&vmaInfo, &ctx.allocator), "Failed to create VMA allocator");
 
-    // ── Command Pool ──────────────────────────────────────────────────────────
+    // Command pool must come before createDepthResources
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.queueFamilyIndex = ctx.graphicsQueueFamily;
@@ -168,7 +189,9 @@ VkContext vk_init(GLFWwindow* window) {
     check(vkCreateCommandPool(ctx.device.device, &poolInfo, nullptr, &ctx.commandPool),
           "Failed to create command pool");
 
-    // ── Render Pass ───────────────────────────────────────────────────────────
+    createDepthResources(ctx);
+
+    // ── Render pass ───────────────────────────────────────────────────────────
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format         = ctx.swapchain.image_format;
     colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
@@ -179,25 +202,41 @@ VkContext vk_init(GLFWwindow* window) {
     colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
     colorAttachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+    VkAttachmentDescription depthAttachment{};
+    depthAttachment.format         = VK_FORMAT_D32_SFLOAT;
+    depthAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+    depthAttachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
     VkAttachmentReference colorRef{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+    VkAttachmentReference depthRef{1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
 
     VkSubpassDescription subpass{};
-    subpass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments    = &colorRef;
+    subpass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount    = 1;
+    subpass.pColorAttachments       = &colorRef;
+    subpass.pDepthStencilAttachment = &depthRef;
 
     VkSubpassDependency dep{};
     dep.srcSubpass    = VK_SUBPASS_EXTERNAL;
     dep.dstSubpass    = 0;
-    dep.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    dep.srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+                      | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     dep.srcAccessMask = 0;
-    dep.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    dep.dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
+                      | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+                      | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
+    VkAttachmentDescription attachments[] = {colorAttachment, depthAttachment};
     VkRenderPassCreateInfo rpci{};
     rpci.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    rpci.attachmentCount = 1;
-    rpci.pAttachments    = &colorAttachment;
+    rpci.attachmentCount = 2;
+    rpci.pAttachments    = attachments;
     rpci.subpassCount    = 1;
     rpci.pSubpasses      = &subpass;
     rpci.dependencyCount = 1;
@@ -208,11 +247,12 @@ VkContext vk_init(GLFWwindow* window) {
     // ── Framebuffers ──────────────────────────────────────────────────────────
     ctx.framebuffers.resize(ctx.swapImageViews.size());
     for (size_t i = 0; i < ctx.swapImageViews.size(); i++) {
+        VkImageView fbAttachments[] = {ctx.swapImageViews[i], ctx.depthImageView};
         VkFramebufferCreateInfo fbci{};
         fbci.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         fbci.renderPass      = ctx.renderPass;
-        fbci.attachmentCount = 1;
-        fbci.pAttachments    = &ctx.swapImageViews[i];
+        fbci.attachmentCount = 2;
+        fbci.pAttachments    = fbAttachments;
         fbci.width           = ctx.swapchain.extent.width;
         fbci.height          = ctx.swapchain.extent.height;
         fbci.layers          = 1;
@@ -236,19 +276,16 @@ VkContext vk_init(GLFWwindow* window) {
     stages[1].module = fragMod;
     stages[1].pName  = "main";
 
-    // Vertex layout: vec3 pos, vec3 normal — matches our Vertex struct
     VkVertexInputBindingDescription binding{};
     binding.binding   = 0;
     binding.stride    = sizeof(Vertex);
     binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkVertexInputAttributeDescription attrs[2]{};
-    attrs[0].binding  = 0;
-    attrs[0].location = 0;
+    attrs[0].binding  = 0; attrs[0].location = 0;
     attrs[0].format   = VK_FORMAT_R32G32B32_SFLOAT;
     attrs[0].offset   = offsetof(Vertex, pos);
-    attrs[1].binding  = 0;
-    attrs[1].location = 1;
+    attrs[1].binding  = 0; attrs[1].location = 1;
     attrs[1].format   = VK_FORMAT_R32G32B32_SFLOAT;
     attrs[1].offset   = offsetof(Vertex, normal);
 
@@ -273,10 +310,8 @@ VkContext vk_init(GLFWwindow* window) {
 
     VkPipelineViewportStateCreateInfo viewportState{};
     viewportState.sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-    viewportState.viewportCount = 1;
-    viewportState.pViewports    = &viewport;
-    viewportState.scissorCount  = 1;
-    viewportState.pScissors     = &scissor;
+    viewportState.viewportCount = 1; viewportState.pViewports = &viewport;
+    viewportState.scissorCount  = 1; viewportState.pScissors  = &scissor;
 
     VkPipelineRasterizationStateCreateInfo raster{};
     raster.sType       = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -288,6 +323,12 @@ VkContext vk_init(GLFWwindow* window) {
     VkPipelineMultisampleStateCreateInfo multisample{};
     multisample.sType                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisample.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+    VkPipelineDepthStencilStateCreateInfo depthStencil{};
+    depthStencil.sType            = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable  = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp   = VK_COMPARE_OP_LESS;
 
     VkPipelineColorBlendAttachmentState blendAttachment{};
     blendAttachment.colorWriteMask =
@@ -320,6 +361,7 @@ VkContext vk_init(GLFWwindow* window) {
     pipelineCI.pViewportState      = &viewportState;
     pipelineCI.pRasterizationState = &raster;
     pipelineCI.pMultisampleState   = &multisample;
+    pipelineCI.pDepthStencilState  = &depthStencil;
     pipelineCI.pColorBlendState    = &blend;
     pipelineCI.layout              = ctx.pipelineLayout;
     pipelineCI.renderPass          = ctx.renderPass;
@@ -330,7 +372,7 @@ VkContext vk_init(GLFWwindow* window) {
     vkDestroyShaderModule(ctx.device.device, vertMod, nullptr);
     vkDestroyShaderModule(ctx.device.device, fragMod, nullptr);
 
-    // ── Command Buffers ───────────────────────────────────────────────────────
+    // ── Command buffers ───────────────────────────────────────────────────────
     ctx.commandBuffers.resize(VkContext::FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -340,7 +382,7 @@ VkContext vk_init(GLFWwindow* window) {
     check(vkAllocateCommandBuffers(ctx.device.device, &allocInfo, ctx.commandBuffers.data()),
           "Failed to allocate command buffers");
 
-    // ── Sync Objects ──────────────────────────────────────────────────────────
+    // ── Sync objects ──────────────────────────────────────────────────────────
     ctx.imageAvailable.resize(VkContext::FRAMES_IN_FLIGHT);
     ctx.renderFinished.resize(VkContext::FRAMES_IN_FLIGHT);
     ctx.inFlight.resize(VkContext::FRAMES_IN_FLIGHT);
@@ -364,22 +406,18 @@ void vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh) {
     GpuChunk gpu{};
     gpu.indexCount = static_cast<uint32_t>(mesh.indices.size());
 
-    uploadBuffer(ctx,
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        mesh.vertices.data(),
-        mesh.vertices.size() * sizeof(Vertex),
+    uploadBuffer(ctx, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        mesh.vertices.data(), mesh.vertices.size() * sizeof(Vertex),
         gpu.vertexBuffer, gpu.vertexAlloc);
 
-    uploadBuffer(ctx,
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        mesh.indices.data(),
-        mesh.indices.size() * sizeof(uint32_t),
+    uploadBuffer(ctx, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        mesh.indices.data(), mesh.indices.size() * sizeof(uint32_t),
         gpu.indexBuffer, gpu.indexAlloc);
 
     ctx.chunks[mesh.coord] = gpu;
 }
 
-void vk_draw(VkContext& ctx) {
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj) {
     uint32_t frame = ctx.currentFrame;
 
     vkWaitForFences(ctx.device.device, 1, &ctx.inFlight[frame], VK_TRUE, UINT64_MAX);
@@ -395,36 +433,27 @@ void vk_draw(VkContext& ctx) {
     VkCommandBufferBeginInfo beginInfo{VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
     vkBeginCommandBuffer(cmd, &beginInfo);
 
-    VkClearValue clearColor{{{0.1f, 0.1f, 0.15f, 1.0f}}};
+    VkClearValue clearValues[2]{};
+    clearValues[0].color        = {{0.1f, 0.1f, 0.15f, 1.0f}};
+    clearValues[1].depthStencil = {1.0f, 0};
+
     VkRenderPassBeginInfo rpBegin{};
     rpBegin.sType             = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rpBegin.renderPass        = ctx.renderPass;
     rpBegin.framebuffer       = ctx.framebuffers[imageIndex];
     rpBegin.renderArea.extent = ctx.swapchain.extent;
-    rpBegin.clearValueCount   = 1;
-    rpBegin.pClearValues      = &clearColor;
+    rpBegin.clearValueCount   = 2;
+    rpBegin.pClearValues      = clearValues;
 
     vkCmdBeginRenderPass(cmd, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
 
-    // Camera looking at the chunk cluster
-    static float angle = 0.0f;
-    angle += 0.005f;
-    float aspect = (float)ctx.swapchain.extent.width / (float)ctx.swapchain.extent.height;
-    float r = 80.0f;
-    glm::vec3 eye = glm::vec3(r * cos(angle), 40.0f, r * sin(angle));
-    glm::mat4 view = glm::lookAt(eye, glm::vec3(16, 0, 16), glm::vec3(0, 1, 0));
-    glm::mat4 proj = glm::perspective(glm::radians(60.0f), aspect, 0.1f, 500.0f);
-    proj[1][1] *= -1;
-    glm::mat4 vp = proj * view;
-
     for (auto& [coord, gpu] : ctx.chunks) {
-        // Each chunk is offset by its coord * chunk size
-        glm::mat4 model = glm::translate(glm::mat4(1.0f),
+        glm::mat4 model = glm::translate(glm::mat4(1.f),
             glm::vec3(coord.x * ChunkData::SIZE,
                       coord.y * ChunkData::SIZE,
                       coord.z * ChunkData::SIZE));
-        glm::mat4 mvp = vp * model;
+        glm::mat4 mvp = viewProj * model;
 
         vkCmdPushConstants(cmd, ctx.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT,
                            0, sizeof(glm::mat4), &mvp);
@@ -468,6 +497,8 @@ void vk_destroy(VkContext& ctx) {
         vmaDestroyBuffer(ctx.allocator, gpu.indexBuffer,  gpu.indexAlloc);
     }
 
+    vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
+    vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
     vmaDestroyAllocator(ctx.allocator);
 
     for (int i = 0; i < VkContext::FRAMES_IN_FLIGHT; i++) {

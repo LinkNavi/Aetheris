@@ -4,9 +4,11 @@ client_src = files(
   'src/main.cpp',
   'src/window.cpp',
   'src/vk_init.cpp',
+  'src/input.cpp',
+  'src/player.cpp',
   '../thirdparty/vk-bootstrap/src/VkBootstrap.cpp',
 )
 
 executable('client', client_src,
-  include_directories : ['include', vkb_inc, vma_inc, vk_headers_inc],
-  dependencies : [vulkan_dep, glfw_dep, glm_dep, shared_dep])
+  include_directories : ['include', vkb_inc, vma_inc, vk_headers_inc, entt_inc],
+  dependencies : [vulkan_dep, glfw_dep, glm_dep, enet_dep, shared_dep])

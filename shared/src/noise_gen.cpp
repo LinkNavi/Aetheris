@@ -21,8 +21,8 @@ ChunkData generateChunk(ChunkCoord coord) {
         float noise = stb_perlin_fbm_noise3(wx, wy, wz, 2.0f, 0.5f, 4);
 
         // Vertical gradient so we get a ground surface
-        float height = (coord.y * N + y) * 0.03f - 0.5f;
-        data.values[x][y][z] = noise + height;
+    float height = 0.5f - (coord.y * N + y) * 0.03f;
+data.values[x][y][z] = noise + height;
     }
 
     return data;

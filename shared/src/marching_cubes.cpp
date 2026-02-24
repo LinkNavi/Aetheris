@@ -173,12 +173,11 @@ ChunkMesh marchChunk(const ChunkData& chunk) {
             glm::vec3 v1 = edgeVerts[triTable[cubeIndex][t+1]];
             glm::vec3 v2 = edgeVerts[triTable[cubeIndex][t+2]];
 
-            glm::vec3 normal = glm::normalize(glm::cross(v1 - v0, v2 - v0));
-
+           glm::vec3 normal = glm::normalize(glm::cross(v2 - v0, v1 - v0));
             uint32_t base = mesh.vertices.size();
             mesh.vertices.push_back({v0, normal});
-            mesh.vertices.push_back({v1, normal});
-            mesh.vertices.push_back({v2, normal});
+mesh.vertices.push_back({v2, normal});
+mesh.vertices.push_back({v1, normal});
             mesh.indices.push_back(base);
             mesh.indices.push_back(base + 1);
             mesh.indices.push_back(base + 2);

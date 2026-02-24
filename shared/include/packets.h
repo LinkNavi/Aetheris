@@ -3,14 +3,14 @@
 #include <cstdint>
 #include <cstring>
 #include "chunk.h"
-
+#include <string>
 // Packet IDs
 enum class PacketID : uint8_t {
     ChunkData    = 0x01,
     PlayerMove   = 0x02,
     PlayerJoin   = 0x03,
     PlayerLeave  = 0x04,
-    // add more here
+    SpawnPosition = 0x05
 };
 
 // ── Serialization helpers ─────────────────────────────────────────────────────
@@ -121,6 +121,23 @@ struct PlayerJoinPacket {
         PlayerJoinPacket p; size_t o = 1;
         uint32_t len = readU32(d,o);
         p.name.assign((const char*)d+o, len);
+        return p;
+    }
+};
+
+struct SpawnPositionPacket {
+    float x, y, z;
+
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> b;
+        writeU8(b, (uint8_t)PacketID::SpawnPosition);
+        writeF32(b,x); writeF32(b,y); writeF32(b,z);
+        return b;
+    }
+
+    static SpawnPositionPacket deserialize(const uint8_t* d, size_t) {
+        SpawnPositionPacket p; size_t o = 1;
+        p.x=readF32(d,o); p.y=readF32(d,o); p.z=readF32(d,o);
         return p;
     }
 };

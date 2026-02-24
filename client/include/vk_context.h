@@ -3,19 +3,12 @@
 #include <VkBootstrap.h>
 #include <vk_mem_alloc.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 #include <vector>
 #include <unordered_map>
 #include "chunk.h"
 
-struct ChunkCoordHash {
-    size_t operator()(const ChunkCoord& c) const {
-        size_t h = 0;
-        h ^= std::hash<int>{}(c.x) + 0x9e3779b9 + (h<<6) + (h>>2);
-        h ^= std::hash<int>{}(c.y) + 0x9e3779b9 + (h<<6) + (h>>2);
-        h ^= std::hash<int>{}(c.z) + 0x9e3779b9 + (h<<6) + (h>>2);
-        return h;
-    }
-};
+
 
 struct GpuChunk {
     VkBuffer      vertexBuffer;
@@ -29,7 +22,9 @@ struct VkContext {
     vkb::Instance    instance;
     vkb::Device      device;
     vkb::Swapchain   swapchain;
-
+VkImage       depthImage;
+VkImageView   depthImageView;
+VmaAllocation depthAlloc;
     VkSurfaceKHR     surface;
     VkQueue          graphicsQueue;
     uint32_t         graphicsQueueFamily;
@@ -59,5 +54,5 @@ struct VkContext {
 
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
-void      vk_draw(VkContext& ctx);
+void      vk_draw(VkContext& ctx, const glm::mat4& viewProj); // <-- takes VP from caller
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
