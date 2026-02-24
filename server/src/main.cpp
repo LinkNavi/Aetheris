@@ -24,15 +24,12 @@ int main() {
                 std::cout << "[server] client connected\n";
                 chunks.addClient(ev.peer);
 
-                // Find surface first so we can centre the initial chunk load on it
                 float spawnY = chunks.findSpawnY(0.f, 0.f);
                 positions[ev.peer] = {0.f, spawnY, 0.f};
 
-                // Send a 5x5x5 volume centred on the spawn point, flush before spawn packet
                 chunks.sendInitialChunks(ev.peer, 0.f, spawnY, 0.f, 2, 2);
                 enet_host_flush(host.get());
 
-                // Now tell the client where to stand
                 SpawnPositionPacket sp{0.f, spawnY, 0.f};
                 Net::sendReliable(ev.peer, sp.serialize());
                 enet_host_flush(host.get());
@@ -42,11 +39,21 @@ int main() {
             case ENET_EVENT_TYPE_RECEIVE: {
                 const uint8_t* d = ev.packet->data;
                 size_t len       = ev.packet->dataLength;
+
                 if (len > 0 && d[0] == (uint8_t)PacketID::PlayerMove) {
                     auto mv = PlayerMovePacket::deserialize(d, len);
                     positions[ev.peer] = {mv.x, mv.y, mv.z};
                     chunks.updateClient(ev.peer, mv.x, mv.y, mv.z);
                 }
+                else if (len > 0 && d[0] == (uint8_t)PacketID::RespawnRequest) {
+                    float spawnY = chunks.findSpawnY(0.f, 0.f);
+                    positions[ev.peer] = {0.f, spawnY, 0.f};
+                    SpawnPositionPacket sp{0.f, spawnY, 0.f};
+                    Net::sendReliable(ev.peer, sp.serialize());
+                    enet_host_flush(host.get());
+                    std::cout << "[server] respawn at y=" << spawnY << "\n";
+                }
+
                 enet_packet_destroy(ev.packet);
                 break;
             }

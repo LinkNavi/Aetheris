@@ -86,8 +86,14 @@ void PlayerController::removeChunk(ChunkCoord coord) {
 }
 
 void PlayerController::setSpawnPosition(glm::vec3 pos) {
-    _pendingSpawn    = pos;
-    _hasPendingSpawn = true;
+    if (_spawned) {
+        // Immediate teleport for respawn
+        _reg.get<CTransform>(_player).pos = pos;
+        _reg.get<CVelocity> (_player).vel = {0.f, 0.f, 0.f};
+    } else {
+        _pendingSpawn    = pos;
+        _hasPendingSpawn = true;
+    }
 }
 
 glm::vec3 PlayerController::position() const {
@@ -108,7 +114,6 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
         glm::vec3 mn = tf.pos - half;
         glm::vec3 mx = tf.pos + half;
 
-        // ±1 = 27 chunks — sub-stepping handles tunnelling, no need for ±2
         for (int dx = -1; dx <= 1; dx++)
         for (int dy = -1; dy <= 1; dy++)
         for (int dz = -1; dz <= 1; dz++) {
@@ -160,10 +165,8 @@ void PlayerController::update(float dt, const Input& input) {
     auto& box = _reg.get<CAABB>     (_player);
     auto& gr  = _reg.get<CGrounded> (_player);
 
-    // ── Mouse look ────────────────────────────────────────────────────────────
     _cam.applyMouse(input.mouseDelta());
 
-    // ── Wish direction ────────────────────────────────────────────────────────
     glm::vec3 fwd = _cam.forward(); fwd.y = 0.f;
     float fwdLen = glm::length(fwd);
     if (fwdLen > 0.001f) fwd /= fwdLen;
@@ -183,7 +186,6 @@ void PlayerController::update(float dt, const Input& input) {
         ? Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f)
         : 0.f;
 
-    // ── Split velocity ────────────────────────────────────────────────────────
     glm::vec3 hVel{vel.vel.x, 0.f, vel.vel.z};
     float     yVel = vel.vel.y;
 
@@ -207,7 +209,6 @@ void PlayerController::update(float dt, const Input& input) {
 
     vel.vel = {hVel.x, yVel, hVel.z};
 
-    // ── Sub-stepped integration ───────────────────────────────────────────────
     const int   STEPS = 4;
     const float subDt = dt / STEPS;
     for (int s = 0; s < STEPS; s++) {
@@ -215,6 +216,5 @@ void PlayerController::update(float dt, const Input& input) {
         resolveCollision(tf, vel, box, gr);
     }
 
-    // ── Sync camera ───────────────────────────────────────────────────────────
     _cam.position = tf.pos + glm::vec3{0.f, box.half.y * 0.85f, 0.f};
 }

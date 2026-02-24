@@ -10,7 +10,8 @@ enum class PacketID : uint8_t {
     PlayerMove   = 0x02,
     PlayerJoin   = 0x03,
     PlayerLeave  = 0x04,
-    SpawnPosition = 0x05
+    SpawnPosition = 0x05,
+RespawnRequest = 0x06,
 };
 
 // ── Serialization helpers ─────────────────────────────────────────────────────
@@ -139,5 +140,13 @@ struct SpawnPositionPacket {
         SpawnPositionPacket p; size_t o = 1;
         p.x=readF32(d,o); p.y=readF32(d,o); p.z=readF32(d,o);
         return p;
+    }
+};
+
+struct RespawnRequestPacket {
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> b;
+        writeU8(b, (uint8_t)PacketID::RespawnRequest);
+        return b;
     }
 };

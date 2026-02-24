@@ -13,6 +13,294 @@ entirely by the weapons and totems you carry — there is no class
 selection screen.
 
 ----------------------------------------------------------------
+THE PLAYER CHARACTER — THE CROW
+----------------------------------------------------------------
+
+WHAT THE PLAYER IS
+  The player character is a crow demi-human — not born,
+  but made. Partially avian in appearance: dark feathers
+  along the forearms and shoulders, eyes with a crow's
+  reflective quality, bone structure that suggests flight
+  ancestry without enabling it. Humanoid enough to use
+  tools, weapons, and forges. Inhuman enough that the
+  world treats them differently than it treats humans.
+
+  They do not know they were created. They wake in the
+  world with purpose — a felt sense of direction, an
+  instinct toward specific places and actions — but no
+  memory of origin, no awareness of what they are, no
+  understanding of why they are drawn toward the things
+  they are drawn toward. They experience themselves as
+  a person who has always existed and simply cannot
+  recall the early parts.
+
+  The player and the player character discover the truth
+  simultaneously. There is no moment where the character
+  is told something the player already knows. The lore
+  delivery — item descriptions, cult remnants, Aethon
+  notes that reference something created to carry a
+  counter-frequency — reaches both at the same pace.
+  When the community figures out what the Crow is, the
+  Crow is figuring it out too.
+
+WHO CREATED THEM — THE ORDER OF THE HOLLOW WING
+  A clandestine organization that operated in the margins
+  of the kingdom's civilization. Not rebels, not
+  revolutionaries in any conventional sense — the Order
+  understood, through long study of Aethon's ruins and
+  the world's deteriorating response to human activity,
+  that the kingdom was crossing the same thresholds
+  Aethon crossed. They had read the Observatory notes.
+  They had visited the Excavation. They had watched the
+  Ashfields expand and the Logged Vale go silent and
+  the Open Pit collapse inward, and they understood
+  what all of it meant when taken together.
+
+  They also understood that no human could survive long
+  enough or move freely enough through the corruption
+  to complete the task they had identified as necessary.
+  The world's immune response targeted human biology
+  specifically. A human carrying the Aetheric Core
+  toward the Final Dimension would be consumed long
+  before arriving.
+
+  So they made something that wasn't human.
+
+  The Order studied the world's own biology — the
+  corruption, the way certain creatures moved through
+  it without harm, the behavior of the world's native
+  fauna versus its human inhabitants. Crows specifically
+  were observed to nest near corruption scars without
+  ill effect. They appeared in higher numbers near
+  Aethon ruins. They were not affected by the sanity
+  drain that devastated human explorers in the deep
+  caves and dark spaces.
+
+  The Order spent an unknown number of years — their
+  own records are fragmented, hidden in locations
+  across the world in pieces the player assembles
+  gradually — engineering a being that could carry
+  the world's counter-frequency through the corruption
+  and into the Final Dimension. They used crow biology
+  as a foundation because the world did not register
+  crows as damage. The result was the Crow: fully
+  sapient, fully capable, built for a purpose neither
+  it nor the player understands at the start.
+
+  The Order is gone by the time the game begins.
+  Whether they were destroyed by the kingdom — who
+  would have had reason to suppress anyone who
+  understood the truth about the environmental damage —
+  or simply died out waiting for their creation to
+  awaken is left deliberately ambiguous. Their notes
+  exist. Their hidden safehouses exist, scattered
+  across the world as discoverable POIs. But there
+  is no living member to explain anything.
+
+  The Crow is alone in the world with a purpose
+  it was built for and a history it cannot access.
+
+THE ORDER'S HIDDEN SAFEHOUSES
+  Small structures, easily missed, visually
+  indistinguishable from abandoned homesteads until
+  players enter and find the contents — Order sigils
+  on the walls, fragments of research notes, materials
+  cached for a traveler who was expected to arrive,
+  personal letters from Order members to each other
+  that reveal the organization's history and internal
+  disagreements in human terms.
+
+  The safehouses are not marked. They are found by
+  exploration or community mapping. Each one contains
+  one piece of the Order's story and one practical
+  reward — materials, a totem, a blueprint — ensuring
+  that engaging with the lore is always worth the
+  detour mechanically.
+
+  The final safehouse, findable only after reaching
+  the Aether, contains the most complete record of
+  what the Crow is and why. It is written as a letter
+  addressed to no name, beginning: "if you are reading
+  this, you found us before you found yourself. that
+  is the correct order. we are sorry for the weight
+  of what comes next."
+
+WHY THE CROW FIGHTS ALDRIC
+  The Order's final active operation before their
+  disappearance was establishing a network of contacts
+  and cleared paths that the Crow would need to
+  traverse. Aldric's dungeon sits directly on the
+  route toward the cave entrance — the collapsed
+  palace is the only viable path through the cliff
+  formation that separates the starting area from
+  the cave approaches.
+
+  A surviving Order instruction cache, findable
+  early in the game, contains a single directive
+  written in the clipped language of someone who
+  expected to give more instructions later but ran
+  out of time: "the palace. clear it. the path is
+  underneath." No explanation of who Aldric is,
+  no acknowledgment of what the player will find
+  there. The Order expected to be present to provide
+  context. They are not.
+
+  The player follows the instruction because it is
+  the only instruction they have. They do not know
+  Aldric was a king. They do not know the dungeon
+  is a palace until they are inside it. Aldric
+  attacks them because Aldric attacks everything
+  that enters — he is not a gatekeeper with a
+  reason, just a broken thing that responds to
+  presence with violence. The tragedy of the fight
+  is entirely retrospective, assembled from the
+  dungeon's environmental storytelling rather than
+  from anything the Crow is told.
+
+THE CROW'S SANITY — FLAVORED DIFFERENTLY
+  The sanity meter exists for the Crow as it does
+  for any player, but what it represents is different.
+  Human sanity drain is the world's immune response
+  recognizing and targeting human biology — the
+  darkness, the corruption, the deep caves are
+  hostile to human presence at a fundamental level.
+
+  The Crow is not human. The world does not target
+  them the same way. Their sanity drain is not
+  hostility — it is resonance. The corruption is
+  the world's signal, and the Crow is built from
+  material close enough to the world's own biology
+  to receive it. Too much signal without grounding
+  produces the same mechanical result — a Corruption
+  Event — but the flavor is different. Human sanity
+  breaks under assault. The Crow's sanity frays
+  under saturation.
+
+  This distinction is expressed through audio and
+  visual design rather than different mechanics.
+  Human Corruption Events should feel like an attack.
+  The Crow's should feel like being overwhelmed by
+  something that isn't trying to harm them.
+
+  The practical implication: the Crow can venture
+  deeper into corrupted spaces than a human before
+  triggering an Event, but prolonged exposure
+  accumulates differently. Players who treat the
+  sanity meter as they would on a human character
+  will find it behaves with slightly different
+  rhythm — not punishingly, just unexpectedly.
+
+  This resonance is the most important thing about
+  the Crow. It is also what the ending takes away.
+  The sanity meter's strange behavior throughout
+  the game is the world talking. Players who reach
+  the ending will understand retroactively what
+  the signal was, and what its absence means.
+
+THE ENDING AND THE CROW
+  The Aetheric Core fires. The Wound recedes.
+  The corruption stops spreading. The world
+  continues.
+
+  Nobody acknowledges what just happened.
+
+  No NPC speaks to it. No notification, no
+  server message beyond the mechanical win
+  condition log. The other players on the
+  server are alive and their worlds are
+  intact and they go back to whatever they
+  were doing. The Crow stands at the Core
+  site and the game simply continues. There
+  is no parade. There is no recognition.
+  The thing that was built for a single
+  purpose has completed that purpose and
+  the world has moved on in the same breath.
+
+  The sky is wrong now. Where the Aether
+  used to be visible — a faint luminous
+  layer above the clouds, present as a
+  background element since the opening
+  moments of the game — there is nothing.
+  Not darkness. Not cloud cover. Just
+  absence. A permanent scar where an
+  entire dimension used to be, visible
+  from anywhere in the world on a clear
+  day. Players who never reached the
+  Aether will notice something changed
+  about the sky without knowing what.
+  Players who cleared the Aether Dungeon
+  and fought Velith will know exactly
+  what they are looking at.
+
+  The crows come to the Core site.
+
+  Not immediately — over the hours and
+  days following the activation, natural
+  crows begin gathering at the location
+  where the Core was placed. They do not
+  behave unusually. They do not circle
+  or call or perform. They simply land
+  nearby and stay. More arrive over time.
+  Players who return to the site days
+  later will find a significant flock,
+  still there, still quiet. No explanation
+  is given. No explanation exists in any
+  note or item description anywhere in
+  the game. It just happens.
+
+  Whether it means the world is watching,
+  mourning, or recognizing something in
+  the Crow that it never articulated is
+  left entirely open. The Order's sigil
+  was a crow in flight. The Order is gone.
+  The crows remain.
+
+  The final note found at the activation
+  site: "the readings have stabilized.
+  the anomaly has accepted containment.
+  we are logging this as a success."
+  No author. No writing system that
+  appears anywhere else in the game.
+  Rendered in the player's language
+  without explanation.
+
+  The world kept records. It always
+  watched. It considered this a success.
+
+  The Crow can keep playing. The world
+  is still here. It just no longer
+  needs them.
+
+CROW MOTIF IN THE WORLD
+  Natural crows appear throughout the game as an
+  environmental constant. They are present near
+  Aethon ruins before the player understands the
+  significance. They nest at corruption scars without
+  ill effect. They are the only wildlife that does
+  not flee from Headcrawlers. In the Aether they
+  appear on drifting platforms far above where any
+  natural crow should be.
+
+  They never interact with the player directly.
+  They never flock toward the player or respond
+  to player actions. They are simply present,
+  consistently, in the places that matter.
+
+  Players who notice the pattern early will have
+  questions the game will eventually answer.
+  Players who notice it late will experience
+  retroactive recognition — realizing the crows
+  were always there, in every significant location,
+  the entire time.
+
+  The Order's sigil is a crow in flight. It appears
+  in their safehouses, on their equipment, in the
+  margins of their notes. No Order member explains
+  why they chose it. By the time players find the
+  final safehouse letter, they will understand
+  without being told.
+
+----------------------------------------------------------------
 CLASS SYSTEM
 ----------------------------------------------------------------
 There are 8 recognized archetypes, but they aren't chosen from
@@ -278,6 +566,82 @@ MULTIPLAYER
   - Sanity corruption events are local to each player
 
 ----------------------------------------------------------------
+SIDE BOSSES
+----------------------------------------------------------------
+
+THE CASTLE DUNGEON & THE FALLEN CAPTAIN
+  Location: An abandoned castle found in the overworld,
+  unrelated to main progression. The castle exterior is its
+  own mini-dungeon — standard undead enemies throughout.
+  Clearing the castle opens a door into a lower dungeon level
+  beneath it, which terminates in the Fallen Captain.
+
+  The Fallen Captain is a side boss. He is not required for
+  any crafting gate or progression unlock. Players who want
+  the Montante blueprint will seek him out; Archers,
+  Apothecaries, and Summoners can skip him entirely without
+  missing anything critical.
+
+  PHASE 1 — Unarmed
+    The Captain fights with bare hands, parrying with an open
+    palm. His parry only covers frontal attacks — circling
+    pressure or attacking immediately after his own swing
+    (during his end lag) bypasses it entirely. He will not
+    attack during his parry stance, so it can also be baited:
+    fake a swing, wait for his guard to rise, then commit.
+    His parry stance has a readable tell — a subtle weight
+    shift and guard raise animation that players will learn
+    to recognise over repeated attempts.
+
+    Against ranged players: he telegraphs his dodge with a
+    visible backward step. Arrows fired into that step will
+    miss. Wait for him to land and punish the recovery frame.
+
+    Phase 1 ends when his health drops to roughly half.
+
+  PHASE 2 — Montante
+    He steps back, heals partially, and draws a Montante
+    one-handed — implying a level of skill that makes two
+    hands unnecessary. The shift changes the fight dynamic
+    entirely. In Phase 1 he was the defensive wall. In Phase
+    2 he becomes the aggressor.
+
+    The Montante has longer reach than players will expect
+    from a one-handed grip. His swings are slower than Phase
+    1's hand strikes but carry significant end-lag bait —
+    the timing is designed to punish players who parry too
+    early. His own parry rate drops in Phase 2 because he
+    is now committed to pressing the attack rather than
+    reading the player.
+
+    Interrupting his Phase 2 heal during the wind-up
+    animation cancels it — rewards aggressive play but is
+    not required to win.
+
+  EXPLOIT (readable across both phases):
+    The parry stance tell is consistent in both phases.
+    During the guard raise animation he will never initiate
+    an attack, making it a reliable bait window. Players
+    who learn this in Phase 1 carry that knowledge into
+    Phase 2 without the mechanic being re-explained.
+
+  Drops:
+    - Montante Blueprint — unlocks the Montante as a
+      forgeable two-handed weapon. High base damage, slower
+      attack speed, long reach. Suits Knight, Monk, and
+      Swordmage builds best.
+    - High-tier loot (standard undead drop pool, elevated
+      quality).
+
+  Notes:
+    - The Montante the Captain wields in Phase 2 is not
+      lootable directly — the Blueprint must be taken to a
+      Forge to craft one.
+    - The castle itself can be used as a player shelter after
+      clearing — doors can be secured, making it one of the
+      better defensible structures in the overworld.
+
+----------------------------------------------------------------
 WEAPON FORGING SYSTEM
 ----------------------------------------------------------------
 
@@ -303,12 +667,14 @@ FORGE TIERS
 WEAPON PARTS BY TYPE
   Each part is cast separately and contributes its own stats.
 
-  Sword   — Blade, Guard, Handle
-  Bow     — Limbs, Grip, String Anchor
-  Staff   — Focus Gem, Shaft, Base
-  Axe     — Head, Beard, Handle
-  Dagger  — Blade, Grip (2 parts, simplest weapon)
-  Spear   — Head, Pole, Butt Cap
+  Sword     — Blade, Guard, Handle
+  Bow       — Limbs, Grip, String Anchor
+  Staff     — Focus Gem, Shaft, Base
+  Axe       — Head, Beard, Handle
+  Dagger    — Blade, Grip (2 parts, simplest weapon)
+  Spear     — Head, Pole, Butt Cap
+  Montante  — Blade, Cross Guard, Grip, Pommel (4 parts,
+               two-handed, longest weapon in the game)
 
 WHAT PARTS CONTRIBUTE
   Every part pulls from its material's stat pool:
@@ -396,15 +762,1493 @@ SYNERGY EXAMPLE
     which may suit your build better. Neither is wrong.
 
 ----------------------------------------------------------------
+TOTEM LIST
+----------------------------------------------------------------
+
+RULES
+  - Each totem slot has a dedicated keybind for its active.
+  - Totems with no active are purely stat or passive.
+  - Equipping two of the same totem causes conflict — only one
+    applies. Use the slot for something else.
+  - Any build can equip any totem. Stats always apply fully
+    regardless of build. Dead passives/actives are a trade-off
+    the player accepts.
+
+-- SHADE TOTEMS --
+
+  Shade Totem
+    Passive: Disables parry entirely. Dodge rolls travel farther
+    and have longer I-frames than any other build.
+    Stat: +dodge distance.
+
+  Veil Totem
+    Passive: Landing a dodge roll within melee range of an enemy
+    briefly turns you translucent, reducing their aggro
+    re-acquisition window by ~0.5s.
+    Stat: +dodge speed.
+
+  Wraith Totem
+    Active: Enter a short invisibility (3-4s). Breaks on attack.
+    Long cooldown.
+    Stat: +movement speed.
+
+-- SHIELD / COUNTER TOTEMS --
+
+  Bulwark Totem
+    Passive: Successful parries restore a small amount of stamina.
+    Stat: +max stamina.
+
+  Counter Totem
+    Passive: Extends the counter-attack window after a successful
+    parry by a fixed number of frames.
+    Stat: +counter damage.
+
+  Ironwall Totem
+    Active: Shield bash — interrupts an enemy attack mid-animation
+    and staggers them, opening a counter window.
+    Stat: +physical damage reduction.
+
+-- INFUSION TOTEMS --
+
+  Ember Totem
+    Active: Coats your melee weapon in fire for 10s. Adds burn
+    on hit and temporarily changes its passive trait.
+    Stat: +elemental damage.
+
+  Frost Totem
+    Active: Coats weapon in frost. Hits slow enemy movement for
+    the duration.
+    Stat: +attack reach.
+
+  Void Totem
+    Active: Coats weapon in void energy. Hits briefly reduce
+    the target's damage output.
+    Stat: +skill cooldown reduction.
+
+-- BOND TOTEMS --
+
+  Hatch Totem
+    Passive: Eggs found in the world incubate faster while
+    equipped. Required to raise permanent companions.
+    Stat: +companion health.
+
+  Leash Totem
+    Active: Command all active temporary companions to focus
+    a single target simultaneously.
+    Stat: +temporary companion duration.
+
+  Soulbond Totem
+    Passive: When a permanent companion takes lethal damage,
+    they instead survive at 1hp once per encounter.
+    Stat: +permanent companion damage.
+
+-- QUIVER TOTEMS --
+
+  Pierce Totem
+    Passive: Arrows penetrate through the first enemy hit
+    and continue.
+    Stat: +arrow damage.
+
+  Split Totem
+    Active: Next arrow fired splits into three on release.
+    Short cooldown.
+    Stat: +projectile speed.
+
+  Trap Totem
+    Active: Fire a trap arrow that embeds in a surface and
+    triggers on enemy proximity.
+    Stat: +stamina regen while bow is drawn.
+
+-- SIGHT TOTEMS --
+
+  Farsight Totem
+    Passive: Reduces bow sway at full draw.
+    Stat: +effective range.
+
+  Hunter Totem
+    Passive: Enemies briefly show a weak point indicator
+    after completing an attack animation.
+    Stat: +crit damage.
+
+  Mark Totem
+    Active: Mark a target — all damage dealt to that target
+    is increased for 8s.
+    Stat: +perception range (aggro awareness).
+
+-- BLESSING TOTEMS --
+
+  Mend Totem
+    Active: Pulse a small heal to yourself and nearby allies.
+    Stat: +healing effectiveness.
+
+  Vigil Totem
+    Passive: Allies within range have slightly accelerated
+    sanity regen.
+    Stat: +sanity cap.
+
+  Grace Totem
+    Passive: Reviving a teammate with a Revival Token leaves
+    them with a brief damage reduction buff on respawn.
+    Stat: +Revival Token use speed.
+
+-- WARD TOTEMS --
+
+  Barrier Totem
+    Active: Place a damage-absorbing field at your location.
+    Absorbs a fixed amount before breaking.
+    Stat: +field durability.
+
+  Warding Totem
+    Passive: Enemies that hit you through a ward are briefly
+    slowed.
+    Stat: +ward recharge speed.
+
+  Anchor Totem
+    Passive: You cannot be staggered while standing inside
+    your own ward field.
+    Stat: +max health.
+
+-- BREW TOTEMS --
+
+  Flask Totem
+    Active: Instantly craft a basic heal potion from carried
+    ingredients without opening the crafting menu.
+    Stat: +potion potency.
+
+  Splash Totem
+    Passive: Thrown potions have a larger area of effect.
+    Stat: +ingredient carry capacity.
+
+  Toxin Totem
+    Passive: Poison potions apply stacks faster and last longer.
+    Stat: +poison damage.
+
+-- DISCIPLINE TOTEMS --
+
+  Focus Totem
+    Passive: Discipline meter fills faster on successful
+    parries specifically.
+    Stat: +discipline meter cap.
+
+  Endure Totem
+    Passive: Spending discipline for a heal restores more
+    health than base.
+    Stat: +health regen rate.
+
+  Strike Totem
+    Passive: Every 5 consecutive hits without taking damage
+    grants a brief attack speed boost.
+    Stat: +unarmed damage.
+
+NOTABLE CROSS-BUILD INTERACTIONS
+  Mark Totem + Apothecary — mark a target then splash them
+  with a potion. The damage amplification stacks with potion
+  AoE. Unintended but valid.
+
+  Pierce Totem on Knight — stat bonus applies, passive is
+  dead without a bow. Worth it only if the stamina or damage
+  stat outweighs using that slot for Counter Totem.
+
+  Soulbond Totem on non-Summoner — purely a stat stick.
+  The passive does nothing. Take it if the stats suit the
+  build and you have a spare slot.
+
+  Wraith Totem on Rogue — pairs with Shade Totem's extended
+  I-frames. Invisible approach into a dodge-through attack
+  is a high-skill opener that no other build replicates.
+
+----------------------------------------------------------------
+LORE FRAMEWORK — THE TRUE NATURE OF THE WORLD
+----------------------------------------------------------------
+
+This is design-internal context. It is never stated to the
+player directly. Players reconstruct it through environmental
+storytelling, item descriptions, boss arenas, and notes left
+by Aethon's civilization. The community is expected to piece
+it together collectively over time, ARG-style.
+
+THE CORE TRUTH
+  The world is a living organism. Not metaphorically — it
+  has an immune system. Humanity is not native to it. Whether
+  humanity arrived, evolved incorrectly, or was placed here
+  is deliberately left unanswered. What matters is that
+  human activity — mining, forging, dimensional travel,
+  large-scale construction — crosses thresholds the world
+  registers as damage. Below those thresholds, humanity is
+  tolerated. Above them, the immune response activates.
+
+  The corruption is not evil. It is biological. The undead,
+  the headcrawlers, the sanity drain, the phantom spawns
+  during Corruption Events — all of it is the world's
+  low-level response to human presence. Not punishment.
+  Antibodies.
+
+  The Wound is what the immune system becomes when the
+  low-level response fails. It has done this before. Aethon
+  was not the first civilization to cross the threshold.
+  They were simply the most recent, and the most thorough
+  in their destruction.
+
+  The Crow is not subject to the immune response in the
+  same way. The world does not register crow biology as
+  damage. This is why the Order of the Hollow Wing used
+  it as a foundation — the Crow can go where humans
+  cannot, carry what humans cannot deliver, and activate
+  the counter-frequency at the source without being
+  consumed before arrival. The world tolerates the Crow
+  not out of recognition but out of the same indifference
+  it shows to its own native fauna. The Crow is close
+  enough to native that the distinction is below the
+  threshold of response.
+
+  Whether that changes after the ending is unanswered.
+
+THE ORDER OF THE HOLLOW WING
+  The only human organization in the current civilization
+  to correctly interpret Aethon's ruins. They understood
+  the threshold, understood the immune response, and
+  understood that the kingdom's activity was approaching
+  the same breaking point Aethon reached. They were not
+  public. They operated in margins, safehouses, and
+  coded correspondence. Whether the kingdom destroyed
+  them for what they knew or whether they simply died
+  out over the long wait for their creation to awaken
+  is deliberately unresolved.
+
+  Their notes are warmer in tone than Aethon's clinical
+  records — personal, occasionally argued, written by
+  people who disagreed with each other about methods
+  and timelines while agreeing completely on the problem.
+  The internal disagreements are part of the lore.
+  Some Order members believed the Crow should be told
+  everything from the moment of awakening. Others
+  believed the discovery had to be organic or the
+  Crow would not trust it. The organic faction won.
+  This is why the Crow wakes knowing nothing.
+
+  Their sigil is a crow in flight. It appears on all
+  Order materials. No member explains the choice in
+  any surviving document. By the time a player has
+  read everything, the explanation is unnecessary.
+
+AETHON
+  The civilization that built the Aether structures, the
+  dimensional forges, the gates. They were not evil. They
+  were curious, industrious, and completely oblivious to
+  what their work was doing to the world beneath them.
+  Their notes read as proud, methodical, and increasingly
+  confused in the final entries. They detected the world's
+  response and interpreted it as a natural phenomenon to
+  be studied rather than a warning to be heeded.
+
+  They never understood what they did wrong. The Wound
+  consumed them before the understanding could arrive.
+  Their ruins are everywhere. Their notes are the primary
+  lore delivery mechanism. Reading them in sequence — if
+  a player can find them all — tells the complete story
+  of a civilization that built magnificently and died
+  without ever knowing why.
+
+  The final Aethon note, found in the Observatory in the
+  Aether, reads: "it appears to be a response — we have
+  not determined what to." There is no entry after this.
+
+THE ENDING
+  Placing the Aetheric Core ends the Wound's active
+  phase. The corruption stops spreading. The Aether
+  collapses. All dimensional access closes permanently.
+  The sky carries the scar of its absence from that
+  point forward — a visible void above the cloud layer
+  where the Aether used to glow, present from anywhere
+  in the world on a clear day. Players who never
+  reached the Aether will notice the sky changed
+  without knowing what was there. Players who cleared
+  the Aether Dungeon will know exactly what they are
+  looking at every time they look up.
+
+  Nobody acknowledges what the Crow did. The world
+  continues. The game continues. The win condition
+  logs as a server milestone and that is the full
+  extent of the world's formal recognition.
+
+  Over the hours and days following activation,
+  natural crows gather at the Core placement site
+  and remain. They do not behave unusually. They
+  simply arrive and stay, in growing numbers, with
+  no explanation given anywhere in the game. The
+  Order's sigil was a crow in flight. The Order is
+  gone. The crows remain. What that means is left
+  entirely to the player.
+
+  The final readable item is authored by no
+  identifiable source, in no writing system that
+  appears elsewhere, rendered in the player's
+  language without explanation: "the readings
+  have stabilized. the anomaly has accepted
+  containment. we are logging this as a success."
+
+  The Wound kept records. It always watched. It
+  considered this outcome a success too. Whether
+  "the anomaly" refers to humanity, the Wound's
+  active phase, the Crow, or all three at once
+  is left entirely to the player.
+
+  The Crow keeps playing. The world is still here.
+  It just no longer needs them. What that implies
+  about the next cycle is left unwritten.
+
+----------------------------------------------------------------
+POINTS OF INTEREST
+----------------------------------------------------------------
+
+Points of interest are unmarkered. No quest indicators, no
+map pins. Players find them by exploring or following
+community knowledge. Each one contains at minimum one
+readable note, one environmental story, and one reason
+to have come.
+
+The environmental damage POIs exist to plant seeds of the
+true lore without stating it. A player who visits all of
+them before the final boss will have everything they need
+to understand what The Wound is. A player who skips them
+will understand it only in retrospect, or not at all.
+
+== OVERWORLD POIs ==
+
+  THE ASHFIELDS
+    A vast stretch of dead farmland southeast of the starting
+    area, visible from a distance as a black scar on the
+    landscape. Crops were grown here using cave minerals as
+    fertilizer — Aethon agricultural records describe yields
+    so extraordinary they were considered a miracle. The soil
+    is now black, dry, and cracked in hexagonal plates. Nothing
+    grows. The water table beneath it is gone.
+
+    The farmhouse at the center is intact. Plates are still
+    on the table. The final journal entry from the farmer
+    describes the third consecutive miracle harvest and plans
+    to expand into the adjacent valley. There is no entry
+    that describes anything going wrong. It happened too fast.
+
+    Headcrawlers nest here in large numbers — they are drawn
+    to dead earth. The density here is higher than anywhere
+    else in the overworld, making the Ashfields dangerous
+    even for mid-progression players.
+
+    Environmental detail: the tree line stops abruptly at
+    the field boundary, as if the death has a border it
+    hasn't crossed yet. The border is slowly expanding.
+    Players who visit early and revisit late will notice it
+    has moved.
+
+  THE LOGGED VALE
+    A valley west of the first overworld dungeon where every
+    tree has been felled. The stumps are old — this happened
+    long before the player arrived. The river that ran through
+    the vale has changed course entirely, carving new channels
+    through the exposed topsoil. The original riverbed is dry
+    and cracked.
+
+    A sawmill sits half-collapsed at the valley floor. The
+    machinery is Aethon-era. Inside, production ledgers
+    detail quotas and shipment schedules in precise numerical
+    language — the same clinical tone as the Observatory
+    notes. The final entry is not a conclusion, just a number.
+    The next line is blank. Shipments simply stopped.
+
+    The new river channels have created a series of unstable
+    mudflats at the valley exit. Players traversing on foot
+    risk sinking. A body is visible in one of the deeper
+    patches, half-submerged, carrying a mid-tier ore cache
+    on its person — reachable with careful pathfinding.
+
+    No hostile mobs spawn here. The vale is simply dead and
+    quiet. The silence is the point.
+
+  THE OPEN PIT
+    Visible from the ridgeline above it as a wound in the
+    earth — a mine so large and so deep that it has begun
+    to collapse inward at the edges. The surrounding land
+    has subsided in concentric rings, cracking the surface
+    in lines that radiate outward like a shatter pattern.
+    Several trees on the rim have tilted inward at steep
+    angles, roots partially exposed.
+
+    Ladders descend into the pit in sections. The bottom
+    is not accessible — a collapse has sealed the lowest
+    level. But the accessible tiers contain remnant ore
+    deposits that were missed in the original extraction,
+    making the descent worth the risk for resource-focused
+    players.
+
+    A small settlement at the pit rim was abandoned mid-meal.
+    Plates on tables, tools leaning against walls, a child's
+    toy on the floor of one structure. No bodies. No sign of
+    violence. Whatever made them leave, they left quickly and
+    they did not come back. One note pinned to the settlement
+    noticeboard reads: "do not go near the eastern ring.
+    the ground sounds wrong." It is not signed.
+
+    The eastern ring has since collapsed entirely.
+
+  ABANDONED APOTHECARY HUT
+    A small structure deep in the forest, overgrown but
+    structurally intact. The previous occupant was clearly
+    a skilled herbalist — ingredient stockpiles line the
+    walls in labeled clay jars, most still usable. Brew
+    totem schematics are pinned above the workbench,
+    hand-annotated with personal notes about potency and
+    timing.
+
+    The occupant's journal describes years of careful
+    foraging and experimentation. The final entries describe
+    a change in the local plant life — certain herbs growing
+    wrong, producing effects they shouldn't. The occupant
+    was excited. They thought they had discovered something
+    new. The journal ends mid-sentence in a recipe notation.
+
+    The ingredient stockpile makes this a high-value early
+    find for Apothecary builds. The schematic notes function
+    as a soft tutorial for brew mechanics. The journal is
+    pure lore — the herbs growing wrong are an early hint
+    at the world's changing chemistry, though no player
+    will recognize it as such on first read.
+
+  STANDING STONES
+    Seven stones arranged in a rough circle in an open field,
+    each roughly twice human height. No Aethon markings —
+    these predate Aethon entirely and no notes explain them.
+    They are simply there.
+
+    Players who stand within the circle find their sanity
+    regen rate significantly increased. No visual effect,
+    no sound cue, no explanation. The stones do not appear
+    in any note or journal found elsewhere in the world.
+    They simply work.
+
+    The implication — that something older than Aethon
+    understood the world well enough to build sanity anchors
+    into the landscape — is left entirely to the player.
+
+  RUINED WATCHTOWER
+    A collapsed tower on a cliff overlooking a valley,
+    reachable by a narrow path that most players will
+    miss on a first pass. The top two floors have fallen
+    but the base is stable. An Undead Knight patrols the
+    interior — better equipped than standard field variants,
+    carrying a mid-tier sword the player can recover from
+    the corpse.
+
+    A logbook at the base describes the tower's original
+    purpose: watching for movement from the eastern
+    territory. The final entries describe something moving
+    at night that didn't match any known creature. The
+    watchmen sent a runner for reinforcements. The runner
+    apparently never arrived. The logbook ends.
+
+    The cliff view from the top of the accessible floors
+    is the best vantage point in the early overworld —
+    players can see the Logged Vale, the edge of the
+    Ashfields, and the distant mountain range concealing
+    the cave entrance from a single position.
+
+  BANDIT CAMP
+    A functioning camp of human survivors who have chosen
+    hostility over cooperation. Not undead, not corrupted —
+    just people who decided that aggression was the better
+    survival strategy. They attack on sight.
+
+    The camp has a central fire, several tents, a locked
+    chest requiring a key carried by the camp leader, and
+    a prisoner in a cage who will trade information for
+    release. The information varies — cave entrance
+    locations, structure positions, general world knowledge
+    — making the camp worth clearing even without the
+    chest contents.
+
+    A note in the leader's tent describes their original
+    group of eleven. They are now six. The note does not
+    explain what happened to the other five.
+
+  MERCHANT CARAVAN WRECKAGE
+    The remains of a trading convoy on a road that no
+    longer leads anywhere useful. Several wagons, most
+    overturned. Scattered goods across a wide area, some
+    still in usable condition. One wagon is intact and
+    locked — the key is on a body twenty meters into
+    the treeline, as if someone tried to run.
+
+    A single survivor sits at the intact wagon. He does
+    not explain what happened to the others and deflects
+    direct questions. He trades — mid-tier goods for
+    materials, prices fair. He is not a quest giver.
+    He has no name given to the player. He simply exists
+    here and trades, and if players return to the wreckage
+    later in progression he is gone and the wagon is
+    finally open, containing high-tier goods and a note
+    in handwriting that matches nothing else in the world.
+
+    What the note says is left to final writing.
+
+== CAVE POIs ==
+
+  THE POISONED VEIN
+    An underground river that Aethon's civilization
+    diverted centuries ago to power a series of
+    deep-level forges. The diversion was never reversed.
+    The water runs the wrong color — not dramatically,
+    not a vivid green or red, just slightly off. Players
+    who look at it long enough will feel uncertain whether
+    they're seeing it correctly.
+
+    The fish in the river are wrong-shaped. Not grotesquely
+    — subtly. Fins in positions that are almost correct.
+    Eyes slightly too large. They are alive and they
+    behave normally except that they do not flee from
+    the player.
+
+    Bioluminescent zones adjacent to the Poisoned Vein
+    have been bleached out entirely. The fungi that
+    produce the light are present but no longer luminescent.
+    The section of cave around the Vein is consequently
+    darker than surrounding areas.
+
+    An Aethon engineer's journal found at the diversion
+    point describes the project with considerable pride.
+    Precise measurements, projected output figures,
+    a note about the commendation the team expects to
+    receive. No follow-up entry about what the river
+    looked like a year later.
+
+  THE EXCAVATION
+    The deepest accessible point in the cave system —
+    reaching it requires significant vertical descent
+    through increasingly hostile territory. The dig
+    site is Aethon-era, massive in scale, clearly the
+    work of a dedicated long-term operation. The equipment
+    is still present, frozen in mid-use.
+
+    Notes accumulate as players descend through the site.
+    The upper levels describe a routine mining operation.
+    Mid-levels describe an unexpected discovery — a
+    formation that doesn't match any known geology.
+    The language becomes more excited, less precise.
+    Lower levels describe readings that "should be
+    impossible" and the decision to send a second team
+    to confirm.
+
+    The lowest accessible level contains the second team's
+    equipment. No second team. The final note, written in
+    a different hand from all preceding entries, contains
+    only coordinates and the word "underneath."
+
+    The coordinates, if players attempt to cross-reference
+    them, point to a location inside solid rock that should
+    not be accessible. Whether something is there is left
+    to level design.
+
+  BIOLUMINESCENT GROTTO
+    A large cave chamber where the fungi and mineral
+    formations produce enough light to see clearly without
+    torches. No hostile mobs spawn here — the space is
+    genuinely safe. Sanity actively recovers inside it
+    rather than draining, at a rate faster than sleeping.
+
+    The grotto is a reward for deep exploration. Players
+    who find it have a reliable sanity reset point that
+    doesn't require food, sleep, or totem use. In a game
+    where the caves are hostile and dark, a safe glowing
+    room is a significant discovery.
+
+    No notes. No lore. No explanation for why this place
+    is safe when nothing else down here is. The standing
+    stones in the overworld have the same absence of
+    explanation. Players who notice the pattern will
+    draw their own conclusions.
+
+  FLOODED MINE
+    A partially operational mine where a lower section
+    has flooded, creating a pool of still black water
+    of uncertain depth. The accessible dry sections
+    contain mid-tier ore deposits. The flooded section
+    contains something visible at the bottom — a light
+    source, consistent and unmoving, too deep to reach
+    by swimming from the surface.
+
+    Headcrawlers are more aggressive near the water.
+    They do not enter it but they cluster at its edge
+    in higher numbers than elsewhere in the caves,
+    facing inward. They do not attack each other. They
+    do not move unless the player approaches.
+
+    Reaching the light at the bottom requires either
+    specific equipment or creative problem-solving left
+    to player discovery. What the light source is is
+    left to final design.
+
+  ANCIENT VAULT
+    A sealed door deep in the cave system, visually
+    distinct from Aethon architecture — older, different
+    materials, different construction language entirely.
+    The door requires a key that is not found in the
+    vault's immediate area.
+
+    The key is in the Excavation site, on the person
+    of the second team's expedition leader — who is
+    not present at the Excavation but whose body is
+    findable elsewhere in the cave system if players
+    search thoroughly.
+
+    Inside the vault: no boss, no combat encounter.
+    A high-tier ore cache, a pre-Aethon artifact of
+    unclear purpose that functions as a mid-tier totem
+    when equipped, and a single wall inscription in
+    a script that does not match Aethon's writing system.
+    No translation is provided anywhere in the game.
+
+  MUSHROOM FOREST
+    A large cave biome where the ceiling is high enough
+    that the fungi have grown to tree scale — caps
+    three to four meters across, stalks climbable with
+    careful movement. The light they produce is dim
+    and shifts color slowly.
+
+    Foraging ingredients concentrated here are usable
+    in Apothecary brew recipes and provide effects not
+    achievable with surface ingredients. A headcrawler
+    den occupies the deepest section of the forest,
+    making thorough foraging a risk calculation.
+
+    No Aethon presence here. No notes, no equipment.
+    The mushroom forest predates their civilization.
+    Whether this is significant is left unstated.
+
+== AETHER POIs ==
+
+  THE ANCHOR SCARS
+    Points in the Aether where Aethon physically tethered
+    floating platforms to stabilize them for construction.
+    The anchors are still in place — massive metal spires
+    driven through the platforms and into whatever is
+    below the Aether. The platforms around each anchor
+    are cracked and listing, the geometry warped in ways
+    that affect movement and gliding near them.
+
+    Gravity behaves inconsistently within a radius of
+    each scar. Not dangerously — just wrongly. Falls
+    that should be fast are slow. Jumps that should
+    arc normally don't. The Wyvern Wing glider produces
+    unexpected results near the anchors.
+
+    Aethon structural notes at each site describe the
+    anchoring process as an engineering triumph. The
+    final note at the largest scar site, written by
+    a different author, describes vibrations in the
+    anchor that weren't there during installation.
+    The author recommends investigation. There is no
+    record of investigation occurring.
+
+  THE OBSERVATORY
+    An Aethon facility on a large stable platform near
+    the Aether's upper limit. The equipment inside is
+    still running — power source unknown, still active
+    after Aethon's collapse. The readings it outputs
+    are the same waveform pattern as the corruption.
+
+    Notes in the Observatory span the full arc of
+    Aethon's discovery. Early entries describe anomalous
+    dimensional readings with scientific excitement.
+    Mid-period entries describe the readings intensifying
+    in correlation with Aethon's construction output.
+    The correlation is noted but not interpreted correctly
+    — the researchers conclude the dimensional activity
+    is causing the readings, rather than the readings
+    being a response to the dimensional activity.
+
+    The final entry: "it appears to be a response — we
+    have not determined what to." No entry follows.
+
+    The Observatory is the single location in the game
+    where the full truth is closest to explicit. Players
+    who reach it and read every note in sequence will
+    have most of the picture. The final connection —
+    that the response was to humanity itself, not to
+    dimensional technology specifically — is never
+    written down anywhere. It is the inference players
+    are meant to make.
+
+  CRASHED SKYSHIP
+    A large Aethon vessel wrecked on a drifting platform,
+    listing at a steep angle, partially broken apart on
+    impact. The cargo hold is accessible and contains
+    mid-to-high tier materials, some Aethon-era equipment
+    that functions as craftable blueprints, and a flight
+    log that ends with a single anomalous entry.
+
+    The final log entry describes something the crew
+    observed through the viewport that the captain could
+    not identify and declined to describe in writing
+    on the grounds that the description would not be
+    believed. Course correction was initiated. Impact
+    followed two entries later.
+
+    The wreck is large enough to function as a temporary
+    shelter. Players can secure sections of it and use
+    it as a base, though the platform it rests on drifts
+    and its position relative to other landmarks shifts
+    over time.
+
+  SKY MONASTERY
+    A structure built by a sect of Aethon who believed
+    the Aether itself was sacred and who attempted to
+    live in harmony with it rather than exploit it.
+    Their notes are the warmest human writing in the
+    game — careful, observational, interested in the
+    Aether as a place rather than a resource.
+
+    They were still consumed. The Wound made no
+    distinction between the sect and the civilization
+    that surrounded them. Their final entries describe
+    watching Aethon's collapse from a distance and
+    understanding, too late, that proximity was enough.
+
+    The monastery contains the highest concentration
+    of Cleric and Monk totems in the game. A complete
+    set of Blessing Totem variants is findable here
+    without fighting for them — the monastery is
+    largely safe, its only enemies being Wyverns on
+    the platform approaches.
+
+    The sect's final note is the closest any Aethon
+    source comes to understanding the truth: "we built
+    too much. we asked too much of a place that was
+    not ours to ask anything of. we are sorry. we do
+    not know to whom we are apologizing."
+
+  WYVERN NEST
+    A cluster of three large platforms close enough
+    together that Wyverns use the gaps between them
+    as hunting territory. Multiple Wyverns patrol
+    simultaneously, making approach dangerous without
+    a glider and combat space.
+
+    The nest itself contains eggs. A Summoner with
+    the Hatch Totem equipped can take an egg as a
+    permanent companion candidate. The nest also
+    contains Wyvern Wing materials in higher quantity
+    than random Wyvern drops, making it worth the
+    approach for non-Summoner builds.
+
+    No lore here. The Wyverns predate Aethon and
+    will outlast whatever comes next.
+
+----------------------------------------------------------------
+REQUIRED BOSSES
+----------------------------------------------------------------
+
+== OVERWORLD BOSS — ALDRIC, THE HOLLOW SOVEREIGN ==
+
+  LORE
+    Aldric was the last king of the largest human
+    settlement in the overworld — a city whose ruins
+    are now the first overworld dungeon. When the
+    corruption reached his territory he did not flee.
+    He believed that a king's will was sufficient to
+    contain anything if the will was strong enough.
+    He bound himself to the corruption deliberately,
+    convinced that sheer refusal would turn it back.
+
+    He was wrong. The corruption did not respond to
+    will. It responded to biology, and his was no
+    different from anyone else's. What remains of
+    Aldric still wears the crown. Still issues orders
+    to soldiers who have been dead for centuries.
+    He wanders the ruins of his own capital in a
+    loop, commanding a kingdom that no longer exists,
+    unable to understand why no one follows his orders
+    anymore.
+
+    He is not evil. He is simply completely gone.
+    Every item he drops has a description written
+    as if authored by a court historian who didn't
+    survive either.
+
+  LOCATION
+    The throne room at the base of the first overworld
+    dungeon. Players clear through the dungeon — former
+    palace structures, now haunted by undead soldiers —
+    before reaching Aldric in what was once the great
+    hall. The architecture is intact. The banquet table
+    is still set. He is standing at the head of it.
+
+  PHASE 1 — The Sovereign's Discipline
+    Aldric fights with a royal greatsword and a decaying
+    shield. His moveset is methodical, almost ceremonial —
+    he fights the way someone trained to fight in armor
+    for formal duels, not actual warfare. Every attack
+    has a long wind-up and a clear recovery. He is not
+    fast. He is reading the player, waiting for openings.
+
+    The complication: phantom soldiers intercept the
+    player's attacks. They manifest between Aldric and
+    incoming strikes, absorbing damage before dissolving.
+    They are not fully tangible — attacking through them
+    is possible but the damage is split.
+
+    The tell: Aldric's eyes track the phantom he intends
+    to use before he uses it. His gaze shifts to a
+    position before the phantom appears there. Players
+    who watch his eyes rather than his weapon learn to
+    predict interceptions and position around them.
+
+    Parry-heavy builds will find Phase 1 manageable —
+    his attacks are slow enough to read. Dodge-heavy
+    builds can circle him faster than the phantoms
+    can reposition.
+
+  PHASE 2 — What's Left
+    Triggered at roughly 50% health. The shield
+    crumbles — it was already mostly corroded, Phase 1
+    was hiding how little was left. The phantoms stop
+    responding to him. He stands still for a moment,
+    looking at where they were, and the fight pauses
+    for roughly three seconds.
+
+    Then he comes.
+
+    Phase 2 Aldric is slower than Phase 1 but hits
+    significantly harder. No phantoms, no tactical
+    positioning — just grief expressed as violence.
+    His attacks are no longer ceremonial. They are
+    desperate. His parry window is gone. He does not
+    defend himself anymore. He just swings.
+
+    Players who were playing reactively in Phase 1
+    need to adjust — he no longer gives them the
+    recovery windows they were exploiting. He is
+    trying to end the fight quickly even at the cost
+    of taking damage.
+
+  DROPS
+    Sovereign Shard — a key crafting material for
+    mid-tier weapon assembly. Item description reads:
+    "recovered from the ruins of the Ashfen campaign.
+    provenance uncertain. the crown is not included
+    in the inventory."
+
+    Aldric's Crown — a wearable item with no combat
+    stats. Purely cosmetic. Item description reads:
+    "it fits."
+
+  NOTES FOR DESIGN
+    The three-second pause at Phase 2 transition is
+    intentional and must be preserved. It is the
+    moment the player understands who they just broke.
+    Do not fill it with sound or effects. Let it be
+    quiet.
+
+    The phantom interception mechanic must be tuned
+    so that players who ignore the eye-tracking tell
+    still eventually win — just less efficiently.
+    The tell is a reward for observation, not a
+    mandatory mechanic.
+
+== CAVE BOSS — THE SEXTON ==
+
+  LORE
+    The caves are not natural. The deepest sections —
+    below the bioluminescent zones, below the flooded
+    mines — were dug. Aethon dug them, looking for
+    something they had detected in their dimensional
+    readings. They found it. The Excavation notes
+    describe a discovery at the lowest level that
+    the authors could not explain and declined to
+    describe precisely.
+
+    The Sexton found it first.
+
+    He was a gravedigger by trade, hired by Aethon's
+    excavation teams for the physical labor of the
+    deep dig. When the teams were consumed he stayed.
+    He has been down here ever since — tending to
+    whatever is at the bottom, feeding it, keeping
+    others away. Whether he is acting on compulsion
+    or genuine devotion is impossible to determine
+    from the outside.
+
+    His body has partially merged with the cave wall
+    in the sections he inhabits most frequently.
+    The merge is not violent — it looks almost
+    voluntary, like he leaned against the wall one
+    day and simply kept going. He carries a mining
+    pick that he swings one-handed as if it weighs
+    nothing.
+
+    His lore is deliberately incomplete. Players
+    will not find notes that explain what he found
+    or what he has been feeding. The Excavation
+    notes point toward his discovery but do not
+    reach it. What is at the bottom of the dig
+    site is a question the game does not answer.
+
+  LOCATION
+    The lowest reachable point of the cave dungeon,
+    in a chamber that opens unexpectedly after a
+    section of tight tunnels. The ceiling is higher
+    than it should be. The chamber feels wrong in
+    scale — too large for where it is in the cave
+    system, as if the space itself is not entirely
+    natural.
+
+  PHASE 1 — The Gardener
+    The Sexton is partially embedded in the wall when
+    players enter. He extracts himself as the fight
+    begins — this takes several seconds and is not
+    instant, giving players time to assess the arena.
+
+    The arena is his garden — bodies half-embedded
+    in the walls and floor in the same manner as
+    his own partial merge. These are previous
+    intruders, Aethon excavators, things that came
+    down here and did not leave. He can animate them
+    mid-fight as distractions.
+
+    The bodies manifest as slow-moving obstacles
+    rather than active combatants — they intercept
+    movement, create chokepoints, and absorb hits
+    intended for The Sexton. Destroying them before
+    he animates them permanently removes them from
+    the encounter. A player who enters aggressively
+    and prioritizes the bodies will fight a
+    progressively simpler Phase 1. A player who
+    focuses only on The Sexton will find themselves
+    navigating an increasingly crowded arena.
+
+    The Sexton himself in Phase 1 is methodical.
+    He swings the pick in wide arcs with significant
+    end-lag. The damage is enormous but the windows
+    are generous. The bodies are the difficulty,
+    not his moveset.
+
+  PHASE 2 — The Weight of It
+    Triggered when his health drops to roughly 40%.
+    The Sexton stops, turns to the section of wall
+    he was originally embedded in, and tears himself
+    free entirely. Phase 1 obscured how large he
+    actually is — the embedded section constituted
+    roughly a third of his body mass. Phase 2 reveals
+    the full figure: significantly taller, the pick
+    now two-handed by necessity, his movement faster
+    and less predictable.
+
+    Remaining bodies from Phase 1 animate simultaneously
+    at the Phase 2 trigger regardless of player progress
+    in clearing them. A player who cleared the arena
+    in Phase 1 faces only The Sexton. A player who
+    ignored them faces The Sexton and a full arena.
+
+    Phase 2 moveset includes a ground slam that sends
+    a shockwave through the floor, an overhead strike
+    that embeds the pick and briefly immobilizes him
+    (punish window), and a charge that crosses the
+    arena in two steps. The sanity drain in this room
+    accelerates during Phase 2.
+
+  DROPS
+    Sexton's Brand — a key item that unlocks the
+    deeper cave biomes. Without it, certain passages
+    are sealed by mechanisms that use Aethon lock
+    technology. Item description reads: "not a key.
+    keys open locks. this opens something else."
+
+    Excavation Map — reveals the Aether Structure
+    location. Item description reads: "the coordinates
+    are annotated in a hand that does not match any
+    other writing in the dig site records."
+
+  NOTES FOR DESIGN
+    The body-clearing mechanic is the fight's central
+    decision. Players must be aware of it by the end
+    of Phase 1 without it being explained to them.
+    Arena layout should make the bodies visually
+    prominent and The Sexton's animation of them
+    clearly telegraphed.
+
+    The Phase 2 reveal must be impactful. The wall
+    section he tears free from should leave a visible
+    void — players should be able to see afterward
+    exactly how much of him was hidden.
+
+== AETHER BOSS — VELITH, THE CHAINED MERIDIAN ==
+
+  LORE
+    Velith was not placed at the Aether threshold to
+    keep players out. It was placed there to keep
+    something in.
+
+    Aethon's dimensional research eventually produced
+    an entity they could not classify — something that
+    emerged from the space between their constructed
+    dimensions, vast and incomprehensible and initially
+    dormant. They did not destroy it. They bound it,
+    using the Aether as a containment space, and chained
+    it to the threshold with anchors they believed
+    permanent.
+
+    The chains held. Velith has been at the threshold
+    for the full span of Aethon's collapse and the
+    current civilization's rise. It is in agony. It has
+    been in agony for longer than the player's civilization
+    has existed. It cannot distinguish between the
+    people who chained it and the people who are now
+    standing in front of it. It attacks because it
+    is suffering and the players are present.
+
+    It is not malevolent. It is in pain and it cannot
+    stop.
+
+    Observatory notes reference "the meridian entity"
+    in three entries, each more alarmed than the last,
+    before the topic disappears from the records entirely.
+    Players who connect the Observatory's meridian
+    references to Velith's fight are seeing what Aethon
+    saw and lost.
+
+  LOCATION
+    A massive drifting platform at the upper boundary
+    of the Aether — the highest reachable point in the
+    dimension. The platform is wide enough that the
+    edges are not immediately visible. Four anchor
+    pillars stand at cardinal points, each with a
+    chain running from it into the air above, where
+    Velith is suspended.
+
+  PHASE 1 — Chained
+    Velith cannot reach the platform while chained.
+    It attacks with the chains themselves — swinging
+    lengths of ethereal chain that can cross the
+    entire arena, dragging sections of platform
+    upward, or whipping the ground in sweeping arcs.
+    The chains glow at the point of stress before
+    each attack, giving players a directional tell.
+
+    The pillars are destructible. Destroying a pillar
+    severs the corresponding chain and permanently
+    removes that attack from Velith's moveset. It also
+    enrages Velith — its speed increases with each
+    severed chain, and the remaining chains hit harder.
+
+    Players choose how many pillars to destroy and
+    when. Destroying all four before the health
+    threshold triggers Phase 2 immediately but with
+    full enrage stacked. Destroying none means
+    surviving a longer Phase 1 with the full chain
+    moveset but facing a slower Phase 2. Most players
+    will find a middle approach — two or three pillars
+    destroyed — produces the most manageable overall
+    fight.
+
+    The Wyvern Wing glider is essential for avoiding
+    certain chain attacks. Players who reach Velith
+    without one will find specific attacks nearly
+    impossible to dodge on foot.
+
+  PHASE 2 — Unchained
+    Triggered when health drops to 40% or all pillars
+    are destroyed, whichever comes first. Velith breaks
+    free — the remaining chains snap, the remaining
+    pillars shatter, and Velith descends to the platform.
+
+    Its scale is disorienting. It fills the upper half
+    of the visual space. It moves by repositioning above
+    the platform and striking downward — players are
+    always fighting something above them, never at
+    eye level.
+
+    The platform begins fragmenting. Large sections
+    break off and drift, creating gaps. Players without
+    the glider are in serious danger. The fight becomes
+    a movement challenge as much as a combat challenge —
+    maintaining a platform to stand on while dealing
+    damage and avoiding strikes from above.
+
+    Sanity drains throughout Phase 2 at an accelerated
+    rate. Looking directly at Velith contributes to
+    the drain — the visual is designed to be difficult
+    to process without triggering a stress response.
+
+  DROPS
+    Aether Core — required to craft the three gate
+    weapons. Item description reads: "it was keeping
+    something contained. it is unclear whether that
+    function has ceased or merely changed."
+
+  NOTES FOR DESIGN
+    The pillar destruction choice is the fight's
+    identity. Difficulty is player-determined, not
+    fixed. Speedrunners will destroy all four immediately.
+    Careful players will destroy none. The optimal
+    line is somewhere between and players will debate
+    it.
+
+    Velith should not make sounds associated with
+    aggression. Its audio design should communicate
+    pain — low sustained tones, harmonic distortion,
+    nothing that reads as a roar or a battle cry.
+
+== FINAL SENTINEL — THE USHER ==
+
+  LORE
+    The Usher has no origin because it predates origin.
+    It is the threshold itself given a shape sufficient
+    to be interacted with. It does not guard the passage
+    between the Aether and the Final Dimension out of
+    assignment or loyalty — it simply occupies that
+    position because it has always occupied that position,
+    in the same way that a door occupies a doorframe.
+
+    It has no face. It has no consistent shape. Its
+    form shifts between observations — players who look
+    away and look back will find it slightly different
+    each time. Not dramatically. Just enough.
+
+    Aethon's final dimensional records contain a single
+    reference to an entity at the threshold described
+    as "the administrative presence." The phrasing is
+    clinical and clearly written by someone who was
+    deeply unsettled and chose bureaucratic language
+    as a coping mechanism.
+
+  LOCATION
+    The threshold between the Aether and the Final
+    Dimension — a space that is neither. The arena
+    has no floor in any conventional sense, just a
+    surface that holds weight without explanation.
+    The architecture around it is half-Aether, half
+    something else, as if two places were pressed
+    together imperfectly.
+
+  MECHANICS
+    The Usher is immune to all damage except that
+    dealt by the three gate weapons: the Skyblade,
+    the Starcaller Bow, and the Voidweave Staff.
+    No chip damage. No totem effects. No magic not
+    channeled through the Voidweave Staff.
+
+    In a server group this forces coordination across
+    archetypes — at least three players need gate
+    weapons. Solo players must craft all three and
+    weapon-swap mid-fight, managing stamina and
+    positioning across completely different combat
+    styles simultaneously.
+
+    The Usher's additional mechanic: it mirrors the
+    dominant damage type it has been hit with and
+    develops a temporary resistance to it. A player
+    who commits to the Skyblade for too long will
+    find it shrugging off melee. Forcing a weapon
+    swap breaks the resistance. In a group, uncoordinated
+    players who all use the same weapon simultaneously
+    will trigger the resistance faster.
+
+  PHASE 2
+    Triggered at 50% health. The Usher begins copying
+    player behavior. If the player has been dodge-heavy,
+    it will dodge. If the player has been parrying,
+    it will attempt to parry. It reads movement patterns
+    specifically and adapts to the individual player,
+    not to a fixed Phase 2 script.
+
+    In a group, it copies the most frequent behavior
+    across all players simultaneously, creating a
+    chaotic mirror of the group's collective habits.
+
+    Looking at The Usher during Phase 2 deals passive
+    sanity damage. Not from a visible effect — just
+    from looking at it directly for more than a few
+    consecutive seconds. The visual is designed to
+    produce a cognitive discomfort that the mechanic
+    then formalizes.
+
+  DROPS
+    Void Shard — activates the Final Dimension structure.
+    Item description reads: "the passage is open. it
+    was always open. the usher was not preventing entry.
+    it was preventing something else from leaving."
+
+== FINAL BOSS — THE WOUND ==
+
+  LORE
+    The Wound has no name it gave itself. That is what
+    Aethon's last coherent researcher called it in the
+    final Observatory log entry before the writing
+    degrades into repetition of the word "underneath"
+    for eleven lines.
+
+    The Wound is the world's immune system given singular
+    form. It did not exist before Aethon's civilization
+    crossed a critical threshold of environmental damage.
+    It coalesced from the corruption itself — not summoned,
+    not created, not born. Simply necessary. When the
+    low-level response — the undead, the headcrawlers,
+    the sanity drain — proved insufficient, the world
+    produced something sufficient.
+
+    It is not intelligent. It is purposeful. The distinction
+    matters. It does not hate humanity. It does not want
+    anything. It processes the presence of humanity above
+    a certain threshold as damage and responds accordingly.
+    Below that threshold, humanity is not worth responding
+    to. The game's ending is humanity negotiating itself
+    below the threshold permanently, at significant cost.
+
+    Everything players have encountered was downstream of
+    The Wound. Every corrupted mob, every sanity event,
+    every hostile manifestation in every dimension —
+    all of it was its peripheral immune response. The
+    Wound itself has been passive until now because the
+    peripheral response was sufficient. It is engaging
+    directly because players, by reaching the Final
+    Dimension, have demonstrated that the peripheral
+    response has failed.
+
+    It has done this before. Aethon was not the first
+    civilization to cross the threshold. The vault in
+    the caves — the pre-Aethon architecture, the
+    untranslatable script — is evidence of a civilization
+    that preceded Aethon by an unknown span. The Wound
+    consumed them too. It kept records. Players who
+    find the right notes in the right order will realize
+    that the Observatory equipment is still running
+    because The Wound has been maintaining it.
+
+  LOCATION
+    The ruins of Aethon's capital city, now fully inside
+    the Final Dimension. The architecture is recognizable
+    as human — streets, buildings, civic structures —
+    but warped. Grown over. Being slowly digested by
+    something that is treating the stonework as foreign
+    material to be broken down and reabsorbed.
+
+    Players can read what this city was while fighting
+    for their lives in its remains. Readable fragments
+    of Aethon text are embedded in the arena walls —
+    partial sentences, broken signage, inscriptions
+    on half-dissolved civic monuments. None of them
+    finish. The city's story is as incomplete here
+    as it is everywhere else. The Wound did not
+    preserve it. It simply hasn't finished with it yet.
+
+  PHASE 1 — RECOGNITION
+    The Wound does not immediately engage. For the
+    first thirty seconds it circles the arena at a
+    distance, its form indistinct at range — players
+    cannot clearly identify what they are looking at.
+    Tendrils of corruption probe the ground around
+    the player during this period. They deal real
+    damage if stood on. Standing still is not an
+    option.
+
+    The phase is not a grace period. It is teaching
+    the player that this fight will not allow passive
+    behavior.
+
+    When The Wound engages, it fights with constructs —
+    Aethon architecture weaponized and animated.
+    Pillars hurled, bridges used as rams, civic
+    structures collapsed onto the player's position.
+    The Wound itself does not attack directly in
+    Phase 1. It uses the city as ammunition. The
+    distinction is intentional: it is not fighting
+    the player yet. It is using available resources
+    to remove an irritant.
+
+    Phantom notes appear briefly on the arena walls
+    during lulls — fragments of Aethon's final days,
+    rendered in a flickering visual style that makes
+    them readable only if players are not moving.
+    They are purely atmospheric. Players who stop
+    to read them during subsequent runs will piece
+    together the full Aethon timeline. Players who
+    never stop will never see them. This is correct.
+
+    Sanity drains slowly throughout Phase 1.
+
+  PHASE 2 — REVULSION
+    Triggered at 65% health. The constructs collapse
+    simultaneously. The Wound sheds the Aethon
+    architecture entirely.
+
+    What is underneath is biological, massive, and
+    wrong in ways that resist description. The design
+    intent is visual discomfort through incorrectness
+    rather than overt grotesquerie — limbs that bend
+    in directions that are almost correct, geometry
+    that the eye processes as slightly off without
+    being able to identify why, movement that suggests
+    weight without following the physical rules weight
+    implies.
+
+    Sanity drains significantly faster in Phase 2.
+    This is not a punishment mechanic. It is a lore
+    statement. The human perceptual system was not
+    designed to process what The Wound actually is.
+    Players with high sanity reserves from Cleric
+    or Apothecary builds will notice the drain less.
+    Players at low sanity entering Phase 2 will
+    trigger Corruption Events during the fight —
+    phantom enemies spawning mid-boss encounter is
+    not designed but is an emergent consequence of
+    poor sanity management.
+
+    Phantom versions of earlier bosses manifest
+    periodically during Phase 2 — Aldric, The Sexton,
+    Velith. Not as full encounters. They appear for
+    ten to fifteen seconds, attack, and dissolve.
+    They are things The Wound consumed. The implication —
+    that it has catalogued everything it has ever
+    processed and can reproduce any of it — should
+    land without being stated. The fight with Aldric
+    is now recontextualized. Players who connected
+    with his tragedy will feel it differently here.
+
+    The Wound's own attacks in Phase 2 are direct —
+    biological strikes, sweeping limb attacks, ground
+    impacts that send corruption shockwaves across
+    the arena. The moveset is large but telegraphed.
+    The difficulty is not the attacks individually.
+    It is managing sanity, managing phantom spawns,
+    managing the scale of the arena, and managing
+    the psychological weight of what the fight is
+    telling the player about everything that came before.
+
+  PHASE 3 — ACCEPTANCE
+    Triggered at 30% health. The arena goes quiet.
+    The Wound contracts — not visually retreating,
+    but condensing, as if gathering itself. The result
+    is near-human in scale. Hunched. Still.
+
+    Then it walks toward the player. Steadily. Without
+    telegraphed attacks, without spectacle, without
+    sound. It simply advances.
+
+    Every hit it takes closes over. Wounds open and
+    seal in seconds. Conventional damage produces
+    no visible effect on its health. Players who do
+    not understand the mechanic will spend this phase
+    in escalating panic. Players who read the Observatory
+    notes will remember the reference to a "resonant
+    counter-frequency" in Aethon's failed attempts to
+    halt the corruption and will understand what the
+    Aetheric Core in their inventory is for.
+
+    The Aetheric Core must be activated in proximity
+    to The Wound during Phase 3. This is never stated
+    anywhere in the game. It is the inference players
+    are guided toward by the accumulated lore. Players
+    who did not engage with the lore will discover it
+    through desperation, community knowledge, or the
+    simple fact that nothing else is working.
+
+    Activating the Core triggers the ending sequence.
+
+  THE ENDING
+    The Wound does not die. It recedes. The animation
+    is slow and the audio drops almost entirely —
+    not silence, just the absence of the frequencies
+    that were present throughout the fight.
+
+    The Aether collapses. Any player currently in
+    the Aether dimension is returned to the overworld
+    by force. The dimensional structures cease
+    functioning. The sky changes. Where the Aether
+    used to glow faintly above the cloud layer —
+    visible throughout the entire game as a background
+    detail — there is now a permanent absence. Not
+    darkness, not cloud cover. Just a scar where
+    something used to be. It is visible from anywhere
+    in the world on a clear day and it does not heal.
+
+    The corruption stops spreading. The existing scars
+    remain. The dead farmland stays dead. The logged
+    vale does not regrow. The open pit does not close.
+    The server win condition triggers and logs as a
+    global event. That is the full extent of the
+    world's formal acknowledgment.
+
+    Nobody says anything to the Crow. No NPC speaks
+    to what happened. No other player is required to
+    respond. The world simply continues, indifferent
+    to the weight of what was just done in it.
+
+    Over the hours and in-game days that follow,
+    natural crows begin gathering at the Core
+    placement site. They arrive in small numbers
+    at first, then more. They stay. They do not
+    behave unusually. They simply remain, in growing
+    numbers, at the site of the activation. Players
+    who return days later will find them still there.
+    No note explains it. No item description
+    references it. It just happens.
+
+    The final readable item found at the activation
+    site is authored by no identifiable source, in
+    no writing system that appears elsewhere in the
+    game, rendered in the player's language without
+    explanation:
+
+    "the readings have stabilized. the anomaly has
+    accepted containment. we are logging this as
+    a success."
+
+    The Wound kept records. It always watched. It
+    considered this outcome a success too. What that
+    implies about the next cycle is left unwritten.
+    The Crow keeps playing. The world is still here.
+    It just no longer needs them.
+
+  NOTES FOR DESIGN
+    Phase 3's silence is the fight's most important
+    moment. The contrast with Phase 2's scale must
+    be total. No music. Reduced ambient sound. The
+    Wound walking toward the player in near-silence
+    while they scramble to understand what to do
+    is the culmination of everything the game has
+    been building.
+
+    The Aetheric Core activation should not be
+    obvious. The UI should not prompt it. Players
+    should arrive at it themselves.
+
+    The phantom boss appearances in Phase 2 must
+    use the actual boss movesets — scaled down,
+    shortened duration, but mechanically accurate.
+    A player who learned Aldric's eye-tracking tell
+    should be able to apply it to his phantom.
+    The callback must be functional, not cosmetic.
+
+    The ending's tragedy should not be underlined.
+    No voiceover, no closing narration, no text
+    explanation of what the flat sanity meter means.
+    It goes still. The game continues. Players
+    who were paying attention will feel it.
+    Players who weren't will find out later when
+    the community explains it to them, which is
+    its own kind of discovery.
+
+----------------------------------------------------------------
 THINGS NOT YET DECIDED
 ----------------------------------------------------------------
-  - Cave Boss identity and fight gimmick
   - Final Dimension name
-  - Full totem list (what each of the base totems does)
   - Whether food also restores sanity/stamina or is purely
     survival
   - Temperature and weather (could complement each dimension
     naturally — caves are cold, Aether has thin air, etc.)
+  - What the Merchant caravan survivor's final note says
+  - What is at the bottom of the Flooded Mine
+  - Whether the Ancient Vault's pre-Aethon artifact has
+    additional lore implications
+  - Full moveset numbers and tuning for all bosses
 
 ================================================================
                      END OF DOCUMENT
