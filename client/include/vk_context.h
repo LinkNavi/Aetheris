@@ -25,6 +25,10 @@ struct VkContext {
 VkImage       depthImage;
 VkImageView   depthImageView;
 VmaAllocation depthAlloc;
+VkBuffer      stagingBuffer = VK_NULL_HANDLE;
+VmaAllocation stagingAlloc  = nullptr;
+void*         stagingMapped = nullptr;
+VkDeviceSize  stagingSize   = 32 * 1024 * 1024; // 32 MB
     VkSurfaceKHR     surface;
     VkQueue          graphicsQueue;
     uint32_t         graphicsQueueFamily;

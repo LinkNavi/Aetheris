@@ -108,9 +108,10 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
         glm::vec3 mn = tf.pos - half;
         glm::vec3 mx = tf.pos + half;
 
-        for (int dx = -2; dx <= 2; dx++)
-        for (int dy = -2; dy <= 2; dy++)
-        for (int dz = -2; dz <= 2; dz++) {
+        // ±1 = 27 chunks — sub-stepping handles tunnelling, no need for ±2
+        for (int dx = -1; dx <= 1; dx++)
+        for (int dy = -1; dy <= 1; dy++)
+        for (int dz = -1; dz <= 1; dz++) {
             ChunkCoord cc{cx+dx, cy+dy, cz+dz};
             auto it = _triSoups.find(cc);
             if (it == _triSoups.end()) continue;
@@ -187,7 +188,6 @@ void PlayerController::update(float dt, const Input& input) {
     float     yVel = vel.vel.y;
 
     if (gr.grounded) {
-        // Friction
         float speed = glm::length(hVel);
         if (speed > 0.001f) {
             float drop     = speed * Config::FRICTION * dt;

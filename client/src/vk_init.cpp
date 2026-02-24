@@ -37,45 +37,43 @@ static VkShaderModule makeModule(VkDevice dev, const std::vector<uint32_t>& code
     return mod;
 }
 
+// Reuses the persistent staging buffer — no alloc/free per chunk
 static void uploadBuffer(VkContext& ctx,
                          VkBufferUsageFlags usage,
                          const void* data, VkDeviceSize size,
                          VkBuffer& outBuffer, VmaAllocation& outAlloc) {
-    VkBufferCreateInfo stagingCI{};
-    stagingCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    stagingCI.size  = size;
-    stagingCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    // Grow staging buffer if data is larger than current capacity (rare)
+    if (size > ctx.stagingSize) {
+        vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
+        ctx.stagingSize = size * 2;
+        VkBufferCreateInfo sCI{};
+        sCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        sCI.size  = ctx.stagingSize;
+        sCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        VmaAllocationCreateInfo sACI{};
+        sACI.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+        sACI.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        VmaAllocationInfo info{};
+        vmaCreateBuffer(ctx.allocator, &sCI, &sACI,
+                        &ctx.stagingBuffer, &ctx.stagingAlloc, &info);
+        ctx.stagingMapped = info.pMappedData;
+    }
 
-    VmaAllocationCreateInfo stagingAllocCI{};
-    stagingAllocCI.usage = VMA_MEMORY_USAGE_CPU_ONLY;
-
-    VkBuffer      stagingBuf;
-    VmaAllocation stagingAlloc;
-    vmaCreateBuffer(ctx.allocator, &stagingCI, &stagingAllocCI,
-                    &stagingBuf, &stagingAlloc, nullptr);
-
-    void* mapped;
-    vmaMapMemory(ctx.allocator, stagingAlloc, &mapped);
-    memcpy(mapped, data, size);
-    vmaUnmapMemory(ctx.allocator, stagingAlloc);
+    memcpy(ctx.stagingMapped, data, size);
 
     VkBufferCreateInfo bufCI{};
     bufCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufCI.size  = size;
     bufCI.usage = usage | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
     VmaAllocationCreateInfo bufAllocCI{};
     bufAllocCI.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-    vmaCreateBuffer(ctx.allocator, &bufCI, &bufAllocCI,
-                    &outBuffer, &outAlloc, nullptr);
+    vmaCreateBuffer(ctx.allocator, &bufCI, &bufAllocCI, &outBuffer, &outAlloc, nullptr);
 
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool        = ctx.commandPool;
     allocInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = 1;
-
     VkCommandBuffer cmd;
     vkAllocateCommandBuffers(ctx.device.device, &allocInfo, &cmd);
 
@@ -84,10 +82,8 @@ static void uploadBuffer(VkContext& ctx,
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     vkBeginCommandBuffer(cmd, &beginInfo);
 
-    VkBufferCopy copy{};
-    copy.size = size;
-    vkCmdCopyBuffer(cmd, stagingBuf, outBuffer, 1, &copy);
-
+    VkBufferCopy copy{0, 0, size};
+    vkCmdCopyBuffer(cmd, ctx.stagingBuffer, outBuffer, 1, &copy);
     vkEndCommandBuffer(cmd);
 
     VkSubmitInfo submit{VK_STRUCTURE_TYPE_SUBMIT_INFO};
@@ -95,12 +91,9 @@ static void uploadBuffer(VkContext& ctx,
     submit.pCommandBuffers    = &cmd;
     vkQueueSubmit(ctx.graphicsQueue, 1, &submit, VK_NULL_HANDLE);
     vkQueueWaitIdle(ctx.graphicsQueue);
-
     vkFreeCommandBuffers(ctx.device.device, ctx.commandPool, 1, &cmd);
-    vmaDestroyBuffer(ctx.allocator, stagingBuf, stagingAlloc);
 }
 
-// Declared before vk_init so it can be called inside it
 static void createDepthResources(VkContext& ctx) {
     VkImageCreateInfo imgCI{};
     imgCI.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -133,11 +126,11 @@ static void createDepthResources(VkContext& ctx) {
 VkContext vk_init(GLFWwindow* window) {
     VkContext ctx;
 
+    // Validation layers OFF — significant CPU overhead on low-end hardware
     auto inst = vkb::InstanceBuilder{}
         .set_app_name("Aetheris")
-        .request_validation_layers(true)
+        .request_validation_layers(false)
         .require_api_version(1, 3, 0)
-        .use_default_debug_messenger()
         .build();
     if (!inst) throw std::runtime_error(inst.error().message());
     ctx.instance = inst.value();
@@ -181,13 +174,29 @@ VkContext vk_init(GLFWwindow* window) {
     vmaInfo.vulkanApiVersion = VK_API_VERSION_1_3;
     check(vmaCreateAllocator(&vmaInfo, &ctx.allocator), "Failed to create VMA allocator");
 
-    // Command pool must come before createDepthResources
+    // Command pool before staging buffer and depth resources
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
     poolInfo.queueFamilyIndex = ctx.graphicsQueueFamily;
     poolInfo.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     check(vkCreateCommandPool(ctx.device.device, &poolInfo, nullptr, &ctx.commandPool),
           "Failed to create command pool");
+
+    // Persistent staging buffer — reused for every chunk upload
+    {
+        VkBufferCreateInfo sCI{};
+        sCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        sCI.size  = ctx.stagingSize;
+        sCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        VmaAllocationCreateInfo sACI{};
+        sACI.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+        sACI.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        VmaAllocationInfo info{};
+        check(vmaCreateBuffer(ctx.allocator, &sCI, &sACI,
+                              &ctx.stagingBuffer, &ctx.stagingAlloc, &info),
+              "Failed to create staging buffer");
+        ctx.stagingMapped = info.pMappedData;
+    }
 
     createDepthResources(ctx);
 
@@ -282,12 +291,12 @@ VkContext vk_init(GLFWwindow* window) {
     binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     VkVertexInputAttributeDescription attrs[2]{};
-    attrs[0].binding  = 0; attrs[0].location = 0;
-    attrs[0].format   = VK_FORMAT_R32G32B32_SFLOAT;
-    attrs[0].offset   = offsetof(Vertex, pos);
-    attrs[1].binding  = 0; attrs[1].location = 1;
-    attrs[1].format   = VK_FORMAT_R32G32B32_SFLOAT;
-    attrs[1].offset   = offsetof(Vertex, normal);
+    attrs[0].binding = 0; attrs[0].location = 0;
+    attrs[0].format  = VK_FORMAT_R32G32B32_SFLOAT;
+    attrs[0].offset  = offsetof(Vertex, pos);
+    attrs[1].binding = 0; attrs[1].location = 1;
+    attrs[1].format  = VK_FORMAT_R32G32B32_SFLOAT;
+    attrs[1].offset  = offsetof(Vertex, normal);
 
     VkPipelineVertexInputStateCreateInfo vertexInput{};
     vertexInput.sType                           = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -304,7 +313,6 @@ VkContext vk_init(GLFWwindow* window) {
     viewport.width    = (float)ctx.swapchain.extent.width;
     viewport.height   = (float)ctx.swapchain.extent.height;
     viewport.maxDepth = 1.0f;
-
     VkRect2D scissor{};
     scissor.extent = ctx.swapchain.extent;
 
@@ -448,7 +456,34 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj) {
     vkCmdBeginRenderPass(cmd, &rpBegin, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
 
+    // ── Frustum culling (Gribb/Hartmann) ─────────────────────────────────────
+    struct Plane { glm::vec3 n; float d; };
+    Plane planes[6];
+    const glm::mat4& m = viewProj;
+    planes[0] = {{ m[0][3]+m[0][0], m[1][3]+m[1][0], m[2][3]+m[2][0] }, m[3][3]+m[3][0] }; // left
+    planes[1] = {{ m[0][3]-m[0][0], m[1][3]-m[1][0], m[2][3]-m[2][0] }, m[3][3]-m[3][0] }; // right
+    planes[2] = {{ m[0][3]+m[0][1], m[1][3]+m[1][1], m[2][3]+m[2][1] }, m[3][3]+m[3][1] }; // bottom
+    planes[3] = {{ m[0][3]-m[0][1], m[1][3]-m[1][1], m[2][3]-m[2][1] }, m[3][3]-m[3][1] }; // top
+    planes[4] = {{ m[0][3]+m[0][2], m[1][3]+m[1][2], m[2][3]+m[2][2] }, m[3][3]+m[3][2] }; // near
+    planes[5] = {{ m[0][3]-m[0][2], m[1][3]-m[1][2], m[2][3]-m[2][2] }, m[3][3]-m[3][2] }; // far
+
+    auto chunkVisible = [&](ChunkCoord coord) -> bool {
+        glm::vec3 mn = glm::vec3(coord.x, coord.y, coord.z) * (float)ChunkData::SIZE;
+        glm::vec3 mx = mn + (float)ChunkData::SIZE;
+        for (auto& p : planes) {
+            glm::vec3 pv{
+                p.n.x > 0 ? mx.x : mn.x,
+                p.n.y > 0 ? mx.y : mn.y,
+                p.n.z > 0 ? mx.z : mn.z
+            };
+            if (glm::dot(p.n, pv) + p.d < 0.f) return false;
+        }
+        return true;
+    };
+
     for (auto& [coord, gpu] : ctx.chunks) {
+        if (!chunkVisible(coord)) continue;
+
         glm::mat4 model = glm::translate(glm::mat4(1.f),
             glm::vec3(coord.x * ChunkData::SIZE,
                       coord.y * ChunkData::SIZE,
@@ -497,6 +532,7 @@ void vk_destroy(VkContext& ctx) {
         vmaDestroyBuffer(ctx.allocator, gpu.indexBuffer,  gpu.indexAlloc);
     }
 
+    vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
     vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
     vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
     vmaDestroyAllocator(ctx.allocator);
