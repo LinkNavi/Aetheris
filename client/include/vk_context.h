@@ -9,7 +9,10 @@
 #include <deque>
 #include "chunk.h"
 
-// ── GpuChunk: slot inside the mega-buffer ─────────────────────────────────────
+// Forward declare to avoid circular include
+struct ViewModelRenderer;
+
+// ── GpuChunk ──────────────────────────────────────────────────────────────────
 struct GpuChunk {
     uint32_t vertexOffset;
     uint32_t indexOffset;
@@ -17,22 +20,17 @@ struct GpuChunk {
     uint32_t vertexCount;
 };
 
-// ── Upload queued from game thread, processed in vk_draw ─────────────────────
+// ── Upload queued from game thread ────────────────────────────────────────────
 struct PendingUpload {
     ChunkCoord            coord;
     std::vector<Vertex>   vertices;
     std::vector<uint32_t> indices;
 };
 
-// NEW
-static constexpr uint32_t MEGA_VERTEX_CAP = 1 << 21; // 2M verts
-static constexpr uint32_t MEGA_INDEX_CAP  = 1 << 21; // 2M indices
+static constexpr uint32_t MEGA_VERTEX_CAP = 1 << 21;
+static constexpr uint32_t MEGA_INDEX_CAP  = 1 << 21;
 
 // ── MegaBuffer ────────────────────────────────────────────────────────────────
-// Members and methods use different names to avoid C++ name-collision errors:
-//   member data  : vertRanges / indRanges
-//   alloc methods: allocVerts / allocInds
-//   free  methods: releaseVerts / releaseInds
 struct MegaBuffer {
     VkBuffer      vertexBuffer = VK_NULL_HANDLE;
     VkBuffer      indexBuffer  = VK_NULL_HANDLE;
@@ -40,8 +38,8 @@ struct MegaBuffer {
     VmaAllocation indexAlloc   = nullptr;
 
     struct Range { uint32_t offset, size; };
-    std::vector<Range> vertRanges; // free-list for vertex space
-    std::vector<Range> indRanges;  // free-list for index space
+    std::vector<Range> vertRanges;
+    std::vector<Range> indRanges;
 
     uint32_t allocVerts  (uint32_t count);
     uint32_t allocInds   (uint32_t count);
@@ -49,19 +47,17 @@ struct MegaBuffer {
     void     releaseInds (uint32_t offset, uint32_t count);
 };
 
-// ── Indirect draw command (must match VkDrawIndexedIndirectCommand) ───────────
 struct DrawCmd {
     uint32_t indexCount;
     uint32_t instanceCount;
     uint32_t firstIndex;
     int32_t  vertexOffset;
-    uint32_t firstInstance; // used as index into per-chunk storage buffer
+    uint32_t firstInstance;
 };
 
-// ── Per-chunk GPU data (renamed to avoid clash with shared::ChunkData) ────────
 struct ChunkDrawData {
     glm::mat4 model;
-    glm::vec4 params; // x = sunIntensity
+    glm::vec4 params;
 };
 
 // ── VkContext ─────────────────────────────────────────────────────────────────
@@ -74,13 +70,11 @@ struct VkContext {
     VkImageView   depthImageView = VK_NULL_HANDLE;
     VmaAllocation depthAlloc     = nullptr;
 
-    // 64 MB persistent staging buffer (CPU_ONLY, mapped)
     VkBuffer      stagingBuffer = VK_NULL_HANDLE;
     VmaAllocation stagingAlloc  = nullptr;
     void*         stagingMapped = nullptr;
     VkDeviceSize  stagingSize   = 64 * 1024 * 1024;
 
-    // Dedicated upload cmd + fence — never stalls the render queue
     VkCommandBuffer uploadCmd   = VK_NULL_HANDLE;
     VkFence         uploadFence = VK_NULL_HANDLE;
 
@@ -88,7 +82,6 @@ struct VkContext {
 
     static constexpr uint32_t MAX_DRAW_CHUNKS = 512;
 
-    // Per-frame indirect + per-chunk data buffers (CPU_TO_GPU, persistently mapped)
     VkBuffer      indirectBuffer[2] = {};
     VmaAllocation indirectAlloc[2]  = {};
     void*         indirectMapped[2] = {};
@@ -97,8 +90,8 @@ struct VkContext {
     VmaAllocation perChunkAlloc[2]  = {};
     void*         perChunkMapped[2] = {};
 
-    VkSurfaceKHR surface           = VK_NULL_HANDLE;
-    VkQueue      graphicsQueue     = VK_NULL_HANDLE;
+    VkSurfaceKHR surface             = VK_NULL_HANDLE;
+    VkQueue      graphicsQueue       = VK_NULL_HANDLE;
     uint32_t     graphicsQueueFamily = 0;
 
     VkCommandPool                commandPool = VK_NULL_HANDLE;
@@ -130,7 +123,12 @@ struct VkContext {
 
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
+
+// viewModel may be nullptr — skips viewmodel draw
 void      vk_draw(VkContext& ctx, const glm::mat4& viewProj,
-                  float sunIntensity, glm::vec3 skyColor);
+                  float sunIntensity, glm::vec3 skyColor,
+                  const ViewModelRenderer* viewModel = nullptr,
+                  const glm::mat4& proj = glm::mat4(1.f));
+
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
 void      vk_remove_chunk(VkContext& ctx, ChunkCoord coord);

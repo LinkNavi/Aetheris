@@ -660,8 +660,13 @@ void vk_remove_chunk(VkContext &ctx, ChunkCoord coord) {
 // ── Draw
 // ──────────────────────────────────────────────────────────────────────
 
-void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
-             glm::vec3 skyColor) {
+// ── Draw
+// ──────────────────────────────────────────────────────────────────────
+
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj, float sunIntensity,
+             glm::vec3 skyColor,
+             const ViewModelRenderer* viewModel,
+             const glm::mat4& proj) {
 
   flushUploads(ctx);
 
@@ -675,69 +680,53 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
                         ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
 
   // ── Frustum planes ────────────────────────────────────────────────────────
-  struct Plane {
-    glm::vec3 n;
-    float d;
-  };
+  struct Plane { glm::vec3 n; float d; };
   Plane planes[6];
-  const glm::mat4 &m = viewProj;
-  planes[0] = {{m[0][3] + m[0][0], m[1][3] + m[1][0], m[2][3] + m[2][0]},
-               m[3][3] + m[3][0]};
-  planes[1] = {{m[0][3] - m[0][0], m[1][3] - m[1][0], m[2][3] - m[2][0]},
-               m[3][3] - m[3][0]};
-  planes[2] = {{m[0][3] + m[0][1], m[1][3] + m[1][1], m[2][3] + m[2][1]},
-               m[3][3] + m[3][1]};
-  planes[3] = {{m[0][3] - m[0][1], m[1][3] - m[1][1], m[2][3] - m[2][1]},
-               m[3][3] - m[3][1]};
-  planes[4] = {{m[0][3] + m[0][2], m[1][3] + m[1][2], m[2][3] + m[2][2]},
-               m[3][3] + m[3][2]};
-  planes[5] = {{m[0][3] - m[0][2], m[1][3] - m[1][2], m[2][3] - m[2][2]},
-               m[3][3] - m[3][2]};
+  const glm::mat4& m = viewProj;
+  planes[0] = {{m[0][3]+m[0][0], m[1][3]+m[1][0], m[2][3]+m[2][0]}, m[3][3]+m[3][0]};
+  planes[1] = {{m[0][3]-m[0][0], m[1][3]-m[1][0], m[2][3]-m[2][0]}, m[3][3]-m[3][0]};
+  planes[2] = {{m[0][3]+m[0][1], m[1][3]+m[1][1], m[2][3]+m[2][1]}, m[3][3]+m[3][1]};
+  planes[3] = {{m[0][3]-m[0][1], m[1][3]-m[1][1], m[2][3]-m[2][1]}, m[3][3]-m[3][1]};
+  planes[4] = {{m[0][3]+m[0][2], m[1][3]+m[1][2], m[2][3]+m[2][2]}, m[3][3]+m[3][2]};
+  planes[5] = {{m[0][3]-m[0][2], m[1][3]-m[1][2], m[2][3]-m[2][2]}, m[3][3]-m[3][2]};
 
   auto chunkVisible = [&](ChunkCoord coord) -> bool {
     float s = (float)ChunkData::SIZE;
-    glm::vec3 mn((float)coord.x * s, (float)coord.y * s, (float)coord.z * s);
+    glm::vec3 mn((float)coord.x*s, (float)coord.y*s, (float)coord.z*s);
     glm::vec3 mx = mn + s;
-    for (auto &p : planes) {
-      glm::vec3 pv{p.n.x > 0 ? mx.x : mn.x, p.n.y > 0 ? mx.y : mn.y,
-                   p.n.z > 0 ? mx.z : mn.z};
-      if (glm::dot(p.n, pv) + p.d < 0.f)
-        return false;
+    for (auto& p : planes) {
+      glm::vec3 pv{p.n.x>0?mx.x:mn.x, p.n.y>0?mx.y:mn.y, p.n.z>0?mx.z:mn.z};
+      if (glm::dot(p.n, pv) + p.d < 0.f) return false;
     }
     return true;
   };
 
   // ── Build indirect draw list ──────────────────────────────────────────────
-  auto *drawCmds = static_cast<DrawCmd *>(ctx.indirectMapped[frame]);
-  auto *chunkDatas = static_cast<ChunkDrawData *>(ctx.perChunkMapped[frame]);
+  auto* drawCmds   = static_cast<DrawCmd*>(ctx.indirectMapped[frame]);
+  auto* chunkDatas = static_cast<ChunkDrawData*>(ctx.perChunkMapped[frame]);
 
   uint32_t drawCount = 0;
-  for (auto &[coord, gpu] : ctx.chunks) {
-    if (!chunkVisible(coord))
-      continue;
-    if (drawCount >= VkContext::MAX_DRAW_CHUNKS)
-      break;
+  for (auto& [coord, gpu] : ctx.chunks) {
+    if (!chunkVisible(coord)) continue;
+    if (drawCount >= VkContext::MAX_DRAW_CHUNKS) break;
 
     float s = (float)ChunkData::SIZE;
-    glm::vec3 offset((float)coord.x * s, (float)coord.y * s,
-                     (float)coord.z * s);
-
-    chunkDatas[drawCount].model = glm::translate(glm::mat4(1.f), offset);
+    glm::vec3 offset((float)coord.x*s, (float)coord.y*s, (float)coord.z*s);
+    chunkDatas[drawCount].model  = glm::translate(glm::mat4(1.f), offset);
     chunkDatas[drawCount].params = glm::vec4(sunIntensity, 0.f, 0.f, 0.f);
 
-    drawCmds[drawCount].indexCount = gpu.indexCount;
+    drawCmds[drawCount].indexCount    = gpu.indexCount;
     drawCmds[drawCount].instanceCount = 1;
-    drawCmds[drawCount].firstIndex = gpu.indexOffset;
-    drawCmds[drawCount].vertexOffset = (int32_t)gpu.vertexOffset;
+    drawCmds[drawCount].firstIndex    = gpu.indexOffset;
+    drawCmds[drawCount].vertexOffset  = (int32_t)gpu.vertexOffset;
     drawCmds[drawCount].firstInstance = drawCount;
-
     drawCount++;
   }
 
   vmaFlushAllocation(ctx.allocator, ctx.perChunkAlloc[frame], 0, VK_WHOLE_SIZE);
   vmaFlushAllocation(ctx.allocator, ctx.indirectAlloc[frame], 0, VK_WHOLE_SIZE);
 
-  // ── Record render commands ────────────────────────────────────────────────
+  // ── Record ────────────────────────────────────────────────────────────────
   VkCommandBuffer cmd = ctx.commandBuffers[frame];
   vkResetCommandBuffer(cmd, 0);
   VkCommandBufferBeginInfo bI{};
@@ -745,113 +734,64 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
   vkBeginCommandBuffer(cmd, &bI);
 
   VkClearValue clears[2]{};
-  clears[0].color = {{skyColor.r, skyColor.g, skyColor.b, 1.f}};
+  clears[0].color        = {{skyColor.r, skyColor.g, skyColor.b, 1.f}};
   clears[1].depthStencil = {1.f, 0};
 
   VkRenderPassBeginInfo rpBI{};
-  rpBI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  rpBI.renderPass = ctx.renderPass;
-  rpBI.framebuffer = ctx.framebuffers[imageIndex];
+  rpBI.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  rpBI.renderPass      = ctx.renderPass;
+  rpBI.framebuffer     = ctx.framebuffers[imageIndex];
   rpBI.renderArea.extent = ctx.swapchain.extent;
   rpBI.clearValueCount = 2;
-  rpBI.pClearValues = clears;
+  rpBI.pClearValues    = clears;
 
   vkCmdBeginRenderPass(cmd, &rpBI, VK_SUBPASS_CONTENTS_INLINE);
-  vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
 
+  // ── Terrain ───────────────────────────────────────────────────────────────
+  vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
   VkDeviceSize zero = 0;
   vkCmdBindVertexBuffers(cmd, 0, 1, &ctx.mega.vertexBuffer, &zero);
   vkCmdBindIndexBuffer(cmd, ctx.mega.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
   vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          ctx.pipelineLayout, 0, 1, &ctx.dsSets[frame], 0,
-                          nullptr);
+                          ctx.pipelineLayout, 0, 1, &ctx.dsSets[frame], 0, nullptr);
 
-  struct GlobalPC {
-    glm::mat4 viewProj;
-    glm::vec4 params;
-  };
+  struct GlobalPC { glm::mat4 viewProj; glm::vec4 params; };
   GlobalPC gpc{viewProj, {sunIntensity, 0.f, 0.f, 0.f}};
   vkCmdPushConstants(cmd, ctx.pipelineLayout,
                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                      0, sizeof(GlobalPC), &gpc);
 
   if (drawCount > 0)
-    vkCmdDrawIndexedIndirect(cmd, ctx.indirectBuffer[frame], 0, drawCount,
-                             sizeof(DrawCmd));
+    vkCmdDrawIndexedIndirect(cmd, ctx.indirectBuffer[frame], 0, drawCount, sizeof(DrawCmd));
+
+  // ── View model (drawn after terrain, depth test disabled so always on top) ─
+  if (viewModel)
+    viewModel->draw(cmd, proj);
 
   vkCmdEndRenderPass(cmd);
   vkEndCommandBuffer(cmd);
 
   // ── Submit ────────────────────────────────────────────────────────────────
-  VkPipelineStageFlags waitStage =
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   VkSubmitInfo sI2{};
-  sI2.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  sI2.waitSemaphoreCount = 1;
-  sI2.pWaitSemaphores = &ctx.imageAvailable[frame];
-  sI2.pWaitDstStageMask = &waitStage;
-  sI2.commandBufferCount = 1;
-  sI2.pCommandBuffers = &cmd;
+  sI2.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  sI2.waitSemaphoreCount   = 1;
+  sI2.pWaitSemaphores      = &ctx.imageAvailable[frame];
+  sI2.pWaitDstStageMask    = &waitStage;
+  sI2.commandBufferCount   = 1;
+  sI2.pCommandBuffers      = &cmd;
   sI2.signalSemaphoreCount = 1;
-  sI2.pSignalSemaphores = &ctx.renderFinished[frame];
+  sI2.pSignalSemaphores    = &ctx.renderFinished[frame];
   vkQueueSubmit(ctx.graphicsQueue, 1, &sI2, ctx.inFlight[frame]);
 
   VkPresentInfoKHR pI{};
-  pI.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  pI.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   pI.waitSemaphoreCount = 1;
-  pI.pWaitSemaphores = &ctx.renderFinished[frame];
-  pI.swapchainCount = 1;
-  pI.pSwapchains = &ctx.swapchain.swapchain;
-  pI.pImageIndices = &imageIndex;
+  pI.pWaitSemaphores    = &ctx.renderFinished[frame];
+  pI.swapchainCount     = 1;
+  pI.pSwapchains        = &ctx.swapchain.swapchain;
+  pI.pImageIndices      = &imageIndex;
   vkQueuePresentKHR(ctx.graphicsQueue, &pI);
 
   ctx.currentFrame = (frame + 1) % VkContext::FRAMES_IN_FLIGHT;
-}
-
-// ── Destroy
-// ───────────────────────────────────────────────────────────────────
-
-void vk_destroy(VkContext &ctx) {
-  vkDeviceWaitIdle(ctx.device.device);
-
-  vmaDestroyBuffer(ctx.allocator, ctx.mega.vertexBuffer, ctx.mega.vertexAlloc);
-  vmaDestroyBuffer(ctx.allocator, ctx.mega.indexBuffer, ctx.mega.indexAlloc);
-  vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
-  vkDestroyFence(ctx.device.device, ctx.uploadFence, nullptr);
-
-  for (int i = 0; i < 2; i++) {
-    vmaDestroyBuffer(ctx.allocator, ctx.indirectBuffer[i],
-                     ctx.indirectAlloc[i]);
-    vmaDestroyBuffer(ctx.allocator, ctx.perChunkBuffer[i],
-                     ctx.perChunkAlloc[i]);
-  }
-
-  vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
-  vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
-  vmaDestroyAllocator(ctx.allocator);
-
-  for (int i = 0; i < VkContext::FRAMES_IN_FLIGHT; i++) {
-    vkDestroySemaphore(ctx.device.device, ctx.imageAvailable[i], nullptr);
-    vkDestroySemaphore(ctx.device.device, ctx.renderFinished[i], nullptr);
-    vkDestroyFence(ctx.device.device, ctx.inFlight[i], nullptr);
-  }
-
-  vkDestroyDescriptorPool(ctx.device.device, ctx.dsPool, nullptr);
-  vkDestroyDescriptorSetLayout(ctx.device.device, ctx.dsLayout, nullptr);
-  vkDestroyCommandPool(ctx.device.device, ctx.commandPool, nullptr);
-  vkDestroyPipeline(ctx.device.device, ctx.pipeline, nullptr);
-  vkDestroyPipelineLayout(ctx.device.device, ctx.pipelineLayout, nullptr);
-
-  for (auto fb : ctx.framebuffers)
-    vkDestroyFramebuffer(ctx.device.device, fb, nullptr);
-  vkDestroyRenderPass(ctx.device.device, ctx.renderPass, nullptr);
-
-  for (auto iv : ctx.swapImageViews)
-    vkDestroyImageView(ctx.device.device, iv, nullptr);
-
-  vkb::destroy_swapchain(ctx.swapchain);
-  vkb::destroy_device(ctx.device);
-  vkDestroySurfaceKHR(ctx.instance.instance, ctx.surface, nullptr);
-  vkb::destroy_instance(ctx.instance);
 }

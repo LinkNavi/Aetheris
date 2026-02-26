@@ -16,7 +16,7 @@ if host_machine.system() == 'windows'
   platform_deps += cc.find_library('ws2_32')
   platform_deps += cc.find_library('winmm')
   add_project_link_arguments(
-      '-static-libgcc', '-static-libstdc++',
+      '-static-libgcc', '-static-libstdc++', '-static',
       language: 'cpp')
 endif
 
@@ -25,6 +25,7 @@ vkb_inc        = include_directories('thirdparty/vk-bootstrap/src')
 vma_inc        = include_directories('thirdparty/VulkanMemoryAllocator/include')
 vk_headers_inc = include_directories('thirdparty/Vulkan-Headers/include')
 entt_inc       = include_directories('thirdparty/entt')
+tinygltf_inc   = include_directories('thirdparty/tinygltf')
 
 subdir('shared')
 subdir('client')

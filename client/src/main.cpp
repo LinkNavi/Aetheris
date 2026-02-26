@@ -3,12 +3,14 @@
 #include "config.h"
 #include "../include/combat_system.h"
 #include "day_night.h"
+#include "gltf_loader.h"
 #include "input.h"
 #include "log.h"
 #include "mesh_builder.h"
 #include "net_common.h"
 #include "packets.h"
 #include "player.h"
+#include "view_model.h"
 #include "vk_context.h"
 #include "window.h"
 
@@ -31,10 +33,34 @@ int main(int argc, char** argv) {
     PlayerController player(reg, camera);
     CombatSystem     combat(reg);
     DayNight         dayNight;
+    MeshBuilder      meshBuilder(1);
 
-    MeshBuilder meshBuilder(1);
+    // ── View model renderer ───────────────────────────────────────────────
+    ViewModelRenderer viewModel;
+    viewModel.init(ctx.device.device, ctx.allocator,
+                   ctx.renderPass, ctx.swapchain.extent,
+                   AssetPath::get("viewmodel_vert.spv").c_str(),
+                   AssetPath::get("viewmodel_frag.spv").c_str());
 
-    // Spawn a couple of test enemies once the player spawns
+    // Load a GLB if one exists next to the exe — placeholder path.
+    // Replace "hand.glb" with your actual asset name.
+    {
+        std::string glbPath = AssetPath::get("hand.glb");
+        GltfModel model = loadGlb(glbPath.c_str());
+        if (model.valid) {
+            ViewModelTransform t;
+            t.offset   = { 0.25f, -0.28f, -0.45f };
+            t.rotation = { 0.f, 180.f, 0.f };
+            t.scale    = { 1.f, 1.f, 1.f };
+            int idx = viewModel.loadMesh(ctx.device.device, ctx.allocator,
+                                         ctx.commandPool, ctx.graphicsQueue,
+                                         model, t);
+            viewModel.setActiveMesh(idx);
+        } else {
+            Log::warn("No hand.glb found — viewmodel disabled. Place hand.glb next to client.exe");
+        }
+    }
+
     bool enemiesSpawned = false;
 
     Net::init();
@@ -72,27 +98,25 @@ int main(int argc, char** argv) {
 
         input.beginFrame();
 
-        // ── Receive packets ───────────────────────────────────────────────────
+        // ── Receive packets ───────────────────────────────────────────────
         ENetEvent ev;
         while (enet_host_service(host.get(), &ev, 0) > 0) {
             if (ev.type == ENET_EVENT_TYPE_RECEIVE) {
                 const uint8_t* d   = ev.packet->data;
                 size_t         len = ev.packet->dataLength;
 
-                if (len > 0 && d[0] == (uint8_t)PacketID::ChunkData) {
+                if (len > 0 && d[0] == (uint8_t)PacketID::ChunkData)
                     meshBuilder.submit(d, len);
-                }
                 else if (len > 0 && d[0] == (uint8_t)PacketID::SpawnPosition) {
                     auto sp = SpawnPositionPacket::deserialize(d, len);
                     player.setSpawnPosition({sp.x, sp.y, sp.z});
-                    enemiesSpawned = false; // reset so enemies respawn after respawn
+                    enemiesSpawned = false;
                 }
-
                 enet_packet_destroy(ev.packet);
             }
         }
 
-        // ── Poll finished meshes ──────────────────────────────────────────────
+        // ── Poll finished meshes ──────────────────────────────────────────
         readyMeshes.clear();
         meshBuilder.poll(readyMeshes, 4);
         for (auto& mesh : readyMeshes) {
@@ -100,7 +124,7 @@ int main(int argc, char** argv) {
             vk_upload_chunk(ctx, mesh);
         }
 
-        // ── Spawn test enemies once we have a position ────────────────────────
+        // ── Spawn test enemies ────────────────────────────────────────────
         if (player.isSpawned() && !enemiesSpawned) {
             glm::vec3 base = player.position();
             combat.spawnEnemy(base + glm::vec3{ 5.f, 0.f,  0.f});
@@ -109,18 +133,18 @@ int main(int argc, char** argv) {
             enemiesSpawned = true;
         }
 
-        // ── Update ────────────────────────────────────────────────────────────
+        // ── Update ────────────────────────────────────────────────────────
         player.update(dt, input, &combat);
         combat.update(dt, player.entity());
         dayNight.update(dt);
 
-        // ── Respawn ───────────────────────────────────────────────────────────
+        // ── Respawn ───────────────────────────────────────────────────────
         if (input.keyPressed(GLFW_KEY_R)) {
             Net::sendReliable(server, RespawnRequestPacket{}.serialize());
             enet_host_flush(host.get());
         }
 
-        // ── Send position (20 Hz) ─────────────────────────────────────────────
+        // ── Send position (20 Hz) ─────────────────────────────────────────
         netAccum += dt;
         if (netAccum >= 0.05f) {
             netAccum = 0.f;
@@ -130,16 +154,22 @@ int main(int argc, char** argv) {
             enet_host_flush(host.get());
         }
 
-        // ── Render ────────────────────────────────────────────────────────────
+        // ── Render ────────────────────────────────────────────────────────
         int w, h;
         window.getSize(w, h);
         float     aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
         glm::mat4 vp     = camera.viewProj(aspect);
-        vk_draw(ctx, vp, dayNight.sunIntensity(), dayNight.skyColor());
+        glm::mat4 proj   = camera.proj(aspect);
+
+        vk_draw(ctx, vp, dayNight.sunIntensity(), dayNight.skyColor(), viewModel, proj);
     }
 
     enet_peer_disconnect(server, 0);
     enet_host_flush(host.get());
+
+    vkDeviceWaitIdle(ctx.device.device);
+    viewModel.destroy(ctx.device.device, ctx.allocator);
+
     vk_destroy(ctx);
     Net::deinit();
     Log::info("Client shutdown");
