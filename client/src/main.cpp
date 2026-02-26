@@ -1,6 +1,7 @@
 #include "asset_path.h"
 #include "camera.h"
 #include "config.h"
+#include "../include/combat_system.h"
 #include "day_night.h"
 #include "input.h"
 #include "log.h"
@@ -28,11 +29,13 @@ int main(int argc, char** argv) {
     Camera           camera;
     entt::registry   reg;
     PlayerController player(reg, camera);
+    CombatSystem     combat(reg);
     DayNight         dayNight;
 
-    // One worker thread for mesh building on a 2-core Chromebook:
-    // main thread stays free for render + input, worker does deserialize+march.
     MeshBuilder meshBuilder(1);
+
+    // Spawn a couple of test enemies once the player spawns
+    bool enemiesSpawned = false;
 
     Net::init();
     Net::Host host;
@@ -69,7 +72,7 @@ int main(int argc, char** argv) {
 
         input.beginFrame();
 
-        // ── Receive packets (fast — no mesh work here) ────────────────────────
+        // ── Receive packets ───────────────────────────────────────────────────
         ENetEvent ev;
         while (enet_host_service(host.get(), &ev, 0) > 0) {
             if (ev.type == ENET_EVENT_TYPE_RECEIVE) {
@@ -77,30 +80,38 @@ int main(int argc, char** argv) {
                 size_t         len = ev.packet->dataLength;
 
                 if (len > 0 && d[0] == (uint8_t)PacketID::ChunkData) {
-                    // Hand off to worker — returns immediately
                     meshBuilder.submit(d, len);
                 }
                 else if (len > 0 && d[0] == (uint8_t)PacketID::SpawnPosition) {
                     auto sp = SpawnPositionPacket::deserialize(d, len);
                     player.setSpawnPosition({sp.x, sp.y, sp.z});
+                    enemiesSpawned = false; // reset so enemies respawn after respawn
                 }
 
                 enet_packet_destroy(ev.packet);
             }
         }
 
-        // ── Poll finished meshes (up to 4 per frame to avoid stutter) ─────────
-        // On a slow device even 4 mesh integrations per frame is conservative;
-        // tune upward if chunks arrive slowly and you want faster pop-in.
+        // ── Poll finished meshes ──────────────────────────────────────────────
         readyMeshes.clear();
         meshBuilder.poll(readyMeshes, 4);
         for (auto& mesh : readyMeshes) {
             player.addChunkMesh(mesh);
-            vk_upload_chunk(ctx, mesh); // queued internally, flushed in vk_draw
+            vk_upload_chunk(ctx, mesh);
+        }
+
+        // ── Spawn test enemies once we have a position ────────────────────────
+        if (player.isSpawned() && !enemiesSpawned) {
+            glm::vec3 base = player.position();
+            combat.spawnEnemy(base + glm::vec3{ 5.f, 0.f,  0.f});
+            combat.spawnEnemy(base + glm::vec3{-5.f, 0.f,  3.f});
+            combat.spawnEnemy(base + glm::vec3{ 0.f, 0.f, -6.f});
+            enemiesSpawned = true;
         }
 
         // ── Update ────────────────────────────────────────────────────────────
-        player.update(dt, input);
+        player.update(dt, input, &combat);
+        combat.update(dt, player.entity());
         dayNight.update(dt);
 
         // ── Respawn ───────────────────────────────────────────────────────────

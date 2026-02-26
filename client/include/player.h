@@ -7,6 +7,7 @@
 #include "camera.h"
 #include "input.h"
 #include "config.h"
+#include "combat.h"
 
 // ── ECS Components ────────────────────────────────────────────────────────────
 
@@ -27,6 +28,8 @@ struct ChunkTriSoup { std::vector<glm::vec3> tris; };
 
 // ── PlayerController ──────────────────────────────────────────────────────────
 
+class CombatSystem; // forward decl
+
 class PlayerController {
 public:
     PlayerController(entt::registry& reg, Camera& cam);
@@ -34,16 +37,21 @@ public:
     void addChunkMesh(const ChunkMesh& mesh);
     void removeChunk(ChunkCoord coord);
     void setSpawnPosition(glm::vec3 pos);
-    void update(float dt, const Input& input);
+
+    // Pass combat system so player input can trigger attacks/dodge/parry
+    void update(float dt, const Input& input, CombatSystem* combat = nullptr);
 
     glm::vec3    position()  const;
     entt::entity entity()    const { return _player; }
     bool         isSpawned() const { return _spawned; }
 
-    // 0..1 progress loading spawn chunks (for loading screen)
     float spawnProgress() const;
 
     const CStamina& stamina() const { return _reg.get<CStamina>(_player); }
+    const CHealth&  health()  const { return _reg.get<CHealth>(_player); }
+    const CAttack&  attack()  const { return _reg.get<CAttack>(_player); }
+    const CParry&   parry()   const { return _reg.get<CParry>(_player); }
+    const CDodge&   dodge()   const { return _reg.get<CDodge>(_player); }
 
 private:
     entt::registry& _reg;
@@ -56,9 +64,6 @@ private:
     bool      _hasPendingSpawn = false;
     glm::vec3 _pendingSpawn    {0.f, 120.f, 0.f};
 
-    // Exact set of chunk coords that must be present before spawning.
-    // Computed from the spawn position — only the 3x3 column directly
-    // around and below the spawn point, NOT any 27 arbitrary chunks.
     std::unordered_set<ChunkCoord, ChunkCoordHash> _requiredChunks;
 
     void buildRequiredChunks(glm::vec3 pos);

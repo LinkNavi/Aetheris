@@ -135,10 +135,20 @@ static void createDepthResources(VkContext &ctx) {
 VkContext vk_init(GLFWwindow *window) {
   VkContext ctx;
 
+  // ── Auto-detect Vulkan version ────────────────────────────────────────────
+  uint32_t instanceVersion = VK_API_VERSION_1_0;
+  vkEnumerateInstanceVersion(&instanceVersion);
+  uint32_t major = VK_VERSION_MAJOR(instanceVersion);
+  uint32_t minor = VK_VERSION_MINOR(instanceVersion);
+  if (minor > 3) minor = 3; // cap at 1.3, highest we use
+  if (major < 1 || minor < 1)
+    throw std::runtime_error("Vulkan 1.1 minimum required");
+  Log::info(std::string("Vulkan ") + std::to_string(major) + "." + std::to_string(minor) + " detected");
+
   auto inst = vkb::InstanceBuilder{}
                   .set_app_name("Aetheris")
                   .request_validation_layers(false)
-                  .require_api_version(1, 3, 0)
+                  .require_api_version(major, minor, 0)
                   .build();
   if (!inst)
     throw std::runtime_error(inst.error().message());
@@ -150,7 +160,7 @@ VkContext vk_init(GLFWwindow *window) {
 
   auto phys = vkb::PhysicalDeviceSelector{ctx.instance}
                   .set_surface(ctx.surface)
-                  .set_minimum_version(1, 3)
+                  .set_minimum_version(1, 1)
                   .select();
   if (!phys)
     throw std::runtime_error(phys.error().message());
@@ -185,7 +195,7 @@ VkContext vk_init(GLFWwindow *window) {
   vmaCI.instance = ctx.instance.instance;
   vmaCI.physicalDevice = ctx.device.physical_device.physical_device;
   vmaCI.device = ctx.device.device;
-  vmaCI.vulkanApiVersion = VK_API_VERSION_1_3;
+  vmaCI.vulkanApiVersion = VK_MAKE_VERSION(major, minor, 0);
   check(vmaCreateAllocator(&vmaCI, &ctx.allocator), "VMA allocator");
 
   // ── Command pool ──────────────────────────────────────────────────────────
@@ -347,7 +357,7 @@ VkContext vk_init(GLFWwindow *window) {
           "framebuf");
   }
 
-  // ── Descriptor set layout (storage buffer for per-chunk draw data) ────────
+  // ── Descriptor set layout ─────────────────────────────────────────────────
   {
     VkDescriptorSetLayoutBinding binding{};
     binding.binding = 0;
@@ -481,7 +491,6 @@ VkContext vk_init(GLFWwindow *window) {
   blend.attachmentCount = 1;
   blend.pAttachments = &blendAtt;
 
-  // Push constant: mat4 viewProj + vec4 params
   VkPushConstantRange pushRange{};
   pushRange.stageFlags =
       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;

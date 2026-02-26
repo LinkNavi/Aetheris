@@ -1,7 +1,0 @@
-[wrap-git]
-url = https://github.com/lsalzman/enet.git
-revision = v1.3.17
-depth = 1
-
-[provide]
-libenet = enet_dep
