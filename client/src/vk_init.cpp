@@ -6,7 +6,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <vector>
-
+#include "view_model.h"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -794,4 +794,50 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, float sunIntensity,
   vkQueuePresentKHR(ctx.graphicsQueue, &pI);
 
   ctx.currentFrame = (frame + 1) % VkContext::FRAMES_IN_FLIGHT;
+}
+
+void vk_destroy(VkContext& ctx) {
+    vkDeviceWaitIdle(ctx.device.device);
+
+    for (int i = 0; i < VkContext::FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(ctx.device.device, ctx.imageAvailable[i], nullptr);
+        vkDestroySemaphore(ctx.device.device, ctx.renderFinished[i], nullptr);
+        vkDestroyFence(ctx.device.device, ctx.inFlight[i], nullptr);
+    }
+
+    vkDestroyFence(ctx.device.device, ctx.uploadFence, nullptr);
+
+    vkDestroyPipeline(ctx.device.device, ctx.pipeline, nullptr);
+    vkDestroyPipelineLayout(ctx.device.device, ctx.pipelineLayout, nullptr);
+    vkDestroyDescriptorPool(ctx.device.device, ctx.dsPool, nullptr);
+    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.dsLayout, nullptr);
+
+    for (auto& fb : ctx.framebuffers)
+        vkDestroyFramebuffer(ctx.device.device, fb, nullptr);
+
+    vkDestroyRenderPass(ctx.device.device, ctx.renderPass, nullptr);
+
+    vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
+    vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
+
+    for (int i = 0; i < 2; i++) {
+        vmaDestroyBuffer(ctx.allocator, ctx.indirectBuffer[i], ctx.indirectAlloc[i]);
+        vmaDestroyBuffer(ctx.allocator, ctx.perChunkBuffer[i], ctx.perChunkAlloc[i]);
+    }
+
+    vmaDestroyBuffer(ctx.allocator, ctx.mega.vertexBuffer, ctx.mega.vertexAlloc);
+    vmaDestroyBuffer(ctx.allocator, ctx.mega.indexBuffer,  ctx.mega.indexAlloc);
+    vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
+
+    vkDestroyCommandPool(ctx.device.device, ctx.commandPool, nullptr);
+
+    for (auto& iv : ctx.swapImageViews)
+        vkDestroyImageView(ctx.device.device, iv, nullptr);
+
+    vmaDestroyAllocator(ctx.allocator);
+
+    vkb::destroy_swapchain(ctx.swapchain);
+    vkb::destroy_device(ctx.device);
+    vkDestroySurfaceKHR(ctx.instance.instance, ctx.surface, nullptr);
+    vkb::destroy_instance(ctx.instance);
 }

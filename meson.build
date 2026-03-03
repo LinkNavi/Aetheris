@@ -7,7 +7,7 @@ cc = meson.get_compiler('cpp')
 # ── Core deps ─────────────────────────────────────────────────────────────────
 vulkan_dep = dependency('vulkan')
 glm_dep    = dependency('glm', fallback : ['glm', 'glm_dep'])
-enet_dep   = dependency('enet', required: true, static: true)
+enet_dep   = dependency('libenet', required: true, static: true)
 glfw_dep   = dependency('glfw3', fallback : ['glfw', 'glfw_dep'], static: true)
 
 # ── Windows-only link deps ────────────────────────────────────────────────────

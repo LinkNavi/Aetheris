@@ -3,7 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <cstring>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 

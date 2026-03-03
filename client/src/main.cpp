@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
             int idx = viewModel.loadMesh(ctx.device.device, ctx.allocator,
                                          ctx.commandPool, ctx.graphicsQueue,
                                          model, t);
-            viewModel.setActiveMesh(idx);
+            viewModel.activeMesh = idx;
         } else {
             Log::warn("No hand.glb found — viewmodel disabled. Place hand.glb next to client.exe");
         }
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
         glm::mat4 vp     = camera.viewProj(aspect);
         glm::mat4 proj   = camera.proj(aspect);
 
-        vk_draw(ctx, vp, dayNight.sunIntensity(), dayNight.skyColor(), viewModel, proj);
+        vk_draw(ctx, vp, dayNight.sunIntensity(), dayNight.skyColor(), &viewModel, proj);
     }
 
     enet_peer_disconnect(server, 0);
