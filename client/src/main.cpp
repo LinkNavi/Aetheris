@@ -49,13 +49,13 @@ int main(int argc, char** argv) {
         GltfModel model = loadGlb(glbPath.c_str());
         if (model.valid) {
             ViewModelTransform t;
-            t.offset   = { 0.25f, -0.28f, -0.45f };
-            t.rotation = { 0.f, 180.f, 0.f };
-            t.scale    = { 1.f, 1.f, 1.f };
+           t.offset   = { 0.0f, 0.0f, -2.5f }; // dead center, close
+t.rotation = { 0.f, 0.f, 0.f };
+t.scale    = { 9.f, 9.f, 9.f };
             int idx = viewModel.loadMesh(ctx.device.device, ctx.allocator,
                                          ctx.commandPool, ctx.graphicsQueue,
                                          model, t);
-            viewModel.activeMesh = idx;
+         viewModel.setActiveMesh(idx);
         } else {
             Log::warn("No hand.glb found — viewmodel disabled. Place hand.glb next to client.exe");
         }

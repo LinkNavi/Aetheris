@@ -157,8 +157,8 @@ void ViewModelRenderer::init(VkDevice device, VmaAllocator /*allocator*/,
     VkPipelineRasterizationStateCreateInfo raster{};
     raster.sType       = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     raster.polygonMode = VK_POLYGON_MODE_FILL;
-    raster.cullMode    = VK_CULL_MODE_BACK_BIT;
-    raster.frontFace   = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    raster.cullMode = VK_CULL_MODE_NONE; // temporarily disable culling
+    raster.frontFace = VK_FRONT_FACE_CLOCKWISE;
     raster.lineWidth   = 1.f;
 
     VkPipelineMultisampleStateCreateInfo ms{};
@@ -238,11 +238,14 @@ int ViewModelRenderer::loadMesh(VkDevice device, VmaAllocator allocator,
 }
 
 void ViewModelRenderer::draw(VkCommandBuffer cmd, const glm::mat4& proj) const {
+Log::info("draw called, activeMesh=" + std::to_string(activeMesh) + " meshCount=" + std::to_string(meshes.size()));
+
     if (activeMesh < 0 || activeMesh >= (int)meshes.size()) return;
 
     const auto& mesh = meshes[activeMesh];
     const auto& t    = transforms[activeMesh];
 
+Log::info("indexCount=" + std::to_string(mesh.indexCount));
     // Build model matrix in view space (identity view = camera space)
     glm::mat4 model = glm::mat4(1.f);
     model = glm::translate(model, t.offset);
@@ -252,7 +255,7 @@ void ViewModelRenderer::draw(VkCommandBuffer cmd, const glm::mat4& proj) const {
         glm::radians(t.rotation.z));
     model = glm::scale(model, t.scale);
 
-    glm::mat4 mvp = proj * model;
+    glm::mat4 mvp = glm::mat4(1.0f);
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     VkDeviceSize zero = 0;

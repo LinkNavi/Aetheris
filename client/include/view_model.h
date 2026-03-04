@@ -14,6 +14,7 @@ struct ViewModelMesh {
     uint32_t      indexCount = 0;
 };
 
+
 // Position/rotation/scale of the weapon in view space.
 // Tweak per weapon to sit correctly in the player's hand.
 struct ViewModelTransform {
@@ -23,7 +24,7 @@ struct ViewModelTransform {
 };
 
 // Owns the viewmodel pipeline and all loaded meshes.
-// One instance lives in VkContext (or main).
+// One instanceA lives in VkContext (or main).
 struct ViewModelRenderer {
     // Pipeline objects
     VkPipeline            pipeline       = VK_NULL_HANDLE;
@@ -35,6 +36,7 @@ struct ViewModelRenderer {
     // Which mesh is currently equipped (-1 = nothing / fists)
     int activeMesh = -1;
 
+void setActiveMesh(int idx) { activeMesh = idx; }
     // Per-weapon hand transforms
     std::vector<ViewModelTransform> transforms;
 
