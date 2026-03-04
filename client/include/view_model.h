@@ -18,9 +18,10 @@ struct ViewModelMesh {
 // Position/rotation/scale of the weapon in view space.
 // Tweak per weapon to sit correctly in the player's hand.
 struct ViewModelTransform {
-    glm::vec3 offset   = { 0.25f, -0.28f, -0.45f }; // right, down, forward
-    glm::vec3 rotation = { 0.f,   0.f,    0.f };     // degrees XYZ
+    glm::vec3 offset   = { 0.25f, -0.28f, -0.45f };
+    glm::vec3 rotation = { 0.f,   0.f,    0.f };
     glm::vec3 scale    = { 1.f,   1.f,    1.f };
+    glm::vec3 meshCenter = { 0.f, 0.f, 0.f }; // auto-centering offset
 };
 
 // Owns the viewmodel pipeline and all loaded meshes.
@@ -29,7 +30,7 @@ struct ViewModelRenderer {
     // Pipeline objects
     VkPipeline            pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout      pipelineLayout = VK_NULL_HANDLE;
-
+void drawDebugUI();
     // Loaded meshes — index returned by loadMesh()
     std::vector<ViewModelMesh> meshes;
 

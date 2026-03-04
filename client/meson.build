@@ -1,5 +1,15 @@
 glslc = find_program('glslc', required : true)
+# Add near the top, after glslc
+imgui_inc = include_directories('../thirdparty/imgui', '../thirdparty/imgui/backends')
 
+imgui_src = files(
+  '../thirdparty/imgui/imgui.cpp',
+  '../thirdparty/imgui/imgui_draw.cpp',
+  '../thirdparty/imgui/imgui_tables.cpp',
+  '../thirdparty/imgui/imgui_widgets.cpp',
+  '../thirdparty/imgui/backends/imgui_impl_glfw.cpp',
+  '../thirdparty/imgui/backends/imgui_impl_vulkan.cpp',
+)
 # ── Compile shaders ───────────────────────────────────────────────────────────
 terrain_vert_spv = custom_target('terrain_vert_spv',
                                  input            : 'shaders/terrain.vert',
@@ -37,7 +47,7 @@ client_src = files(
   '../thirdparty/vk-bootstrap/src/VkBootstrap.cpp',
 )
 
-executable('client', client_src,
+executable('client', client_src + imgui_src,
            include_directories : [
              'include',
              vkb_inc,
@@ -45,6 +55,7 @@ executable('client', client_src,
              vk_headers_inc,
              entt_inc,
              tinygltf_inc,
+             imgui_inc,
            ],
            dependencies : [vulkan_dep, glfw_dep, glm_dep, enet_dep, platform_deps, shared_dep],
            link_depends : [terrain_vert_spv, terrain_frag_spv,

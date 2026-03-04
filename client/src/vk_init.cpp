@@ -11,7 +11,8 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
@@ -767,7 +768,8 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, float sunIntensity,
   // ── View model (drawn after terrain, depth test disabled so always on top) ─
   if (viewModel)
     viewModel->draw(cmd, proj);
-
+// ── ImGui ─────────────────────────────────────────────────────────────────
+  ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);
   vkEndCommandBuffer(cmd);
 

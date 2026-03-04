@@ -1,5 +1,6 @@
 #include "view_model.h"
 #include "log.h"
+#include <imgui.h>
 #include <fstream>
 #include <stdexcept>
 #include <glm/gtc/matrix_transform.hpp>
@@ -210,13 +211,22 @@ int ViewModelRenderer::loadMesh(VkDevice device, VmaAllocator allocator,
 {
     if (!model.valid || model.meshes.empty()) return -1;
 
-    // Merge all meshes in the GLB into one draw call
     std::vector<GltfVertex> verts;
     std::vector<uint32_t>   inds;
     for (auto& m : model.meshes) {
         uint32_t base = (uint32_t)verts.size();
         verts.insert(verts.end(), m.vertices.begin(), m.vertices.end());
         for (auto i : m.indices) inds.push_back(base + i);
+    }
+
+    // Compute mesh center (average of AABB min/max)
+    if (!verts.empty()) {
+        glm::vec3 mn = verts[0].pos, mx = verts[0].pos;
+        for (auto& v : verts) {
+            mn = glm::min(mn, v.pos);
+            mx = glm::max(mx, v.pos);
+        }
+        transform.meshCenter = (mn + mx) * 0.5f;
     }
 
     ViewModelMesh gpu{};
@@ -236,17 +246,31 @@ int ViewModelRenderer::loadMesh(VkDevice device, VmaAllocator allocator,
     transforms.push_back(transform);
     return (int)meshes.size() - 1;
 }
+void ViewModelRenderer::drawDebugUI() {
+    if (activeMesh < 0 || activeMesh >= (int)transforms.size()) return;
+    auto& t = transforms[activeMesh];
 
+    ImGui::Begin("Viewmodel Transform");
+    ImGui::DragFloat3("Offset",   &t.offset.x,   0.005f, -5.f, 5.f);
+    ImGui::DragFloat3("Rotation", &t.rotation.x, 0.5f,  -360.f, 360.f);
+    ImGui::DragFloat3("Scale",    &t.scale.x,    0.0005f, 0.0001f, 1.f);
+    ImGui::Separator();
+    ImGui::Text("Mesh Center: %.1f, %.1f, %.1f", t.meshCenter.x, t.meshCenter.y, t.meshCenter.z);
+    ImGui::Separator();
+    ImGui::TextWrapped("Paste into main.cpp:");
+    ImGui::TextColored({0.5f,1.f,0.5f,1.f},
+        "t.offset={%.4ff,%.4ff,%.4ff};\nt.rotation={%.1ff,%.1ff,%.1ff};\nt.scale={%.5ff,%.5ff,%.5ff};",
+        t.offset.x, t.offset.y, t.offset.z,
+        t.rotation.x, t.rotation.y, t.rotation.z,
+        t.scale.x, t.scale.y, t.scale.z);
+    ImGui::End();
+}
 void ViewModelRenderer::draw(VkCommandBuffer cmd, const glm::mat4& proj) const {
-Log::info("draw called, activeMesh=" + std::to_string(activeMesh) + " meshCount=" + std::to_string(meshes.size()));
-
     if (activeMesh < 0 || activeMesh >= (int)meshes.size()) return;
 
     const auto& mesh = meshes[activeMesh];
     const auto& t    = transforms[activeMesh];
 
-Log::info("indexCount=" + std::to_string(mesh.indexCount));
-    // Build model matrix in view space (identity view = camera space)
     glm::mat4 model = glm::mat4(1.f);
     model = glm::translate(model, t.offset);
     model = model * glm::eulerAngleXYZ(
@@ -254,8 +278,9 @@ Log::info("indexCount=" + std::to_string(mesh.indexCount));
         glm::radians(t.rotation.y),
         glm::radians(t.rotation.z));
     model = glm::scale(model, t.scale);
+    model = glm::translate(model, -t.meshCenter);
 
-    glm::mat4 mvp = glm::mat4(1.0f);
+    glm::mat4 mvp = proj * model;
 
     vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
     VkDeviceSize zero = 0;
