@@ -9,13 +9,13 @@ namespace Config {
     inline constexpr int   WORLD_SEED    = 1273;
     inline constexpr float PLAYER_WIDTH   = 0.6f;
     inline constexpr float PLAYER_HEIGHT  = 1.8f;
-    inline constexpr float FRICTION       = 15.0f;
-    inline constexpr float GROUND_ACCEL   = 15.0f;
-    inline constexpr float AIR_ACCEL      = 2.5f;
-    inline constexpr float WALK_SPEED     = 8.0f;
+    inline constexpr float FRICTION       = 50.0f;
+    inline constexpr float GROUND_ACCEL   = 5.0f;
+    inline constexpr float AIR_ACCEL      = 0.5f;
+    inline constexpr float WALK_SPEED     = 5.0f;
     inline constexpr float SPRINT_MULT    = 1.8f;
     inline constexpr float JUMP_VEL       = 8.0f;
-    inline constexpr float GRAVITY        = -22.0f;
+    inline constexpr float GRAVITY        = -52.0f;
     inline constexpr float MOUSE_SENS     = 0.1f;
 
     inline constexpr float DAY_LENGTH_SECONDS = 1200.f; // 20 real minutes

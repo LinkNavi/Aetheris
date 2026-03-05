@@ -62,6 +62,7 @@ PlayerController::PlayerController(entt::registry& reg, Camera& cam)
     reg.emplace<CAttack>   (_player);
     reg.emplace<CParry>    (_player);
     reg.emplace<CDodge>    (_player);
+    reg.emplace<CInventory>(_player);
 }
 
 void PlayerController::addChunkMesh(const ChunkMesh& mesh) {
@@ -163,8 +164,8 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
 }
 
 static glm::vec3 accelerate(glm::vec3 vel, glm::vec3 dir, float speed, float accel, float dt) {
-    float cur  = glm::dot(vel, dir);
-    float add  = speed - cur;
+    float cur = glm::dot(vel, dir);
+    float add = speed - cur;
     if (add <= 0.f) return vel;
     return vel + dir * std::min(accel * speed * dt, add);
 }
@@ -190,7 +191,6 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
     auto& sta = _reg.get<CStamina>  (_player);
     auto& hp  = _reg.get<CHealth>   (_player);
 
-    // Dead — don't process input
     if (hp.dead) {
         _cam.applyMouse(input.mouseDelta());
         return;
@@ -212,6 +212,9 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         }
     }
 
+    // Always apply mouse look (even with UI open the camera can still move,
+    // but cursor is released so it won't actually move — GLFW won't fire
+    // cursor callbacks when cursor is not captured).
     _cam.applyMouse(input.mouseDelta());
 
     glm::vec3 fwd = _cam.forward(); fwd.y = 0.f;
@@ -227,22 +230,14 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
     float wishLen = glm::length(wishDir);
     if (wishLen > 0.001f) wishDir /= wishLen;
 
-    // ── Combat input ──────────────────────────────────────────────────────────
+    // ── Combat input (only when combat system is passed in — suppressed if UI open) ──
     if (combat) {
-        // LMB = light attack
-        if (input.keyDown(GLFW_MOUSE_BUTTON_LEFT + 400)) // placeholder — wire to mouse later
-            combat->playerLightAttack(_player, _cam.forward());
-
-        // Left click: GLFW mouse buttons come through key callbacks with offset
-        // For now use keyboard: F = light, G = heavy, Q = parry, Space+dir = dodge
         if (input.keyDown(GLFW_KEY_F))
             combat->playerLightAttack(_player, _cam.forward());
         if (input.keyDown(GLFW_KEY_G))
             combat->playerHeavyAttack(_player, _cam.forward());
         if (input.keyDown(GLFW_KEY_Q))
             combat->playerParry(_player);
-
-        // Dodge: Left Ctrl + movement direction
         if (input.keyDown(GLFW_KEY_LEFT_CONTROL) && wishLen > 0.001f)
             combat->playerDodge(_player, wishDir);
     }
@@ -253,9 +248,8 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         if (sta.depleteCooldown <= 0.f) sta.depleted = false;
     }
 
-    // Don't allow sprint during attack or dodge
     auto& atk = _reg.get<CAttack>(_player);
-    auto& dod = _reg.get<CDodge>(_player);
+    auto& dod = _reg.get<CDodge> (_player);
     bool sprinting = input.key(GLFW_KEY_LEFT_SHIFT) && !sta.depleted
                      && sta.current > 0.f && atk.isIdle() && !dod.isRolling();
 
@@ -273,13 +267,11 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         ? Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f)
         : 0.f;
 
-    // Slow down during attack recovery
     if (!atk.isIdle()) wishSpeed *= 0.3f;
 
     glm::vec3 hVel{vel.vel.x, 0.f, vel.vel.z};
     float     yVel = vel.vel.y;
 
-    // ── Dodge overrides horizontal velocity ───────────────────────────────────
     if (combat && dod.isRolling()) {
         glm::vec3 dv = combat->getDodgeVelocity(_player);
         hVel = {dv.x, 0.f, dv.z};

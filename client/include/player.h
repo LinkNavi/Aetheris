@@ -8,6 +8,7 @@
 #include "input.h"
 #include "config.h"
 #include "combat.h"
+#include "inventory.h"
 
 // ── ECS Components ────────────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ struct ChunkTriSoup { std::vector<glm::vec3> tris; };
 
 // ── PlayerController ──────────────────────────────────────────────────────────
 
-class CombatSystem; // forward decl
+class CombatSystem;
 
 class PlayerController {
 public:
@@ -38,7 +39,6 @@ public:
     void removeChunk(ChunkCoord coord);
     void setSpawnPosition(glm::vec3 pos);
 
-    // Pass combat system so player input can trigger attacks/dodge/parry
     void update(float dt, const Input& input, CombatSystem* combat = nullptr);
 
     glm::vec3    position()  const;
@@ -47,11 +47,12 @@ public:
 
     float spawnProgress() const;
 
-    const CStamina& stamina() const { return _reg.get<CStamina>(_player); }
-    const CHealth&  health()  const { return _reg.get<CHealth>(_player); }
-    const CAttack&  attack()  const { return _reg.get<CAttack>(_player); }
-    const CParry&   parry()   const { return _reg.get<CParry>(_player); }
-    const CDodge&   dodge()   const { return _reg.get<CDodge>(_player); }
+    const CStamina&   stamina()   const { return _reg.get<CStamina>  (_player); }
+    const CHealth&    health()    const { return _reg.get<CHealth>   (_player); }
+    const CAttack&    attack()    const { return _reg.get<CAttack>   (_player); }
+    const CParry&     parry()     const { return _reg.get<CParry>    (_player); }
+    const CDodge&     dodge()     const { return _reg.get<CDodge>    (_player); }
+    const CInventory& inventory() const { return _reg.get<CInventory>(_player); }
 
 private:
     entt::registry& _reg;
