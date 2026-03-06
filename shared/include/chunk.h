@@ -2,6 +2,15 @@
 #include <vector>
 #include <glm/vec3.hpp>
 #include <glm/vec2.hpp>
+
+// Material IDs — match atlas column order (each = 0.25 of atlas width)
+enum class BlockMat : uint8_t {
+    Stone = 0,
+    Dirt  = 1,
+    Grass = 2,
+    Sand  = 3,
+};
+
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 normal;
@@ -34,6 +43,7 @@ struct ChunkCoordHash {
 struct ChunkData {
     ChunkCoord coord;
     static constexpr int SIZE   = 32;
-    static constexpr int PADDED = SIZE + 1; // 1-voxel overlap on +X/+Y/+Z faces
-    float values[PADDED][PADDED][PADDED];
+    static constexpr int PADDED = SIZE + 1;
+    float   values   [PADDED][PADDED][PADDED];
+    uint8_t materials[PADDED][PADDED][PADDED]; // BlockMat per voxel
 };

@@ -3,14 +3,13 @@
 #include <cmath>
 #include <cstdint>
 
-// Seeded hash — same seed + same coords = same value always
 static float hashNoise(int64_t seed, int x, int y, int z) {
     uint64_t h = (uint64_t)seed;
     h ^= (uint64_t)(x * 1619 + y * 31337 + z * 6971);
     h ^= h >> 16;
     h *= 0x45d9f3b37197344dULL;
     h ^= h >> 16;
-    return (float)(h & 0xffffff) / (float)0xffffff; // 0..1
+    return (float)(h & 0xffffff) / (float)0xffffff;
 }
 
 static float smoothstep(float t) { return t * t * (3.f - 2.f * t); }
@@ -42,8 +41,9 @@ static float fbm(int64_t seed, float x, float y, float z, int octaves) {
         amp  *= 0.5f;
         freq *= 2.f;
     }
-    return n * 2.f - 1.f; // remap 0..1 to -1..1
+    return n * 2.f - 1.f;
 }
+
 float sampleSurfaceY(float wx, float wz) {
     constexpr float hscale   = 0.008f;
     constexpr float hHeight  = 80.f;
@@ -54,6 +54,7 @@ float sampleSurfaceY(float wx, float wz) {
     float detail = fbm(seed + 111111, wx * hscale * 3.f, 0.f, wz * hscale * 3.f, 3) * 0.25f;
     return seaLevel + (base + detail) * hHeight + 2.f;
 }
+
 ChunkData generateChunk(ChunkCoord coord) {
     ChunkData data;
     data.coord = coord;
@@ -64,6 +65,9 @@ ChunkData generateChunk(ChunkCoord coord) {
     constexpr float   hscale   = 0.008f;
     constexpr float   hHeight  = 80.f;
     constexpr float   seaLevel = 64.f;
+    constexpr float   sandLevel = seaLevel + 4.f;
+    constexpr float   dirtDepth = 4.f;   // voxels below surface = dirt
+    constexpr float   stoneDepth = 10.f; // deeper than this = stone
 
     for (int x = 0; x < P; x++)
     for (int z = 0; z < P; z++) {
@@ -79,8 +83,8 @@ ChunkData generateChunk(ChunkCoord coord) {
 
             float cave = 0.f;
             if (wy < surfaceY - 4.f) {
-                float c1 = fbm(seed + 222222, wx * 0.018f,        wy * 0.018f,        wz * 0.018f,        2);
-                float c2 = fbm(seed + 333333, wx * 0.018f + 5.f,  wy * 0.018f + 5.f,  wz * 0.018f + 5.f,  2);
+                float c1 = fbm(seed + 222222, wx * 0.018f,       wy * 0.018f,       wz * 0.018f,       2);
+                float c2 = fbm(seed + 333333, wx * 0.018f + 5.f, wy * 0.018f + 5.f, wz * 0.018f + 5.f, 2);
                 cave = (1.f - std::abs(c1 * c2) * 4.f) * 0.6f;
             }
 
@@ -88,6 +92,24 @@ ChunkData generateChunk(ChunkCoord coord) {
             if (density >  2.f) density =  2.f;
             if (density < -2.f) density = -2.f;
             data.values[x][y][z] = -density;
+
+            // Material assignment
+            float depthBelow = surfaceY - wy;
+            uint8_t mat;
+            if (surfaceY <= sandLevel + 2.f) {
+                // Near sea level — sand
+                mat = (uint8_t)BlockMat::Sand;
+            } else if (depthBelow <= 1.f) {
+                // Top layer — grass
+                mat = (uint8_t)BlockMat::Grass;
+            } else if (depthBelow <= dirtDepth) {
+                // Shallow subsurface — dirt
+                mat = (uint8_t)BlockMat::Dirt;
+            } else {
+                // Deep — stone
+                mat = (uint8_t)BlockMat::Stone;
+            }
+            data.materials[x][y][z] = mat;
         }
     }
 

@@ -9,10 +9,8 @@
 #include <deque>
 #include "chunk.h"
 
-// Forward declare to avoid circular include
 struct ViewModelRenderer;
 
-// ── GpuChunk ──────────────────────────────────────────────────────────────────
 struct GpuChunk {
     uint32_t vertexOffset;
     uint32_t indexOffset;
@@ -20,7 +18,6 @@ struct GpuChunk {
     uint32_t vertexCount;
 };
 
-// ── Upload queued from game thread ────────────────────────────────────────────
 struct PendingUpload {
     ChunkCoord            coord;
     std::vector<Vertex>   vertices;
@@ -30,7 +27,6 @@ struct PendingUpload {
 static constexpr uint32_t MEGA_VERTEX_CAP = 1 << 21;
 static constexpr uint32_t MEGA_INDEX_CAP  = 1 << 21;
 
-// ── MegaBuffer ────────────────────────────────────────────────────────────────
 struct MegaBuffer {
     VkBuffer      vertexBuffer = VK_NULL_HANDLE;
     VkBuffer      indexBuffer  = VK_NULL_HANDLE;
@@ -60,12 +56,13 @@ struct ChunkDrawData {
     glm::vec4 params;
 };
 
-// ── VkContext ─────────────────────────────────────────────────────────────────
 struct VkContext {
     vkb::Instance  instance;
     vkb::Device    device;
     vkb::Swapchain swapchain;
-VkDescriptorPool imguiPool = VK_NULL_HANDLE;
+
+    VkDescriptorPool imguiPool = VK_NULL_HANDLE;
+
     VkImage       depthImage     = VK_NULL_HANDLE;
     VkImageView   depthImageView = VK_NULL_HANDLE;
     VmaAllocation depthAlloc     = nullptr;
@@ -102,9 +99,23 @@ VkDescriptorPool imguiPool = VK_NULL_HANDLE;
     std::vector<VkFramebuffer> framebuffers;
 
     VkRenderPass          renderPass     = VK_NULL_HANDLE;
+
+    // Set 0: per-chunk storage buffer
     VkDescriptorSetLayout dsLayout       = VK_NULL_HANDLE;
     VkDescriptorPool      dsPool         = VK_NULL_HANDLE;
     VkDescriptorSet       dsSets[2]      = {};
+
+    // Set 1: atlas sampler
+    VkDescriptorSetLayout atlasLayout    = VK_NULL_HANDLE;
+    VkDescriptorPool      atlasPool      = VK_NULL_HANDLE;
+    VkDescriptorSet       atlasSet       = VK_NULL_HANDLE;
+
+    // Atlas texture
+    VkImage       atlasImage     = VK_NULL_HANDLE;
+    VkImageView   atlasImageView = VK_NULL_HANDLE;
+    VmaAllocation atlasAlloc     = nullptr;
+    VkSampler     atlasSampler   = VK_NULL_HANDLE;
+
     VkPipelineLayout      pipelineLayout = VK_NULL_HANDLE;
     VkPipeline            pipeline       = VK_NULL_HANDLE;
 
@@ -124,7 +135,6 @@ VkDescriptorPool imguiPool = VK_NULL_HANDLE;
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
 
-// viewModel may be nullptr — skips viewmodel draw
 void      vk_draw(VkContext& ctx, const glm::mat4& viewProj,
                   float sunIntensity, glm::vec3 skyColor,
                   const ViewModelRenderer* viewModel = nullptr,
