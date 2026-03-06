@@ -34,12 +34,14 @@ void Input::keyCallback(GLFWwindow*, int key, int, int action, int) {
 }
 
 void Input::cursorCallback(GLFWwindow*, double x, double y) {
-    if (!_instance || !_instance->_captured) return;
+    if (!_instance) return;
     glm::vec2 pos((float)x, (float)y);
     if (_instance->_firstMouse) {
-        _instance->_lastPos  = pos;
+        _instance->_lastPos   = pos;
         _instance->_firstMouse = false;
+        return;
     }
-    _instance->_delta   += pos - _instance->_lastPos;
-    _instance->_lastPos  = pos;
+    if (_instance->_captured)
+        _instance->_delta += pos - _instance->_lastPos;
+    _instance->_lastPos = pos;
 }

@@ -165,9 +165,9 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
 
 static glm::vec3 accelerate(glm::vec3 vel, glm::vec3 dir, float speed, float accel, float dt) {
     float cur = glm::dot(vel, dir);
-    float add = speed - cur;
+    float add = (speed - cur) * accel * dt; // ramp instead of clamp
     if (add <= 0.f) return vel;
-    return vel + dir * std::min(accel * speed * dt, add);
+    return vel + dir * add;
 }
 
 void PlayerController::update(float dt, const Input& input, CombatSystem* combat) {
@@ -301,6 +301,14 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         tf.pos += vel.vel * subDt;
         resolveCollision(tf, vel, box, gr);
     }
-
+if (gr.grounded && wishLen > 0.001f) {
+    static float bobTime = 0.f;
+    float speed = glm::length(glm::vec3{vel.vel.x, 0.f, vel.vel.z});
+    bobTime += dt * speed * 0.4f;
+    float bobY = std::sin(bobTime * 2.f) * 0.04f;
+    float bobX = std::sin(bobTime) * 0.02f;
+    _cam.position.y += bobY;
+    _cam.position += _cam.right() * bobX;
+}
     _cam.position = tf.pos + glm::vec3{0.f, box.half.y * 0.85f, 0.f};
 }

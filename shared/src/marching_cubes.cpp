@@ -358,9 +358,23 @@ ChunkMesh marchChunk(const ChunkData &chunk) {
             continue;
           glm::vec3 normal = glm::normalize(cr);
           uint32_t base = (uint32_t)mesh.vertices.size();
-          mesh.vertices.push_back({v0, normal});
-          mesh.vertices.push_back({v1, normal});
-          mesh.vertices.push_back({v2, normal});
+         // after computing normal and v0/v1/v2
+auto triplanarUV = [](glm::vec3 p, glm::vec3 n, uint32_t mat) -> Vertex {
+    glm::vec3 an = glm::abs(n);
+    glm::vec2 uv;
+    if (an.x > an.y && an.x > an.z)
+        uv = {p.z * 0.0625f, p.y * 0.0625f};
+    else if (an.y > an.z)
+        uv = {p.x * 0.0625f, p.z * 0.0625f};
+    else
+        uv = {p.x * 0.0625f, p.y * 0.0625f};
+    // offset U by material slot (each tile = 0.25 of atlas width)
+    uv.x = uv.x * 0.25f + mat * 0.25f;
+    return {p, n, uv, mat};
+};
+mesh.vertices.push_back(triplanarUV(v0, normal, mat));
+mesh.vertices.push_back(triplanarUV(v1, normal, mat));
+mesh.vertices.push_back(triplanarUV(v2, normal, mat));
           mesh.indices.push_back(base);
           mesh.indices.push_back(base + 1);
           mesh.indices.push_back(base + 2);

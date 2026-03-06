@@ -1,10 +1,12 @@
 #pragma once
 #include <vector>
 #include <glm/vec3.hpp>
-
+#include <glm/vec2.hpp>
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 normal;
+    glm::vec2 uv;
+    uint32_t  material; // 0=stone, 1=dirt, 2=grass, 3=sand
 };
 
 struct ChunkCoord {
