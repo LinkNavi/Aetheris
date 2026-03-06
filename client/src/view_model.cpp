@@ -244,8 +244,10 @@ void ViewModelRenderer::drawDebugUI() {
 
     // ── Transform panel ───────────────────────────────────────────────────
     ImGui::SetNextWindowSize({340, 260}, ImGuiCond_Once);
-    ImGui::SetNextWindowPos({10, 580}, ImGuiCond_Once);
-    ImGui::Begin("Viewmodel Transform", &uiVisible, ImGuiWindowFlags_NoCollapse);
+    // Use Always so it can't end up off-screen on first open
+    ImGui::SetNextWindowPos({10, 580}, ImGuiCond_Always);
+    bool transformOpen = true;
+    ImGui::Begin("Viewmodel Transform", &transformOpen, ImGuiWindowFlags_NoCollapse);
 
     ImGui::DragFloat3("Base Offset",   &t.offset.x,   0.005f, -5.f, 5.f);
     ImGui::DragFloat3("Base Rotation", &t.rotation.x, 0.5f,  -360.f, 360.f);
@@ -275,11 +277,16 @@ void ViewModelRenderer::drawDebugUI() {
 
     ImGui::End();
 
+    // If user closed the transform window, close everything
+    if (!transformOpen) {
+        uiVisible = false;
+        animEditor.open = false;
+        return;
+    }
+
     // ── Animation editor ─────────────────────────────────────────────────
-    animEditor.open = uiVisible;
+    animEditor.open = true;
     animEditor.draw(anim);
-    // Sync back in case user closed the editor window via X button
-    uiVisible = animEditor.open || uiVisible;
 }
 
 void ViewModelRenderer::draw(VkCommandBuffer cmd, const glm::mat4& proj) const {
