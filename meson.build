@@ -36,4 +36,4 @@ tinygltf_inc   = include_directories('thirdparty/tinygltf')
 
 subdir('shared')
 subdir('client')
-s
+subdir('server')

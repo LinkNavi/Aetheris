@@ -65,7 +65,7 @@ struct VkContext {
     vkb::Instance  instance;
     vkb::Device    device;
     vkb::Swapchain swapchain;
-
+VkDescriptorPool imguiPool = VK_NULL_HANDLE;
     VkImage       depthImage     = VK_NULL_HANDLE;
     VkImageView   depthImageView = VK_NULL_HANDLE;
     VmaAllocation depthAlloc     = nullptr;

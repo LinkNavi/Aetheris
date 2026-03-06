@@ -79,10 +79,12 @@ int main(int argc, char **argv) {
         imInfo.Device         = ctx.device.device;
         imInfo.QueueFamily    = ctx.graphicsQueueFamily;
         imInfo.Queue          = ctx.graphicsQueue;
-        imInfo.DescriptorPool = ctx.dsPool;
-        imInfo.MinImageCount  = 2;
+        imInfo.DescriptorPool = ctx.imguiPool;  // not ctx.dsPool
+		 imInfo.MinImageCount  = 2;
         imInfo.ImageCount     = (uint32_t)ctx.swapImages.size();
-        imInfo.RenderPass     = ctx.renderPass;
+       imInfo.UseDynamicRendering     = false;
+imInfo.PipelineInfoMain.RenderPass = ctx.renderPass;
+
         ImGui_ImplVulkan_Init(&imInfo);
     }
 

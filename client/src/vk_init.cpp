@@ -340,7 +340,18 @@ VkContext vk_init(GLFWwindow *window) {
   rpCI.pDependencies = &dep;
   check(vkCreateRenderPass(ctx.device.device, &rpCI, nullptr, &ctx.renderPass),
         "render pass");
-
+// ── ImGui descriptor pool ─────────────────────────────────────────────────
+{
+    VkDescriptorPoolSize poolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000};
+    VkDescriptorPoolCreateInfo dpCI{};
+    dpCI.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    dpCI.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    dpCI.maxSets       = 1000;
+    dpCI.poolSizeCount = 1;
+    dpCI.pPoolSizes    = &poolSize;
+    check(vkCreateDescriptorPool(ctx.device.device, &dpCI, nullptr, &ctx.imguiPool),
+          "imgui ds pool");
+}
   // ── Framebuffers ──────────────────────────────────────────────────────────
   ctx.framebuffers.resize(ctx.swapImageViews.size());
   for (size_t i = 0; i < ctx.swapImageViews.size(); i++) {
