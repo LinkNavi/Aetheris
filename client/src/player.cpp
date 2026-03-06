@@ -1,5 +1,6 @@
 #include "player.h"
 #include "../include/combat_system.h"
+#include "log.h"
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
@@ -70,12 +71,11 @@ bool PlayerController::rayTriTest(glm::vec3 orig, glm::vec3 dir, float maxDist,
 }
 
 // ── Raycast ground detection ──────────────────────────────────────────────────
-// Fires a ray straight down from feet. Returns true + hit Y if terrain found.
 bool PlayerController::raycastGround(const CTransform& tf, const CAABB& box,
                                       float& outHitY) const {
-    // Start rays slightly ABOVE feet so we don't clip through after collision resolve
-    constexpr float RAY_START  = 0.05f; // above feet
-    constexpr float RAY_LEN    = 0.55f; // total downward distance to check
+    // Tighter parameters to avoid "floating" feel
+    constexpr float RAY_START  = 0.02f;  // just barely above feet
+    constexpr float RAY_LEN    = 0.25f;  // short ray — only detect ground very close
     constexpr float FOOT_INSET = 0.08f;
 
     float footY   = tf.pos.y - box.half.y;
@@ -108,13 +108,9 @@ bool PlayerController::raycastGround(const CTransform& tf, const CAABB& box,
         if (it == _triSoups.end()) continue;
         const auto& tris = it->second.tris;
         for (size_t i = 0; i + 2 < tris.size(); i += 3) {
-            // Accept triangles whose normal has any upward component
-            // (handles marching cubes winding inconsistencies)
             glm::vec3 edge1 = tris[i+1] - tris[i];
             glm::vec3 edge2 = tris[i+2] - tris[i];
             glm::vec3 n = glm::cross(edge1, edge2);
-            // Skip purely vertical or downward-facing tris
-            // Use a loose threshold — 0.1 catches even steep slopes
             if (n.y < 0.1f) continue;
 
             for (auto& orig : origins) {
@@ -122,7 +118,6 @@ bool PlayerController::raycastGround(const CTransform& tf, const CAABB& box,
                 if (rayTriTest(orig, dir, maxDist, tris[i], tris[i+1], tris[i+2], t)) {
                     if (t < bestT) {
                         bestT   = t;
-                        // Hit Y = origin Y minus distance traveled
                         outHitY = orig.y - t;
                         hit     = true;
                     }
@@ -130,8 +125,12 @@ bool PlayerController::raycastGround(const CTransform& tf, const CAABB& box,
             }
         }
     }
+    if (hit == true){
+    Log::info("hit");}
     return hit;
-}// ── PlayerController ──────────────────────────────────────────────────────────
+}
+
+// ── PlayerController ──────────────────────────────────────────────────────────
 
 PlayerController::PlayerController(entt::registry& reg, Camera& cam)
     : _reg(reg), _cam(cam)
@@ -215,7 +214,7 @@ glm::vec3 PlayerController::position() const {
 
 // ── resolveCollision ──────────────────────────────────────────────────────────
 void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
-                                         const CAABB& box, CGrounded& /*unused*/) {
+                                         const CAABB& box, CGrounded& gr) {
     glm::vec3 half = box.half;
     int sz = ChunkData::SIZE;
     int cx = (int)std::floor(tf.pos.x / sz);
@@ -238,7 +237,13 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
                         mtv)) continue;
 
                 glm::vec3 mtvN = glm::normalize(mtv);
-                if (std::abs(mtvN.y) > 0.7f) {
+
+                // If pushing upward, mark grounded
+                if (mtvN.y > 0.7f) {
+                    gr.grounded = true;
+                    mtv  = glm::vec3(0.f, mtv.y, 0.f);
+                    mtvN = glm::vec3(0.f, 1.f, 0.f);
+                } else if (std::abs(mtvN.y) > 0.7f) {
                     mtv  = glm::vec3(0.f, mtv.y, 0.f);
                     mtvN = glm::vec3(0.f, mtvN.y < 0.f ? -1.f : 1.f, 0.f);
                 }
@@ -357,15 +362,14 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         sta.current = std::min(sta.current + sta.regenRate * dt, sta.max);
     }
 
-    // ── Target speed (Skyrim-style: back is slower, strafe slightly slower) ──
+    // ── Target speed ──────────────────────────────────────────────────────────
     float baseSpeed = Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f);
     if (!atk.isIdle()) baseSpeed *= 0.3f;
 
-    // Directional speed multipliers (Skyrim feel)
     float speedMult = 1.f;
-    if (movingBack && !movingFwd)          speedMult = 0.65f; // backpedal slower
+    if (movingBack && !movingFwd)          speedMult = 0.65f;
     else if ((movingL || movingR) &&
-             !movingFwd && !movingBack)    speedMult = 0.85f; // pure strafe slightly slower
+             !movingFwd && !movingBack)    speedMult = 0.85f;
     float targetSpeed = baseSpeed * speedMult;
 
     // ── Gravity ───────────────────────────────────────────────────────────────
@@ -376,31 +380,32 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
     }
 
     // ── Sub-step integrate + collide ──────────────────────────────────────────
-    const float subDt = dt / 4.f;
-    CGrounded unused;
-    for (int s = 0; s < 4; s++) {
+    // Reset grounded before collision — collision resolve will set it if floor contact
+    gr.grounded = false;
+
+    const int SUBSTEPS = 4;
+    const float subDt = dt / (float)SUBSTEPS;
+    for (int s = 0; s < SUBSTEPS; s++) {
         tf.pos += vel.vel * subDt;
-        resolveCollision(tf, vel, box, unused);
+        resolveCollision(tf, vel, box, gr);
     }
 
-    // ── Raycast ground detection ──────────────────────────────────────────────
-    float hitY  = 0.f;
-    bool onGround = raycastGround(tf, box, hitY);
+    // ── Raycast ground detection (supplement collision-based grounding) ───────
+    float hitY = 0.f;
+    bool rayHit = raycastGround(tf, box, hitY);
 
-    if (onGround && vel.vel.y <= 0.f) {
-        // Snap feet to surface
-        float targetFootY = hitY + box.half.y;
-        // Only snap if we're close (avoids teleporting through geometry)
-        if (std::abs(tf.pos.y - targetFootY) < 0.35f) {
-            tf.pos.y = targetFootY;
+    if (rayHit && vel.vel.y <= 0.01f) {
+        float footY = tf.pos.y - box.half.y;
+        float snapDist = hitY - footY + box.half.y;
+        // Only snap if very close (within ray range)
+        if (std::abs(tf.pos.y - (hitY + box.half.y)) < 0.20f) {
+            tf.pos.y = hitY + box.half.y;
+            vel.vel.y = 0.f;
         }
-        vel.vel.y = 0.f;
         gr.grounded = true;
-    } else {
-        gr.grounded = false;
     }
 
-    // ── Horizontal movement (Skyrim-style smooth accel/decel) ─────────────────
+    // ── Horizontal movement ───────────────────────────────────────────────────
     if (dod.isRolling() && combat) {
         glm::vec3 dv = combat->getDodgeVelocity(_player);
         _smoothVel.x = dv.x;
@@ -408,7 +413,6 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
     } else if (gr.grounded) {
         glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
 
-        // Skyrim uses fast accel, moderate decel — feels weighty but responsive
         float accel  = (wishLen > 0.001f) ? Config::GROUND_ACCEL : Config::FRICTION;
         float blend  = std::min(accel * dt, 1.f);
         _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;
@@ -429,7 +433,7 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
             gr.grounded = false;
         }
     } else {
-        // Air: carry momentum, minimal steering (Skyrim has very little air control)
+        // Air control
         glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
         float blend = std::min(Config::AIR_ACCEL * dt, 1.f);
         _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;

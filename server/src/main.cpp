@@ -1,15 +1,16 @@
 #include "chunk_manager.h"
 #include "inventory_manager.h"
+#include "stats_manager.h"
 #include "config.h"
 #include "log.h"
 #include "net_common.h"
 #include "packets.h"
 #include "inv_packets.h"
+#include "player_stats.h"
 #include <enet/enet.h>
 #include <unordered_map>
+#include <chrono>
 
-// Temporary: use ENet peer pointer as player UID until real auth exists.
-// Replace with a proper UUID system when adding accounts.
 static uint64_t peerToUID(ENetPeer* peer) {
     return (uint64_t)(uintptr_t)peer;
 }
@@ -22,19 +23,25 @@ int main(int argc, char **argv) {
     Net::init();
     Net::Host host(Config::SERVER_PORT, 32);
 
-    ChunkManager    chunks(1);
+    ChunkManager     chunks(1);
     InventoryManager invMgr;
-
-    // Seed some world chests on first run (only if none loaded from disk)
-    // Replace positions with real world coords once terrain is finalized
-    // invMgr.addChest({0.f, 80.f, 10.f}, []{ Inventory i; i.add(ItemID::WpnSword,1); return i; }());
+    StatsManager     statsMgr;
 
     Log::info(std::string("Listening on port ") +
               std::to_string(Config::SERVER_PORT));
 
     std::unordered_map<ENetPeer*, glm::vec3> positions;
 
+    using Clock = std::chrono::steady_clock;
+    auto lastTick = Clock::now();
+    float statsFlushAccum = 0.f;
+
     while (true) {
+        auto now = Clock::now();
+        float dt = std::chrono::duration<float>(now - lastTick).count();
+        lastTick = now;
+        if (dt > 0.1f) dt = 0.1f;
+
         ENetEvent ev;
         while (enet_host_service(host.get(), &ev, 0) > 0) {
             switch (ev.type) {
@@ -43,6 +50,7 @@ int main(int argc, char **argv) {
                 Log::info("Client connected");
                 chunks.addClient(ev.peer);
                 invMgr.onPlayerConnect(ev.peer, peerToUID(ev.peer));
+                statsMgr.onPlayerConnect(ev.peer);
 
                 float spawnY = chunks.findSpawnY(0.f, 0.f);
                 positions[ev.peer] = {0.f, spawnY, 0.f};
@@ -50,12 +58,11 @@ int main(int argc, char **argv) {
                 chunks.updateClient(ev.peer, 0.f, spawnY, 0.f);
                 chunks.flushReady(host.get());
 
-                // Send spawn position
                 SpawnPositionPacket sp{0.f, spawnY, 0.f};
                 Net::sendReliable(ev.peer, sp.serialize());
 
-                // Send authoritative inventory state
                 invMgr.sendInventoryState(ev.peer);
+                statsMgr.sendFullSync(ev.peer);
 
                 enet_host_flush(host.get());
                 break;
@@ -68,7 +75,6 @@ int main(int argc, char **argv) {
 
                 uint8_t pid = d[0];
 
-                // ── Chunk / movement packets ──────────────────────────────────
                 if (pid == (uint8_t)PacketID::PlayerMove) {
                     auto mv = PlayerMovePacket::deserialize(d, len);
                     glm::vec3 pos{mv.x, mv.y, mv.z};
@@ -86,10 +92,10 @@ int main(int argc, char **argv) {
                     SpawnPositionPacket sp{0.f, spawnY, 0.f};
                     Net::sendReliable(ev.peer, sp.serialize());
                     invMgr.sendInventoryState(ev.peer);
+                    statsMgr.respawn(ev.peer);
                     enet_host_flush(host.get());
                     Log::info(std::string("Respawn at y=") + std::to_string(spawnY));
 
-                // ── Inventory packets ─────────────────────────────────────────
                 } else if (pid == (uint8_t)InvPacketID::ChestOpenReq) {
                     auto req = ChestOpenReqPacket::deserialize(d, len);
                     invMgr.onChestOpenReq(ev.peer, req);
@@ -113,12 +119,24 @@ int main(int argc, char **argv) {
                 Log::info("Client disconnected");
                 chunks.removeClient(ev.peer);
                 invMgr.onPlayerDisconnect(ev.peer);
+                statsMgr.onPlayerDisconnect(ev.peer);
                 positions.erase(ev.peer);
                 break;
 
             default:
                 break;
             }
+        }
+
+        // Server-side stat regen
+        statsMgr.update(dt);
+
+        // Flush stats at ~10Hz
+        statsFlushAccum += dt;
+        if (statsFlushAccum >= 0.1f) {
+            statsFlushAccum = 0.f;
+            statsMgr.flushDirty();
+            enet_host_flush(host.get());
         }
 
         chunks.flushReady(host.get());

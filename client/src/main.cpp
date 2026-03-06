@@ -4,6 +4,7 @@
 #include "config.h"
 #include "day_night.h"
 #include "gltf_loader.h"
+#include "hud.h"
 #include "input.h"
 #include "inv_packets.h"
 #include "inventory.h"
@@ -13,6 +14,7 @@
 #include "net_common.h"
 #include "packets.h"
 #include "player.h"
+#include "player_stats.h"
 #include "view_model.h"
 #include "vk_context.h"
 #include "window.h"
@@ -30,9 +32,9 @@ int main(int argc, char **argv) {
   Log::info("Client starting");
 
   Window window(1280, 720, "Aetheris");
-VkContext ctx = vk_init(window.handle());
-vk_load_atlas(ctx, AssetPath::get("atlas.png").c_str()); 
-Input input(window.handle());
+  VkContext ctx = vk_init(window.handle());
+  vk_load_atlas(ctx, AssetPath::get("atlas.png").c_str());
+  Input input(window.handle());
   Camera camera;
   entt::registry reg;
   PlayerController player(reg, camera);
@@ -40,6 +42,8 @@ Input input(window.handle());
   DayNight dayNight;
   MeshBuilder meshBuilder(1);
   InventoryUI invUI;
+  HUD hud;
+  ClientStats clientStats;
 
   ClientChestMirror chestMirror;
 
@@ -50,7 +54,6 @@ Input input(window.handle());
                  AssetPath::get("viewmodel_vert.spv").c_str(),
                  AssetPath::get("viewmodel_frag.spv").c_str());
 
-  // Start the animation editor open=false, it is shown only when uiVisible=true
   viewModel.animEditor.open = false;
 
   VkDescriptorPool imguiPool;
@@ -79,7 +82,7 @@ Input input(window.handle());
     imInfo.Device = ctx.device.device;
     imInfo.QueueFamily = ctx.graphicsQueueFamily;
     imInfo.Queue = ctx.graphicsQueue;
-    imInfo.DescriptorPool = ctx.imguiPool; // not ctx.dsPool
+    imInfo.DescriptorPool = ctx.imguiPool;
     imInfo.MinImageCount = 2;
     imInfo.ImageCount = (uint32_t)ctx.swapImages.size();
     imInfo.UseDynamicRendering = false;
@@ -152,7 +155,6 @@ Input input(window.handle());
     if (input.keyDown(GLFW_KEY_RIGHT_BRACKET)) {
       viewModel.uiVisible = !viewModel.uiVisible;
       viewModel.animEditor.open = viewModel.uiVisible;
-      // Release cursor so the user can interact with ImGui
       if (viewModel.uiVisible && !cinv.open)
         input.captureCursor(false);
       else if (!viewModel.uiVisible && !cinv.open)
@@ -197,6 +199,15 @@ Input input(window.handle());
             auto pkt = LootAvailablePacket::deserialize(d, len);
             Log::info("Loot available: corpse uid=" +
                       std::to_string(pkt.corpseUID));
+
+          // ── Stats packets from server ────────────────────────────────
+          } else if (pid == (uint8_t)StatsPacketID::StatsSync) {
+            auto pkt = StatsSyncPacket::deserialize(d, len);
+            clientStats.applySync(pkt);
+
+          } else if (pid == (uint8_t)StatsPacketID::StatsDelta) {
+            auto pkt = StatsDeltaPacket::deserialize(d, len);
+            clientStats.applyDelta(pkt);
           }
         }
         enet_packet_destroy(ev.packet);
@@ -245,7 +256,6 @@ Input input(window.handle());
       enet_host_flush(host.get());
     }
 
-    // Recapture cursor when all UI closed
     bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible;
     if (!uiOpen && !input.cursorCaptured())
       input.captureCursor(true);
@@ -260,21 +270,15 @@ Input input(window.handle());
     }
 
     // ── Update ────────────────────────────────────────────────────────────
-    // Track whether attacks were triggered this frame to sync animations
     bool suppressInput = uiOpen;
     if (suppressInput) {
-      // Still update player movement but pass null combat so attacks are
-      // suppressed
       player.update(dt, input, nullptr);
     } else {
-      // Detect attack keypresses before passing to player so we can trigger
-      // animations
       bool lightAttack = input.keyDown(GLFW_KEY_F);
       bool heavyAttack = input.keyDown(GLFW_KEY_G);
 
       player.update(dt, input, &combat);
 
-      // Trigger viewmodel animations in sync with combat input
       if (lightAttack)
         viewModel.triggerLightAttack();
       if (heavyAttack)
@@ -283,8 +287,6 @@ Input input(window.handle());
 
     combat.update(dt, player.entity());
     dayNight.update(dt);
-
-    // Update animation system (advances playhead, handles blending)
     viewModel.update(dt);
 
     // ── Respawn ───────────────────────────────────────────────────────────
@@ -319,7 +321,10 @@ Input input(window.handle());
     glfwGetWindowSize(window.handle(), &winW, &winH);
     io.DisplayFramebufferScale = ImVec2(winW > 0 ? (float)fbW / winW : 1.f,
                                         winH > 0 ? (float)fbH / winH : 1.f);
-    // Draw viewmodel UI panels (only visible when ] toggled on)
+
+    // Draw HUD (always visible)
+    hud.draw(clientStats);
+
     viewModel.drawDebugUI();
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
 
