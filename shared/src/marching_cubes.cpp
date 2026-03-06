@@ -368,7 +368,12 @@ ChunkMesh marchChunk(const ChunkData& chunk) {
             uint8_t mat = edgeMats[e0];
 
             // Triplanar UV — tile at 1 unit, then remap into atlas column
-          auto makeVertex = [&](glm::vec3 p, uint8_t m) -> Vertex {
+      auto makeVertex = [&](glm::vec3 p, uint8_t m) -> Vertex {
+    constexpr float TW = 64.f / 256.f;
+    constexpr float TH = 64.f / 256.f;
+    constexpr float COL_OFFSETS[] = { 0.0f, 0.25f, 0.5f, 0.75f };
+    constexpr float SCALE = 0.25f; // lower = more tiles = "zoomed out"
+
     glm::vec3 an = glm::abs(normal);
     glm::vec2 localUV;
     if (an.x > an.y && an.x > an.z)
@@ -378,21 +383,11 @@ ChunkMesh marchChunk(const ChunkData& chunk) {
     else
         localUV = {p.x, p.y};
 
-    // Tile within the 64px cell
-    localUV.x = localUV.x - std::floor(localUV.x);
-    localUV.y = localUV.y - std::floor(localUV.y);
-
-    // Atlas: 4 tiles in a row, each 64x64 in a 256x256 image
-    // Stone=0, Dirt=1, Grass=2, Sand=3
-    constexpr float TW = 64.f / 256.f; // 0.25
-    constexpr float TH = 64.f / 256.f; // 0.25 (only top row used)
-    constexpr float COL_OFFSETS[] = { 0.0f, 0.25f, 0.5f, 0.75f };
+    float u = std::fmod(std::abs(localUV.x) * SCALE, 1.0f);
+    float v = std::fmod(std::abs(localUV.y) * SCALE, 1.0f);
 
     float uOff = (m < 4) ? COL_OFFSETS[m] : 0.f;
-    glm::vec2 uv{
-        uOff + localUV.x * TW,
-        localUV.y * TH        // all tiles on row 0
-    };
+    glm::vec2 uv{ uOff + u * TW, v * TH };
     return {p, normal, uv, (uint32_t)m};
 };
 

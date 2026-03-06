@@ -481,7 +481,7 @@ VkContext vk_init(GLFWwindow *window) {
   vBinding.stride = sizeof(Vertex);
   vBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-  VkVertexInputAttributeDescription attrs[2]{};
+  VkVertexInputAttributeDescription attrs[3]{};
   attrs[0].binding = 0;
   attrs[0].location = 0;
   attrs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -559,6 +559,7 @@ attrs[2].offset   = offsetof(Vertex, uv);
   layoutCI.setLayoutCount = 2;
   layoutCI.pSetLayouts = setLayouts;
   layoutCI.pPushConstantRanges = &pushRange;
+layoutCI.pushConstantRangeCount = 1;
   check(vkCreatePipelineLayout(ctx.device.device, &layoutCI, nullptr,
                                &ctx.pipelineLayout),
         "pipeline layout");
@@ -852,7 +853,9 @@ void vk_remove_chunk(VkContext &ctx, ChunkCoord coord) {
 void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
              glm::vec3 skyColor, const ViewModelRenderer *viewModel,
              const glm::mat4 &proj) {
-
+// just before the drawCount loop:
+if (ctx.chunks.size() > 0)
+    Log::info("chunks=" + std::to_string(ctx.chunks.size()) + " drawCount will compute...");
   flushUploads(ctx);
 
   uint32_t frame = ctx.currentFrame;
@@ -951,7 +954,9 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
   VkDeviceSize zero = 0;
   vkCmdBindVertexBuffers(cmd, 0, 1, &ctx.mega.vertexBuffer, &zero);
   vkCmdBindIndexBuffer(cmd, ctx.mega.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-  vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+ vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        ctx.pipelineLayout, 0, 1, &ctx.dsSets[frame], 0, nullptr);
+vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
                         ctx.pipelineLayout, 1, 1, &ctx.atlasSet, 0, nullptr);
 
   struct GlobalPC {
