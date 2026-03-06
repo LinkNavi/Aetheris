@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "gltf_loader.h"
+#include "view_model_anim.h"
 
 // GPU buffers for one loaded GLB mesh
 struct ViewModelMesh {
@@ -14,7 +15,6 @@ struct ViewModelMesh {
     uint32_t      indexCount = 0;
 };
 
-
 // Position/rotation/scale of the weapon in view space.
 // Tweak per weapon to sit correctly in the player's hand.
 struct ViewModelTransform {
@@ -24,22 +24,42 @@ struct ViewModelTransform {
     glm::vec3 meshCenter = { 0.f, 0.f, 0.f }; // auto-centering offset
 };
 
-// Owns the viewmodel pipeline and all loaded meshes.
-// One instanceA lives in VkContext (or main).
+// Owns the viewmodel pipeline, all loaded meshes, and the animation system.
 struct ViewModelRenderer {
     // Pipeline objects
     VkPipeline            pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout      pipelineLayout = VK_NULL_HANDLE;
-void drawDebugUI();
+
     // Loaded meshes — index returned by loadMesh()
     std::vector<ViewModelMesh> meshes;
 
     // Which mesh is currently equipped (-1 = nothing / fists)
     int activeMesh = -1;
 
-void setActiveMesh(int idx) { activeMesh = idx; }
-    // Per-weapon hand transforms
+    // Per-weapon hand transforms (base pose, edited via transform panel)
     std::vector<ViewModelTransform> transforms;
+
+    // ── Animation system ───────────────────────────────────────────────────
+    AnimationPlayer      anim;
+    ViewModelAnimEditor  animEditor;
+
+    // ── UI toggle (] key) ──────────────────────────────────────────────────
+    // Both the transform debug panel and the animation editor share this flag.
+    bool uiVisible = false;
+
+    void setActiveMesh(int idx) { activeMesh = idx; }
+
+    // Call once per frame with delta time to advance animation
+    void update(float dt) {
+        anim.update(dt);
+
+        // Advance animation editor preview if it's playing
+        // (editor manages its own previewTime internally via ImGui::GetIO().DeltaTime)
+    }
+
+    // Trigger attack animations from combat input
+    void triggerLightAttack() { anim.play(AnimSlot::LightAttack); }
+    void triggerHeavyAttack() { anim.play(AnimSlot::HeavyAttack); }
 
     // ── Lifecycle ─────────────────────────────────────────────────────────
     void init(VkDevice device, VmaAllocator allocator,
@@ -57,4 +77,8 @@ void setActiveMesh(int idx) { activeMesh = idx; }
     // Record draw commands. Call after terrain draw, still inside render pass.
     // proj: same projection matrix used for the scene.
     void draw(VkCommandBuffer cmd, const glm::mat4& proj) const;
+
+    // Draw ImGui panels (transform debug + animation editor).
+    // Only shown when uiVisible == true.
+    void drawDebugUI();
 };

@@ -7,8 +7,15 @@ cc = meson.get_compiler('cpp')
 # ── Core deps ─────────────────────────────────────────────────────────────────
 vulkan_dep = dependency('vulkan')
 glm_dep    = dependency('glm', fallback : ['glm', 'glm_dep'])
-enet_dep   = dependency('libenet', required: true, static: true)
-glfw_dep   = dependency('glfw3', fallback : ['glfw', 'glfw_dep'], static: true)
+
+# enet is packaged as 'enet' on Windows (vcpkg/manual) and 'libenet' on Linux
+if host_machine.system() == 'windows'
+  enet_dep = dependency('enet', required : true, static : true)
+else
+  enet_dep = dependency('libenet', required : true, static : true)
+endif
+
+glfw_dep = dependency('glfw3', fallback : ['glfw', 'glfw_dep'], static : true)
 
 # ── Windows-only link deps ────────────────────────────────────────────────────
 platform_deps = []
@@ -17,7 +24,7 @@ if host_machine.system() == 'windows'
   platform_deps += cc.find_library('winmm')
   add_project_link_arguments(
       '-static-libgcc', '-static-libstdc++', '-static',
-      language: 'cpp')
+      language : 'cpp')
 endif
 
 # ── Third-party include dirs ──────────────────────────────────────────────────
@@ -29,4 +36,4 @@ tinygltf_inc   = include_directories('thirdparty/tinygltf')
 
 subdir('shared')
 subdir('client')
-subdir('server')
+s

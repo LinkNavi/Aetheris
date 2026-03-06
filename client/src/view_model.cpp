@@ -32,14 +32,12 @@ static VkShaderModule vmMakeModule(VkDevice dev, const std::vector<uint32_t>& co
     return m;
 }
 
-// Upload a CPU buffer to a GPU-only VkBuffer via a staging buffer
 static void uploadBuffer(VkDevice device, VmaAllocator allocator,
                          VkCommandPool pool, VkQueue queue,
                          const void* data, VkDeviceSize size,
                          VkBufferUsageFlags usage,
                          VkBuffer& outBuf, VmaAllocation& outAlloc)
 {
-    // Staging
     VkBuffer      stageBuf;
     VmaAllocation stageAlloc;
     {
@@ -55,7 +53,6 @@ static void uploadBuffer(VkDevice device, VmaAllocator allocator,
         memcpy(info.pMappedData, data, size);
     }
 
-    // GPU buffer
     {
         VkBufferCreateInfo bCI{};
         bCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -66,7 +63,6 @@ static void uploadBuffer(VkDevice device, VmaAllocator allocator,
         vmaCreateBuffer(allocator, &bCI, &aCI, &outBuf, &outAlloc, nullptr);
     }
 
-    // One-shot copy
     VkCommandBufferAllocateInfo cbAI{};
     cbAI.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     cbAI.commandPool        = pool;
@@ -98,7 +94,6 @@ void ViewModelRenderer::init(VkDevice device, VmaAllocator /*allocator*/,
                               VkRenderPass renderPass, VkExtent2D extent,
                               const char* vertSpv, const char* fragSpv)
 {
-    // ── Push constant: single mat4 (model-view-proj) ──────────────────────
     VkPushConstantRange pushRange{};
     pushRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
     pushRange.size       = sizeof(glm::mat4);
@@ -110,7 +105,6 @@ void ViewModelRenderer::init(VkDevice device, VmaAllocator /*allocator*/,
     vmCheck(vkCreatePipelineLayout(device, &layoutCI, nullptr, &pipelineLayout),
             "viewmodel pipeline layout");
 
-    // ── Shaders ───────────────────────────────────────────────────────────
     auto vertCode = vmLoadSpv(vertSpv);
     auto fragCode = vmLoadSpv(fragSpv);
     VkShaderModule vertMod = vmMakeModule(device, vertCode);
@@ -126,7 +120,6 @@ void ViewModelRenderer::init(VkDevice device, VmaAllocator /*allocator*/,
     stages[1].module = fragMod;
     stages[1].pName  = "main";
 
-    // ── Vertex input: pos(vec3) + normal(vec3) + uv(vec2) ────────────────
     VkVertexInputBindingDescription binding{};
     binding.binding   = 0;
     binding.stride    = sizeof(GltfVertex);
@@ -158,20 +151,17 @@ void ViewModelRenderer::init(VkDevice device, VmaAllocator /*allocator*/,
     VkPipelineRasterizationStateCreateInfo raster{};
     raster.sType       = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
     raster.polygonMode = VK_POLYGON_MODE_FILL;
-    raster.cullMode = VK_CULL_MODE_NONE; // temporarily disable culling
-    raster.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    raster.cullMode    = VK_CULL_MODE_NONE;
+    raster.frontFace   = VK_FRONT_FACE_CLOCKWISE;
     raster.lineWidth   = 1.f;
 
     VkPipelineMultisampleStateCreateInfo ms{};
     ms.sType                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
-    // Depth test ON so it occludes world geometry, but writes OFF so the hand
-    // doesn't block itself when drawn after terrain. We clear depth to 1.0
-    // before drawing the viewmodel so it always renders on top of terrain.
     VkPipelineDepthStencilStateCreateInfo ds{};
     ds.sType            = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    ds.depthTestEnable  = VK_FALSE; // always on top
+    ds.depthTestEnable  = VK_FALSE;
     ds.depthWriteEnable = VK_FALSE;
     ds.depthCompareOp   = VK_COMPARE_OP_ALWAYS;
 
@@ -219,7 +209,6 @@ int ViewModelRenderer::loadMesh(VkDevice device, VmaAllocator allocator,
         for (auto i : m.indices) inds.push_back(base + i);
     }
 
-    // Compute mesh center (average of AABB min/max)
     if (!verts.empty()) {
         glm::vec3 mn = verts[0].pos, mx = verts[0].pos;
         for (auto& v : verts) {
@@ -246,38 +235,71 @@ int ViewModelRenderer::loadMesh(VkDevice device, VmaAllocator allocator,
     transforms.push_back(transform);
     return (int)meshes.size() - 1;
 }
+
 void ViewModelRenderer::drawDebugUI() {
+    if (!uiVisible) return;
     if (activeMesh < 0 || activeMesh >= (int)transforms.size()) return;
+
     auto& t = transforms[activeMesh];
 
-    ImGui::Begin("Viewmodel Transform");
-    ImGui::DragFloat3("Offset",   &t.offset.x,   0.005f, -5.f, 5.f);
-    ImGui::DragFloat3("Rotation", &t.rotation.x, 0.5f,  -360.f, 360.f);
-    ImGui::DragFloat3("Scale",    &t.scale.x,    0.0005f, 0.0001f, 1.f);
+    // ── Transform panel ───────────────────────────────────────────────────
+    ImGui::SetNextWindowSize({340, 260}, ImGuiCond_Once);
+    ImGui::SetNextWindowPos({10, 580}, ImGuiCond_Once);
+    ImGui::Begin("Viewmodel Transform", &uiVisible, ImGuiWindowFlags_NoCollapse);
+
+    ImGui::DragFloat3("Base Offset",   &t.offset.x,   0.005f, -5.f, 5.f);
+    ImGui::DragFloat3("Base Rotation", &t.rotation.x, 0.5f,  -360.f, 360.f);
+    ImGui::DragFloat3("Base Scale",    &t.scale.x,    0.0005f, 0.0001f, 1.f);
     ImGui::Separator();
     ImGui::Text("Mesh Center: %.1f, %.1f, %.1f", t.meshCenter.x, t.meshCenter.y, t.meshCenter.z);
     ImGui::Separator();
-    ImGui::TextWrapped("Paste into main.cpp:");
+
+    // Animation state readout
+    glm::vec3 animOff, animRot, animScl;
+    anim.getCurrentDelta(animOff, animRot, animScl);
+    ImGui::TextColored({0.5f,0.8f,1.f,1.f}, "Anim delta — Slot: %s  t=%.3f",
+        ANIM_SLOT_NAMES[(int)anim.activeSlot], anim.playTime);
+    ImGui::TextDisabled("  Off(%.3f %.3f %.3f)  Rot(%.1f %.1f %.1f)",
+        animOff.x, animOff.y, animOff.z,
+        animRot.x, animRot.y, animRot.z);
+
+    ImGui::Separator();
+    ImGui::TextWrapped("Copy to main.cpp:");
     ImGui::TextColored({0.5f,1.f,0.5f,1.f},
-        "t.offset={%.4ff,%.4ff,%.4ff};\nt.rotation={%.1ff,%.1ff,%.1ff};\nt.scale={%.5ff,%.5ff,%.5ff};",
+        "t.offset={%.4ff,%.4ff,%.4ff};\n"
+        "t.rotation={%.1ff,%.1ff,%.1ff};\n"
+        "t.scale={%.5ff,%.5ff,%.5ff};",
         t.offset.x, t.offset.y, t.offset.z,
         t.rotation.x, t.rotation.y, t.rotation.z,
         t.scale.x, t.scale.y, t.scale.z);
+
     ImGui::End();
+
+    // ── Animation editor ─────────────────────────────────────────────────
+    animEditor.open = uiVisible;
+    animEditor.draw(anim);
+    // Sync back in case user closed the editor window via X button
+    uiVisible = animEditor.open || uiVisible;
 }
+
 void ViewModelRenderer::draw(VkCommandBuffer cmd, const glm::mat4& proj) const {
     if (activeMesh < 0 || activeMesh >= (int)meshes.size()) return;
 
     const auto& mesh = meshes[activeMesh];
     const auto& t    = transforms[activeMesh];
 
+    // Get animation deltas
+    glm::vec3 animOffset, animRot, animScale;
+    anim.getCurrentDelta(animOffset, animRot, animScale);
+
+    // Base transform
     glm::mat4 model = glm::mat4(1.f);
-    model = glm::translate(model, t.offset);
+    model = glm::translate(model, t.offset + animOffset);
     model = model * glm::eulerAngleXYZ(
-        glm::radians(t.rotation.x),
-        glm::radians(t.rotation.y),
-        glm::radians(t.rotation.z));
-    model = glm::scale(model, t.scale);
+        glm::radians(t.rotation.x + animRot.x),
+        glm::radians(t.rotation.y + animRot.y),
+        glm::radians(t.rotation.z + animRot.z));
+    model = glm::scale(model, t.scale * animScale);
     model = glm::translate(model, -t.meshCenter);
 
     glm::mat4 mvp = proj * model;

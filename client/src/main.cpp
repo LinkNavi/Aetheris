@@ -41,7 +41,6 @@ int main(int argc, char **argv) {
     MeshBuilder meshBuilder(1);
     InventoryUI invUI;
 
-    // Client-side chest mirror — populated from server ChestStatePacket
     ClientChestMirror chestMirror;
 
     // ── View model renderer ───────────────────────────────────────────────────
@@ -50,6 +49,9 @@ int main(int argc, char **argv) {
                    ctx.swapchain.extent,
                    AssetPath::get("viewmodel_vert.spv").c_str(),
                    AssetPath::get("viewmodel_frag.spv").c_str());
+
+    // Start the animation editor open=false, it is shown only when uiVisible=true
+    viewModel.animEditor.open = false;
 
     VkDescriptorPool imguiPool;
     {
@@ -139,6 +141,17 @@ int main(int argc, char **argv) {
 
         auto& cinv = reg.get<CInventory>(player.entity());
 
+        // ── ] key — toggle viewmodel UI panels ───────────────────────────────
+        if (input.keyDown(GLFW_KEY_RIGHT_BRACKET)) {
+            viewModel.uiVisible = !viewModel.uiVisible;
+            viewModel.animEditor.open = viewModel.uiVisible;
+            // Release cursor so the user can interact with ImGui
+            if (viewModel.uiVisible && !cinv.open)
+                input.captureCursor(false);
+            else if (!viewModel.uiVisible && !cinv.open)
+                input.captureCursor(true);
+        }
+
         // ── Receive packets ───────────────────────────────────────────────────
         ENetEvent ev;
         while (enet_host_service(host.get(), &ev, 0) > 0) {
@@ -174,8 +187,6 @@ int main(int argc, char **argv) {
 
                     } else if (pid == (uint8_t)InvPacketID::LootAvailable) {
                         auto pkt = LootAvailablePacket::deserialize(d, len);
-                        // TODO: show loot beacon marker in world
-                        // For now just log it
                         Log::info("Loot available: corpse uid=" +
                                   std::to_string(pkt.corpseUID));
                     }
@@ -210,7 +221,6 @@ int main(int argc, char **argv) {
         if (input.keyDown(GLFW_KEY_I)) {
             cinv.open = !cinv.open;
             if (!cinv.open && chestMirror.open) {
-                // Closing inventory also closes chest
                 ChestCloseReqPacket req{chestMirror.uid};
                 Net::sendReliable(server, req.serialize());
                 chestMirror.open = false;
@@ -218,21 +228,15 @@ int main(int argc, char **argv) {
             input.captureCursor(!cinv.open);
         }
 
-        // ── Chest interaction (E) — send open request to server ───────────────
-        // The server validates range and sends back ChestStatePacket if allowed.
-        // Client doesn't know chest UIDs yet without a nearby-chest broadcast —
-        // for now we send the nearest known chest UID if we have one in mirror,
-        // or rely on server to send chests proactively (TODO: NearbyChests packet).
-        // Placeholder: send open req for chestUID=1 when E pressed near spawn.
+        // ── Chest interaction (E) ─────────────────────────────────────────────
         if (input.keyDown(GLFW_KEY_E) && !chestMirror.open) {
-            // TODO: replace hardcoded uid with nearest chest from a NearbyChests list
             ChestOpenReqPacket req{1};
             Net::sendReliable(server, req.serialize());
             enet_host_flush(host.get());
         }
 
         // Recapture cursor when all UI closed
-        bool uiOpen = cinv.open || chestMirror.open;
+        bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible;
         if (!uiOpen && !input.cursorCaptured())
             input.captureCursor(true);
 
@@ -246,9 +250,28 @@ int main(int argc, char **argv) {
         }
 
         // ── Update ────────────────────────────────────────────────────────────
-        player.update(dt, input, uiOpen ? nullptr : &combat);
+        // Track whether attacks were triggered this frame to sync animations
+        bool suppressInput = uiOpen;
+        if (suppressInput) {
+            // Still update player movement but pass null combat so attacks are suppressed
+            player.update(dt, input, nullptr);
+        } else {
+            // Detect attack keypresses before passing to player so we can trigger animations
+            bool lightAttack = input.keyDown(GLFW_KEY_F);
+            bool heavyAttack = input.keyDown(GLFW_KEY_G);
+
+            player.update(dt, input, &combat);
+
+            // Trigger viewmodel animations in sync with combat input
+            if (lightAttack) viewModel.triggerLightAttack();
+            if (heavyAttack) viewModel.triggerHeavyAttack();
+        }
+
         combat.update(dt, player.entity());
         dayNight.update(dt);
+
+        // Update animation system (advances playhead, handles blending)
+        viewModel.update(dt);
 
         // ── Respawn ───────────────────────────────────────────────────────────
         if (input.keyPressed(GLFW_KEY_R)) {
@@ -277,6 +300,7 @@ int main(int argc, char **argv) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // Draw viewmodel UI panels (only visible when ] toggled on)
         viewModel.drawDebugUI();
         invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
 
