@@ -854,8 +854,8 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
              glm::vec3 skyColor, const ViewModelRenderer *viewModel,
              const glm::mat4 &proj) {
 // just before the drawCount loop:
-if (ctx.chunks.size() > 0)
-    Log::info("chunks=" + std::to_string(ctx.chunks.size()) + " drawCount will compute...");
+
+
   flushUploads(ctx);
 
   uint32_t frame = ctx.currentFrame;

@@ -71,7 +71,10 @@ private:
     bool spawnChunksReady()  const;
 
     void resolveCollision(CTransform& tf, CVelocity& vel,
-                          const CAABB& box, CGrounded& grounded);
+                          const CAABB& box, CGrounded& unused);
+
+    // Dedicated ground probe — called once after all sub-steps each frame
+    bool probeGround(const CTransform& tf, const CAABB& box) const;
 
     bool aabbTriTest(glm::vec3 mn, glm::vec3 mx,
                      glm::vec3 a, glm::vec3 b, glm::vec3 c,

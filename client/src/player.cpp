@@ -128,15 +128,16 @@ glm::vec3 PlayerController::position() const {
     return _reg.get<CTransform>(_player).pos;
 }
 
+// ── resolveCollision ──────────────────────────────────────────────────────────
+// Pushes player out of geometry only. Does NOT set grounded — that's probeGround's job.
+// Separating these means sub-stepping can't clobber the grounded state mid-frame.
 void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
-                                         const CAABB& box, CGrounded& grounded) {
+                                         const CAABB& box, CGrounded& /*unused*/) {
     glm::vec3 half = box.half;
     int sz = ChunkData::SIZE;
     int cx = (int)std::floor(tf.pos.x / sz);
     int cy = (int)std::floor(tf.pos.y / sz);
     int cz = (int)std::floor(tf.pos.z / sz);
-
-    grounded.grounded = false;
 
     for (int iter = 0; iter < 4; iter++) {
         glm::vec3 mn = tf.pos - half;
@@ -152,22 +153,71 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
                 if (!aabbTriTest(mn, mx,
                         it->second.tris[i], it->second.tris[i+1], it->second.tris[i+2],
                         mtv)) continue;
+
+                // If the push is mostly vertical (floor or ceiling), strip the
+                // horizontal component entirely. Flat marching-cubes surfaces
+                // produce many coplanar triangles that all slightly overlap the
+                // AABB; their tiny random horizontal MTV components accumulate
+                // into a sideways slide. A purely vertical push is correct here
+                // and eliminates the noise.
+                glm::vec3 mtvN = glm::normalize(mtv);
+                if (std::abs(mtvN.y) > 0.7f) {
+                    // Floor or ceiling hit — push only vertically
+                    mtv = glm::vec3(0.f, mtv.y, 0.f);
+                    mtvN = glm::vec3(0.f, mtvN.y < 0.f ? -1.f : 1.f, 0.f);
+                }
+
                 tf.pos += mtv;
                 mn = tf.pos - half;
                 mx = tf.pos + half;
-                float vDot = glm::dot(vel.vel, glm::normalize(mtv));
-                if (vDot < 0.f) vel.vel -= glm::normalize(mtv) * vDot;
-                if (glm::normalize(mtv).y > 0.5f) grounded.grounded = true;
+
+                // Kill velocity into the surface
+                float vDot = glm::dot(vel.vel, mtvN);
+                if (vDot < 0.f) vel.vel -= mtvN * vDot;
             }
         }
     }
 }
 
-static glm::vec3 accelerate(glm::vec3 vel, glm::vec3 dir, float speed, float accel, float dt) {
-    float cur = glm::dot(vel, dir);
-    float add = (speed - cur) * accel * dt; // ramp instead of clamp
-    if (add <= 0.f) return vel;
-    return vel + dir * add;
+// ── probeGround ───────────────────────────────────────────────────────────────
+// Cast a thin AABB downward from the feet after all sub-steps. This is the
+// single authoritative ground check for the frame. It's not affected by
+// sub-step ordering or MTV direction ambiguity on sloped marching-cubes terrain.
+bool PlayerController::probeGround(const CTransform& tf, const CAABB& box) const {
+    constexpr float PROBE_DIST   = 0.15f; // distance below feet to check
+    constexpr float PROBE_SHRINK = 0.04f; // inset sides to avoid catching wall edges
+
+    glm::vec3 probeHalf = {
+        box.half.x - PROBE_SHRINK,
+        PROBE_DIST * 0.5f,
+        box.half.z - PROBE_SHRINK
+    };
+    glm::vec3 probeCentre = tf.pos - glm::vec3{0.f, box.half.y + PROBE_DIST * 0.5f, 0.f};
+
+    glm::vec3 mn = probeCentre - probeHalf;
+    glm::vec3 mx = probeCentre + probeHalf;
+
+    int sz = ChunkData::SIZE;
+    int cx = (int)std::floor(tf.pos.x / sz);
+    int cy = (int)std::floor(tf.pos.y / sz);
+    int cz = (int)std::floor(tf.pos.z / sz);
+
+    for (int dx = -1; dx <= 1; dx++)
+    for (int dy = -1; dy <= 1; dy++)
+    for (int dz = -1; dz <= 1; dz++) {
+        auto it = _triSoups.find({cx+dx, cy+dy, cz+dz});
+        if (it == _triSoups.end()) continue;
+        for (size_t i = 0; i + 2 < it->second.tris.size(); i += 3) {
+            glm::vec3 mtv;
+            if (aabbTriTest(mn, mx,
+                    it->second.tris[i], it->second.tris[i+1], it->second.tris[i+2],
+                    mtv)) {
+                // Accept any upward-ish push as ground — 0.3 handles steep slopes
+                if (glm::normalize(mtv).y > 0.3f) return true;
+            }
+        }
+    }
+    return false;
 }
 
 void PlayerController::update(float dt, const Input& input, CombatSystem* combat) {
@@ -212,11 +262,9 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         }
     }
 
-    // Always apply mouse look (even with UI open the camera can still move,
-    // but cursor is released so it won't actually move — GLFW won't fire
-    // cursor callbacks when cursor is not captured).
     _cam.applyMouse(input.mouseDelta());
 
+    // ── Wish direction ────────────────────────────────────────────────────────
     glm::vec3 fwd = _cam.forward(); fwd.y = 0.f;
     float fwdLen = glm::length(fwd);
     if (fwdLen > 0.001f) fwd /= fwdLen;
@@ -230,7 +278,7 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
     float wishLen = glm::length(wishDir);
     if (wishLen > 0.001f) wishDir /= wishLen;
 
-    // ── Combat input (only when combat system is passed in — suppressed if UI open) ──
+    // ── Combat input ──────────────────────────────────────────────────────────
     if (combat) {
         if (input.keyDown(GLFW_KEY_F))
             combat->playerLightAttack(_player, _cam.forward());
@@ -250,65 +298,93 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
 
     auto& atk = _reg.get<CAttack>(_player);
     auto& dod = _reg.get<CDodge> (_player);
-    bool sprinting = input.key(GLFW_KEY_LEFT_SHIFT) && !sta.depleted
-                     && sta.current > 0.f && atk.isIdle() && !dod.isRolling();
 
-    if (sprinting && wishLen > 0.001f) {
+    bool sprinting = input.key(GLFW_KEY_LEFT_SHIFT)
+                     && !sta.depleted
+                     && sta.current > 0.f
+                     && atk.isIdle()
+                     && !dod.isRolling()
+                     && wishLen > 0.001f;
+
+    if (sprinting) {
         sta.current -= sta.sprintCost * dt;
         if (sta.current <= 0.f) {
-            sta.current = 0.f; sta.depleted = true;
-            sta.depleteCooldown = 1.5f; sprinting = false;
+            sta.current = 0.f;
+            sta.depleted = true;
+            sta.depleteCooldown = 1.5f;
+            sprinting = false;
         }
     } else if (!sta.depleted) {
         sta.current = std::min(sta.current + sta.regenRate * dt, sta.max);
     }
 
-    float wishSpeed = wishLen > 0.001f
-        ? Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f)
-        : 0.f;
+    float moveSpeed = Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f);
+    if (!atk.isIdle()) moveSpeed *= 0.3f;
 
-    if (!atk.isIdle()) wishSpeed *= 0.3f;
+    // ── Gravity — only accumulate when airborne ───────────────────────────────
+    // We intentionally apply gravity BEFORE sub-stepping so collision can
+    // immediately cancel it if the player is standing on something.
+    constexpr float MAX_FALL = 60.f;
+    if (!gr.grounded) {
+        vel.vel.y += Config::GRAVITY * dt;
+        if (vel.vel.y < -MAX_FALL) vel.vel.y = -MAX_FALL;
+    }
 
-    glm::vec3 hVel{vel.vel.x, 0.f, vel.vel.z};
-    float     yVel = vel.vel.y;
+    // ── Sub-step integrate + collide ──────────────────────────────────────────
+    const float subDt = dt / 4.f;
+    CGrounded unused;
+    for (int s = 0; s < 4; s++) {
+        tf.pos += vel.vel * subDt;
+        resolveCollision(tf, vel, box, unused);
+    }
 
-    if (combat && dod.isRolling()) {
+    // ── Single authoritative ground probe (after all movement is resolved) ────
+    gr.grounded = probeGround(tf, box);
+
+    if (gr.grounded && vel.vel.y < 0.f)
+        vel.vel.y = 0.f; // kill gravity accumulation the moment we touch ground
+
+    // ── Horizontal velocity ───────────────────────────────────────────────────
+    if (dod.isRolling() && combat) {
         glm::vec3 dv = combat->getDodgeVelocity(_player);
-        hVel = {dv.x, 0.f, dv.z};
+        vel.vel.x = dv.x;
+        vel.vel.z = dv.z;
     } else if (gr.grounded) {
-        float speed = glm::length(hVel);
-        if (speed > 0.001f) {
-            float drop = speed * Config::FRICTION * dt;
-            hVel *= std::max(speed - drop, 0.f) / speed;
-        }
-        hVel = accelerate(hVel, wishDir, wishSpeed, Config::GROUND_ACCEL, dt);
-        if (yVel < 0.f) yVel = 0.f;
-        if (input.key(GLFW_KEY_SPACE) && !sta.depleted && sta.current >= sta.jumpCost
-            && atk.isIdle() && !dod.isRolling()) {
+        // Kinetic: instant response, instant stop
+        vel.vel.x = wishDir.x * (wishLen > 0.001f ? moveSpeed : 0.f);
+        vel.vel.z = wishDir.z * (wishLen > 0.001f ? moveSpeed : 0.f);
+
+        // Jump
+        if (input.keyDown(GLFW_KEY_SPACE)
+            && !sta.depleted
+            && sta.current >= sta.jumpCost
+            && atk.isIdle()
+            && !dod.isRolling())
+        {
             sta.current -= sta.jumpCost;
-            yVel = Config::JUMP_VEL;
+            vel.vel.y   = Config::JUMP_VEL;
             gr.grounded = false;
         }
     } else {
-        hVel = accelerate(hVel, wishDir, wishSpeed, Config::AIR_ACCEL, dt);
-        yVel += Config::GRAVITY * dt;
+        // Air steering
+        if (wishLen > 0.001f) {
+            glm::vec3 target = wishDir * moveSpeed;
+            float blend = std::min(Config::AIR_ACCEL * dt, 1.f);
+            vel.vel.x += (target.x - vel.vel.x) * blend;
+            vel.vel.z += (target.z - vel.vel.z) * blend;
+        }
     }
 
-    vel.vel = {hVel.x, yVel, hVel.z};
-
-    const float subDt = dt / 4.f;
-    for (int s = 0; s < 4; s++) {
-        tf.pos += vel.vel * subDt;
-        resolveCollision(tf, vel, box, gr);
+    // ── Head bob ──────────────────────────────────────────────────────────────
+    if (gr.grounded && wishLen > 0.001f) {
+        static float bobTime = 0.f;
+        float speed = glm::length(glm::vec3{vel.vel.x, 0.f, vel.vel.z});
+        bobTime += dt * speed * 0.4f;
+        float bobY = std::sin(bobTime * 2.f) * 0.04f;
+        float bobX = std::sin(bobTime) * 0.02f;
+        _cam.position.y += bobY;
+        _cam.position += _cam.right() * bobX;
     }
-if (gr.grounded && wishLen > 0.001f) {
-    static float bobTime = 0.f;
-    float speed = glm::length(glm::vec3{vel.vel.x, 0.f, vel.vel.z});
-    bobTime += dt * speed * 0.4f;
-    float bobY = std::sin(bobTime * 2.f) * 0.04f;
-    float bobX = std::sin(bobTime) * 0.02f;
-    _cam.position.y += bobY;
-    _cam.position += _cam.right() * bobX;
-}
+
     _cam.position = tf.pos + glm::vec3{0.f, box.half.y * 0.85f, 0.f};
 }
