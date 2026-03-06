@@ -30,9 +30,9 @@ int main(int argc, char **argv) {
   Log::info("Client starting");
 
   Window window(1280, 720, "Aetheris");
-  VkContext ctx = vk_init(window.handle());
-
-  Input input(window.handle());
+VkContext ctx = vk_init(window.handle());
+vk_load_atlas(ctx, AssetPath::get("atlas.png").c_str()); 
+Input input(window.handle());
   Camera camera;
   entt::registry reg;
   PlayerController player(reg, camera);

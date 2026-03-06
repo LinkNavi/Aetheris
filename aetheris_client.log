@@ -1,0 +1,12 @@
+[13:45:41][INFO] Client starting
+[13:45:42][INFO] Vulkan 1.3 detected
+[13:45:42][INFO] Shaders loaded
+[13:45:42][INFO] Vulkan initialised
+[13:45:43][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[13:45:43][INFO] ViewModelRenderer initialised
+[13:45:43][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[13:45:43][INFO] Connected to server
+[13:45:43][ERR ] Caught SIGSEGV — flushing log
+[13:45:43][ERR ] ./build/client/client(+0x36654) [0x563c6d3d3654]
+[13:45:43][ERR ] /usr/lib/libc.so.6(+0x3e2d0) [0x7fb1a584d2d0]
+[13:45:43][ERR ] [0x7fb1a0012d6b]

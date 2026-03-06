@@ -131,7 +131,7 @@ struct VkContext {
     static constexpr int FRAMES_IN_FLIGHT = 2;
     uint32_t currentFrame = 0;
 };
-
+void vk_load_atlas(VkContext& ctx, const char* path);
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
 
