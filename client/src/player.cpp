@@ -47,7 +47,91 @@ bool PlayerController::aabbTriTest(glm::vec3 mn, glm::vec3 mx,
     return true;
 }
 
-// ── PlayerController ──────────────────────────────────────────────────────────
+// ── Möller–Trumbore ray-triangle intersection ─────────────────────────────────
+bool PlayerController::rayTriTest(glm::vec3 orig, glm::vec3 dir, float maxDist,
+                                   glm::vec3 a, glm::vec3 b, glm::vec3 c,
+                                   float& outT) const {
+    constexpr float EPS = 1e-7f;
+    glm::vec3 ab = b - a, ac = c - a;
+    glm::vec3 h  = glm::cross(dir, ac);
+    float det    = glm::dot(ab, h);
+    if (std::abs(det) < EPS) return false;
+    float invDet = 1.f / det;
+    glm::vec3 s  = orig - a;
+    float u      = glm::dot(s, h) * invDet;
+    if (u < 0.f || u > 1.f) return false;
+    glm::vec3 q  = glm::cross(s, ab);
+    float v      = glm::dot(dir, q) * invDet;
+    if (v < 0.f || u + v > 1.f) return false;
+    float t      = glm::dot(ac, q) * invDet;
+    if (t < EPS || t > maxDist) return false;
+    outT = t;
+    return true;
+}
+
+// ── Raycast ground detection ──────────────────────────────────────────────────
+// Fires a ray straight down from feet. Returns true + hit Y if terrain found.
+bool PlayerController::raycastGround(const CTransform& tf, const CAABB& box,
+                                      float& outHitY) const {
+    // Start rays slightly ABOVE feet so we don't clip through after collision resolve
+    constexpr float RAY_START  = 0.05f; // above feet
+    constexpr float RAY_LEN    = 0.55f; // total downward distance to check
+    constexpr float FOOT_INSET = 0.08f;
+
+    float footY   = tf.pos.y - box.half.y;
+    float origY   = footY + RAY_START;
+    float maxDist = RAY_LEN;
+
+    float inset = box.half.x - FOOT_INSET;
+    // 5 rays: centre + 4 corners
+    glm::vec3 origins[5] = {
+        {tf.pos.x,         origY, tf.pos.z        },
+        {tf.pos.x + inset, origY, tf.pos.z + inset},
+        {tf.pos.x - inset, origY, tf.pos.z + inset},
+        {tf.pos.x + inset, origY, tf.pos.z - inset},
+        {tf.pos.x - inset, origY, tf.pos.z - inset},
+    };
+    glm::vec3 dir{0.f, -1.f, 0.f};
+
+    int sz = ChunkData::SIZE;
+    int cx = (int)std::floor(tf.pos.x / sz);
+    int cy = (int)std::floor(tf.pos.y / sz);
+    int cz = (int)std::floor(tf.pos.z / sz);
+
+    float bestT = maxDist + 1.f;
+    bool  hit   = false;
+
+    for (int dx = -1; dx <= 1; dx++)
+    for (int dy = -1; dy <= 1; dy++)
+    for (int dz = -1; dz <= 1; dz++) {
+        auto it = _triSoups.find({cx+dx, cy+dy, cz+dz});
+        if (it == _triSoups.end()) continue;
+        const auto& tris = it->second.tris;
+        for (size_t i = 0; i + 2 < tris.size(); i += 3) {
+            // Accept triangles whose normal has any upward component
+            // (handles marching cubes winding inconsistencies)
+            glm::vec3 edge1 = tris[i+1] - tris[i];
+            glm::vec3 edge2 = tris[i+2] - tris[i];
+            glm::vec3 n = glm::cross(edge1, edge2);
+            // Skip purely vertical or downward-facing tris
+            // Use a loose threshold — 0.1 catches even steep slopes
+            if (n.y < 0.1f) continue;
+
+            for (auto& orig : origins) {
+                float t;
+                if (rayTriTest(orig, dir, maxDist, tris[i], tris[i+1], tris[i+2], t)) {
+                    if (t < bestT) {
+                        bestT   = t;
+                        // Hit Y = origin Y minus distance traveled
+                        outHitY = orig.y - t;
+                        hit     = true;
+                    }
+                }
+            }
+        }
+    }
+    return hit;
+}// ── PlayerController ──────────────────────────────────────────────────────────
 
 PlayerController::PlayerController(entt::registry& reg, Camera& cam)
     : _reg(reg), _cam(cam)
@@ -91,6 +175,7 @@ void PlayerController::setSpawnPosition(glm::vec3 pos) {
     _hasPendingSpawn = true;
     _spawned         = false;
     _triSoups.clear();
+    _smoothVel = {0.f, 0.f, 0.f};
     buildRequiredChunks(pos);
 }
 
@@ -129,8 +214,6 @@ glm::vec3 PlayerController::position() const {
 }
 
 // ── resolveCollision ──────────────────────────────────────────────────────────
-// Pushes player out of geometry only. Does NOT set grounded — that's probeGround's job.
-// Separating these means sub-stepping can't clobber the grounded state mid-frame.
 void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
                                          const CAABB& box, CGrounded& /*unused*/) {
     glm::vec3 half = box.half;
@@ -154,16 +237,9 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
                         it->second.tris[i], it->second.tris[i+1], it->second.tris[i+2],
                         mtv)) continue;
 
-                // If the push is mostly vertical (floor or ceiling), strip the
-                // horizontal component entirely. Flat marching-cubes surfaces
-                // produce many coplanar triangles that all slightly overlap the
-                // AABB; their tiny random horizontal MTV components accumulate
-                // into a sideways slide. A purely vertical push is correct here
-                // and eliminates the noise.
                 glm::vec3 mtvN = glm::normalize(mtv);
                 if (std::abs(mtvN.y) > 0.7f) {
-                    // Floor or ceiling hit — push only vertically
-                    mtv = glm::vec3(0.f, mtv.y, 0.f);
+                    mtv  = glm::vec3(0.f, mtv.y, 0.f);
                     mtvN = glm::vec3(0.f, mtvN.y < 0.f ? -1.f : 1.f, 0.f);
                 }
 
@@ -171,53 +247,11 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
                 mn = tf.pos - half;
                 mx = tf.pos + half;
 
-                // Kill velocity into the surface
                 float vDot = glm::dot(vel.vel, mtvN);
                 if (vDot < 0.f) vel.vel -= mtvN * vDot;
             }
         }
     }
-}
-
-// ── probeGround ───────────────────────────────────────────────────────────────
-// Cast a thin AABB downward from the feet after all sub-steps. This is the
-// single authoritative ground check for the frame. It's not affected by
-// sub-step ordering or MTV direction ambiguity on sloped marching-cubes terrain.
-bool PlayerController::probeGround(const CTransform& tf, const CAABB& box) const {
-    constexpr float PROBE_DIST   = 0.15f; // distance below feet to check
-    constexpr float PROBE_SHRINK = 0.04f; // inset sides to avoid catching wall edges
-
-    glm::vec3 probeHalf = {
-        box.half.x - PROBE_SHRINK,
-        PROBE_DIST * 0.5f,
-        box.half.z - PROBE_SHRINK
-    };
-    glm::vec3 probeCentre = tf.pos - glm::vec3{0.f, box.half.y + PROBE_DIST * 0.5f, 0.f};
-
-    glm::vec3 mn = probeCentre - probeHalf;
-    glm::vec3 mx = probeCentre + probeHalf;
-
-    int sz = ChunkData::SIZE;
-    int cx = (int)std::floor(tf.pos.x / sz);
-    int cy = (int)std::floor(tf.pos.y / sz);
-    int cz = (int)std::floor(tf.pos.z / sz);
-
-    for (int dx = -1; dx <= 1; dx++)
-    for (int dy = -1; dy <= 1; dy++)
-    for (int dz = -1; dz <= 1; dz++) {
-        auto it = _triSoups.find({cx+dx, cy+dy, cz+dz});
-        if (it == _triSoups.end()) continue;
-        for (size_t i = 0; i + 2 < it->second.tris.size(); i += 3) {
-            glm::vec3 mtv;
-            if (aabbTriTest(mn, mx,
-                    it->second.tris[i], it->second.tris[i+1], it->second.tris[i+2],
-                    mtv)) {
-                // Accept any upward-ish push as ground — 0.3 handles steep slopes
-                if (glm::normalize(mtv).y > 0.3f) return true;
-            }
-        }
-    }
-    return false;
 }
 
 void PlayerController::update(float dt, const Input& input, CombatSystem* combat) {
@@ -271,14 +305,22 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
     glm::vec3 right = glm::normalize(glm::cross(fwd, glm::vec3{0,1,0}));
 
     glm::vec3 wishDir{0.f};
-    if (input.key(GLFW_KEY_W)) wishDir += fwd;
-    if (input.key(GLFW_KEY_S)) wishDir -= fwd;
-    if (input.key(GLFW_KEY_D)) wishDir += right;
-    if (input.key(GLFW_KEY_A)) wishDir -= right;
+    bool movingFwd  = input.key(GLFW_KEY_W);
+    bool movingBack = input.key(GLFW_KEY_S);
+    bool movingR    = input.key(GLFW_KEY_D);
+    bool movingL    = input.key(GLFW_KEY_A);
+
+    if (movingFwd)  wishDir += fwd;
+    if (movingBack) wishDir -= fwd;
+    if (movingR)    wishDir += right;
+    if (movingL)    wishDir -= right;
     float wishLen = glm::length(wishDir);
     if (wishLen > 0.001f) wishDir /= wishLen;
 
     // ── Combat input ──────────────────────────────────────────────────────────
+    auto& atk = _reg.get<CAttack>(_player);
+    auto& dod = _reg.get<CDodge> (_player);
+
     if (combat) {
         if (input.keyDown(GLFW_KEY_F))
             combat->playerLightAttack(_player, _cam.forward());
@@ -295,9 +337,6 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         sta.depleteCooldown -= dt;
         if (sta.depleteCooldown <= 0.f) sta.depleted = false;
     }
-
-    auto& atk = _reg.get<CAttack>(_player);
-    auto& dod = _reg.get<CDodge> (_player);
 
     bool sprinting = input.key(GLFW_KEY_LEFT_SHIFT)
                      && !sta.depleted
@@ -318,12 +357,18 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         sta.current = std::min(sta.current + sta.regenRate * dt, sta.max);
     }
 
-    float moveSpeed = Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f);
-    if (!atk.isIdle()) moveSpeed *= 0.3f;
+    // ── Target speed (Skyrim-style: back is slower, strafe slightly slower) ──
+    float baseSpeed = Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f);
+    if (!atk.isIdle()) baseSpeed *= 0.3f;
 
-    // ── Gravity — only accumulate when airborne ───────────────────────────────
-    // We intentionally apply gravity BEFORE sub-stepping so collision can
-    // immediately cancel it if the player is standing on something.
+    // Directional speed multipliers (Skyrim feel)
+    float speedMult = 1.f;
+    if (movingBack && !movingFwd)          speedMult = 0.65f; // backpedal slower
+    else if ((movingL || movingR) &&
+             !movingFwd && !movingBack)    speedMult = 0.85f; // pure strafe slightly slower
+    float targetSpeed = baseSpeed * speedMult;
+
+    // ── Gravity ───────────────────────────────────────────────────────────────
     constexpr float MAX_FALL = 60.f;
     if (!gr.grounded) {
         vel.vel.y += Config::GRAVITY * dt;
@@ -338,21 +383,39 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
         resolveCollision(tf, vel, box, unused);
     }
 
-    // ── Single authoritative ground probe (after all movement is resolved) ────
-    gr.grounded = probeGround(tf, box);
+    // ── Raycast ground detection ──────────────────────────────────────────────
+    float hitY  = 0.f;
+    bool onGround = raycastGround(tf, box, hitY);
 
-    if (gr.grounded && vel.vel.y < 0.f)
-        vel.vel.y = 0.f; // kill gravity accumulation the moment we touch ground
+    if (onGround && vel.vel.y <= 0.f) {
+        // Snap feet to surface
+        float targetFootY = hitY + box.half.y;
+        // Only snap if we're close (avoids teleporting through geometry)
+        if (std::abs(tf.pos.y - targetFootY) < 0.35f) {
+            tf.pos.y = targetFootY;
+        }
+        vel.vel.y = 0.f;
+        gr.grounded = true;
+    } else {
+        gr.grounded = false;
+    }
 
-    // ── Horizontal velocity ───────────────────────────────────────────────────
+    // ── Horizontal movement (Skyrim-style smooth accel/decel) ─────────────────
     if (dod.isRolling() && combat) {
         glm::vec3 dv = combat->getDodgeVelocity(_player);
-        vel.vel.x = dv.x;
-        vel.vel.z = dv.z;
+        _smoothVel.x = dv.x;
+        _smoothVel.z = dv.z;
     } else if (gr.grounded) {
-        // Kinetic: instant response, instant stop
-        vel.vel.x = wishDir.x * (wishLen > 0.001f ? moveSpeed : 0.f);
-        vel.vel.z = wishDir.z * (wishLen > 0.001f ? moveSpeed : 0.f);
+        glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
+
+        // Skyrim uses fast accel, moderate decel — feels weighty but responsive
+        float accel  = (wishLen > 0.001f) ? Config::GROUND_ACCEL : Config::FRICTION;
+        float blend  = std::min(accel * dt, 1.f);
+        _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;
+        _smoothVel.z += (targetHoriz.z - _smoothVel.z) * blend;
+
+        vel.vel.x = _smoothVel.x;
+        vel.vel.z = _smoothVel.z;
 
         // Jump
         if (input.keyDown(GLFW_KEY_SPACE)
@@ -366,13 +429,13 @@ void PlayerController::update(float dt, const Input& input, CombatSystem* combat
             gr.grounded = false;
         }
     } else {
-        // Air steering
-        if (wishLen > 0.001f) {
-            glm::vec3 target = wishDir * moveSpeed;
-            float blend = std::min(Config::AIR_ACCEL * dt, 1.f);
-            vel.vel.x += (target.x - vel.vel.x) * blend;
-            vel.vel.z += (target.z - vel.vel.z) * blend;
-        }
+        // Air: carry momentum, minimal steering (Skyrim has very little air control)
+        glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
+        float blend = std::min(Config::AIR_ACCEL * dt, 1.f);
+        _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;
+        _smoothVel.z += (targetHoriz.z - _smoothVel.z) * blend;
+        vel.vel.x = _smoothVel.x;
+        vel.vel.z = _smoothVel.z;
     }
 
     // ── Head bob ──────────────────────────────────────────────────────────────

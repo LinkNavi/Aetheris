@@ -9,20 +9,21 @@ namespace Config {
     inline constexpr float PLAYER_WIDTH   = 0.6f;
     inline constexpr float PLAYER_HEIGHT  = 1.8f;
 
-    // ── Kinetic movement ──────────────────────────────────────────────────────
-    // These are direct speed values — no friction/accel ramps on the ground.
+    // ── Skyrim-style movement ─────────────────────────────────────────────────
     inline constexpr float WALK_SPEED    = 5.5f;
-    inline constexpr float SPRINT_MULT   = 1.7f;
-    inline constexpr float JUMP_VEL      = 9.0f;
-    inline constexpr float GRAVITY       = -28.0f; // stronger gravity = snappier arc
+    inline constexpr float SPRINT_MULT   = 1.85f;
+    inline constexpr float JUMP_VEL      = 8.5f;
+    inline constexpr float GRAVITY       = -28.0f;
 
-    // Air steering: how quickly you can redirect mid-air (0=none, 1=instant)
-    // Low value keeps momentum but lets you nudge your trajectory
-    inline constexpr float AIR_ACCEL     = 4.0f;
+    // Ground accel: how fast you reach target speed (higher = snappier)
+    // Skyrim ~10-12: responsive but not instant
+    inline constexpr float GROUND_ACCEL  = 11.0f;
 
-    // Unused by kinetic controller but kept for dodge/combat use
-    inline constexpr float FRICTION      = 8.0f;
-    inline constexpr float GROUND_ACCEL  = 12.0f;
+    // Friction / decel rate when no input (Skyrim stops fairly fast)
+    inline constexpr float FRICTION      = 14.0f;
+
+    // Air steering: very low, Skyrim has almost no air control
+    inline constexpr float AIR_ACCEL     = 1.8f;
 
     inline constexpr float MOUSE_SENS     = 0.1f;
     inline constexpr float DAY_LENGTH_SECONDS = 1200.f;

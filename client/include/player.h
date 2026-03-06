@@ -67,16 +67,24 @@ private:
 
     std::unordered_set<ChunkCoord, ChunkCoordHash> _requiredChunks;
 
+    // Skyrim-style movement: smooth horizontal velocity target
+    glm::vec3 _smoothVel{0.f}; // current horizontal velocity (blended)
+
     void buildRequiredChunks(glm::vec3 pos);
     bool spawnChunksReady()  const;
 
     void resolveCollision(CTransform& tf, CVelocity& vel,
                           const CAABB& box, CGrounded& unused);
 
-    // Dedicated ground probe — called once after all sub-steps each frame
-    bool probeGround(const CTransform& tf, const CAABB& box) const;
+    // Raycast ground detection
+    bool raycastGround(const CTransform& tf, const CAABB& box, float& outHitY) const;
 
     bool aabbTriTest(glm::vec3 mn, glm::vec3 mx,
                      glm::vec3 a, glm::vec3 b, glm::vec3 c,
                      glm::vec3& outMTV) const;
+
+    // Ray-triangle intersection (Möller–Trumbore)
+    bool rayTriTest(glm::vec3 orig, glm::vec3 dir, float maxDist,
+                    glm::vec3 a, glm::vec3 b, glm::vec3 c,
+                    float& outT) const;
 };
