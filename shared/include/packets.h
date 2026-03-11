@@ -40,16 +40,26 @@ inline int32_t readI32(const uint8_t* d, size_t& o) { return (int32_t)readU32(d,
 // ── Packets ───────────────────────────────────────────────────────────────────
 
 struct ChunkDataPacket {
-    ChunkCoord coord;
-    std::vector<float>    vertices; // interleaved: x,y,z,nx,ny,nz
+    ChunkCoord            coord;
+    std::vector<float>    vertices;  // 8 floats per vertex: pos(3) normal(3) uv(2)
+    std::vector<uint32_t> materials; // 1 per vertex
     std::vector<uint32_t> indices;
 
     static ChunkDataPacket from(const ChunkMesh& mesh) {
         ChunkDataPacket p;
         p.coord = mesh.coord;
+        p.vertices.reserve(mesh.vertices.size() * 8);
+        p.materials.reserve(mesh.vertices.size());
         for (auto& v : mesh.vertices) {
-            p.vertices.insert(p.vertices.end(),
-                {v.pos.x, v.pos.y, v.pos.z, v.normal.x, v.normal.y, v.normal.z});
+            p.vertices.push_back(v.pos.x);
+            p.vertices.push_back(v.pos.y);
+            p.vertices.push_back(v.pos.z);
+            p.vertices.push_back(v.normal.x);
+            p.vertices.push_back(v.normal.y);
+            p.vertices.push_back(v.normal.z);
+            p.vertices.push_back(v.uv.x);
+            p.vertices.push_back(v.uv.y);
+            p.materials.push_back((uint32_t)v.material);
         }
         p.indices = mesh.indices;
         return p;
@@ -58,9 +68,17 @@ struct ChunkDataPacket {
     ChunkMesh toMesh() const {
         ChunkMesh m;
         m.coord = coord;
-        for (size_t i = 0; i+5 < vertices.size(); i+=6)
-            m.vertices.push_back({{vertices[i],vertices[i+1],vertices[i+2]},
-                                  {vertices[i+3],vertices[i+4],vertices[i+5]}});
+        size_t vertCount = vertices.size() / 8;
+        m.vertices.reserve(vertCount);
+        for (size_t i = 0; i < vertCount; i++) {
+            size_t b = i * 8;
+            Vertex v;
+            v.pos      = {vertices[b],   vertices[b+1], vertices[b+2]};
+            v.normal   = {vertices[b+3], vertices[b+4], vertices[b+5]};
+            v.uv       = {vertices[b+6], vertices[b+7]};
+            v.material = (i < materials.size()) ? materials[i] : 0u;
+            m.vertices.push_back(v);
+        }
         m.indices = indices;
         return m;
     }
@@ -69,24 +87,31 @@ struct ChunkDataPacket {
         std::vector<uint8_t> b;
         writeU8(b, (uint8_t)PacketID::ChunkData);
         writeI32(b, coord.x); writeI32(b, coord.y); writeI32(b, coord.z);
-        writeU32(b, vertices.size());
-        for (float f : vertices) writeF32(b, f);
-        writeU32(b, indices.size());
-        for (uint32_t i : indices) writeU32(b, i);
+        writeU32(b, (uint32_t)vertices.size());
+        for (float f : vertices)    writeF32(b, f);
+        writeU32(b, (uint32_t)materials.size());
+        for (uint32_t mat : materials) writeU32(b, mat);
+        writeU32(b, (uint32_t)indices.size());
+        for (uint32_t i : indices)  writeU32(b, i);
         return b;
     }
 
     static ChunkDataPacket deserialize(const uint8_t* d, size_t len) {
-        ChunkDataPacket p; size_t o = 1; // skip packet id
+        ChunkDataPacket p;
+        size_t o = 1; // skip packet id
         p.coord.x = readI32(d,o); p.coord.y = readI32(d,o); p.coord.z = readI32(d,o);
-        uint32_t vc = readU32(d,o); p.vertices.resize(vc);
-        for (auto& f : p.vertices) f = readF32(d,o);
-        uint32_t ic = readU32(d,o); p.indices.resize(ic);
-        for (auto& i : p.indices) i = readU32(d,o);
+        uint32_t vc = readU32(d,o);
+        p.vertices.resize(vc);
+        for (auto& f : p.vertices)  f = readF32(d,o);
+        uint32_t mc = readU32(d,o);
+        p.materials.resize(mc);
+        for (auto& mat : p.materials) mat = readU32(d,o);
+        uint32_t ic = readU32(d,o);
+        p.indices.resize(ic);
+        for (auto& i : p.indices)   i = readU32(d,o);
         return p;
     }
 };
-
 struct PlayerMovePacket {
     float x, y, z;
     float yaw, pitch;

@@ -1,6 +1,5 @@
 bin
-
+subprojects/
 .cache
 build
 buildDir
-subprojects

@@ -1,12 +1,12 @@
 #include "asset_path.h"
 #include "log.h"
+#include "view_model.h"
 #include "vk_context.h"
 #include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
-#include "view_model.h"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
@@ -16,6 +16,7 @@
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
+#include <stb_image.h>
 static void check(VkResult r, const char *msg) {
   if (r != VK_SUCCESS)
     throw std::runtime_error(msg);
@@ -141,10 +142,12 @@ VkContext vk_init(GLFWwindow *window) {
   vkEnumerateInstanceVersion(&instanceVersion);
   uint32_t major = VK_VERSION_MAJOR(instanceVersion);
   uint32_t minor = VK_VERSION_MINOR(instanceVersion);
-  if (minor > 3) minor = 3; // cap at 1.3, highest we use
+  if (minor > 3)
+    minor = 3; // cap at 1.3, highest we use
   if (major < 1 || minor < 1)
     throw std::runtime_error("Vulkan 1.1 minimum required");
-  Log::info(std::string("Vulkan ") + std::to_string(major) + "." + std::to_string(minor) + " detected");
+  Log::info(std::string("Vulkan ") + std::to_string(major) + "." +
+            std::to_string(minor) + " detected");
 
   auto inst = vkb::InstanceBuilder{}
                   .set_app_name("Aetheris")
@@ -340,18 +343,20 @@ VkContext vk_init(GLFWwindow *window) {
   rpCI.pDependencies = &dep;
   check(vkCreateRenderPass(ctx.device.device, &rpCI, nullptr, &ctx.renderPass),
         "render pass");
-// ── ImGui descriptor pool ─────────────────────────────────────────────────
-{
-    VkDescriptorPoolSize poolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000};
+  // ── ImGui descriptor pool ─────────────────────────────────────────────────
+  {
+    VkDescriptorPoolSize poolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                  1000};
     VkDescriptorPoolCreateInfo dpCI{};
-    dpCI.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    dpCI.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-    dpCI.maxSets       = 1000;
+    dpCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    dpCI.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    dpCI.maxSets = 1000;
     dpCI.poolSizeCount = 1;
-    dpCI.pPoolSizes    = &poolSize;
-    check(vkCreateDescriptorPool(ctx.device.device, &dpCI, nullptr, &ctx.imguiPool),
+    dpCI.pPoolSizes = &poolSize;
+    check(vkCreateDescriptorPool(ctx.device.device, &dpCI, nullptr,
+                                 &ctx.imguiPool),
           "imgui ds pool");
-}
+  }
   // ── Framebuffers ──────────────────────────────────────────────────────────
   ctx.framebuffers.resize(ctx.swapImageViews.size());
   for (size_t i = 0; i < ctx.swapImageViews.size(); i++) {
@@ -419,7 +424,40 @@ VkContext vk_init(GLFWwindow *window) {
       vkUpdateDescriptorSets(ctx.device.device, 1, &write, 0, nullptr);
     }
   }
+  // ── Atlas descriptor set layout (set 1) ──────────────────────────────────
+  {
+    VkDescriptorSetLayoutBinding binding{};
+    binding.binding = 0;
+    binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    binding.descriptorCount = 1;
+    binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
+    VkDescriptorSetLayoutCreateInfo ci{};
+    ci.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    ci.bindingCount = 1;
+    ci.pBindings = &binding;
+    check(vkCreateDescriptorSetLayout(ctx.device.device, &ci, nullptr,
+                                      &ctx.atlasLayout),
+          "atlas ds layout");
+
+    VkDescriptorPoolSize poolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1};
+    VkDescriptorPoolCreateInfo dpCI{};
+    dpCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    dpCI.maxSets = 1;
+    dpCI.poolSizeCount = 1;
+    dpCI.pPoolSizes = &poolSize;
+    check(vkCreateDescriptorPool(ctx.device.device, &dpCI, nullptr,
+                                 &ctx.atlasPool),
+          "atlas ds pool");
+
+    VkDescriptorSetAllocateInfo ai{};
+    ai.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    ai.descriptorPool = ctx.atlasPool;
+    ai.descriptorSetCount = 1;
+    ai.pSetLayouts = &ctx.atlasLayout;
+    check(vkAllocateDescriptorSets(ctx.device.device, &ai, &ctx.atlasSet),
+          "atlas ds alloc");
+  }
   // ── Pipeline ──────────────────────────────────────────────────────────────
   auto vertCode = loadSpv(AssetPath::get("terrain_vert.spv").c_str());
   auto fragCode = loadSpv(AssetPath::get("terrain_frag.spv").c_str());
@@ -443,7 +481,7 @@ VkContext vk_init(GLFWwindow *window) {
   vBinding.stride = sizeof(Vertex);
   vBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-  VkVertexInputAttributeDescription attrs[2]{};
+  VkVertexInputAttributeDescription attrs[3]{};
   attrs[0].binding = 0;
   attrs[0].location = 0;
   attrs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -457,7 +495,11 @@ VkContext vk_init(GLFWwindow *window) {
   vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexInput.vertexBindingDescriptionCount = 1;
   vertexInput.pVertexBindingDescriptions = &vBinding;
-  vertexInput.vertexAttributeDescriptionCount = 2;
+  vertexInput.vertexAttributeDescriptionCount = 3;
+attrs[2].binding  = 0;
+attrs[2].location = 2;
+attrs[2].format   = VK_FORMAT_R32G32_SFLOAT;
+attrs[2].offset   = offsetof(Vertex, uv);
   vertexInput.pVertexAttributeDescriptions = attrs;
 
   VkPipelineInputAssemblyStateCreateInfo ia{};
@@ -507,13 +549,17 @@ VkContext vk_init(GLFWwindow *window) {
   pushRange.stageFlags =
       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
   pushRange.size = sizeof(glm::mat4) + sizeof(glm::vec4);
+  VkDescriptorSetLayout setLayouts[] = {ctx.dsLayout, ctx.atlasLayout};
 
   VkPipelineLayoutCreateInfo layoutCI{};
   layoutCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  layoutCI.setLayoutCount = 1;
+
   layoutCI.pSetLayouts = &ctx.dsLayout;
-  layoutCI.pushConstantRangeCount = 1;
+
+  layoutCI.setLayoutCount = 2;
+  layoutCI.pSetLayouts = setLayouts;
   layoutCI.pPushConstantRanges = &pushRange;
+layoutCI.pushConstantRangeCount = 1;
   check(vkCreatePipelineLayout(ctx.device.device, &layoutCI, nullptr,
                                &ctx.pipelineLayout),
         "pipeline layout");
@@ -572,7 +618,136 @@ VkContext vk_init(GLFWwindow *window) {
   Log::info("Vulkan initialised");
   return ctx;
 }
+void vk_load_atlas(VkContext &ctx, const char *path) {
+  // Load PNG with stb
 
+  int w, h, ch;
+  uint8_t *pixels = stbi_load(path, &w, &h, &ch, 4);
+  if (!pixels) {
+    Log::err(std::string("Failed to load atlas: ") + path);
+    return;
+  }
+  VkDeviceSize size = w * h * 4;
+
+  // Stage + upload
+  VkBuffer stageBuf;
+  VmaAllocation stageAlloc;
+  {
+    VkBufferCreateInfo bCI{};
+    bCI.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bCI.size = size;
+    bCI.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VmaAllocationCreateInfo aCI{};
+    aCI.usage = VMA_MEMORY_USAGE_CPU_ONLY;
+    aCI.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+    VmaAllocationInfo info{};
+    vmaCreateBuffer(ctx.allocator, &bCI, &aCI, &stageBuf, &stageAlloc, &info);
+    memcpy(info.pMappedData, pixels, size);
+  }
+  stbi_image_free(pixels);
+
+  VkImageCreateInfo imgCI{};
+  imgCI.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  imgCI.imageType = VK_IMAGE_TYPE_2D;
+  imgCI.format = VK_FORMAT_R8G8B8A8_SRGB;
+  imgCI.extent = {(uint32_t)w, (uint32_t)h, 1};
+  imgCI.mipLevels = 1;
+  imgCI.arrayLayers = 1;
+  imgCI.samples = VK_SAMPLE_COUNT_1_BIT;
+  imgCI.tiling = VK_IMAGE_TILING_OPTIMAL;
+  imgCI.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  imgCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  VmaAllocationCreateInfo aCI{};
+  aCI.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+  vmaCreateImage(ctx.allocator, &imgCI, &aCI, &ctx.atlasImage, &ctx.atlasAlloc,
+                 nullptr);
+
+  // Transition + copy + transition via upload cmd
+  vkWaitForFences(ctx.device.device, 1, &ctx.uploadFence, VK_TRUE, UINT64_MAX);
+  vkResetFences(ctx.device.device, 1, &ctx.uploadFence);
+  vkResetCommandBuffer(ctx.uploadCmd, 0);
+  VkCommandBufferBeginInfo bI{};
+  bI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  bI.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+  vkBeginCommandBuffer(ctx.uploadCmd, &bI);
+
+  auto barrier = [&](VkImageLayout oldL, VkImageLayout newL, VkAccessFlags srcA,
+                     VkAccessFlags dstA, VkPipelineStageFlags srcS,
+                     VkPipelineStageFlags dstS) {
+    VkImageMemoryBarrier b{};
+    b.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    b.oldLayout = oldL;
+    b.newLayout = newL;
+    b.srcAccessMask = srcA;
+    b.dstAccessMask = dstA;
+    b.image = ctx.atlasImage;
+    b.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+    vkCmdPipelineBarrier(ctx.uploadCmd, srcS, dstS, 0, 0, nullptr, 0, nullptr,
+                         1, &b);
+  };
+
+  barrier(VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 0,
+          VK_ACCESS_TRANSFER_WRITE_BIT, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+  VkBufferImageCopy region{};
+  region.imageSubresource = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 0, 1};
+  region.imageExtent = {(uint32_t)w, (uint32_t)h, 1};
+  vkCmdCopyBufferToImage(ctx.uploadCmd, stageBuf, ctx.atlasImage,
+                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+  barrier(VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+          VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT,
+          VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+  vkEndCommandBuffer(ctx.uploadCmd);
+  VkSubmitInfo si{};
+  si.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  si.commandBufferCount = 1;
+  si.pCommandBuffers = &ctx.uploadCmd;
+  vkQueueSubmit(ctx.graphicsQueue, 1, &si, ctx.uploadFence);
+  vkWaitForFences(ctx.device.device, 1, &ctx.uploadFence, VK_TRUE, UINT64_MAX);
+  vmaDestroyBuffer(ctx.allocator, stageBuf, stageAlloc);
+
+  // Image view
+  VkImageViewCreateInfo vCI{};
+  vCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+  vCI.image = ctx.atlasImage;
+  vCI.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  vCI.format = VK_FORMAT_R8G8B8A8_SRGB;
+  vCI.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+  vkCreateImageView(ctx.device.device, &vCI, nullptr, &ctx.atlasImageView);
+
+  // Sampler — nearest for pixel-art crispness, or linear for smooth
+  VkSamplerCreateInfo sCI{};
+  sCI.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  sCI.magFilter = VK_FILTER_LINEAR;
+  sCI.minFilter = VK_FILTER_LINEAR;
+  sCI.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+  sCI.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  sCI.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  sCI.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+  vkCreateSampler(ctx.device.device, &sCI, nullptr, &ctx.atlasSampler);
+
+  // Write descriptor
+  VkDescriptorImageInfo imgInfo{};
+  imgInfo.sampler = ctx.atlasSampler;
+  imgInfo.imageView = ctx.atlasImageView;
+  imgInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  VkWriteDescriptorSet write{};
+  write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  write.dstSet = ctx.atlasSet;
+  write.dstBinding = 0;
+  write.descriptorCount = 1;
+  write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  write.pImageInfo = &imgInfo;
+  vkUpdateDescriptorSets(ctx.device.device, 1, &write, 0, nullptr);
+
+  Log::info(std::string("Atlas loaded: ") + path + " (" + std::to_string(w) +
+            "x" + std::to_string(h) + ")");
+}
 // ── Upload
 // ────────────────────────────────────────────────────────────────────
 
@@ -675,10 +850,11 @@ void vk_remove_chunk(VkContext &ctx, ChunkCoord coord) {
 // ── Draw
 // ──────────────────────────────────────────────────────────────────────
 
-void vk_draw(VkContext& ctx, const glm::mat4& viewProj, float sunIntensity,
-             glm::vec3 skyColor,
-             const ViewModelRenderer* viewModel,
-             const glm::mat4& proj) {
+void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
+             glm::vec3 skyColor, const ViewModelRenderer *viewModel,
+             const glm::mat4 &proj) {
+// just before the drawCount loop:
+
 
   flushUploads(ctx);
 
@@ -692,45 +868,59 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, float sunIntensity,
                         ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
 
   // ── Frustum planes ────────────────────────────────────────────────────────
-  struct Plane { glm::vec3 n; float d; };
+  struct Plane {
+    glm::vec3 n;
+    float d;
+  };
   Plane planes[6];
-  const glm::mat4& m = viewProj;
-  planes[0] = {{m[0][3]+m[0][0], m[1][3]+m[1][0], m[2][3]+m[2][0]}, m[3][3]+m[3][0]};
-  planes[1] = {{m[0][3]-m[0][0], m[1][3]-m[1][0], m[2][3]-m[2][0]}, m[3][3]-m[3][0]};
-  planes[2] = {{m[0][3]+m[0][1], m[1][3]+m[1][1], m[2][3]+m[2][1]}, m[3][3]+m[3][1]};
-  planes[3] = {{m[0][3]-m[0][1], m[1][3]-m[1][1], m[2][3]-m[2][1]}, m[3][3]-m[3][1]};
-  planes[4] = {{m[0][3]+m[0][2], m[1][3]+m[1][2], m[2][3]+m[2][2]}, m[3][3]+m[3][2]};
-  planes[5] = {{m[0][3]-m[0][2], m[1][3]-m[1][2], m[2][3]-m[2][2]}, m[3][3]-m[3][2]};
+  const glm::mat4 &m = viewProj;
+  planes[0] = {{m[0][3] + m[0][0], m[1][3] + m[1][0], m[2][3] + m[2][0]},
+               m[3][3] + m[3][0]};
+  planes[1] = {{m[0][3] - m[0][0], m[1][3] - m[1][0], m[2][3] - m[2][0]},
+               m[3][3] - m[3][0]};
+  planes[2] = {{m[0][3] + m[0][1], m[1][3] + m[1][1], m[2][3] + m[2][1]},
+               m[3][3] + m[3][1]};
+  planes[3] = {{m[0][3] - m[0][1], m[1][3] - m[1][1], m[2][3] - m[2][1]},
+               m[3][3] - m[3][1]};
+  planes[4] = {{m[0][3] + m[0][2], m[1][3] + m[1][2], m[2][3] + m[2][2]},
+               m[3][3] + m[3][2]};
+  planes[5] = {{m[0][3] - m[0][2], m[1][3] - m[1][2], m[2][3] - m[2][2]},
+               m[3][3] - m[3][2]};
 
   auto chunkVisible = [&](ChunkCoord coord) -> bool {
     float s = (float)ChunkData::SIZE;
-    glm::vec3 mn((float)coord.x*s, (float)coord.y*s, (float)coord.z*s);
+    glm::vec3 mn((float)coord.x * s, (float)coord.y * s, (float)coord.z * s);
     glm::vec3 mx = mn + s;
-    for (auto& p : planes) {
-      glm::vec3 pv{p.n.x>0?mx.x:mn.x, p.n.y>0?mx.y:mn.y, p.n.z>0?mx.z:mn.z};
-      if (glm::dot(p.n, pv) + p.d < 0.f) return false;
+    for (auto &p : planes) {
+      glm::vec3 pv{p.n.x > 0 ? mx.x : mn.x, p.n.y > 0 ? mx.y : mn.y,
+                   p.n.z > 0 ? mx.z : mn.z};
+      if (glm::dot(p.n, pv) + p.d < 0.f)
+        return false;
     }
     return true;
   };
 
   // ── Build indirect draw list ──────────────────────────────────────────────
-  auto* drawCmds   = static_cast<DrawCmd*>(ctx.indirectMapped[frame]);
-  auto* chunkDatas = static_cast<ChunkDrawData*>(ctx.perChunkMapped[frame]);
+  auto *drawCmds = static_cast<DrawCmd *>(ctx.indirectMapped[frame]);
+  auto *chunkDatas = static_cast<ChunkDrawData *>(ctx.perChunkMapped[frame]);
 
   uint32_t drawCount = 0;
-  for (auto& [coord, gpu] : ctx.chunks) {
-    if (!chunkVisible(coord)) continue;
-    if (drawCount >= VkContext::MAX_DRAW_CHUNKS) break;
+  for (auto &[coord, gpu] : ctx.chunks) {
+    if (!chunkVisible(coord))
+      continue;
+    if (drawCount >= VkContext::MAX_DRAW_CHUNKS)
+      break;
 
     float s = (float)ChunkData::SIZE;
-    glm::vec3 offset((float)coord.x*s, (float)coord.y*s, (float)coord.z*s);
-    chunkDatas[drawCount].model  = glm::translate(glm::mat4(1.f), offset);
+    glm::vec3 offset((float)coord.x * s, (float)coord.y * s,
+                     (float)coord.z * s);
+    chunkDatas[drawCount].model = glm::translate(glm::mat4(1.f), offset);
     chunkDatas[drawCount].params = glm::vec4(sunIntensity, 0.f, 0.f, 0.f);
 
-    drawCmds[drawCount].indexCount    = gpu.indexCount;
+    drawCmds[drawCount].indexCount = gpu.indexCount;
     drawCmds[drawCount].instanceCount = 1;
-    drawCmds[drawCount].firstIndex    = gpu.indexOffset;
-    drawCmds[drawCount].vertexOffset  = (int32_t)gpu.vertexOffset;
+    drawCmds[drawCount].firstIndex = gpu.indexOffset;
+    drawCmds[drawCount].vertexOffset = (int32_t)gpu.vertexOffset;
     drawCmds[drawCount].firstInstance = drawCount;
     drawCount++;
   }
@@ -746,16 +936,16 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, float sunIntensity,
   vkBeginCommandBuffer(cmd, &bI);
 
   VkClearValue clears[2]{};
-  clears[0].color        = {{skyColor.r, skyColor.g, skyColor.b, 1.f}};
+  clears[0].color = {{skyColor.r, skyColor.g, skyColor.b, 1.f}};
   clears[1].depthStencil = {1.f, 0};
 
   VkRenderPassBeginInfo rpBI{};
-  rpBI.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  rpBI.renderPass      = ctx.renderPass;
-  rpBI.framebuffer     = ctx.framebuffers[imageIndex];
+  rpBI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  rpBI.renderPass = ctx.renderPass;
+  rpBI.framebuffer = ctx.framebuffers[imageIndex];
   rpBI.renderArea.extent = ctx.swapchain.extent;
   rpBI.clearValueCount = 2;
-  rpBI.pClearValues    = clears;
+  rpBI.pClearValues = clears;
 
   vkCmdBeginRenderPass(cmd, &rpBI, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -764,93 +954,106 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, float sunIntensity,
   VkDeviceSize zero = 0;
   vkCmdBindVertexBuffers(cmd, 0, 1, &ctx.mega.vertexBuffer, &zero);
   vkCmdBindIndexBuffer(cmd, ctx.mega.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-  vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          ctx.pipelineLayout, 0, 1, &ctx.dsSets[frame], 0, nullptr);
+ vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        ctx.pipelineLayout, 0, 1, &ctx.dsSets[frame], 0, nullptr);
+vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                        ctx.pipelineLayout, 1, 1, &ctx.atlasSet, 0, nullptr);
 
-  struct GlobalPC { glm::mat4 viewProj; glm::vec4 params; };
+  struct GlobalPC {
+    glm::mat4 viewProj;
+    glm::vec4 params;
+  };
   GlobalPC gpc{viewProj, {sunIntensity, 0.f, 0.f, 0.f}};
   vkCmdPushConstants(cmd, ctx.pipelineLayout,
                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                      0, sizeof(GlobalPC), &gpc);
 
   if (drawCount > 0)
-    vkCmdDrawIndexedIndirect(cmd, ctx.indirectBuffer[frame], 0, drawCount, sizeof(DrawCmd));
+    vkCmdDrawIndexedIndirect(cmd, ctx.indirectBuffer[frame], 0, drawCount,
+                             sizeof(DrawCmd));
 
   // ── View model (drawn after terrain, depth test disabled so always on top) ─
   if (viewModel)
     viewModel->draw(cmd, proj);
-// ── ImGui ─────────────────────────────────────────────────────────────────
+  // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);
   vkEndCommandBuffer(cmd);
 
   // ── Submit ────────────────────────────────────────────────────────────────
-  VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  VkPipelineStageFlags waitStage =
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   VkSubmitInfo sI2{};
-  sI2.sType                = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  sI2.waitSemaphoreCount   = 1;
-  sI2.pWaitSemaphores      = &ctx.imageAvailable[frame];
-  sI2.pWaitDstStageMask    = &waitStage;
-  sI2.commandBufferCount   = 1;
-  sI2.pCommandBuffers      = &cmd;
+  sI2.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  sI2.waitSemaphoreCount = 1;
+  sI2.pWaitSemaphores = &ctx.imageAvailable[frame];
+  sI2.pWaitDstStageMask = &waitStage;
+  sI2.commandBufferCount = 1;
+  sI2.pCommandBuffers = &cmd;
   sI2.signalSemaphoreCount = 1;
-  sI2.pSignalSemaphores    = &ctx.renderFinished[frame];
+  sI2.pSignalSemaphores = &ctx.renderFinished[frame];
   vkQueueSubmit(ctx.graphicsQueue, 1, &sI2, ctx.inFlight[frame]);
 
   VkPresentInfoKHR pI{};
-  pI.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  pI.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   pI.waitSemaphoreCount = 1;
-  pI.pWaitSemaphores    = &ctx.renderFinished[frame];
-  pI.swapchainCount     = 1;
-  pI.pSwapchains        = &ctx.swapchain.swapchain;
-  pI.pImageIndices      = &imageIndex;
+  pI.pWaitSemaphores = &ctx.renderFinished[frame];
+  pI.swapchainCount = 1;
+  pI.pSwapchains = &ctx.swapchain.swapchain;
+  pI.pImageIndices = &imageIndex;
   vkQueuePresentKHR(ctx.graphicsQueue, &pI);
 
   ctx.currentFrame = (frame + 1) % VkContext::FRAMES_IN_FLIGHT;
 }
 
-void vk_destroy(VkContext& ctx) {
-    vkDeviceWaitIdle(ctx.device.device);
+void vk_destroy(VkContext &ctx) {
+  vkDeviceWaitIdle(ctx.device.device);
 
-    for (int i = 0; i < VkContext::FRAMES_IN_FLIGHT; i++) {
-        vkDestroySemaphore(ctx.device.device, ctx.imageAvailable[i], nullptr);
-        vkDestroySemaphore(ctx.device.device, ctx.renderFinished[i], nullptr);
-        vkDestroyFence(ctx.device.device, ctx.inFlight[i], nullptr);
-    }
+  for (int i = 0; i < VkContext::FRAMES_IN_FLIGHT; i++) {
+    vkDestroySemaphore(ctx.device.device, ctx.imageAvailable[i], nullptr);
+    vkDestroySemaphore(ctx.device.device, ctx.renderFinished[i], nullptr);
+    vkDestroyFence(ctx.device.device, ctx.inFlight[i], nullptr);
+  }
 
-    vkDestroyFence(ctx.device.device, ctx.uploadFence, nullptr);
+  vkDestroyFence(ctx.device.device, ctx.uploadFence, nullptr);
 
-    vkDestroyPipeline(ctx.device.device, ctx.pipeline, nullptr);
-    vkDestroyPipelineLayout(ctx.device.device, ctx.pipelineLayout, nullptr);
-    vkDestroyDescriptorPool(ctx.device.device, ctx.dsPool, nullptr);
-    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.dsLayout, nullptr);
+  vkDestroyPipeline(ctx.device.device, ctx.pipeline, nullptr);
+  vkDestroyPipelineLayout(ctx.device.device, ctx.pipelineLayout, nullptr);
+  vkDestroyDescriptorPool(ctx.device.device, ctx.dsPool, nullptr);
+  vkDestroyDescriptorSetLayout(ctx.device.device, ctx.dsLayout, nullptr);
 
-    for (auto& fb : ctx.framebuffers)
-        vkDestroyFramebuffer(ctx.device.device, fb, nullptr);
+  for (auto &fb : ctx.framebuffers)
+    vkDestroyFramebuffer(ctx.device.device, fb, nullptr);
 
-    vkDestroyRenderPass(ctx.device.device, ctx.renderPass, nullptr);
+  vkDestroyRenderPass(ctx.device.device, ctx.renderPass, nullptr);
 
-    vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
-    vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
+  vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
+  vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
 
-    for (int i = 0; i < 2; i++) {
-        vmaDestroyBuffer(ctx.allocator, ctx.indirectBuffer[i], ctx.indirectAlloc[i]);
-        vmaDestroyBuffer(ctx.allocator, ctx.perChunkBuffer[i], ctx.perChunkAlloc[i]);
-    }
+  for (int i = 0; i < 2; i++) {
+    vmaDestroyBuffer(ctx.allocator, ctx.indirectBuffer[i],
+                     ctx.indirectAlloc[i]);
+    vmaDestroyBuffer(ctx.allocator, ctx.perChunkBuffer[i],
+                     ctx.perChunkAlloc[i]);
+  }
 
-    vmaDestroyBuffer(ctx.allocator, ctx.mega.vertexBuffer, ctx.mega.vertexAlloc);
-    vmaDestroyBuffer(ctx.allocator, ctx.mega.indexBuffer,  ctx.mega.indexAlloc);
-    vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
+  vmaDestroyBuffer(ctx.allocator, ctx.mega.vertexBuffer, ctx.mega.vertexAlloc);
+  vmaDestroyBuffer(ctx.allocator, ctx.mega.indexBuffer, ctx.mega.indexAlloc);
+  vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
 
-    vkDestroyCommandPool(ctx.device.device, ctx.commandPool, nullptr);
+  vkDestroyCommandPool(ctx.device.device, ctx.commandPool, nullptr);
+if (ctx.atlasSampler)   vkDestroySampler(ctx.device.device, ctx.atlasSampler, nullptr);
+if (ctx.atlasImageView) vkDestroyImageView(ctx.device.device, ctx.atlasImageView, nullptr);
+if (ctx.atlasImage)     vmaDestroyImage(ctx.allocator, ctx.atlasImage, ctx.atlasAlloc);
+if (ctx.atlasPool)      vkDestroyDescriptorPool(ctx.device.device, ctx.atlasPool, nullptr);
+if (ctx.atlasLayout)    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.atlasLayout, nullptr);
+  for (auto &iv : ctx.swapImageViews)
+    vkDestroyImageView(ctx.device.device, iv, nullptr);
 
-    for (auto& iv : ctx.swapImageViews)
-        vkDestroyImageView(ctx.device.device, iv, nullptr);
+  vmaDestroyAllocator(ctx.allocator);
 
-    vmaDestroyAllocator(ctx.allocator);
-
-    vkb::destroy_swapchain(ctx.swapchain);
-    vkb::destroy_device(ctx.device);
-    vkDestroySurfaceKHR(ctx.instance.instance, ctx.surface, nullptr);
-    vkb::destroy_instance(ctx.instance);
+  vkb::destroy_swapchain(ctx.swapchain);
+  vkb::destroy_device(ctx.device);
+  vkDestroySurfaceKHR(ctx.instance.instance, ctx.surface, nullptr);
+  vkb::destroy_instance(ctx.instance);
 }
