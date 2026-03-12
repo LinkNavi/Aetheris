@@ -16,8 +16,8 @@ const { JSONFile }  = require('lowdb/node');
 const PORT       = process.env.PORT       || 8080;
 const JWT_SECRET = process.env.JWT_SECRET || 'ImVerySecure!';
 const BCRYPT_ROUNDS = 12;
-const TOKEN_TTL     = '7d';          // JWT expiry
-const SESSION_TTL_MS = 7 * 86400000; // 7 days in ms
+const TOKEN_TTL     = '7d';
+const SESSION_TTL_MS = 7 * 86400000;
 
 // ── Database ──────────────────────────────────────────────────────────────────
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -25,9 +25,9 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const adapter = new JSONFile(path.join(DATA_DIR, 'db.json'));
 const db = new Low(adapter, {
-    users:    {},   // uid -> { uid, username, passwordHash, createdAt }
-    sessions: {},   // token -> { uid, username, issuedAt, expiresAt }
-    usernames: {},  // username_lower -> uid  (index for fast lookup)
+    users:    {},
+    sessions: {},
+    usernames: {},
 });
 
 async function initDB() {
@@ -55,7 +55,6 @@ function purgeExpiredSessions() {
     }
 }
 
-// Verify a game session token (called by game server via HTTP)
 function verifySessionToken(token) {
     const sess = db.data.sessions[token];
     if (!sess) return null;
@@ -69,14 +68,13 @@ function verifySessionToken(token) {
 // ── Express app ───────────────────────────────────────────────────────────────
 const app = express();
 
-app.use(helmet({
-    contentSecurityPolicy: false, // relax for the web UI
-}));
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// Rate limiters
+// Serve static files from the website root (parent of src/)
+app.use(express.static(path.join(__dirname, '..')));
+
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 20,
@@ -89,15 +87,12 @@ const verifyLimiter = rateLimit({
     message: { error: 'Too many verify requests.' },
 });
 
-// ── Routes ────────────────────────────────────────────────────────────────────
-
 // POST /api/register
 app.post('/api/register', authLimiter, async (req, res) => {
     const { username, password } = req.body || {};
 
     if (!isValidUsername(username))
         return res.status(400).json({ error: 'Username must be 3-24 chars (A-Z, 0-9, _, -).' });
-
     if (!isValidPassword(password))
         return res.status(400).json({ error: 'Password must be 6-128 characters.' });
 
@@ -112,7 +107,6 @@ app.post('/api/register', authLimiter, async (req, res) => {
     db.data.usernames[key] = uid;
     await db.write();
 
-    // Issue session token
     const token     = jwt.sign({ uid, username }, JWT_SECRET, { expiresIn: TOKEN_TTL });
     const expiresAt = Date.now() + SESSION_TTL_MS;
     db.data.sessions[token] = { uid, username, issuedAt: Date.now(), expiresAt };
@@ -136,7 +130,6 @@ app.post('/api/login', authLimiter, async (req, res) => {
     const ok   = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(401).json({ error: 'Invalid username or password.' });
 
-    // Purge old sessions for this user (keep it clean)
     for (const [tok, sess] of Object.entries(db.data.sessions))
         if (sess.uid === uid) delete db.data.sessions[tok];
 
@@ -158,18 +151,14 @@ app.post('/api/logout', (req, res) => {
     return res.json({ ok: true });
 });
 
-// GET /api/verify?token=<token>
-// Called by the game server to validate a connecting player's token.
-// Returns: { valid: true, uid, username } or { valid: false }
+// GET /api/verify?token=<token>  — called by game server
 app.get('/api/verify', verifyLimiter, (req, res) => {
     const token = req.query.token || '';
     const sess  = verifySessionToken(token);
     if (!sess) return res.json({ valid: false });
 
-    // Verify JWT signature too
-    try {
-        jwt.verify(token, JWT_SECRET);
-    } catch {
+    try { jwt.verify(token, JWT_SECRET); }
+    catch {
         delete db.data.sessions[token];
         db.write().catch(() => {});
         return res.json({ valid: false });
@@ -178,7 +167,7 @@ app.get('/api/verify', verifyLimiter, (req, res) => {
     return res.json({ valid: true, uid: sess.uid, username: sess.username });
 });
 
-// GET /api/me — check own token from client UI
+// GET /api/me
 app.get('/api/me', (req, res) => {
     const token = (req.headers.authorization || '').replace('Bearer ', '').trim();
     const sess  = verifySessionToken(token);
@@ -188,15 +177,14 @@ app.get('/api/me', (req, res) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 initDB().then(() => {
-    // Purge expired sessions every hour
     setInterval(() => {
         purgeExpiredSessions();
         db.write().catch(() => {});
     }, 3600 * 1000);
 
     app.listen(PORT, () => {
-        console.log(`[Auth] Listening on http://0.0.0.0:${PORT}`);
-        console.log(`[Auth] Data dir: ${DATA_DIR}`);
+        console.log(`[Aetheris Auth] http://0.0.0.0:${PORT}`);
+        console.log(`[Aetheris Auth] Data: ${DATA_DIR}`);
     });
 }).catch(err => {
     console.error('[Auth] Init failed:', err);

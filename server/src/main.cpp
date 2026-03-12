@@ -52,8 +52,13 @@ int main(int argc, char **argv) {
                 invMgr.onPlayerConnect(ev.peer, peerToUID(ev.peer));
                 statsMgr.onPlayerConnect(ev.peer);
 
-                float spawnY = chunks.findSpawnY(0.f, 0.f);
+                // Spawn higher above surface to avoid clipping into terrain
+                float surfaceY = chunks.findSpawnY(0.f, 0.f);
+                float spawnY = surfaceY + Config::PLAYER_HEIGHT + 2.f;
                 positions[ev.peer] = {0.f, spawnY, 0.f};
+
+                Log::info(std::string("Spawn: surfaceY=") + std::to_string(surfaceY)
+                          + " spawnY=" + std::to_string(spawnY));
 
                 chunks.updateClient(ev.peer, 0.f, spawnY, 0.f);
                 chunks.flushReady(host.get());
@@ -83,7 +88,8 @@ int main(int argc, char **argv) {
                     invMgr.onPlayerMove(ev.peer, pos);
 
                 } else if (pid == (uint8_t)PacketID::RespawnRequest) {
-                    float spawnY = chunks.findSpawnY(0.f, 0.f);
+                    float surfaceY = chunks.findSpawnY(0.f, 0.f);
+                    float spawnY = surfaceY + Config::PLAYER_HEIGHT + 2.f;
                     positions[ev.peer] = {0.f, spawnY, 0.f};
 
                     chunks.resetClient(ev.peer);
@@ -128,10 +134,8 @@ int main(int argc, char **argv) {
             }
         }
 
-        // Server-side stat regen
         statsMgr.update(dt);
 
-        // Flush stats at ~10Hz
         statsFlushAccum += dt;
         if (statsFlushAccum >= 0.1f) {
             statsFlushAccum = 0.f;

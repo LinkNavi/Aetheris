@@ -1,9 +1,9 @@
-[11:07:08][INFO] Client starting
-[11:07:08][INFO] Vulkan 1.1 detected
-[11:07:08][INFO] Shaders loaded
-[11:07:08][INFO] Vulkan initialised
-[11:07:08][INFO] Atlas loaded: C:\Users\22909\CLionProjects\Aetheris\buildDir\client\atlas.png (256x256)
-[11:07:08][INFO] ViewModelRenderer initialised
-[11:07:08][INFO] Loaded GLB: C:\Users\22909\CLionProjects\Aetheris\buildDir\client\arm.glb (1 meshes)
-[11:07:35][ERR ] Caught SIGSEGV — flushing log
-[11:07:35][ERR ] (backtrace not available on Windows build — attach debugger for stack trace)
+[12:22:57][INFO] Client starting
+[12:22:57][INFO] Vulkan 1.2 detected
+[12:22:58][INFO] Shaders loaded
+[12:22:58][INFO] Vulkan initialised
+[12:22:58][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[12:22:58][INFO] ViewModelRenderer initialised
+[12:22:58][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[12:23:56][INFO] Connected to 127.0.0.1
+[12:24:43][INFO] Client shutdown

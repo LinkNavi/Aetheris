@@ -3,361 +3,453 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Aetheris — Account</title>
+    <title>Aetheris</title>
     <style>
         :root {
-            --COL_BG_DARK:    rgba(8, 8, 8, 1);
-            --COL_BG_MID:     rgba(16, 16, 16, 1);
-            --COL_PANEL:      rgba(18, 18, 18, 0.90);
-            --COL_PANEL_EDGE: rgba(70, 70, 70, 0.71);
-            --COL_GREY:       rgba(160, 160, 160, 1);
-            --COL_GREY_DIM:   rgba(90, 90, 90, 0.71);
-            --COL_GREY_GLOW:  rgba(180, 180, 180, 0.12);
-            --COL_WHITE:      rgba(220, 220, 220, 1);
-            --COL_WHITE_DIM:  rgba(130, 130, 130, 0.71);
-            --COL_RED:        rgba(200, 50, 40, 1);
-            --COL_BTN_HOVER:  rgba(45, 45, 45, 0.78);
-            --COL_BTN_NORM:   rgba(22, 22, 22, 0.63);
-            --COL_GREEN:      rgba(60, 200, 60, 1);
-
-            --bg:       var(--COL_BG_DARK);
-            --panel:    var(--COL_PANEL);
-            --border:   var(--COL_PANEL_EDGE);
-            --gold:     var(--COL_GREY);
-            --gold2:    var(--COL_GREY);
-            --text:     var(--COL_WHITE);
-            --dim:      var(--COL_GREY_DIM);
-            --red:      var(--COL_RED);
-            --green:    var(--COL_GREEN);
-            --input-bg: var(--COL_PANEL);
-
-            --radius: 6px;
+            --bg-dark:    #060a0e;
+            --bg-mid:     #0a1016;
+            --panel:      #0c121aeb;
+            --panel-edge: #28414f;
+            --grey:       #8c9ba5;
+            --grey-dim:   #374650b4;
+            --teal:       #28909f;
+            --teal-dim:   #145060;
+            --teal-glow:  #64a0b019;
+            --white:      #d2dae1;
+            --white-dim:  #6e7d8cb4;
+            --red:        #c83c32;
+            --green:      #32be50;
+            --amber:      #c89b32;
+            --amber-dim:  #8c6e1e78;
+            --input-bg:   #0a101adc;
+            --radius:     6px;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             min-height: 100vh;
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+            background: var(--bg-dark);
+            color: var(--white);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
         }
-        canvas#bg {
-            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        canvas#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        /* ── Nav ─────────────────────────────────────────────── */
+        .nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 32px;
+            background: linear-gradient(180deg, var(--bg-dark), transparent);
         }
-        .container {
+        .nav-logo {
+            font-size: 1.3rem; font-weight: 700; letter-spacing: 0.2em;
+            color: var(--white);
+        }
+        .nav-links { display: flex; gap: 24px; align-items: center; }
+        .nav-links a {
+            color: var(--grey); text-decoration: none; font-size: 0.85rem;
+            letter-spacing: 0.08em; transition: color 0.15s;
+        }
+        .nav-links a:hover { color: var(--teal); }
+        .nav-btn {
+            padding: 8px 20px; border: 1px solid var(--teal-dim);
+            border-radius: var(--radius); background: transparent;
+            color: var(--teal); font-size: 0.85rem; cursor: pointer;
+            letter-spacing: 0.08em; transition: all 0.15s;
+        }
+        .nav-btn:hover {
+            background: var(--teal-dim); color: var(--white);
+            box-shadow: 0 0 16px #28909f33;
+        }
+
+        /* ── Hero ────────────────────────────────────────────── */
+        .hero {
             position: relative; z-index: 1;
-            width: 100%; max-width: 420px;
-            padding: 16px;
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+            padding: 100px 24px 60px;
         }
-        .logo {
-            text-align: center;
-            margin-bottom: 28px;
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 6rem);
+            letter-spacing: 0.2em; font-weight: 700;
+            background: linear-gradient(135deg, var(--white), var(--teal));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .logo h1 {
-            font-size: 3rem;
-            letter-spacing: 0.18em;
-            color: var(--gold);
-            text-shadow: 0 0 30px #c8a03c55, 0 0 6px #c8a03c88;
-            font-weight: 700;
+        .hero .subtitle {
+            font-size: 1rem; color: var(--grey); letter-spacing: 0.25em;
+            text-transform: uppercase; margin-top: 8px;
         }
-        .logo p {
-            color: var(--dim);
-            font-size: 0.82rem;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            margin-top: 4px;
+        .hero .desc {
+            max-width: 600px; color: var(--white-dim); font-size: 0.95rem;
+            line-height: 1.8; margin-top: 32px;
         }
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 28px 32px 32px;
+        .hero .cta-row {
+            display: flex; gap: 16px; margin-top: 40px; flex-wrap: wrap;
+            justify-content: center;
         }
-        .tabs {
-            display: flex;
-            margin-bottom: 24px;
-            border-bottom: 1px solid var(--border);
+        .cta-primary {
+            padding: 14px 36px; border: none; border-radius: var(--radius);
+            background: linear-gradient(135deg, var(--teal-dim), var(--teal));
+            color: var(--white); font-size: 1rem; cursor: pointer;
+            letter-spacing: 0.1em; font-weight: 600;
+            transition: all 0.2s; box-shadow: 0 4px 20px #28909f44;
         }
+        .cta-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 28px #28909f66; }
+        .cta-secondary {
+            padding: 14px 36px; border: 1px solid var(--panel-edge);
+            border-radius: var(--radius); background: transparent;
+            color: var(--grey); font-size: 1rem; cursor: pointer;
+            letter-spacing: 0.1em; transition: all 0.2s;
+        }
+        .cta-secondary:hover { border-color: var(--teal-dim); color: var(--white); }
+        .scroll-hint {
+            position: absolute; bottom: 32px;
+            color: var(--grey-dim); font-size: 0.8rem; letter-spacing: 0.15em;
+            animation: bob 2s ease-in-out infinite;
+        }
+        @keyframes bob { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(6px); } }
+
+        /* ── Features ────────────────────────────────────────── */
+        .features {
+            position: relative; z-index: 1;
+            padding: 80px 24px; max-width: 1000px; margin: 0 auto;
+        }
+        .features h2 {
+            text-align: center; font-size: 2rem; letter-spacing: 0.12em;
+            margin-bottom: 48px; color: var(--white);
+        }
+        .feature-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+        .feature-card {
+            background: var(--panel); border: 1px solid var(--panel-edge);
+            border-radius: var(--radius); padding: 28px;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+        .feature-card:hover { border-color: var(--teal-dim); transform: translateY(-4px); }
+        .feature-card h3 { color: var(--teal); font-size: 1.1rem; margin-bottom: 10px; letter-spacing: 0.05em; }
+        .feature-card p { color: var(--white-dim); font-size: 0.88rem; line-height: 1.6; }
+
+        /* ── Auth Section ────────────────────────────────────── */
+        .auth-section {
+            position: relative; z-index: 1;
+            padding: 80px 24px; max-width: 460px; margin: 0 auto;
+        }
+        .auth-card {
+            background: var(--panel); border: 1px solid var(--panel-edge);
+            border-radius: var(--radius); padding: 32px;
+        }
+        .auth-card h2 { text-align: center; font-size: 1.5rem; letter-spacing: 0.1em; margin-bottom: 24px; }
+        .tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--panel-edge); }
         .tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            font-size: 0.9rem;
-            letter-spacing: 0.1em;
-            color: var(--dim);
-            border-bottom: 2px solid transparent;
-            transition: color 0.15s, border-color 0.15s;
+            flex: 1; padding: 10px; text-align: center; cursor: pointer;
+            font-size: 0.88rem; letter-spacing: 0.1em; color: var(--grey-dim);
+            border-bottom: 2px solid transparent; transition: all 0.15s;
             user-select: none;
         }
-        .tab.active {
-            color: var(--gold);
-            border-bottom-color: var(--gold);
-        }
-        .field {
-            margin-bottom: 18px;
-        }
+        .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+        .field { margin-bottom: 16px; }
         .field label {
-            display: block;
-            font-size: 0.78rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-            color: var(--dim);
-            margin-bottom: 6px;
+            display: block; font-size: 0.75rem; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--grey-dim); margin-bottom: 6px;
         }
         .field input {
-            width: 100%;
-            padding: 10px 12px;
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            color: var(--text);
-            font-size: 0.95rem;
-            outline: none;
+            width: 100%; padding: 10px 12px; background: var(--input-bg);
+            border: 1px solid var(--panel-edge); border-radius: var(--radius);
+            color: var(--white); font-size: 0.95rem; outline: none;
             transition: border-color 0.15s;
         }
-        .field input:focus { border-color: var(--gold); }
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #3a2808, #5a3c0a);
-            border: 1px solid var(--gold);
+        .field input:focus { border-color: var(--teal); }
+        .auth-btn {
+            width: 100%; padding: 12px; border: none;
             border-radius: var(--radius);
-            color: var(--gold2);
-            font-size: 1rem;
-            letter-spacing: 0.12em;
-            cursor: pointer;
-            transition: background 0.15s, box-shadow 0.15s;
-            font-weight: 600;
+            background: linear-gradient(135deg, var(--teal-dim), var(--teal));
+            color: var(--white); font-size: 1rem; cursor: pointer;
+            letter-spacing: 0.1em; font-weight: 600;
+            transition: all 0.15s;
         }
-        .btn:hover { background: linear-gradient(135deg, #4a3010, #7a5018); box-shadow: 0 0 12px #c8a03c44; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .auth-btn:hover { box-shadow: 0 0 16px #28909f44; }
         .msg {
-            margin-top: 16px;
-            padding: 10px 14px;
-            border-radius: var(--radius);
-            font-size: 0.88rem;
-            display: none;
+            margin-top: 14px; padding: 10px 14px; border-radius: var(--radius);
+            font-size: 0.85rem; display: none;
         }
-        .msg.error { background: #2a0a08; border: 1px solid #c8322088; color: #e86050; display: block; }
-        .msg.success { background: #082a08; border: 1px solid #40c84088; color: #60e860; display: block; }
+        .msg.error { background: #1a0808; border: 1px solid #c8322044; color: #e86050; display: block; }
+        .msg.success { background: #081a08; border: 1px solid #40c84044; color: #60e860; display: block; }
         .token-box {
-            display: none;
-            margin-top: 20px;
-            padding: 16px;
-            background: #0a0a18;
-            border: 1px solid #3030a0;
+            display: none; margin-top: 20px; padding: 16px;
+            background: #080e14; border: 1px solid var(--teal-dim);
             border-radius: var(--radius);
         }
-        .token-box h3 { color: var(--gold); font-size: 0.9rem; margin-bottom: 10px; }
         .token-box .welcome { color: var(--green); margin-bottom: 8px; font-size: 0.95rem; }
-        .token-box .tok-label { font-size: 0.75rem; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+        .token-box .tok-label {
+            font-size: 0.72rem; color: var(--grey-dim); letter-spacing: 0.1em;
+            text-transform: uppercase; margin-bottom: 4px;
+        }
         .token-box .tok {
-            font-family: monospace;
-            font-size: 0.7rem;
-            word-break: break-all;
-            background: #060612;
-            padding: 8px;
-            border-radius: 4px;
-            color: #9090e0;
-            border: 1px solid #2020608a;
+            font-family: monospace; font-size: 0.7rem; word-break: break-all;
+            background: #060a10; padding: 8px; border-radius: 4px;
+            color: var(--teal); border: 1px solid var(--teal-dim);
         }
         .token-box .copy-btn {
-            width: auto;
-            padding: 6px 14px;
-            font-size: 0.8rem;
-            margin-top: 10px;
+            display: inline-block; margin-top: 10px; padding: 8px 18px;
+            font-size: 0.82rem; border: 1px solid var(--teal-dim);
+            border-radius: var(--radius); background: transparent;
+            color: var(--teal); cursor: pointer; transition: all 0.15s;
         }
+        .token-box .copy-btn:hover { background: var(--teal-dim); color: var(--white); }
         .hint {
-            margin-top: 14px;
-            font-size: 0.8rem;
-            color: var(--dim);
-            text-align: center;
-            line-height: 1.5;
+            margin-top: 16px; font-size: 0.78rem; color: var(--grey-dim);
+            text-align: center; line-height: 1.6;
         }
-        .hint strong { color: var(--gold); }
+        .hint strong { color: var(--teal); }
+
+        /* ── Footer ──────────────────────────────────────────── */
+        .footer {
+            position: relative; z-index: 1;
+            text-align: center; padding: 40px 24px;
+            color: var(--grey-dim); font-size: 0.75rem;
+            border-top: 1px solid var(--panel-edge);
+            margin-top: 60px;
+        }
+
+        /* ── Scrollbar ───────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--panel-edge); border-radius: 3px; }
+
+        /* ── Responsive ──────────────────────────────────────── */
+        @media (max-width: 600px) {
+            .nav { padding: 12px 16px; }
+            .nav-links { gap: 12px; }
+            .hero { padding: 80px 16px 40px; }
+        }
     </style>
 </head>
 <body>
 <canvas id="bg"></canvas>
-<div class="container">
-    <div class="logo">
-        <h1>AETHERIS</h1>
-        <p>Account Portal</p>
+
+<!-- Nav -->
+<nav class="nav">
+    <div class="nav-logo">AETHERIS</div>
+    <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#account">Account</a>
+        <button class="nav-btn" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'})">Sign In</button>
     </div>
-    <div class="card">
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <h1>AETHERIS</h1>
+    <p class="subtitle">A world that remembers what you did to it</p>
+    <p class="desc">
+        A first-person survival game where the world is alive — and humanity is the infection.
+        Explore overworld ruins, descend into hostile caves, ascend to the Aether,
+        and uncover a truth the game never states directly. Your class is defined by what
+        you carry. Death is punishing. The ending is quiet.
+    </p>
+    <div class="cta-row">
+        <button class="cta-primary" onclick="document.getElementById('account').scrollIntoView({behavior:'smooth'})">Create Account</button>
+        <button class="cta-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Learn More</button>
+    </div>
+    <div class="scroll-hint">SCROLL</div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+    <h2>THE WORLD</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>No Classes — Only Choices</h3>
+            <p>Eight archetypes defined entirely by what you equip. Swap weapons and totems to change your role mid-session. No locked progression trees.</p>
+        </div>
+        <div class="feature-card">
+            <h3>The Corruption</h3>
+            <p>The world has an immune system. Mining, forging, building — cross the threshold and the antibodies come. Undead, headcrawlers, sanity drain. It's not evil. It's biological.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Three Dimensions</h3>
+            <p>Overworld, Caves, and the Aether — a drifting sky realm of floating platforms. Each with unique resources, bosses, and environmental hazards.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Weapon Forging</h3>
+            <p>Smelt ores into liquid, pour into part casts, assemble. Every part contributes stats and traits. Mix within ore groups for synergy bonuses.</p>
+        </div>
+        <div class="feature-card">
+            <h3>Death Has Weight</h3>
+            <p>Die and your corpse becomes an Undead Knight carrying all your gear. Find the beacon, slay your past self — or lose everything to another player.</p>
+        </div>
+        <div class="feature-card">
+            <h3>The Truth</h3>
+            <p>The lore is never stated. It's reconstructed from item descriptions, boss arenas, and notes left by a civilization that built magnificently and died without knowing why.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Account -->
+<section class="auth-section" id="account">
+    <div class="auth-card">
+        <h2>ACCOUNT</h2>
         <div class="tabs">
-            <div class="tab active" id="tab-login" onclick="switchTab('login')">Login</div>
+            <div class="tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
             <div class="tab" id="tab-register" onclick="switchTab('register')">Register</div>
         </div>
 
-        <!-- Login form -->
         <div id="form-login">
             <div class="field"><label>Username</label><input id="l-user" type="text" autocomplete="username" placeholder="Your username"></div>
             <div class="field"><label>Password</label><input id="l-pass" type="password" autocomplete="current-password" placeholder="Your password"></div>
-            <button class="btn" onclick="doLogin()">Login</button>
+            <button class="auth-btn" onclick="doLogin()">Sign In</button>
         </div>
 
-        <!-- Register form -->
         <div id="form-register" style="display:none">
             <div class="field"><label>Username</label><input id="r-user" type="text" autocomplete="username" placeholder="3-24 chars, A-Z 0-9 _ -"></div>
             <div class="field"><label>Password</label><input id="r-pass" type="password" autocomplete="new-password" placeholder="Min 6 characters"></div>
             <div class="field"><label>Confirm Password</label><input id="r-pass2" type="password" autocomplete="new-password" placeholder="Repeat password"></div>
-            <button class="btn" onclick="doRegister()">Create Account</button>
+            <button class="auth-btn" onclick="doRegister()">Create Account</button>
         </div>
 
         <div id="msg" class="msg"></div>
 
         <div class="token-box" id="token-box">
             <div class="welcome" id="welcome-text"></div>
-            <div class="tok-label">Session Token (paste into game client)</div>
+            <div class="tok-label">Session Token — paste into the game client's multiplayer screen</div>
             <div class="tok" id="token-display"></div>
-            <button class="btn copy-btn" onclick="copyToken()">📋 Copy Token</button>
+            <button class="copy-btn" onclick="copyToken()">Copy Token</button>
+        </div>
+
+        <div class="hint">
+            After signing in, paste your <strong>session token</strong> into the<br>
+            Aetheris game client to authenticate on multiplayer servers.
         </div>
     </div>
+</section>
 
-    <div class="hint">
-        After logging in, paste your <strong>Session Token</strong> into the<br>
-        Aetheris multiplayer login screen to authenticate.
-    </div>
-</div>
+<footer class="footer">
+    Aetheris v0.1.0-alpha &mdash; Auth server port 8080
+</footer>
 
 <script>
-    // ── Particle background ───────────────────────────────────────────────────────
-    (function() {
-        const c = document.getElementById('bg');
-        const ctx = c.getContext('2d');
-        let w, h, particles = [];
-        function resize() {
-            w = c.width  = window.innerWidth;
-            h = c.height = window.innerHeight;
+(function() {
+    const c = document.getElementById('bg');
+    const ctx = c.getContext('2d');
+    let w, h, particles = [];
+    function resize() { w = c.width = window.innerWidth; h = c.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
+    function mkp() {
+        return { x: Math.random()*w, y: Math.random()*h,
+            vx: (Math.random()-0.5)*0.2, vy: -0.2-Math.random()*0.5,
+            life: 1, size: 0.8+Math.random()*1.8 };
+    }
+    for (let i=0;i<50;i++) particles.push(mkp());
+    let time = 0;
+    function frame() {
+        time += 0.016;
+        ctx.clearRect(0,0,w,h);
+        let g=ctx.createLinearGradient(0,0,0,h);
+        g.addColorStop(0,'#060a0e'); g.addColorStop(0.6,'#0a1218'); g.addColorStop(1,'#0e141c');
+        ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+        let rg=ctx.createRadialGradient(w/2,h*0.35,0,w/2,h*0.35,w*0.45);
+        rg.addColorStop(0,'rgba(40,144,159,0.03)'); rg.addColorStop(1,'transparent');
+        ctx.fillStyle=rg; ctx.fillRect(0,0,w,h);
+        for (let i=particles.length-1;i>=0;i--) {
+            let p=particles[i];
+            p.x+=p.vx; p.y+=p.vy; p.life-=0.003;
+            if (p.life<=0||p.y<-10) { particles[i]=mkp(); particles[i].y=h+10; continue; }
+            ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,6.28);
+            ctx.fillStyle=`rgba(100,160,200,${p.life*0.35})`;
+            ctx.fill();
         }
-        resize(); window.addEventListener('resize', resize);
-        function mkp() {
-            return { x: Math.random()*w, y: Math.random()*h+h*0.1,
-                vx: (Math.random()-0.5)*0.3, vy: -0.4-Math.random()*0.8,
-                life: 1, size: 1+Math.random()*2 };
-        }
-        for (let i=0;i<60;i++) { let p=mkp(); p.y=Math.random()*h; particles.push(p); }
-        function frame() {
-            ctx.clearRect(0,0,w,h);
-            // gradient bg
-            let g=ctx.createLinearGradient(0,0,0,h);
-            g.addColorStop(0,'#06050a'); g.addColorStop(1,'#0e0c14');
-            ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-            // radial glow
-            let rg=ctx.createRadialGradient(w/2,h*0.45,0,w/2,h*0.45,w*0.4);
-            rg.addColorStop(0,'rgba(200,160,60,0.04)'); rg.addColorStop(1,'transparent');
-            ctx.fillStyle=rg; ctx.fillRect(0,0,w,h);
-            // particles
-            for (let i=particles.length-1;i>=0;i--) {
-                let p=particles[i];
-                p.x+=p.vx; p.y+=p.vy; p.life-=0.004;
-                if (p.life<=0||p.y<-10) { particles[i]=mkp(); continue; }
-                ctx.beginPath();
-                ctx.arc(p.x,p.y,p.size,0,6.28);
-                ctx.fillStyle=`rgba(200,160,60,${p.life*0.7})`;
-                ctx.fill();
-            }
-            requestAnimationFrame(frame);
-        }
-        frame();
-    })();
-
-    // ── UI logic ──────────────────────────────────────────────────────────────────
-    let currentToken = '';
-
-    function switchTab(tab) {
-        document.getElementById('form-login').style.display    = tab==='login'    ? '' : 'none';
-        document.getElementById('form-register').style.display = tab==='register' ? '' : 'none';
-        document.getElementById('tab-login').classList.toggle('active',    tab==='login');
-        document.getElementById('tab-register').classList.toggle('active', tab==='register');
-        showMsg('', '');
+        requestAnimationFrame(frame);
     }
+    frame();
+})();
 
-    function showMsg(type, text) {
-        const el = document.getElementById('msg');
-        el.className = 'msg' + (type ? ' '+type : '');
-        el.textContent = text;
-        el.style.display = text ? 'block' : 'none';
-    }
+let currentToken = '';
 
-    function showToken(username, token) {
-        currentToken = token;
-        document.getElementById('welcome-text').textContent = `Welcome, ${username}!`;
-        document.getElementById('token-display').textContent = token;
-        document.getElementById('token-box').style.display = 'block';
-        localStorage.setItem('aetheris_token', token);
-        localStorage.setItem('aetheris_username', username);
-    }
+function switchTab(tab) {
+    document.getElementById('form-login').style.display = tab==='login' ? '' : 'none';
+    document.getElementById('form-register').style.display = tab==='register' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active', tab==='login');
+    document.getElementById('tab-register').classList.toggle('active', tab==='register');
+    showMsg('','');
+}
 
-    async function doLogin() {
-        const username = document.getElementById('l-user').value.trim();
-        const password = document.getElementById('l-pass').value;
-        if (!username || !password) return showMsg('error', 'Enter username and password.');
-        showMsg('', '');
-        try {
-            const r = await fetch('/api/login', {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ username, password })
-            });
-            const d = await r.json();
-            if (!r.ok) return showMsg('error', d.error || 'Login failed.');
-            showMsg('success', 'Login successful!');
-            showToken(d.username, d.token);
-        } catch(e) { showMsg('error', 'Network error.'); }
-    }
+function showMsg(type, text) {
+    const el = document.getElementById('msg');
+    el.className = 'msg' + (type ? ' '+type : '');
+    el.textContent = text;
+    el.style.display = text ? 'block' : 'none';
+}
 
-    async function doRegister() {
-        const username = document.getElementById('r-user').value.trim();
-        const password = document.getElementById('r-pass').value;
-        const pass2    = document.getElementById('r-pass2').value;
-        if (!username) return showMsg('error', 'Enter a username.');
-        if (password !== pass2) return showMsg('error', 'Passwords do not match.');
-        if (password.length < 6) return showMsg('error', 'Password too short (min 6).');
-        showMsg('', '');
-        try {
-            const r = await fetch('/api/register', {
-                method: 'POST', headers: {'Content-Type':'application/json'},
-                body: JSON.stringify({ username, password })
-            });
-            const d = await r.json();
-            if (!r.ok) return showMsg('error', d.error || 'Registration failed.');
-            showMsg('success', 'Account created!');
-            showToken(d.username, d.token);
-        } catch(e) { showMsg('error', 'Network error.'); }
-    }
+function showToken(username, token) {
+    currentToken = token;
+    document.getElementById('welcome-text').textContent = `Welcome, ${username}`;
+    document.getElementById('token-display').textContent = token;
+    document.getElementById('token-box').style.display = 'block';
+    localStorage.setItem('aetheris_token', token);
+    localStorage.setItem('aetheris_username', username);
+}
 
-    function copyToken() {
-        navigator.clipboard.writeText(currentToken).then(()=>{
-            showMsg('success', 'Token copied to clipboard!');
-            setTimeout(()=>showMsg('',''),2000);
-        }).catch(()=>{
-            showMsg('error', 'Copy failed — select the token manually.');
+async function doLogin() {
+    const username = document.getElementById('l-user').value.trim();
+    const password = document.getElementById('l-pass').value;
+    if (!username || !password) return showMsg('error', 'Enter username and password.');
+    showMsg('','');
+    try {
+        const r = await fetch('/api/login', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ username, password })
         });
-    }
+        const d = await r.json();
+        if (!r.ok) return showMsg('error', d.error || 'Login failed.');
+        showMsg('success', 'Signed in!');
+        showToken(d.username, d.token);
+    } catch(e) { showMsg('error', 'Network error.'); }
+}
 
-    // Restore session if already have one
-    (async function() {
-        const tok  = localStorage.getItem('aetheris_token');
-        const user = localStorage.getItem('aetheris_username');
-        if (!tok) return;
-        try {
-            const r = await fetch('/api/me', { headers: { Authorization: 'Bearer '+tok }});
-            if (r.ok) { const d = await r.json(); showToken(d.username, tok); }
-        } catch {}
-    })();
+async function doRegister() {
+    const username = document.getElementById('r-user').value.trim();
+    const password = document.getElementById('r-pass').value;
+    const pass2 = document.getElementById('r-pass2').value;
+    if (!username) return showMsg('error', 'Enter a username.');
+    if (password !== pass2) return showMsg('error', 'Passwords do not match.');
+    if (password.length < 6) return showMsg('error', 'Password too short (min 6).');
+    showMsg('','');
+    try {
+        const r = await fetch('/api/register', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ username, password })
+        });
+        const d = await r.json();
+        if (!r.ok) return showMsg('error', d.error || 'Registration failed.');
+        showMsg('success', 'Account created!');
+        showToken(d.username, d.token);
+    } catch(e) { showMsg('error', 'Network error.'); }
+}
 
-    // Enter key support
-    document.addEventListener('keydown', e => {
-        if (e.key !== 'Enter') return;
-        if (document.getElementById('form-login').style.display !== 'none') doLogin();
-        else doRegister();
-    });
+function copyToken() {
+    navigator.clipboard.writeText(currentToken).then(()=>{
+        showMsg('success', 'Token copied!');
+        setTimeout(()=>showMsg('',''),2000);
+    }).catch(()=> showMsg('error', 'Copy failed — select manually.'));
+}
+
+(async function() {
+    const tok = localStorage.getItem('aetheris_token');
+    if (!tok) return;
+    try {
+        const r = await fetch('/api/me', { headers: { Authorization: 'Bearer '+tok }});
+        if (r.ok) { const d = await r.json(); showToken(d.username, tok); }
+    } catch {}
+})();
+
+document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('form-login').style.display !== 'none') doLogin();
+    else doRegister();
+});
 </script>
 </body>
 </html>

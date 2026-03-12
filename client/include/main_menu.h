@@ -11,6 +11,7 @@ enum class GameState {
     Settings,
     WorldSelect,
     Multiplayer,
+    Account,
     Connecting,
     InGame,
 };
@@ -28,6 +29,7 @@ struct GameSettings {
 
     char  lastServer[128] = "127.0.0.1";
     int   serverPort      = 7777;
+    int   authPort        = 8080;
 
     void save(const char* path = "settings.cfg") const;
     void load(const char* path = "settings.cfg");
@@ -43,6 +45,14 @@ struct MenuParticle {
     float x, y, vx, vy, life, size, brightness;
 };
 
+// Persistent account state across screens
+struct AccountState {
+    bool  loggedIn = false;
+    char  username[64] = {};
+    char  sessionToken[512] = {};
+    char  uid[128] = {};
+};
+
 class MainMenu {
 public:
     MainMenu();
@@ -51,6 +61,7 @@ public:
     GameState draw(float dt, int screenW, int screenH);
 
     GameSettings& settings() { return _settings; }
+    AccountState& account()  { return _account; }
 
     std::string pendingServerIP;
     int         pendingServerPort = 7777;
@@ -59,6 +70,7 @@ public:
 private:
     GameState    _state = GameState::MainMenu;
     GameSettings _settings;
+    AccountState _account;
 
     static constexpr int MAX_PARTICLES = 80;
     MenuParticle _particles[MAX_PARTICLES]{};
@@ -66,14 +78,17 @@ private:
     int          _hoveredBtn  = -1;
     int          _settingsTab = 0;
 
-    // Multiplayer / login
+    // Account / login
+    char  _accUser[64]     = {};
+    char  _accPass[64]     = {};
+    char  _accPass2[64]    = {};
+    bool  _accLoginMode    = true;
+    char  _accStatusMsg[128] = {};
+    bool  _accStatusIsError  = false;
+
+    // Multiplayer (now just server connect, no login)
     char  _serverInput[128] = "127.0.0.1";
     int   _portInput        = 7777;
-    char  _username[64]     = {};
-    char  _password[64]     = {};
-    bool  _loginMode        = true;
-    char  _statusMsg[128]   = {};
-    bool  _statusIsError    = false;
 
     // Connecting screen
     float _connectTimer     = 0.f;
@@ -93,7 +108,11 @@ private:
     GameState drawSettings   (ImDrawList* dl, float cx, float cy, int sw, int sh, float dt);
     GameState drawWorldSel   (ImDrawList* dl, float cx, float cy, int sw, int sh, float dt);
     GameState drawMultiplayer(ImDrawList* dl, float cx, float cy, int sw, int sh, float dt);
+    GameState drawAccount    (ImDrawList* dl, float cx, float cy, int sw, int sh, float dt);
     GameState drawConnecting (ImDrawList* dl, float cx, float cy, int sw, int sh, float dt);
+
+    // Account button drawn on main page (top-right)
+    void drawAccountButton(ImDrawList* dl, int sw, int sh, GameState& next);
 
     bool menuButton(ImDrawList* dl, const char* label, float cx, float y,
                     float w, float h, bool isHovered, bool& outHovered);
