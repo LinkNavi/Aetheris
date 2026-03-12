@@ -1,0 +1,234 @@
+#!/usr/bin/env python3
+"""texproc - Texture processor with kitty image preview"""
+
+import argparse
+import subprocess
+import sys
+import os
+import base64
+import zipfile
+import tempfile
+from pathlib import Path
+
+try:
+    from PIL import Image
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.prompt import Prompt, Confirm
+except ImportError:
+    print("pip install pillow rich --break-system-packages")
+    sys.exit(1)
+
+console = Console()
+
+
+def kitty_show(img: Image.Image, label: str = "", max_width: int = 400):
+    display = img.copy()
+    if display.width > max_width:
+        ratio = max_width / display.width
+        display = display.resize((max_width, int(display.height * ratio)), Image.LANCZOS)
+
+    display = display.convert("RGBA")
+    data = display.tobytes()
+    enc = base64.standard_b64encode(data).decode()
+
+    chunk_size = 4096
+    first = True
+    while enc:
+        chunk = enc[:chunk_size]
+        enc = enc[chunk_size:]
+        more = 1 if enc else 0
+        if first:
+            sys.stdout.write(f"\033_Ga=T,f=32,s={display.width},v={display.height},m={more};{chunk}\033\\")
+            first = False
+        else:
+            sys.stdout.write(f"\033_Gm={more};{chunk}\033\\")
+        sys.stdout.flush()
+
+    if label:
+        console.print(f"[cyan]{label}[/cyan] [dim]({img.width}x{img.height})[/dim]")
+    print()
+
+
+def is_kitty() -> bool:
+    return os.environ.get("TERM") == "xterm-kitty" or os.environ.get("KITTY_WINDOW_ID") is not None
+
+
+def ascii_preview(img: Image.Image, label: str):
+    chars = " .:-=+*#%@"
+    w = 60
+    aspect = img.height / img.width
+    h = int(w * aspect * 0.45)
+    small = img.resize((w, h)).convert("L")
+    rows = ["".join(chars[int(small.getpixel((x, y)) / 256 * len(chars))] for x in range(small.width))
+            for y in range(small.height)]
+    console.print(Panel("\n".join(rows), title=f"[cyan]{label}[/cyan] ({img.width}x{img.height})"))
+
+
+def show_image(img: Image.Image, label: str):
+    if is_kitty():
+        console.print(f"\n[cyan]{label}[/cyan]")
+        kitty_show(img, "")
+    else:
+        ascii_preview(img, label)
+
+
+def crop_center(img: Image.Image, crop_pct: float) -> Image.Image:
+    w, h = img.size
+    size = int(min(w, h) * crop_pct)
+    left = (w - size) // 2
+    top = (h - size) // 2
+    return img.crop((left, top, left + size, top + size))
+
+
+def process_imagemagick(input_path: str, output_path: str, crop_pct: float, target_size: int):
+    img = Image.open(input_path)
+    w, h = img.size
+    size = int(min(w, h) * crop_pct)
+    left = (w - size) // 2
+    top = (h - size) // 2
+    subprocess.run([
+        "convert", input_path,
+        "-crop", f"{size}x{size}+{left}+{top}",
+        "+repage",
+        "-resize", f"{target_size}x{target_size}",
+        output_path
+    ], check=True)
+
+
+def tui_mode(input_path: str, output_path: str):
+    console.clear()
+    console.rule("[bold cyan]texproc[/bold cyan]")
+
+    try:
+        img = Image.open(input_path)
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+
+    show_image(img, f"Original — {Path(input_path).name}")
+
+    while True:
+        crop_pct = float(Prompt.ask("[yellow]Crop % of center (0.1-1.0)[/yellow]", default="0.8"))
+        if 0.1 <= crop_pct <= 1.0:
+            break
+        console.print("[red]Must be 0.1-1.0[/red]")
+
+    cropped = crop_center(img, crop_pct)
+    show_image(cropped, "After Crop")
+
+    sizes = ["256", "512", "1024", "2048"]
+    console.print("[yellow]Target size:[/yellow]")
+    for i, s in enumerate(sizes):
+        console.print(f"  [bold]{i+1}[/bold]. {s}x{s}")
+    choice = Prompt.ask("Choose", choices=["1","2","3","4"], default="2")
+    target_size = int(sizes[int(choice)-1])
+
+    scaled = cropped.resize((target_size, target_size), Image.LANCZOS)
+    show_image(scaled, f"Final — {target_size}x{target_size}")
+
+    if Confirm.ask("[green]Save?[/green]", default=True):
+        process_imagemagick(input_path, output_path, crop_pct, target_size)
+        console.print(f"[bold green]✓ Saved → {output_path}[/bold green]")
+    else:
+        console.print("[yellow]Cancelled[/yellow]")
+
+
+def extract_zip(zip_path: str) -> str:
+    """Extract zip and let user pick an image, returns chosen image path"""
+    IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".tga", ".tiff", ".bmp", ".webp", ".exr"}
+    with zipfile.ZipFile(zip_path) as z:
+        images = [f for f in z.namelist() if Path(f).suffix.lower() in IMAGE_EXTS]
+
+    if not images:
+        console.print("[red]No images found in zip[/red]")
+        sys.exit(1)
+
+    tmpdir = tempfile.mkdtemp(prefix="texproc_")
+    with zipfile.ZipFile(zip_path) as z:
+        z.extractall(tmpdir)
+
+    console.print("\n[yellow]Images found in zip:[/yellow]")
+    for i, f in enumerate(images):
+        console.print(f"  [bold]{i+1}[/bold]. {f}")
+
+    choice = Prompt.ask("Pick image", choices=[str(i+1) for i in range(len(images))], default="1")
+    return os.path.join(tmpdir, images[int(choice)-1])
+
+
+
+    console.clear()
+    console.rule("[bold cyan]texproc[/bold cyan]")
+
+    try:
+        img = Image.open(input_path)
+    except Exception as e:
+        console.print(f"[red]Error: {e}[/red]")
+        sys.exit(1)
+
+    show_image(img, f"Original — {Path(input_path).name}")
+
+    while True:
+        crop_pct = float(Prompt.ask("[yellow]Crop % of center (0.1-1.0)[/yellow]", default="0.8"))
+        if 0.1 <= crop_pct <= 1.0:
+            break
+        console.print("[red]Must be 0.1-1.0[/red]")
+
+    cropped = crop_center(img, crop_pct)
+    show_image(cropped, "After Crop")
+
+    sizes = ["256", "512", "1024", "2048"]
+    console.print("[yellow]Target size:[/yellow]")
+    for i, s in enumerate(sizes):
+        console.print(f"  [bold]{i+1}[/bold]. {s}x{s}")
+    choice = Prompt.ask("Choose", choices=["1","2","3","4"], default="2")
+    target_size = int(sizes[int(choice)-1])
+
+    scaled = cropped.resize((target_size, target_size), Image.LANCZOS)
+    show_image(scaled, f"Final — {target_size}x{target_size}")
+
+    if Confirm.ask("[green]Save?[/green]", default=True):
+        process_imagemagick(input_path, output_path, crop_pct, target_size)
+        console.print(f"[bold green]✓ Saved → {output_path}[/bold green]")
+    else:
+        console.print("[yellow]Cancelled[/yellow]")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Texture crop + scale — kitty image preview")
+    parser.add_argument("input", nargs="?", help="Input image")
+    parser.add_argument("-o", "--output", help="Output path")
+    parser.add_argument("-c", "--crop", type=float, default=0.8, help="Crop %% (0.1-1.0)")
+    parser.add_argument("-s", "--size", type=int, default=512, help="Output px size")
+    parser.add_argument("--tui", action="store_true", help="TUI mode")
+    args = parser.parse_args()
+
+    if not args.input:
+        console.rule("[bold cyan]texproc[/bold cyan]")
+        args.input = Prompt.ask("[yellow]Input image path[/yellow]")
+        args.tui = True
+
+    if not os.path.exists(args.input):
+        console.print(f"[red]File not found: {args.input}[/red]")
+        sys.exit(1)
+
+    # Handle zip
+    if Path(args.input).suffix.lower() == ".zip":
+        args.input = extract_zip(args.input)
+        if not args.output:
+            p = Path(args.input)
+            args.output = str(p.parent / f"{p.stem}_out{p.suffix}")
+
+    if not args.output:
+        p = Path(args.input)
+        args.output = str(p.parent / f"{p.stem}_out{p.suffix}")
+
+    if args.tui:
+        tui_mode(args.input, args.output)
+    else:
+        process_imagemagick(args.input, args.output, args.crop, args.size)
+        print(f"Done: {args.output}")
+
+
+if __name__ == "__main__":
+    main()

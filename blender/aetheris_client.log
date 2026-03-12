@@ -1,0 +1,136 @@
+import bpy
+import bmesh
+
+def create_tunic():
+    # Duplicate body mesh and offset outward
+    body = bpy.data.objects.get("Cube")
+    if not body:
+        print("No object named 'Cube' found")
+        return
+
+    bpy.ops.object.select_all(action='DESELECT')
+    body.select_set(True)
+    bpy.context.view_layer.objects.active = body
+
+    bpy.ops.object.duplicate()
+    tunic = bpy.context.active_object
+    tunic.name = "Tunic"
+
+    # Go into edit mode and select torso faces (rough Z range)
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(tunic.data)
+
+    bpy.ops.mesh.select_all(action='DESELECT')
+
+    # Select faces roughly in torso Z range (adjust if your model scale differs)
+    for face in bm.faces:
+        center_z = face.calc_center_median().z
+        if 0.5 < center_z < 1.6:
+            face.select = True
+        
+    bmesh.update_edit_mesh(tunic.data)
+
+    # Keep only selected, delete rest
+    bpy.ops.mesh.select_all(action='INVERT')
+    bpy.ops.mesh.delete(type='FACE')
+
+    # Inflate outward
+    bpy.ops.transform.shrink_fatten(value=0.05)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print("Tunic created")
+
+
+def create_hood():
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.22, location=(0, 0, 1.75), segments=8, ring_count=6)
+    hood = bpy.context.active_object
+    hood.name = "Hood"
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(hood.data)
+
+    # Delete bottom half
+    bpy.ops.mesh.select_all(action='DESELECT')
+    for face in bm.faces:
+        if face.calc_center_median().z < 1.75:
+            face.select = True
+
+    bmesh.update_edit_mesh(hood.data)
+    bpy.ops.mesh.delete(type='FACE')
+
+    # Delete front faces to create hood opening
+    bpy.ops.mesh.select_all(action='DESELECT')
+    for face in bm.faces:
+        if face.calc_center_median().y > 0.1:
+            face.select = True
+
+    bmesh.update_edit_mesh(hood.data)
+    bpy.ops.mesh.delete(type='FACE')
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print("Hood created")
+
+
+def create_cloak():
+    bpy.ops.mesh.primitive_plane_add(size=0.9, location=(0, -0.1, 1.3))
+    cloak = bpy.context.active_object
+    cloak.name = "Cloak"
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.subdivide(number_cuts=4)
+
+    # Scale bottom wider to drape effect
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bm = bmesh.from_edit_mesh(cloak.data)
+    for vert in bm.verts:
+        if vert.co.z < 1.3:
+            vert.select = True
+    bmesh.update_edit_mesh(cloak.data)
+    bpy.ops.transform.resize(value=(1.4, 1, 1))
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Add solidify modifier
+    cloak.modifiers.new(name="Solidify", type='SOLIDIFY')
+    cloak.modifiers["Solidify"].thickness = 0.02
+
+    print("Cloak created")
+
+
+def create_boots():
+    body = bpy.data.objects.get("Cube")
+    if not body:
+        return
+
+    bpy.ops.object.select_all(action='DESELECT')
+    body.select_set(True)
+    bpy.context.view_layer.objects.active = body
+
+    bpy.ops.object.duplicate()
+    boots = bpy.context.active_object
+    boots.name = "Boots"
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bm = bmesh.from_edit_mesh(boots.data)
+
+    bpy.ops.mesh.select_all(action='DESELECT')
+
+    # Select lower leg/foot faces
+    for face in bm.faces:
+        if face.calc_center_median().z < 0.5:
+            face.select = True
+
+    bmesh.update_edit_mesh(boots.data)
+    bpy.ops.mesh.select_all(action='INVERT')
+    bpy.ops.mesh.delete(type='FACE')
+
+    bpy.ops.transform.shrink_fatten(value=0.04)
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    print("Boots created")
+
+
+create_tunic()
+create_hood()
+create_cloak()
+create_boots()
