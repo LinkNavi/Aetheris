@@ -13,6 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
+#define VMA_VULKAN_VERSION 1002000  // force VMA to use Vulkan 1.2 API only
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 
@@ -142,8 +143,8 @@ VkContext vk_init(GLFWwindow *window) {
   vkEnumerateInstanceVersion(&instanceVersion);
   uint32_t major = VK_VERSION_MAJOR(instanceVersion);
   uint32_t minor = VK_VERSION_MINOR(instanceVersion);
-  if (minor > 3)
-    minor = 3; // cap at 1.3, highest we use
+  if (minor > 2)
+    minor = 2; // cap at 1.3, highest we use
   if (major < 1 || minor < 1)
     throw std::runtime_error("Vulkan 1.1 minimum required");
   Log::info(std::string("Vulkan ") + std::to_string(major) + "." +

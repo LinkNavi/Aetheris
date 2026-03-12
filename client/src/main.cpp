@@ -116,27 +116,7 @@ int main(int argc, char **argv) {
 
   Net::init();
   Net::Host host;
-
-  ENetAddress addr{};
-  enet_address_set_host(&addr, "127.0.0.1");
-  addr.port = Config::SERVER_PORT;
-
-  ENetPeer *server = enet_host_connect(host.get(), &addr, 2, 0);
-  if (!server) {
-    Log::err("enet_host_connect failed");
-    return 1;
-  }
-
-  {
-    ENetEvent ev;
-    if (enet_host_service(host.get(), &ev, 5000) > 0 &&
-        ev.type == ENET_EVENT_TYPE_CONNECT) {
-      Log::info("Connected to server");
-    } else {
-      Log::err("Connection failed");
-      return 1;
-    }
-  }
+  ENetPeer *server = nullptr;
 
   using Clock = std::chrono::steady_clock;
   auto prev = Clock::now();
@@ -144,49 +124,56 @@ int main(int argc, char **argv) {
   std::vector<ChunkMesh> readyMeshes;
 
   while (!window.shouldClose()) {
-         auto now = Clock::now();
-         float dt = std::chrono::duration<float>(now - prev).count();
-         prev = now;
-         if (dt > 0.05f) dt = 0.05f;
+    auto now = Clock::now();
+    float dt = std::chrono::duration<float>(now - prev).count();
+    prev = now;
+    if (dt > 0.05f) dt = 0.05f;
+    input.beginFrame();
 
-         input.beginFrame();
+    if (gameState != GameState::InGame) {
+      if (input.cursorCaptured()) input.captureCursor(false);
+      int w, h; window.getSize(w, h);
 
-         // ── Main menu ─────────────────────────────────────────────────────────
-         if (gameState != GameState::InGame) {
-             // Release cursor while in menu
-             if (input.cursorCaptured()) input.captureCursor(false);
+      ImGui_ImplVulkan_NewFrame();
+      ImGui_ImplGlfw_NewFrame();
+      ImGui::NewFrame();
 
-             int w, h;
-             window.getSize(w, h);
+      GameState next = mainMenu.draw(dt, w, h);
 
-             ImGui_ImplVulkan_NewFrame();
-             ImGui_ImplGlfw_NewFrame();
-             ImGui::NewFrame();
+      if (next == GameState::Connecting) {
+        if (mainMenu.pendingServerIP == "__QUIT__") break;
 
-             GameState next = mainMenu.draw(dt, w, h);
+        const char* ip = mainMenu.pendingServerIP.c_str();
+        int port = mainMenu.pendingServerPort;
 
-             if (next == GameState::Connecting) {
-                 if (mainMenu.pendingServerIP == "__QUIT__") break; // exit
+        ENetAddress addr2{};
+        if (enet_address_set_host(&addr2, ip) == 0) {
+          addr2.port = (uint16_t)port;
+          if (server) { enet_peer_disconnect_now(server, 0); server = nullptr; }
+          server = enet_host_connect(host.get(), &addr2, 2, 0);
+          if (server) {
+            ENetEvent ev2;
+            if (enet_host_service(host.get(), &ev2, 5000) > 0 &&
+                ev2.type == ENET_EVENT_TYPE_CONNECT) {
+              Log::info(std::string("Connected to ") + ip);
+              gameState = GameState::InGame;
+              input.captureCursor(true);
+                } else {
+                  enet_peer_reset(server);
+                  server = nullptr;
+                }
+          }
+        }
+      } else {
+        gameState = next;
+      }
 
-                 // TODO: initiate ENet connect to mainMenu.pendingServerIP
-                 //       on success set gameState = GameState::InGame;
-                 //       for now just go straight in:
-                 gameState = GameState::InGame;
-                 input.captureCursor(true);
-             } else {
-                 gameState = next;
-             }
-
-             // Apply settings every frame while in menu
-             // (mouse sens will take effect next InGame frame)
-             // Config::MOUSE_SENS is constexpr so you'll need a runtime override:
-             // g_mouseSens = mainMenu.settings().mouseSens;
-
-             ImGui::Render();
-             vk_draw(ctx, glm::mat4(1.f), 0.f, {0.02f,0.02f,0.08f}); // dark clear
-             continue;
-         }
-
+      ImGui::Render();
+      vk_draw(ctx, glm::mat4(1.f), 0.f, {0.02f, 0.02f, 0.08f}, nullptr, glm::mat4(1.f));
+      continue;
+    }
+    if (!server) continue;
+    if (!server) continue;
     auto &cinv = reg.get<CInventory>(player.entity());
 
     // ── ] key — toggle viewmodel UI panels ───────────────────────────────
