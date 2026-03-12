@@ -498,15 +498,67 @@ GameState MainMenu::drawAccount(ImDrawList* dl, float cx, float cy,
         else if (_accPass[0]==0) { snprintf(_accStatusMsg,sizeof(_accStatusMsg),"Password required."); _accStatusIsError=true; }
         else if (!_accLoginMode && strcmp(_accPass, _accPass2)!=0) {
             snprintf(_accStatusMsg,sizeof(_accStatusMsg),"Passwords do not match."); _accStatusIsError=true;
+        } } else {
+        const char* endpoint = _accLoginMode ? "/api/login" : "/api/register";
+        std::string json = std::string("{\"username\":\"") + _accUser +
+                           "\",\"password\":\"" + _accPass + "\"}";
+ 
+        // Auth server uses the same IP but on authPort
+        auto resp = HttpClient::post("127.0.0.1", _settings.authPort, endpoint, json);
+ 
+        if (resp.ok()) {
+            // Minimal JSON field extraction
+            auto extract = [&](const std::string& body, const char* key) -> std::string {
+                std::string k1 = std::string("\"") + key + "\":\"";
+                std::string k2 = std::string("\"") + key + "\": \"";
+                auto pos = body.find(k1);
+                if (pos == std::string::npos) pos = body.find(k2);
+                if (pos == std::string::npos) return "";
+                auto start = body.find('"', pos + strlen(key) + 2);
+                if (start == std::string::npos) return "";
+                start++;
+                auto end = body.find('"', start);
+                if (end == std::string::npos) return "";
+                return body.substr(start, end - start);
+            };
+ 
+            std::string token    = extract(resp.body, "token");
+            std::string username = extract(resp.body, "username");
+            std::string uid      = extract(resp.body, "uid");
+ 
+            if (!token.empty()) {
+                _account.loggedIn = true;
+                snprintf(_account.username, sizeof(_account.username), "%s",
+                         username.empty() ? _accUser : username.c_str());
+                snprintf(_account.sessionToken, sizeof(_account.sessionToken), "%s",
+                         token.c_str());
+                snprintf(_account.uid, sizeof(_account.uid), "%s", uid.c_str());
+                snprintf(_accStatusMsg, sizeof(_accStatusMsg), "%s",
+                         _accLoginMode ? "Signed in!" : "Account created!");
+                _accStatusIsError = false;
+            } else {
+                snprintf(_accStatusMsg, sizeof(_accStatusMsg),
+                         "Server responded OK but no token received.");
+                _accStatusIsError = true;
+            }
         } else {
-            // TODO: HTTP request to auth server
-            // For now, fake login for testing
-            _account.loggedIn = true;
-            snprintf(_account.username, sizeof(_account.username), "%s", _accUser);
-            snprintf(_account.sessionToken, sizeof(_account.sessionToken), "tok_%s_%d", _accUser, (int)_time);
-            snprintf(_accStatusMsg,sizeof(_accStatusMsg),"%s", _accLoginMode?"Signed in!":"Account created!");
-            _accStatusIsError = false;
+            std::string errMsg = "Request failed.";
+            auto extract_err = [&](const std::string& body) -> std::string {
+                auto p = body.find("\"error\":\"");
+                if (p == std::string::npos) p = body.find("\"error\": \"");
+                if (p == std::string::npos) return "";
+                auto s = body.find('"', p + 8); if (s == std::string::npos) return "";
+                s++;
+                auto e = body.find('"', s); if (e == std::string::npos) return "";
+                return body.substr(s, e - s);
+            };
+            std::string parsed = extract_err(resp.body);
+            if (!parsed.empty()) errMsg = parsed;
+            if (resp.status == 0) errMsg = "Cannot reach auth server.";
+            snprintf(_accStatusMsg, sizeof(_accStatusMsg), "%s", errMsg.c_str());
+            _accStatusIsError = true;
         }
+    }
     }
     return GameState::Account;
 }

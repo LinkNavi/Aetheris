@@ -10,6 +10,7 @@
 #include "chunk.h"
 
 struct ViewModelRenderer;
+class RemotePlayerRenderer;
 
 struct GpuChunk {
     uint32_t vertexOffset;
@@ -138,7 +139,8 @@ void      vk_destroy(VkContext& ctx);
 void      vk_draw(VkContext& ctx, const glm::mat4& viewProj,
                   float sunIntensity, glm::vec3 skyColor,
                   const ViewModelRenderer* viewModel = nullptr,
-                  const glm::mat4& proj = glm::mat4(1.f));
+                  const glm::mat4& proj = glm::mat4(1.f),
+                  const RemotePlayerRenderer* remotePlayers = nullptr);
 
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
 void      vk_remove_chunk(VkContext& ctx, ChunkCoord coord);

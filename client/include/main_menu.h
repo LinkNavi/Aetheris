@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include "http_client.h"
 
 enum class GameState {
     MainMenu,

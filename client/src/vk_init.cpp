@@ -13,11 +13,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
-#define VMA_VULKAN_VERSION 1002000  // force VMA to use Vulkan 1.2 API only
+#define VMA_VULKAN_VERSION 1002000 // force VMA to use Vulkan 1.2 API only
 #define VMA_IMPLEMENTATION
-#include <vk_mem_alloc.h>
-
+#include "remote_players.h"
 #include <stb_image.h>
+#include <vk_mem_alloc.h>
 static void check(VkResult r, const char *msg) {
   if (r != VK_SUCCESS)
     throw std::runtime_error(msg);
@@ -497,10 +497,10 @@ VkContext vk_init(GLFWwindow *window) {
   vertexInput.vertexBindingDescriptionCount = 1;
   vertexInput.pVertexBindingDescriptions = &vBinding;
   vertexInput.vertexAttributeDescriptionCount = 3;
-attrs[2].binding  = 0;
-attrs[2].location = 2;
-attrs[2].format   = VK_FORMAT_R32G32_SFLOAT;
-attrs[2].offset   = offsetof(Vertex, uv);
+  attrs[2].binding = 0;
+  attrs[2].location = 2;
+  attrs[2].format = VK_FORMAT_R32G32_SFLOAT;
+  attrs[2].offset = offsetof(Vertex, uv);
   vertexInput.pVertexAttributeDescriptions = attrs;
 
   VkPipelineInputAssemblyStateCreateInfo ia{};
@@ -560,7 +560,7 @@ attrs[2].offset   = offsetof(Vertex, uv);
   layoutCI.setLayoutCount = 2;
   layoutCI.pSetLayouts = setLayouts;
   layoutCI.pPushConstantRanges = &pushRange;
-layoutCI.pushConstantRangeCount = 1;
+  layoutCI.pushConstantRangeCount = 1;
   check(vkCreatePipelineLayout(ctx.device.device, &layoutCI, nullptr,
                                &ctx.pipelineLayout),
         "pipeline layout");
@@ -853,9 +853,8 @@ void vk_remove_chunk(VkContext &ctx, ChunkCoord coord) {
 
 void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
              glm::vec3 skyColor, const ViewModelRenderer *viewModel,
-             const glm::mat4 &proj) {
-// just before the drawCount loop:
-
+             const glm::mat4 &proj, const RemotePlayerRenderer *remotePlayers) {
+  // just before the drawCount loop:
 
   flushUploads(ctx);
 
@@ -955,10 +954,11 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
   VkDeviceSize zero = 0;
   vkCmdBindVertexBuffers(cmd, 0, 1, &ctx.mega.vertexBuffer, &zero);
   vkCmdBindIndexBuffer(cmd, ctx.mega.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
- vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        ctx.pipelineLayout, 0, 1, &ctx.dsSets[frame], 0, nullptr);
-vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                        ctx.pipelineLayout, 1, 1, &ctx.atlasSet, 0, nullptr);
+  vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          ctx.pipelineLayout, 0, 1, &ctx.dsSets[frame], 0,
+                          nullptr);
+  vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          ctx.pipelineLayout, 1, 1, &ctx.atlasSet, 0, nullptr);
 
   struct GlobalPC {
     glm::mat4 viewProj;
@@ -976,6 +976,9 @@ vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
   // ── View model (drawn after terrain, depth test disabled so always on top) ─
   if (viewModel)
     viewModel->draw(cmd, proj);
+  if (remotePlayers && viewModel)
+    remotePlayers->draw(cmd, viewModel->pipeline, viewModel->pipelineLayout,
+                        viewProj);
   // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);
@@ -1043,11 +1046,16 @@ void vk_destroy(VkContext &ctx) {
   vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
 
   vkDestroyCommandPool(ctx.device.device, ctx.commandPool, nullptr);
-if (ctx.atlasSampler)   vkDestroySampler(ctx.device.device, ctx.atlasSampler, nullptr);
-if (ctx.atlasImageView) vkDestroyImageView(ctx.device.device, ctx.atlasImageView, nullptr);
-if (ctx.atlasImage)     vmaDestroyImage(ctx.allocator, ctx.atlasImage, ctx.atlasAlloc);
-if (ctx.atlasPool)      vkDestroyDescriptorPool(ctx.device.device, ctx.atlasPool, nullptr);
-if (ctx.atlasLayout)    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.atlasLayout, nullptr);
+  if (ctx.atlasSampler)
+    vkDestroySampler(ctx.device.device, ctx.atlasSampler, nullptr);
+  if (ctx.atlasImageView)
+    vkDestroyImageView(ctx.device.device, ctx.atlasImageView, nullptr);
+  if (ctx.atlasImage)
+    vmaDestroyImage(ctx.allocator, ctx.atlasImage, ctx.atlasAlloc);
+  if (ctx.atlasPool)
+    vkDestroyDescriptorPool(ctx.device.device, ctx.atlasPool, nullptr);
+  if (ctx.atlasLayout)
+    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.atlasLayout, nullptr);
   for (auto &iv : ctx.swapImageViews)
     vkDestroyImageView(ctx.device.device, iv, nullptr);
 
