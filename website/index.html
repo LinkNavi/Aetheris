@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Aetheris — Account</title>
+    <style>
+        :root {
+            --COL_BG_DARK:    rgba(8, 8, 8, 1);
+            --COL_BG_MID:     rgba(16, 16, 16, 1);
+            --COL_PANEL:      rgba(18, 18, 18, 0.90);
+            --COL_PANEL_EDGE: rgba(70, 70, 70, 0.71);
+            --COL_GREY:       rgba(160, 160, 160, 1);
+            --COL_GREY_DIM:   rgba(90, 90, 90, 0.71);
+            --COL_GREY_GLOW:  rgba(180, 180, 180, 0.12);
+            --COL_WHITE:      rgba(220, 220, 220, 1);
+            --COL_WHITE_DIM:  rgba(130, 130, 130, 0.71);
+            --COL_RED:        rgba(200, 50, 40, 1);
+            --COL_BTN_HOVER:  rgba(45, 45, 45, 0.78);
+            --COL_BTN_NORM:   rgba(22, 22, 22, 0.63);
+            --COL_GREEN:      rgba(60, 200, 60, 1);
+
+            --bg:       var(--COL_BG_DARK);
+            --panel:    var(--COL_PANEL);
+            --border:   var(--COL_PANEL_EDGE);
+            --gold:     var(--COL_GREY);
+            --gold2:    var(--COL_GREY);
+            --text:     var(--COL_WHITE);
+            --dim:      var(--COL_GREY_DIM);
+            --red:      var(--COL_RED);
+            --green:    var(--COL_GREEN);
+            --input-bg: var(--COL_PANEL);
+
+            --radius: 6px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        canvas#bg {
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+        }
+        .container {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 420px;
+            padding: 16px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .logo h1 {
+            font-size: 3rem;
+            letter-spacing: 0.18em;
+            color: var(--gold);
+            text-shadow: 0 0 30px #c8a03c55, 0 0 6px #c8a03c88;
+            font-weight: 700;
+        }
+        .logo p {
+            color: var(--dim);
+            font-size: 0.82rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 32px 32px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            color: var(--dim);
+            border-bottom: 2px solid transparent;
+            transition: color 0.15s, border-color 0.15s;
+            user-select: none;
+        }
+        .tab.active {
+            color: var(--gold);
+            border-bottom-color: var(--gold);
+        }
+        .field {
+            margin-bottom: 18px;
+        }
+        .field label {
+            display: block;
+            font-size: 0.78rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--dim);
+            margin-bottom: 6px;
+        }
+        .field input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .field input:focus { border-color: var(--gold); }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3a2808, #5a3c0a);
+            border: 1px solid var(--gold);
+            border-radius: var(--radius);
+            color: var(--gold2);
+            font-size: 1rem;
+            letter-spacing: 0.12em;
+            cursor: pointer;
+            transition: background 0.15s, box-shadow 0.15s;
+            font-weight: 600;
+        }
+        .btn:hover { background: linear-gradient(135deg, #4a3010, #7a5018); box-shadow: 0 0 12px #c8a03c44; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .msg {
+            margin-top: 16px;
+            padding: 10px 14px;
+            border-radius: var(--radius);
+            font-size: 0.88rem;
+            display: none;
+        }
+        .msg.error { background: #2a0a08; border: 1px solid #c8322088; color: #e86050; display: block; }
+        .msg.success { background: #082a08; border: 1px solid #40c84088; color: #60e860; display: block; }
+        .token-box {
+            display: none;
+            margin-top: 20px;
+            padding: 16px;
+            background: #0a0a18;
+            border: 1px solid #3030a0;
+            border-radius: var(--radius);
+        }
+        .token-box h3 { color: var(--gold); font-size: 0.9rem; margin-bottom: 10px; }
+        .token-box .welcome { color: var(--green); margin-bottom: 8px; font-size: 0.95rem; }
+        .token-box .tok-label { font-size: 0.75rem; color: var(--dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+        .token-box .tok {
+            font-family: monospace;
+            font-size: 0.7rem;
+            word-break: break-all;
+            background: #060612;
+            padding: 8px;
+            border-radius: 4px;
+            color: #9090e0;
+            border: 1px solid #2020608a;
+        }
+        .token-box .copy-btn {
+            width: auto;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+        .hint {
+            margin-top: 14px;
+            font-size: 0.8rem;
+            color: var(--dim);
+            text-align: center;
+            line-height: 1.5;
+        }
+        .hint strong { color: var(--gold); }
+    </style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="container">
+    <div class="logo">
+        <h1>AETHERIS</h1>
+        <p>Account Portal</p>
+    </div>
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" id="tab-login" onclick="switchTab('login')">Login</div>
+            <div class="tab" id="tab-register" onclick="switchTab('register')">Register</div>
+        </div>
+
+        <!-- Login form -->
+        <div id="form-login">
+            <div class="field"><label>Username</label><input id="l-user" type="text" autocomplete="username" placeholder="Your username"></div>
+            <div class="field"><label>Password</label><input id="l-pass" type="password" autocomplete="current-password" placeholder="Your password"></div>
+            <button class="btn" onclick="doLogin()">Login</button>
+        </div>
+
+        <!-- Register form -->
+        <div id="form-register" style="display:none">
+            <div class="field"><label>Username</label><input id="r-user" type="text" autocomplete="username" placeholder="3-24 chars, A-Z 0-9 _ -"></div>
+            <div class="field"><label>Password</label><input id="r-pass" type="password" autocomplete="new-password" placeholder="Min 6 characters"></div>
+            <div class="field"><label>Confirm Password</label><input id="r-pass2" type="password" autocomplete="new-password" placeholder="Repeat password"></div>
+            <button class="btn" onclick="doRegister()">Create Account</button>
+        </div>
+
+        <div id="msg" class="msg"></div>
+
+        <div class="token-box" id="token-box">
+            <div class="welcome" id="welcome-text"></div>
+            <div class="tok-label">Session Token (paste into game client)</div>
+            <div class="tok" id="token-display"></div>
+            <button class="btn copy-btn" onclick="copyToken()">📋 Copy Token</button>
+        </div>
+    </div>
+
+    <div class="hint">
+        After logging in, paste your <strong>Session Token</strong> into the<br>
+        Aetheris multiplayer login screen to authenticate.
+    </div>
+</div>
+
+<script>
+    // ── Particle background ───────────────────────────────────────────────────────
+    (function() {
+        const c = document.getElementById('bg');
+        const ctx = c.getContext('2d');
+        let w, h, particles = [];
+        function resize() {
+            w = c.width  = window.innerWidth;
+            h = c.height = window.innerHeight;
+        }
+        resize(); window.addEventListener('resize', resize);
+        function mkp() {
+            return { x: Math.random()*w, y: Math.random()*h+h*0.1,
+                vx: (Math.random()-0.5)*0.3, vy: -0.4-Math.random()*0.8,
+                life: 1, size: 1+Math.random()*2 };
+        }
+        for (let i=0;i<60;i++) { let p=mkp(); p.y=Math.random()*h; particles.push(p); }
+        function frame() {
+            ctx.clearRect(0,0,w,h);
+            // gradient bg
+            let g=ctx.createLinearGradient(0,0,0,h);
+            g.addColorStop(0,'#06050a'); g.addColorStop(1,'#0e0c14');
+            ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+            // radial glow
+            let rg=ctx.createRadialGradient(w/2,h*0.45,0,w/2,h*0.45,w*0.4);
+            rg.addColorStop(0,'rgba(200,160,60,0.04)'); rg.addColorStop(1,'transparent');
+            ctx.fillStyle=rg; ctx.fillRect(0,0,w,h);
+            // particles
+            for (let i=particles.length-1;i>=0;i--) {
+                let p=particles[i];
+                p.x+=p.vx; p.y+=p.vy; p.life-=0.004;
+                if (p.life<=0||p.y<-10) { particles[i]=mkp(); continue; }
+                ctx.beginPath();
+                ctx.arc(p.x,p.y,p.size,0,6.28);
+                ctx.fillStyle=`rgba(200,160,60,${p.life*0.7})`;
+                ctx.fill();
+            }
+            requestAnimationFrame(frame);
+        }
+        frame();
+    })();
+
+    // ── UI logic ──────────────────────────────────────────────────────────────────
+    let currentToken = '';
+
+    function switchTab(tab) {
+        document.getElementById('form-login').style.display    = tab==='login'    ? '' : 'none';
+        document.getElementById('form-register').style.display = tab==='register' ? '' : 'none';
+        document.getElementById('tab-login').classList.toggle('active',    tab==='login');
+        document.getElementById('tab-register').classList.toggle('active', tab==='register');
+        showMsg('', '');
+    }
+
+    function showMsg(type, text) {
+        const el = document.getElementById('msg');
+        el.className = 'msg' + (type ? ' '+type : '');
+        el.textContent = text;
+        el.style.display = text ? 'block' : 'none';
+    }
+
+    function showToken(username, token) {
+        currentToken = token;
+        document.getElementById('welcome-text').textContent = `Welcome, ${username}!`;
+        document.getElementById('token-display').textContent = token;
+        document.getElementById('token-box').style.display = 'block';
+        localStorage.setItem('aetheris_token', token);
+        localStorage.setItem('aetheris_username', username);
+    }
+
+    async function doLogin() {
+        const username = document.getElementById('l-user').value.trim();
+        const password = document.getElementById('l-pass').value;
+        if (!username || !password) return showMsg('error', 'Enter username and password.');
+        showMsg('', '');
+        try {
+            const r = await fetch('/api/login', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ username, password })
+            });
+            const d = await r.json();
+            if (!r.ok) return showMsg('error', d.error || 'Login failed.');
+            showMsg('success', 'Login successful!');
+            showToken(d.username, d.token);
+        } catch(e) { showMsg('error', 'Network error.'); }
+    }
+
+    async function doRegister() {
+        const username = document.getElementById('r-user').value.trim();
+        const password = document.getElementById('r-pass').value;
+        const pass2    = document.getElementById('r-pass2').value;
+        if (!username) return showMsg('error', 'Enter a username.');
+        if (password !== pass2) return showMsg('error', 'Passwords do not match.');
+        if (password.length < 6) return showMsg('error', 'Password too short (min 6).');
+        showMsg('', '');
+        try {
+            const r = await fetch('/api/register', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ username, password })
+            });
+            const d = await r.json();
+            if (!r.ok) return showMsg('error', d.error || 'Registration failed.');
+            showMsg('success', 'Account created!');
+            showToken(d.username, d.token);
+        } catch(e) { showMsg('error', 'Network error.'); }
+    }
+
+    function copyToken() {
+        navigator.clipboard.writeText(currentToken).then(()=>{
+            showMsg('success', 'Token copied to clipboard!');
+            setTimeout(()=>showMsg('',''),2000);
+        }).catch(()=>{
+            showMsg('error', 'Copy failed — select the token manually.');
+        });
+    }
+
+    // Restore session if already have one
+    (async function() {
+        const tok  = localStorage.getItem('aetheris_token');
+        const user = localStorage.getItem('aetheris_username');
+        if (!tok) return;
+        try {
+            const r = await fetch('/api/me', { headers: { Authorization: 'Bearer '+tok }});
+            if (r.ok) { const d = await r.json(); showToken(d.username, tok); }
+        } catch {}
+    })();
+
+    // Enter key support
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        if (document.getElementById('form-login').style.display !== 'none') doLogin();
+        else doRegister();
+    });
+</script>
+</body>
+</html>

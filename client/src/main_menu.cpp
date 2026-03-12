@@ -8,19 +8,18 @@
 #include <algorithm>
 
 // ── Colour palette ────────────────────────────────────────────────────────────
-static constexpr ImU32 COL_BG_DARK    = IM_COL32(6,   5,   8,   255);
-static constexpr ImU32 COL_BG_MID     = IM_COL32(14,  11,  18,  255);
-static constexpr ImU32 COL_PANEL      = IM_COL32(18,  14,  24,  230);
-static constexpr ImU32 COL_PANEL_EDGE = IM_COL32(80,  58,  32,  180);
-static constexpr ImU32 COL_GOLD       = IM_COL32(200, 160, 60,  255);
-static constexpr ImU32 COL_GOLD_DIM   = IM_COL32(120, 88,  28,  180);
-static constexpr ImU32 COL_GOLD_GLOW  = IM_COL32(220, 180, 80,  40);
-static constexpr ImU32 COL_WHITE      = IM_COL32(240, 232, 210, 255);
-static constexpr ImU32 COL_WHITE_DIM  = IM_COL32(160, 148, 120, 180);
+static constexpr ImU32 COL_BG_DARK    = IM_COL32(8,   8,   8,   255);
+static constexpr ImU32 COL_BG_MID     = IM_COL32(16,  16,  16,  255);
+static constexpr ImU32 COL_PANEL      = IM_COL32(18,  18,  18,  230);
+static constexpr ImU32 COL_PANEL_EDGE = IM_COL32(70,  70,  70,  180);
+static constexpr ImU32 COL_GREY       = IM_COL32(160, 160, 160, 255);
+static constexpr ImU32 COL_GREY_DIM   = IM_COL32(90,  90,  90,  180);
+static constexpr ImU32 COL_GREY_GLOW  = IM_COL32(180, 180, 180, 30);
+static constexpr ImU32 COL_WHITE      = IM_COL32(220, 220, 220, 255);
+static constexpr ImU32 COL_WHITE_DIM  = IM_COL32(130, 130, 130, 180);
 static constexpr ImU32 COL_RED        = IM_COL32(200, 50,  40,  255);
-static constexpr ImU32 COL_BTN_HOVER  = IM_COL32(40,  28,  12,  200);
-static constexpr ImU32 COL_BTN_NORM   = IM_COL32(22,  16,  10,  160);
-static constexpr ImU32 COL_EMBER      = IM_COL32(255, 120, 20,  200);
+static constexpr ImU32 COL_BTN_HOVER  = IM_COL32(45,  45,  45,  200);
+static constexpr ImU32 COL_BTN_NORM   = IM_COL32(22,  22,  22,  160);
 static constexpr ImU32 COL_GREEN      = IM_COL32(60,  200, 60,  255);
 
 static ImU32 colAlpha(ImU32 col, float a) {
@@ -99,8 +98,8 @@ void MainMenu::drawParticles(ImDrawList* dl, int sw, int sh) {
         if (p.life <= 0.f) continue;
         float alpha = p.life * p.brightness * (0.7f + 0.3f*std::sin(_time*8.f+i*1.3f));
         float gx = p.x*sw, gy = p.y*sh;
-        dl->AddCircleFilled({gx,gy}, p.size*3.f, colAlpha(COL_EMBER, alpha*0.15f));
-        dl->AddCircleFilled({gx,gy}, p.size,     colAlpha(COL_GOLD,  alpha*0.90f));
+        dl->AddCircleFilled({gx,gy}, p.size*3.f, colAlpha(COL_GREY_GLOW, alpha*0.15f));
+        dl->AddCircleFilled({gx,gy}, p.size,     colAlpha(COL_GREY,      alpha*0.60f));
     }
 }
 
@@ -112,19 +111,19 @@ static void drawBackground(ImDrawList* dl, float time, int sw, int sh) {
     float pulse=0.5f+0.5f*std::sin(time*0.4f);
     for (int r=5;r>=0;r--) {
         float rad=sw*(0.3f+r*0.12f);
-        float alpha=(0.03f-r*0.004f)*(r==0?1.f+pulse*0.5f:1.f);
-        dl->AddCircleFilled({cx,cy},rad,colAlpha(COL_GOLD_GLOW,alpha),64);
+        float alpha=(0.025f-r*0.003f)*(r==0?1.f+pulse*0.3f:1.f);
+        dl->AddCircleFilled({cx,cy},rad,colAlpha(COL_GREY_GLOW,alpha),64);
     }
     for (int y=0;y<sh;y+=4)
-        dl->AddLine({0.f,(float)y},{(float)sw,(float)y},IM_COL32(0,0,0,18),1.f);
+        dl->AddLine({0.f,(float)y},{(float)sw,(float)y},IM_COL32(0,0,0,14),1.f);
     float orn=60.f;
-    dl->AddLine({0,0},{orn,0},COL_GOLD_DIM,1.f);  dl->AddLine({0,0},{0,orn},COL_GOLD_DIM,1.f);
-    dl->AddLine({(float)sw,0},{(float)sw-orn,0},COL_GOLD_DIM,1.f);
-    dl->AddLine({(float)sw,0},{(float)sw,orn},COL_GOLD_DIM,1.f);
-    dl->AddLine({0,(float)sh},{orn,(float)sh},COL_GOLD_DIM,1.f);
-    dl->AddLine({0,(float)sh},{0,(float)sh-orn},COL_GOLD_DIM,1.f);
-    dl->AddLine({(float)sw,(float)sh},{(float)sw-orn,(float)sh},COL_GOLD_DIM,1.f);
-    dl->AddLine({(float)sw,(float)sh},{(float)sw,(float)sh-orn},COL_GOLD_DIM,1.f);
+    dl->AddLine({0,0},{orn,0},COL_GREY_DIM,1.f);  dl->AddLine({0,0},{0,orn},COL_GREY_DIM,1.f);
+    dl->AddLine({(float)sw,0},{(float)sw-orn,0},COL_GREY_DIM,1.f);
+    dl->AddLine({(float)sw,0},{(float)sw,orn},COL_GREY_DIM,1.f);
+    dl->AddLine({0,(float)sh},{orn,(float)sh},COL_GREY_DIM,1.f);
+    dl->AddLine({0,(float)sh},{0,(float)sh-orn},COL_GREY_DIM,1.f);
+    dl->AddLine({(float)sw,(float)sh},{(float)sw-orn,(float)sh},COL_GREY_DIM,1.f);
+    dl->AddLine({(float)sw,(float)sh},{(float)sw,(float)sh-orn},COL_GREY_DIM,1.f);
 }
 
 static void drawTitle(ImDrawList* dl, float cx, float sy, float time) {
@@ -135,50 +134,51 @@ static void drawTitle(ImDrawList* dl, float cx, float sy, float time) {
     float tx=cx-tsz.x*0.5f, ty=sy;
     float pulse=0.5f+0.5f*std::sin(time*1.1f);
     for (int i=4;i>=1;i--) {
-        float spread=i*3.f;
-        ImU32 gc=colAlpha(COL_GOLD_GLOW,0.12f*(5.f-i)*pulse);
+        float spread=i*2.f;
+        ImU32 gc=colAlpha(COL_GREY_GLOW,0.08f*(5.f-i)*pulse);
         dl->AddText(font,sz,{tx-spread,ty-spread*0.5f},gc,title);
         dl->AddText(font,sz,{tx+spread,ty-spread*0.5f},gc,title);
     }
-    dl->AddText(font,sz,{tx+2,ty+3},IM_COL32(80,50,0,180),title);
-    dl->AddText(font,sz,{tx,ty},COL_GOLD,title);
+    dl->AddText(font,sz,{tx+2,ty+3},IM_COL32(0,0,0,180),title);
+    dl->AddText(font,sz,{tx,ty},COL_WHITE,title);
     const char* sub="AN OPEN WORLD AWAITS";
     ImVec2 ssz=font->CalcTextSizeA(16.f,9999.f,0.f,sub);
     dl->AddText(font,16.f,{cx-ssz.x*0.5f,ty+tsz.y+4.f},colAlpha(COL_WHITE_DIM,0.7f+0.3f*pulse),sub);
     float dw=180.f;
-    dl->AddLine({cx-dw,ty+tsz.y+28.f},{cx+dw,ty+tsz.y+28.f},colAlpha(COL_GOLD_DIM,0.8f),1.f);
+    dl->AddLine({cx-dw,ty+tsz.y+28.f},{cx+dw,ty+tsz.y+28.f},colAlpha(COL_GREY_DIM,0.8f),1.f);
 }
 
-// ── Button ────────────────────────────────────────────────────────────────────
+// ── Button — dl is the WINDOW's draw list, called while window is open ────────
 bool MainMenu::menuButton(ImDrawList* dl, const char* label,
                            float cx, float y, float w, float h,
-                           bool isHovered, bool& outHovered) {
-    float x=cx-w*0.5f;
-    ImGui::SetCursorScreenPos({x,y});
+                           bool /*unused*/, bool& outHovered) {
+    float x = cx - w*0.5f;
+    ImGui::SetCursorScreenPos({x, y});
     ImGui::PushID(label);
-    bool clicked=ImGui::InvisibleButton("##btn",{w,h});
-    outHovered=ImGui::IsItemHovered();
+    bool clicked = ImGui::InvisibleButton("##btn", {w, h});
+    outHovered   = ImGui::IsItemHovered();
     ImGui::PopID();
-    float hov=isHovered?1.f:0.f;
-    dl->AddRectFilled({x,y},{x+w,y+h},colLerp(COL_BTN_NORM,COL_BTN_HOVER,hov),2.f);
-    float barW=3.f+hov*2.f;
-    dl->AddRectFilled({x,y+4},{x+barW,y+h-4},colLerp(COL_GOLD_DIM,COL_GOLD,hov),1.f);
-    dl->AddRect({x,y},{x+w,y+h},colLerp(COL_PANEL_EDGE,COL_GOLD,hov*0.6f),2.f,0,1.f);
-    if (hov>0.01f) dl->AddLine({x+barW,y},{x+w,y},colAlpha(COL_GOLD,hov*0.25f),1.f);
-    ImFont* font=ImGui::GetFont();
-    float fsz=20.f;
-    ImVec2 tsz=font->CalcTextSizeA(fsz,9999.f,0.f,label);
-    float tx=cx-tsz.x*0.5f+8.f, ty2=y+(h-tsz.y)*0.5f;
-    dl->AddText(font,fsz,{tx+1,ty2+1},IM_COL32(0,0,0,180),label);
-    dl->AddText(font,fsz,{tx,ty2},colLerp(COL_WHITE_DIM,COL_WHITE,hov),label);
+
+    float hov = outHovered ? 1.f : 0.f;
+    dl->AddRectFilled({x,y},{x+w,y+h}, colLerp(COL_BTN_NORM,COL_BTN_HOVER,hov), 2.f);
+    float barW = 3.f + hov*2.f;
+    dl->AddRectFilled({x,y+4},{x+barW,y+h-4}, colLerp(COL_GREY_DIM,COL_GREY,hov), 1.f);
+    dl->AddRect({x,y},{x+w,y+h}, colLerp(COL_PANEL_EDGE,COL_GREY,hov*0.6f), 2.f, 0, 1.f);
+
+    ImFont* font = ImGui::GetFont();
+    float fsz = 20.f;
+    ImVec2 tsz = font->CalcTextSizeA(fsz,9999.f,0.f,label);
+    float tx2 = cx - tsz.x*0.5f + 8.f, ty2 = y + (h-tsz.y)*0.5f;
+    dl->AddText(font,fsz,{tx2+1,ty2+1},IM_COL32(0,0,0,180),label);
+    dl->AddText(font,fsz,{tx2,ty2}, colLerp(COL_WHITE_DIM,COL_WHITE,hov), label);
     return clicked;
 }
 
 static void drawPanel(ImDrawList* dl, float x, float y, float w, float h, float slide=0.f) {
     float ox=slide*w*0.25f, alpha=1.f-slide;
-    dl->AddRectFilled({x+ox,y},{x+w+ox,y+h},colAlpha(COL_PANEL,alpha),4.f);
-    dl->AddRect({x+ox,y},{x+w+ox,y+h},colAlpha(COL_PANEL_EDGE,alpha*0.9f),4.f,0,1.2f);
-    dl->AddLine({x+ox+12,y+1},{x+w+ox-12,y+1},colAlpha(COL_GOLD_DIM,alpha*0.5f),1.f);
+    dl->AddRectFilled({x+ox,y},{x+w+ox,y+h}, colAlpha(COL_PANEL,alpha), 4.f);
+    dl->AddRect({x+ox,y},{x+w+ox,y+h}, colAlpha(COL_PANEL_EDGE,alpha*0.9f), 4.f, 0, 1.2f);
+    dl->AddLine({x+ox+12,y+1},{x+w+ox-12,y+1}, colAlpha(COL_GREY_DIM,alpha*0.5f), 1.f);
 }
 
 void MainMenu::drawSlider(ImDrawList* dl, const char* label,
@@ -188,9 +188,9 @@ void MainMenu::drawSlider(ImDrawList* dl, const char* label,
     float trackH=4.f,knobR=7.f,labelW=150.f;
     float trackX=x+labelW, trackW=w-labelW-60.f, trackY=y+12.f;
     dl->AddText(font,15.f,{x,y+4},COL_WHITE_DIM,label);
-    dl->AddRectFilled({trackX,trackY-trackH*0.5f},{trackX+trackW,trackY+trackH*0.5f},IM_COL32(40,30,15,200),2.f);
+    dl->AddRectFilled({trackX,trackY-trackH*0.5f},{trackX+trackW,trackY+trackH*0.5f},IM_COL32(35,35,35,200),2.f);
     float t=std::clamp((value-mn)/(mx-mn),0.f,1.f);
-    dl->AddRectFilled({trackX,trackY-trackH*0.5f},{trackX+trackW*t,trackY+trackH*0.5f},COL_GOLD_DIM,2.f);
+    dl->AddRectFilled({trackX,trackY-trackH*0.5f},{trackX+trackW*t,trackY+trackH*0.5f},COL_GREY_DIM,2.f);
     ImGui::SetCursorScreenPos({trackX-knobR,trackY-knobR});
     ImGui::PushID(label);
     ImGui::InvisibleButton("##sl",{trackW+knobR*2,knobR*2});
@@ -201,7 +201,7 @@ void MainMenu::drawSlider(ImDrawList* dl, const char* label,
     }
     ImGui::PopID();
     float kx=trackX+trackW*t;
-    dl->AddCircleFilled({kx,trackY},knobR,hov?COL_GOLD:COL_GOLD_DIM,12);
+    dl->AddCircleFilled({kx,trackY},knobR,hov?COL_GREY:COL_GREY_DIM,12);
     dl->AddCircle({kx,trackY},knobR,IM_COL32(0,0,0,120),12,1.5f);
     char buf[32]; snprintf(buf,sizeof(buf),fmt,value);
     dl->AddText(font,14.f,{trackX+trackW+10.f,y+4},COL_WHITE_DIM,buf);
@@ -211,11 +211,11 @@ void MainMenu::drawToggle(ImDrawList* dl, const char* label, float x, float y, b
     ImFont* font=ImGui::GetFont();
     float tw=38.f,th=20.f,tr=th*0.5f,labelW=150.f,tx=x+labelW;
     dl->AddText(font,15.f,{x,y+2},COL_WHITE_DIM,label);
-    ImU32 trackCol=value?colAlpha(COL_GOLD_DIM,0.9f):IM_COL32(40,30,15,200);
+    ImU32 trackCol=value?colAlpha(COL_GREY_DIM,0.9f):IM_COL32(35,35,35,200);
     dl->AddRectFilled({tx,y},{tx+tw,y+th},trackCol,tr);
     dl->AddRect({tx,y},{tx+tw,y+th},colAlpha(COL_PANEL_EDGE,0.8f),tr,0,1.f);
     float kx=value?tx+tw-tr:tx+tr;
-    dl->AddCircleFilled({kx,y+tr},tr-3.f,value?COL_GOLD:COL_WHITE_DIM,12);
+    dl->AddCircleFilled({kx,y+tr},tr-3.f,value?COL_WHITE:COL_WHITE_DIM,12);
     ImGui::SetCursorScreenPos({tx,y});
     ImGui::PushID(label);
     if (ImGui::InvisibleButton("##tog",{tw,th})) value=!value;
@@ -227,20 +227,20 @@ void MainMenu::drawInputInt(ImDrawList* dl, const char* label,
     ImFont* font=ImGui::GetFont();
     float labelW=150.f,fieldW=60.f,btnSize=20.f,fx=x+labelW;
     dl->AddText(font,15.f,{x,y+2},COL_WHITE_DIM,label);
-    ImGui::SetCursorScreenPos({fx,y});
     ImGui::PushID(label);
-    dl->AddRectFilled({fx,y},{fx+btnSize,y+btnSize},IM_COL32(40,28,12,200),2.f);
-    dl->AddText(font,15.f,{fx+6,y+2},COL_GOLD,"-");
+    dl->AddRectFilled({fx,y},{fx+btnSize,y+btnSize},IM_COL32(35,35,35,200),2.f);
+    dl->AddText(font,15.f,{fx+6,y+2},COL_GREY,"-");
+    ImGui::SetCursorScreenPos({fx,y});
     if (ImGui::InvisibleButton("##dec",{btnSize,btnSize})) value=std::max(mn,value-1);
     float vx=fx+btnSize+4;
-    dl->AddRectFilled({vx,y},{vx+fieldW,y+btnSize},IM_COL32(18,14,24,220),2.f);
+    dl->AddRectFilled({vx,y},{vx+fieldW,y+btnSize},IM_COL32(18,18,18,220),2.f);
     dl->AddRect({vx,y},{vx+fieldW,y+btnSize},COL_PANEL_EDGE,2.f,0,1.f);
     char buf[16]; snprintf(buf,sizeof(buf),"%d",value);
     ImVec2 vsz=font->CalcTextSizeA(15.f,999.f,0.f,buf);
     dl->AddText(font,15.f,{vx+(fieldW-vsz.x)*0.5f,y+2},COL_WHITE,buf);
     float bx=vx+fieldW+4;
-    dl->AddRectFilled({bx,y},{bx+btnSize,y+btnSize},IM_COL32(40,28,12,200),2.f);
-    dl->AddText(font,15.f,{bx+4,y+2},COL_GOLD,"+");
+    dl->AddRectFilled({bx,y},{bx+btnSize,y+btnSize},IM_COL32(35,35,35,200),2.f);
+    dl->AddText(font,15.f,{bx+4,y+2},COL_GREY,"+");
     ImGui::SetCursorScreenPos({bx,y});
     if (ImGui::InvisibleButton("##inc",{btnSize,btnSize})) value=std::min(mx,value+1);
     ImGui::PopID();
@@ -252,12 +252,12 @@ void MainMenu::drawTextInput(ImDrawList* dl, const char* label,
     ImFont* font=ImGui::GetFont();
     float labelW=150.f, fx=x+labelW;
     dl->AddText(font,15.f,{x,y+2},COL_WHITE_DIM,label);
-    dl->AddRectFilled({fx,y},{fx+fieldW,y+22},IM_COL32(18,14,24,220),2.f);
+    dl->AddRectFilled({fx,y},{fx+fieldW,y+22},IM_COL32(18,18,18,220),2.f);
     dl->AddRect({fx,y},{fx+fieldW,y+22},COL_PANEL_EDGE,2.f,0,1.f);
     ImGui::SetCursorScreenPos({fx+4,y+2});
     ImGui::PushStyleColor(ImGuiCol_FrameBg,        ImVec4(0,0,0,0));
-    ImGui::PushStyleColor(ImGuiCol_Text,           ImVec4(0.94f,0.91f,0.82f,1));
-    ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, ImVec4(0.55f,0.40f,0.10f,0.8f));
+    ImGui::PushStyleColor(ImGuiCol_Text,           ImVec4(0.86f,0.86f,0.86f,1));
+    ImGui::PushStyleColor(ImGuiCol_TextSelectedBg, ImVec4(0.4f,0.4f,0.4f,0.8f));
     ImGui::PushItemWidth(fieldW-8.f);
     ImGui::PushID(label);
     ImGuiInputTextFlags flags = password ? ImGuiInputTextFlags_Password : 0;
@@ -270,16 +270,16 @@ void MainMenu::drawTextInput(ImDrawList* dl, const char* label,
 static void drawSectionHeader(ImDrawList* dl, ImFont* font, const char* text,
                                float x, float y, float w) {
     ImVec2 tsz=font->CalcTextSizeA(13.f,999.f,0.f,text);
-    dl->AddLine({x,y+6},{x+(w-tsz.x)*0.5f-8,y+6},COL_GOLD_DIM,1.f);
-    dl->AddText(font,13.f,{x+(w-tsz.x)*0.5f,y},COL_GOLD_DIM,text);
-    dl->AddLine({x+(w+tsz.x)*0.5f+8,y+6},{x+w,y+6},COL_GOLD_DIM,1.f);
+    dl->AddLine({x,y+6},{x+(w-tsz.x)*0.5f-8,y+6},COL_GREY_DIM,1.f);
+    dl->AddText(font,13.f,{x+(w-tsz.x)*0.5f,y},COL_GREY_DIM,text);
+    dl->AddLine({x+(w+tsz.x)*0.5f+8,y+6},{x+w,y+6},COL_GREY_DIM,1.f);
 }
 
 static bool drawTab(ImDrawList* dl, ImFont* font, const char* label,
                     float x, float y, float w, float h, bool active) {
-    ImU32 bg=active?IM_COL32(40,28,12,230):IM_COL32(18,14,10,160);
+    ImU32 bg=active?IM_COL32(40,40,40,230):IM_COL32(18,18,18,160);
     dl->AddRectFilled({x,y},{x+w,y+h},bg,3.f);
-    if (active) dl->AddLine({x+2,y},{x+w-2,y},COL_GOLD,2.f);
+    if (active) dl->AddLine({x+2,y},{x+w-2,y},COL_GREY,2.f);
     else        dl->AddLine({x,y+h},{x+w,y+h},COL_PANEL_EDGE,1.f);
     ImVec2 tsz=font->CalcTextSizeA(15.f,999.f,0.f,label);
     dl->AddText(font,15.f,{x+(w-tsz.x)*0.5f,y+(h-tsz.y)*0.5f},
@@ -291,7 +291,25 @@ static bool drawTab(ImDrawList* dl, ImFont* font, const char* label,
     return clicked;
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Helper: open the fullscreen window and return its draw list ───────────────
+static ImDrawList* beginFullscreenWindow(int sw, int sh) {
+    ImGui::SetNextWindowPos({0,0});
+    ImGui::SetNextWindowSize({(float)sw,(float)sh});
+    ImGui::SetNextWindowBgAlpha(0.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0,0});
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize,0.f);
+    ImGui::Begin("##menu_root", nullptr,
+        ImGuiWindowFlags_NoDecoration   |
+        ImGuiWindowFlags_NoNav          |
+        ImGuiWindowFlags_NoMove         |
+        ImGuiWindowFlags_NoBringToFrontOnFocus |
+        ImGuiWindowFlags_NoSavedSettings);
+    ImGui::PopStyleVar(2);
+    return ImGui::GetWindowDrawList();
+}
+static void endFullscreenWindow() { ImGui::End(); }
+
+// ── Pages ─────────────────────────────────────────────────────────────────────
 GameState MainMenu::drawMainPage(ImDrawList* dl, float cx, float cy,
                                   int sw, int sh, float dt) {
     drawTitle(dl, cx, sh*0.12f, _time);
@@ -311,7 +329,7 @@ GameState MainMenu::drawMainPage(ImDrawList* dl, float cx, float cy,
     for (int i=0;i<3;i++) {
         bool hov=false;
         float y=startY+i*(btnH+gap);
-        if (menuButton(dl,BTNS[i].label,cx,y,btnW,btnH,_hoveredBtn==i,hov)) {
+        if (menuButton(dl,BTNS[i].label,cx,y,btnW,btnH,false,hov)) {
             _panelSlide=1.f;
             return BTNS[i].target;
         }
@@ -320,18 +338,17 @@ GameState MainMenu::drawMainPage(ImDrawList* dl, float cx, float cy,
     {
         bool hov=false;
         float y=startY+3*(btnH+gap)+10.f;
-        if (menuButton(dl,"QUIT",cx,y,btnW*0.5f,btnH*0.75f,_hoveredBtn==3,hov)) {
+        if (menuButton(dl,"QUIT",cx,y,btnW*0.5f,btnH*0.75f,false,hov)) {
             pendingServerIP="__QUIT__";
             return GameState::Connecting;
         }
         if (hov) _hoveredBtn=3;
     }
     dl->AddText(ImGui::GetFont(),12.f,{8.f,(float)sh-20.f},
-                IM_COL32(80,68,40,160),"v0.1.0-alpha");
+                IM_COL32(80,80,80,160),"v0.1.0-alpha");
     return GameState::MainMenu;
 }
 
-// ── Settings page ─────────────────────────────────────────────────────────────
 GameState MainMenu::drawSettings(ImDrawList* dl, float cx, float cy,
                                   int sw, int sh, float dt) {
     float panW=540.f, panH=440.f;
@@ -340,8 +357,8 @@ GameState MainMenu::drawSettings(ImDrawList* dl, float cx, float cy,
     ImFont* font=ImGui::GetFont();
 
     ImVec2 hsz=font->CalcTextSizeA(28.f,999.f,0.f,"SETTINGS");
-    dl->AddText(font,28.f,{cx-hsz.x*0.5f,panY+14.f},COL_GOLD,"SETTINGS");
-    dl->AddLine({panX+20,panY+50.f},{panX+panW-20,panY+50.f},COL_GOLD_DIM,1.f);
+    dl->AddText(font,28.f,{cx-hsz.x*0.5f,panY+14.f},COL_WHITE,"SETTINGS");
+    dl->AddLine({panX+20,panY+50.f},{panX+panW-20,panY+50.f},COL_GREY_DIM,1.f);
 
     static const char* TABS[]={"GRAPHICS","AUDIO","NETWORK"};
     float tabW=(panW-40.f)/3.f, tabH=28.f, tabY=panY+56.f;
@@ -350,7 +367,6 @@ GameState MainMenu::drawSettings(ImDrawList* dl, float cx, float cy,
             _settingsTab=i;
 
     float cy2=panY+56.f+tabH+20.f, lx=panX+30.f, rowH=34.f;
-
     if (_settingsTab==0) {
         drawSectionHeader(dl,font,"RENDERING",lx,cy2,panW-60.f); cy2+=22.f;
         drawSlider(dl,"Render Distance",lx,cy2,panW-60.f,_settings.renderDistance,1.f,8.f,"%.0f chunks"); cy2+=rowH;
@@ -372,17 +388,14 @@ GameState MainMenu::drawSettings(ImDrawList* dl, float cx, float cy,
 
     float bbY=panY+panH-54.f;
     bool hBack=false, hApply=false;
-    if (menuButton(dl,"BACK",panX+80.f,bbY,100.f,36.f,_hoveredBtn==10,hBack)) {
+    if (menuButton(dl,"BACK",panX+80.f+50.f,bbY,100.f,36.f,false,hBack)) {
         _settings.save(); _panelSlide=1.f; return GameState::MainMenu;
     }
-    if (hBack) _hoveredBtn=10;
-    if (menuButton(dl,"APPLY & SAVE",panX+panW-180.f,bbY,160.f,36.f,_hoveredBtn==11,hApply))
+    if (menuButton(dl,"APPLY & SAVE",panX+panW-180.f+80.f,bbY,160.f,36.f,false,hApply))
         _settings.save();
-    if (hApply) _hoveredBtn=11;
     return GameState::Settings;
 }
 
-// ── World select page ─────────────────────────────────────────────────────────
 GameState MainMenu::drawWorldSel(ImDrawList* dl, float cx, float cy,
                                   int sw, int sh, float dt) {
     float panW=500.f, panH=380.f;
@@ -391,8 +404,8 @@ GameState MainMenu::drawWorldSel(ImDrawList* dl, float cx, float cy,
     ImFont* font=ImGui::GetFont();
 
     ImVec2 hsz=font->CalcTextSizeA(26.f,999.f,0.f,"SELECT WORLD");
-    dl->AddText(font,26.f,{cx-hsz.x*0.5f,panY+14.f},COL_GOLD,"SELECT WORLD");
-    dl->AddLine({panX+20,panY+48.f},{panX+panW-20,panY+48.f},COL_GOLD_DIM,1.f);
+    dl->AddText(font,26.f,{cx-hsz.x*0.5f,panY+14.f},COL_WHITE,"SELECT WORLD");
+    dl->AddLine({panX+20,panY+48.f},{panX+panW-20,panY+48.f},COL_GREY_DIM,1.f);
 
     static const char* WORLDS[]={"World 1","World 2","World 3"};
     static const char* SUBTXT[]={"Last played: Today","Last played: Yesterday","New World"};
@@ -400,8 +413,8 @@ GameState MainMenu::drawWorldSel(ImDrawList* dl, float cx, float cy,
     for (int i=0;i<3;i++) {
         float rx=panX+20.f, rw=panW-40.f, rh=54.f;
         bool hover=ImGui::IsMouseHoveringRect({rx,wy},{rx+rw,wy+rh});
-        dl->AddRectFilled({rx,wy},{rx+rw,wy+rh},hover?IM_COL32(40,28,12,200):IM_COL32(22,16,10,140),3.f);
-        dl->AddRect({rx,wy},{rx+rw,wy+rh},hover?COL_GOLD_DIM:COL_PANEL_EDGE,3.f,0,1.f);
+        dl->AddRectFilled({rx,wy},{rx+rw,wy+rh},hover?IM_COL32(45,45,45,200):IM_COL32(22,22,22,140),3.f);
+        dl->AddRect({rx,wy},{rx+rw,wy+rh},hover?COL_GREY_DIM:COL_PANEL_EDGE,3.f,0,1.f);
         dl->AddText(font,18.f,{rx+14,wy+8},COL_WHITE,WORLDS[i]);
         dl->AddText(font,13.f,{rx+14,wy+30},COL_WHITE_DIM,SUBTXT[i]);
         ImGui::SetCursorScreenPos({rx,wy});
@@ -409,20 +422,19 @@ GameState MainMenu::drawWorldSel(ImDrawList* dl, float cx, float cy,
         if (ImGui::InvisibleButton("##world",{rw,rh})) {
             pendingServerIP=_settings.lastServer;
             pendingServerPort=_settings.serverPort;
+            ImGui::PopID();
             return GameState::Connecting;
         }
         ImGui::PopID();
         wy+=rh+8.f;
     }
     bool hBack=false;
-    if (menuButton(dl,"BACK",cx,panY+panH-52.f,140.f,36.f,_hoveredBtn==20,hBack)) {
+    if (menuButton(dl,"BACK",cx,panY+panH-52.f,140.f,36.f,false,hBack)) {
         _panelSlide=1.f; return GameState::MainMenu;
     }
-    if (hBack) _hoveredBtn=20;
     return GameState::WorldSelect;
 }
 
-// ── Multiplayer / login page ──────────────────────────────────────────────────
 GameState MainMenu::drawMultiplayer(ImDrawList* dl, float cx, float cy,
                                      int sw, int sh, float dt) {
     float panW=480.f, panH=420.f;
@@ -430,120 +442,83 @@ GameState MainMenu::drawMultiplayer(ImDrawList* dl, float cx, float cy,
     drawPanel(dl,panX,panY,panW,panH,_panelSlide);
     ImFont* font=ImGui::GetFont();
 
-    // Header
     const char* hdr=_loginMode?"LOGIN":"REGISTER";
     ImVec2 hsz=font->CalcTextSizeA(26.f,999.f,0.f,hdr);
-    dl->AddText(font,26.f,{cx-hsz.x*0.5f,panY+14.f},COL_GOLD,hdr);
-    dl->AddLine({panX+20,panY+50.f},{panX+panW-20,panY+50.f},COL_GOLD_DIM,1.f);
+    dl->AddText(font,26.f,{cx-hsz.x*0.5f,panY+14.f},COL_WHITE,hdr);
+    dl->AddLine({panX+20,panY+50.f},{panX+panW-20,panY+50.f},COL_GREY_DIM,1.f);
 
     float lx=panX+30.f, cy2=panY+64.f, rowH=34.f;
-
-    // Server address
     drawSectionHeader(dl,font,"SERVER",lx,cy2,panW-60.f); cy2+=22.f;
     drawTextInput(dl,"Server IP",lx,cy2,200.f,_serverInput,sizeof(_serverInput)); cy2+=rowH;
     drawInputInt(dl,"Port",lx,cy2,panW-60.f,_portInput,1024,65535); cy2+=rowH+8.f;
-
-    // Credentials
     drawSectionHeader(dl,font,"ACCOUNT",lx,cy2,panW-60.f); cy2+=22.f;
     drawTextInput(dl,"Username",lx,cy2,200.f,_username,sizeof(_username)); cy2+=rowH;
     drawTextInput(dl,"Password",lx,cy2,200.f,_password,sizeof(_password),true); cy2+=rowH+8.f;
 
-    // Status message
     if (_statusMsg[0]) {
         ImVec2 ssz=font->CalcTextSizeA(13.f,999.f,0.f,_statusMsg);
-        dl->AddText(font,13.f,{cx-ssz.x*0.5f,cy2},
-                    _statusIsError?COL_RED:COL_GREEN,_statusMsg);
+        dl->AddText(font,13.f,{cx-ssz.x*0.5f,cy2},_statusIsError?COL_RED:COL_GREEN,_statusMsg);
         cy2+=20.f;
     }
-
-    // Mode toggle
     {
         const char* toggleLbl=_loginMode?"No account? Register":"Have account? Login";
         ImVec2 tsz2=font->CalcTextSizeA(13.f,999.f,0.f,toggleLbl);
-        dl->AddText(font,13.f,{cx-tsz2.x*0.5f,cy2},colAlpha(COL_GOLD_DIM,0.9f),toggleLbl);
+        dl->AddText(font,13.f,{cx-tsz2.x*0.5f,cy2},colAlpha(COL_GREY_DIM,0.9f),toggleLbl);
         ImGui::SetCursorScreenPos({cx-tsz2.x*0.5f,cy2});
         ImGui::PushID("toggle_mode");
-        if (ImGui::InvisibleButton("##tm",{tsz2.x,14.f})) {
-            _loginMode=!_loginMode;
-            _statusMsg[0]=0;
-        }
+        if (ImGui::InvisibleButton("##tm",{tsz2.x,14.f})) { _loginMode=!_loginMode; _statusMsg[0]=0; }
         ImGui::PopID();
     }
 
-    // Bottom buttons
     float bbY=panY+panH-54.f;
     bool hBack=false, hConn=false;
-    if (menuButton(dl,"BACK",panX+60.f,bbY,100.f,36.f,_hoveredBtn==30,hBack)) {
+    if (menuButton(dl,"BACK",panX+60.f+50.f,bbY,100.f,36.f,false,hBack)) {
         _panelSlide=1.f; return GameState::MainMenu;
     }
-    if (hBack) _hoveredBtn=30;
-
     const char* connLbl=_loginMode?"LOGIN & CONNECT":"REGISTER & CONNECT";
-    if (menuButton(dl,connLbl,panX+panW-200.f,bbY,190.f,36.f,_hoveredBtn==31,hConn)) {
-        if (_username[0]==0) {
-            snprintf(_statusMsg,sizeof(_statusMsg),"Username required.");
-            _statusIsError=true;
-        } else if (_password[0]==0) {
-            snprintf(_statusMsg,sizeof(_statusMsg),"Password required.");
-            _statusIsError=true;
-        } else {
-            // Store pending connection info — caller will do actual ENet connect
+    if (menuButton(dl,connLbl,panX+panW-200.f+95.f,bbY,190.f,36.f,false,hConn)) {
+        if (_username[0]==0) { snprintf(_statusMsg,sizeof(_statusMsg),"Username required."); _statusIsError=true; }
+        else if (_password[0]==0) { snprintf(_statusMsg,sizeof(_statusMsg),"Password required."); _statusIsError=true; }
+        else {
             snprintf(pendingUsername,sizeof(pendingUsername),"%s",_username);
             snprintf(_settings.lastServer,sizeof(_settings.lastServer),"%s",_serverInput);
             _settings.serverPort=_portInput;
             pendingServerIP=_serverInput;
             pendingServerPort=_portInput;
-            _connectTimer=0.f;
-            _connectFailed=false;
-            _statusMsg[0]=0;
+            _connectTimer=0.f; _connectFailed=false; _statusMsg[0]=0;
             return GameState::Connecting;
         }
     }
-    if (hConn) _hoveredBtn=31;
-
     return GameState::Multiplayer;
 }
 
-// ── Connecting screen ─────────────────────────────────────────────────────────
 GameState MainMenu::drawConnecting(ImDrawList* dl, float cx, float cy,
                                     int sw, int sh, float dt) {
     _connectTimer+=dt;
-
     float panW=380.f, panH=180.f;
     float panX=cx-panW*0.5f, panY=cy-panH*0.5f;
     drawPanel(dl,panX,panY,panW,panH);
     ImFont* font=ImGui::GetFont();
 
     if (!_connectFailed) {
-        // Spinning dots
         char dots[8]="";
         int d=(int)(_connectTimer*2.f)%4;
         for (int i=0;i<d;i++) dots[i]='.'; dots[d]=0;
-
         char msg[128];
-        snprintf(msg,sizeof(msg),"Connecting to %s:%d%s",
-                 pendingServerIP.c_str(), pendingServerPort, dots);
+        snprintf(msg,sizeof(msg),"Connecting to %s:%d%s",pendingServerIP.c_str(),pendingServerPort,dots);
         ImVec2 msz=font->CalcTextSizeA(18.f,999.f,0.f,msg);
         dl->AddText(font,18.f,{cx-msz.x*0.5f,cy-10.f},COL_WHITE,msg);
-
-        // Timeout after 8 seconds — caller may set _connectFailed via markConnectFailed()
         if (_connectTimer>8.f) _connectFailed=true;
     } else {
         const char* msg="Connection failed.";
         ImVec2 msz=font->CalcTextSizeA(18.f,999.f,0.f,msg);
         dl->AddText(font,18.f,{cx-msz.x*0.5f,cy-20.f},COL_RED,msg);
-
-        bool hRetry=false;
-        if (menuButton(dl,"RETRY",cx-90.f,cy+10.f,80.f,32.f,_hoveredBtn==40,hRetry)) {
-            if (hRetry) _hoveredBtn=40;
-            _connectTimer=0.f; _connectFailed=false;
-            return GameState::Connecting;
+        bool hRetry=false, hBack=false;
+        if (menuButton(dl,"RETRY",cx-45.f,cy+10.f,80.f,32.f,false,hRetry)) {
+            _connectTimer=0.f; _connectFailed=false; return GameState::Connecting;
         }
-        bool hBack=false;
-        if (menuButton(dl,"BACK",cx+10.f,cy+10.f,80.f,32.f,_hoveredBtn==41,hBack)) {
-            if (hBack) _hoveredBtn=41;
-            pendingServerIP="";
-            return GameState::Multiplayer;
+        if (menuButton(dl,"BACK",cx+45.f,cy+10.f,80.f,32.f,false,hBack)) {
+            pendingServerIP=""; return GameState::Multiplayer;
         }
     }
     return GameState::Connecting;
@@ -555,37 +530,27 @@ GameState MainMenu::draw(float dt, int screenW, int screenH) {
     _panelSlide+=((0.f)-_panelSlide)*std::min(8.f*dt,1.f);
     tickParticles(dt,screenW,screenH);
 
-    ImGui::SetNextWindowPos({0,0});
-    ImGui::SetNextWindowSize({(float)screenW,(float)screenH});
-    ImGui::SetNextWindowBgAlpha(0.f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0,0});
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize,0.f);
-    ImGui::Begin("##menu_root",nullptr,
-        ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoNav|
-        ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoBringToFrontOnFocus|
-        ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
-    ImGui::End();
-    ImGui::PopStyleVar(2);
+    // Background drawn first (behind window)
+    ImDrawList* bgDl = ImGui::GetBackgroundDrawList();
+    drawBackground(bgDl, _time, screenW, screenH);
+    drawParticles(bgDl, screenW, screenH);
 
-    ImDrawList* dl=ImGui::GetBackgroundDrawList();
+    // Fullscreen window — owns the draw list used for all interactive widgets
+    ImDrawList* dl = beginFullscreenWindow(screenW, screenH);
+
     float cx=screenW*0.5f, cy=screenH*0.5f;
-    drawBackground(dl,_time,screenW,screenH);
-    drawParticles(dl,screenW,screenH);
 
     GameState next=_state;
     switch (_state) {
-    case GameState::MainMenu:
-        next=drawMainPage(dl,cx,cy,screenW,screenH,dt); break;
-    case GameState::Settings:
-        next=drawSettings(dl,cx,cy,screenW,screenH,dt); break;
-    case GameState::WorldSelect:
-        next=drawWorldSel(dl,cx,cy,screenW,screenH,dt); break;
-    case GameState::Multiplayer:
-        next=drawMultiplayer(dl,cx,cy,screenW,screenH,dt); break;
-    case GameState::Connecting:
-        next=drawConnecting(dl,cx,cy,screenW,screenH,dt); break;
+    case GameState::MainMenu:   next=drawMainPage(dl,cx,cy,screenW,screenH,dt); break;
+    case GameState::Settings:   next=drawSettings(dl,cx,cy,screenW,screenH,dt); break;
+    case GameState::WorldSelect:next=drawWorldSel(dl,cx,cy,screenW,screenH,dt); break;
+    case GameState::Multiplayer:next=drawMultiplayer(dl,cx,cy,screenW,screenH,dt); break;
+    case GameState::Connecting: next=drawConnecting(dl,cx,cy,screenW,screenH,dt); break;
     default: break;
     }
+
+    endFullscreenWindow();
 
     if (next!=_state) {
         _state=next; _hoveredBtn=-1; _panelSlide=1.f;
