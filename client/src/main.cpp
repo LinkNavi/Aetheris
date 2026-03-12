@@ -130,6 +130,15 @@ int main(int argc, char **argv) {
     if (dt > 0.05f) dt = 0.05f;
     input.beginFrame();
 
+{
+    ImGuiIO& io = ImGui::GetIO();
+    int fbW, fbH, winW, winH;
+    glfwGetFramebufferSize(window.handle(), &fbW, &fbH);
+    glfwGetWindowSize(window.handle(), &winW, &winH);
+    io.DisplayFramebufferScale = ImVec2(
+        winW > 0 ? (float)fbW / winW : 1.f,
+        winH > 0 ? (float)fbH / winH : 1.f);
+}
     if (gameState != GameState::InGame) {
       if (input.cursorCaptured()) input.captureCursor(false);
       int w, h; window.getSize(w, h);

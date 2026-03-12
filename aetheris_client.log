@@ -1,9 +1,0 @@
-[12:22:57][INFO] Client starting
-[12:22:57][INFO] Vulkan 1.2 detected
-[12:22:58][INFO] Shaders loaded
-[12:22:58][INFO] Vulkan initialised
-[12:22:58][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
-[12:22:58][INFO] ViewModelRenderer initialised
-[12:22:58][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
-[12:23:56][INFO] Connected to 127.0.0.1
-[12:24:43][INFO] Client shutdown
