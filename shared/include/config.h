@@ -25,6 +25,6 @@ namespace Config {
     // Air steering: very low, Skyrim has almost no air control
     inline constexpr float AIR_ACCEL     = 1.8f;
 
-    inline constexpr float MOUSE_SENS     = 0.1f;
+    inline float MOUSE_SENS     = 0.1f;
     inline constexpr float DAY_LENGTH_SECONDS = 1200.f;
 }

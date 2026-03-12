@@ -41,6 +41,8 @@ client_src = files(
   'src/mesh_builder.cpp',
   'src/window.cpp',
   'src/vk_init.cpp',
+
+'src/main_menu.cpp',
   'src/input.cpp',
   'src/player.cpp',
   'src/view_model.cpp',

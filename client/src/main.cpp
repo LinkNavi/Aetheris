@@ -24,6 +24,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
+#include "main_menu.h"
 
 int main(int argc, char **argv) {
   AssetPath::init(argv[0]);
@@ -44,7 +45,9 @@ int main(int argc, char **argv) {
   InventoryUI invUI;
   HUD hud;
   ClientStats clientStats;
-
+  MainMenu mainMenu;
+     GameState gameState = GameState::MainMenu;
+      bool cursorWasCapured = false;
   ClientChestMirror chestMirror;
 
   // ── View model renderer ───────────────────────────────────────────────────
@@ -141,13 +144,48 @@ int main(int argc, char **argv) {
   std::vector<ChunkMesh> readyMeshes;
 
   while (!window.shouldClose()) {
-    auto now = Clock::now();
-    float dt = std::chrono::duration<float>(now - prev).count();
-    prev = now;
-    if (dt > 0.05f)
-      dt = 0.05f;
+         auto now = Clock::now();
+         float dt = std::chrono::duration<float>(now - prev).count();
+         prev = now;
+         if (dt > 0.05f) dt = 0.05f;
 
-    input.beginFrame();
+         input.beginFrame();
+
+         // ── Main menu ─────────────────────────────────────────────────────────
+         if (gameState != GameState::InGame) {
+             // Release cursor while in menu
+             if (input.cursorCaptured()) input.captureCursor(false);
+
+             int w, h;
+             window.getSize(w, h);
+
+             ImGui_ImplVulkan_NewFrame();
+             ImGui_ImplGlfw_NewFrame();
+             ImGui::NewFrame();
+
+             GameState next = mainMenu.draw(dt, w, h);
+
+             if (next == GameState::Connecting) {
+                 if (mainMenu.pendingServerIP == "__QUIT__") break; // exit
+
+                 // TODO: initiate ENet connect to mainMenu.pendingServerIP
+                 //       on success set gameState = GameState::InGame;
+                 //       for now just go straight in:
+                 gameState = GameState::InGame;
+                 input.captureCursor(true);
+             } else {
+                 gameState = next;
+             }
+
+             // Apply settings every frame while in menu
+             // (mouse sens will take effect next InGame frame)
+             // Config::MOUSE_SENS is constexpr so you'll need a runtime override:
+             // g_mouseSens = mainMenu.settings().mouseSens;
+
+             ImGui::Render();
+             vk_draw(ctx, glm::mat4(1.f), 0.f, {0.02f,0.02f,0.08f}); // dark clear
+             continue;
+         }
 
     auto &cinv = reg.get<CInventory>(player.entity());
 
