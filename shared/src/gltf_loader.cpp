@@ -1,11 +1,7 @@
 #include "gltf_loader.h"
 #include "log.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 
-#define TINYGLTF_NO_STB_IMAGE_WRITE
 #include <tiny_gltf.h>
 
 GltfModel loadGlb(const char* path) {

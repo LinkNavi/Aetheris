@@ -559,7 +559,7 @@ GameState MainMenu::drawAccount(ImDrawList* dl, float cx, float cy,
             _accStatusIsError = true;
         }
     }
-    }
+
     return GameState::Account;
 }
 

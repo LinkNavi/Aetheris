@@ -26,7 +26,11 @@ if host_machine.system() == 'windows'
       '-static-libgcc', '-static-libstdc++', '-static',
       language : 'cpp')
 endif
-
+bot_src = files('tools/bot_client.cpp')
+ 
+executable('bot_client', bot_src,
+  dependencies : [enet_dep, platform_deps],
+  install      : true)
 # ── Third-party include dirs ──────────────────────────────────────────────────
 vkb_inc        = include_directories('thirdparty/vk-bootstrap/src')
 vma_inc        = include_directories('thirdparty/VulkanMemoryAllocator/include')

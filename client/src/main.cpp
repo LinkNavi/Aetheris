@@ -11,10 +11,12 @@
 #include "inventory_ui.h"
 #include "log.h"
 #include "mesh_builder.h"
+#include "mp_packets.h"
 #include "net_common.h"
 #include "packets.h"
 #include "player.h"
 #include "player_stats.h"
+#include "remote_players.h"
 #include "view_model.h"
 #include "vk_context.h"
 #include "window.h"
@@ -25,7 +27,10 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
 #include "main_menu.h"
-
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <tiny_gltf.h>
 int main(int argc, char **argv) {
   AssetPath::init(argv[0]);
   Log::init("aetheris_client.log");
@@ -46,9 +51,10 @@ int main(int argc, char **argv) {
   HUD hud;
   ClientStats clientStats;
   MainMenu mainMenu;
-     GameState gameState = GameState::MainMenu;
-      bool cursorWasCapured = false;
+  GameState gameState = GameState::MainMenu;
+  bool cursorWasCaptured = false;
   ClientChestMirror chestMirror;
+  RemotePlayerRenderer remotePlayers;
 
   // ── View model renderer ───────────────────────────────────────────────────
   ViewModelRenderer viewModel;
@@ -108,11 +114,27 @@ int main(int argc, char **argv) {
                              ctx.graphicsQueue, model, t);
       viewModel.setActiveMesh(idx);
     } else {
-      Log::warn("No hand.glb found — viewmodel disabled.");
+      Log::warn("No arm.glb found — viewmodel disabled.");
+    }
+  }
+
+  // ── Load player model for remote players ──────────────────────────────────
+  {
+    std::string playerGlb = AssetPath::get("player.glb");
+    if (remotePlayers.loadModel(ctx.device.device, ctx.allocator,
+                                 ctx.commandPool, ctx.graphicsQueue,
+                                 ctx.renderPass, ctx.swapchain.extent,
+                                 playerGlb.c_str(),
+                                 AssetPath::get("player_vert.spv").c_str(),
+                                 AssetPath::get("player_frag.spv").c_str())) {
+      Log::info("Player model loaded for multiplayer.");
+    } else {
+      Log::warn("No player.glb found — remote players will be invisible.");
     }
   }
 
   bool enemiesSpawned = false;
+  bool authSent = false;
 
   Net::init();
   Net::Host host;
@@ -130,15 +152,6 @@ int main(int argc, char **argv) {
     if (dt > 0.05f) dt = 0.05f;
     input.beginFrame();
 
-{
-    ImGuiIO& io = ImGui::GetIO();
-    int fbW, fbH, winW, winH;
-    glfwGetFramebufferSize(window.handle(), &fbW, &fbH);
-    glfwGetWindowSize(window.handle(), &winW, &winH);
-    io.DisplayFramebufferScale = ImVec2(
-        winW > 0 ? (float)fbW / winW : 1.f,
-        winH > 0 ? (float)fbH / winH : 1.f);
-}
     if (gameState != GameState::InGame) {
       if (input.cursorCaptured()) input.captureCursor(false);
       int w, h; window.getSize(w, h);
@@ -165,12 +178,26 @@ int main(int argc, char **argv) {
             if (enet_host_service(host.get(), &ev2, 5000) > 0 &&
                 ev2.type == ENET_EVENT_TYPE_CONNECT) {
               Log::info(std::string("Connected to ") + ip);
+
+              // Send auth request immediately
+              AuthRequestPacket authReq;
+              authReq.username = mainMenu.pendingUsername;
+              authReq.token = mainMenu.account().sessionToken;
+              Net::sendReliable(server, authReq.serialize());
+              enet_host_flush(host.get());
+              authSent = true;
+
               gameState = GameState::InGame;
               input.captureCursor(true);
-                } else {
-                  enet_peer_reset(server);
-                  server = nullptr;
-                }
+
+              // Clear remote players from previous session
+              remotePlayers.players.clear();
+              remotePlayers.localPlayerId = 0;
+
+            } else {
+              enet_peer_reset(server);
+              server = nullptr;
+            }
           }
         }
       } else {
@@ -181,7 +208,6 @@ int main(int argc, char **argv) {
       vk_draw(ctx, glm::mat4(1.f), 0.f, {0.02f, 0.02f, 0.08f}, nullptr, glm::mat4(1.f));
       continue;
     }
-    if (!server) continue;
     if (!server) continue;
     auto &cinv = reg.get<CInventory>(player.entity());
 
@@ -242,11 +268,44 @@ int main(int argc, char **argv) {
           } else if (pid == (uint8_t)StatsPacketID::StatsDelta) {
             auto pkt = StatsDeltaPacket::deserialize(d, len);
             clientStats.applyDelta(pkt);
+
+          // ── Multiplayer packets ──────────────────────────────────────
+          } else if (pid == (uint8_t)MPPacketID::AuthResponse) {
+            auto pkt = AuthResponsePacket::deserialize(d, len);
+            if (pkt.accepted) {
+              Log::info("Auth accepted: " + pkt.message + " (id=" + std::to_string(pkt.playerId) + ")");
+              remotePlayers.localPlayerId = pkt.playerId;
+            } else {
+              Log::warn("Auth rejected: " + pkt.message);
+              // Could kick back to menu, for now just log
+            }
+
+          } else if (pid == (uint8_t)MPPacketID::PlayerSpawn) {
+            auto pkt = PlayerSpawnPacket::deserialize(d, len);
+            remotePlayers.onSpawn(pkt);
+            Log::info("Remote player spawned: " + pkt.username +
+                      " (id=" + std::to_string(pkt.playerId) + ")");
+
+          } else if (pid == (uint8_t)MPPacketID::PlayerDespawn) {
+            auto pkt = PlayerDespawnPacket::deserialize(d, len);
+            Log::info("Remote player left (id=" + std::to_string(pkt.playerId) + ")");
+            remotePlayers.onDespawn(pkt.playerId);
+
+          } else if (pid == (uint8_t)MPPacketID::PlayerPosSync) {
+            auto pkt = PlayerPosSyncPacket::deserialize(d, len);
+            remotePlayers.onPosSync(pkt);
           }
         }
         enet_packet_destroy(ev.packet);
+      } else if (ev.type == ENET_EVENT_TYPE_DISCONNECT) {
+        Log::info("Disconnected from server");
+        server = nullptr;
+        gameState = GameState::MainMenu;
+        break;
       }
     }
+
+    if (!server) continue;
 
     // ── Poll finished meshes ──────────────────────────────────────────────
     readyMeshes.clear();
@@ -322,6 +381,7 @@ int main(int argc, char **argv) {
     combat.update(dt, player.entity());
     dayNight.update(dt);
     viewModel.update(dt);
+    remotePlayers.update(dt);
 
     // ── Respawn ───────────────────────────────────────────────────────────
     if (input.keyPressed(GLFW_KEY_R)) {
@@ -349,31 +409,31 @@ int main(int argc, char **argv) {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGuiIO &io = ImGui::GetIO();
-    int fbW, fbH, winW, winH;
-    glfwGetFramebufferSize(window.handle(), &fbW, &fbH);
-    glfwGetWindowSize(window.handle(), &winW, &winH);
-    io.DisplayFramebufferScale = ImVec2(winW > 0 ? (float)fbW / winW : 1.f,
-                                        winH > 0 ? (float)fbH / winH : 1.f);
 
     // Draw HUD (always visible)
     hud.draw(clientStats);
+
+    // Draw nametags for remote players
+    remotePlayers.drawNametags(vp, w, h);
 
     viewModel.drawDebugUI();
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
 
     ImGui::Render();
     vk_draw(ctx, vp, dayNight.sunIntensity(), dayNight.skyColor(), &viewModel,
-            proj);
+            proj, &remotePlayers);
   }
 
-  enet_peer_disconnect(server, 0);
-  enet_host_flush(host.get());
+  if (server) {
+    enet_peer_disconnect(server, 0);
+    enet_host_flush(host.get());
+  }
   ImGui_ImplVulkan_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
   vkDestroyDescriptorPool(ctx.device.device, imguiPool, nullptr);
   vkDeviceWaitIdle(ctx.device.device);
+  remotePlayers.destroy(ctx.device.device, ctx.allocator);
   viewModel.destroy(ctx.device.device, ctx.allocator);
   vk_destroy(ctx);
   Net::deinit();

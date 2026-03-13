@@ -1,0 +1,14 @@
+[01:10:21][INFO] Client starting
+[01:10:23][INFO] Vulkan 1.2 detected
+[01:10:25][INFO] Shaders loaded
+[01:10:25][INFO] Vulkan initialised
+[01:10:25][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[01:10:25][INFO] ViewModelRenderer initialised
+[01:10:25][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[01:10:25][INFO] Player model: 4364 verts, h=4.870493
+[01:10:25][INFO] Player model loaded for multiplayer.
+[01:10:31][INFO] Connected to 127.0.0.1
+[01:10:31][INFO] Auth accepted: Welcome, Guest! (id=3)
+[01:10:31][INFO] Remote player spawned: Bot1 (id=2)
+[01:10:31][INFO] Remote player spawned: Bot1 (id=1)
+[01:11:58][INFO] Client shutdown

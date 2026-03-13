@@ -977,8 +977,7 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
   if (viewModel)
     viewModel->draw(cmd, proj);
   if (remotePlayers && viewModel)
-    remotePlayers->draw(cmd, viewModel->pipeline, viewModel->pipelineLayout,
-                        viewProj);
+  remotePlayers->draw(cmd, viewProj);
   // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);

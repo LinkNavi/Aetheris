@@ -1,5 +1,21 @@
 {
-  "users": {},
-  "sessions": {},
-  "usernames": {}
+  "users": {
+    "88707562-321d-45ae-bb56-04011d24c9a7": {
+      "uid": "88707562-321d-45ae-bb56-04011d24c9a7",
+      "username": "Link",
+      "passwordHash": "$2b$12$4aiyWs3bWkIn2Fq6Wz/NR.CFnrYiE2q98yAWDBni7xqnBTUH9W9j6",
+      "createdAt": 1773353587051
+    }
+  },
+  "sessions": {
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI4ODcwNzU2Mi0zMjFkLTQ1YWUtYmI1Ni0wNDAxMWQyNGM5YTciLCJ1c2VybmFtZSI6IkxpbmsiLCJpYXQiOjE3NzMzNTM1ODcsImV4cCI6MTc3Mzk1ODM4N30.LCoip1th4hcvx6xBtCrs6uxXI9L3Rv3vQndpYyCMN_o": {
+      "uid": "88707562-321d-45ae-bb56-04011d24c9a7",
+      "username": "Link",
+      "issuedAt": 1773353587059,
+      "expiresAt": 1773958387059
+    }
+  },
+  "usernames": {
+    "link": "88707562-321d-45ae-bb56-04011d24c9a7"
+  }
 }
