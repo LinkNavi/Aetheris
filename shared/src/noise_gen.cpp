@@ -172,7 +172,7 @@ static uint8_t selectMaterial(Biome b, float depthBelow, float surfaceY, float w
     case Biome::Swamp: return depthBelow<=3.f?(uint8_t)BlockMat::Dirt:(uint8_t)BlockMat::Stone;
     default:
         if (surfaceY<=SEA_LEVEL+4.f && depthBelow<=3.f) return (uint8_t)BlockMat::Sand;
-        if (depthBelow<=3.f) return (uint8_t)BlockMat::Grass;
+        if (depthBelow<=5.f) return (uint8_t)BlockMat::Grass;
         if (depthBelow<=8.f) return (uint8_t)BlockMat::Dirt;
         return (uint8_t)BlockMat::Stone;
     }

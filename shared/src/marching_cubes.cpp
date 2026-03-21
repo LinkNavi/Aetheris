@@ -55,7 +55,7 @@ ChunkMesh marchChunk(const ChunkData& chunk) {
             glm::vec3 normal=glm::normalize(cr);
 
             uint8_t mat=edgeMats[e0];
-            if(mat==(uint8_t)BlockMat::Grass && normal.y<0.3f)
+            if(mat==(uint8_t)BlockMat::Grass && normal.y<0.1f)
                 mat=(uint8_t)BlockMat::Dirt;
 
             uint32_t tint = packNeutralTint(mat);

@@ -9,9 +9,9 @@
 #include "day_night.h"
 
 struct SkyPC {
-    glm::mat4 invViewRot; // inverse of rotation-only view matrix (no proj, no translation)
+    glm::mat4 invViewProj; // inverse(proj * mat4(mat3(view)))
     glm::vec4 sunDir;
-    glm::vec4 params;     // x=sunIntensity, y=time, z=cloudSpeed, w=0
+    glm::vec4 params;      // x=sunIntensity, y=time, z=cloudSpeed, w=0
     glm::vec4 camPos;
 };
 
@@ -114,9 +114,10 @@ struct SkyGodRayRenderer {
         skyLayout   = VK_NULL_HANDLE;
     }
 
-    // viewMatrix = camera.view() — the pure view matrix WITHOUT projection
+    // viewMatrix = camera.view(), projMatrix = camera.proj(aspect)
     void drawSky(VkCommandBuffer cmd, VkExtent2D extent,
                  const glm::mat4& viewMatrix,
+                 const glm::mat4& projMatrix,
                  const DayNight& dn,
                  glm::vec3 camPos) const {
         if (!skyPipeline) return;
@@ -129,11 +130,11 @@ struct SkyGodRayRenderer {
         vkCmdSetScissor(cmd, 0, 1, &sc);
 
         SkyPC pc;
-        // Extract just the rotation part of the view matrix (zero the translation column),
-        // then invert it. This maps NDC ray directions to world-space without any
-        // projection distortion or camera-position offset.
-        glm::mat4 viewRot = glm::mat4(glm::mat3(viewMatrix)); // strips translation
-        pc.invViewRot     = glm::inverse(viewRot);
+        // Build rotation-only view (strip translation), combine with projection,
+        // then invert. This lets the vertex shader reconstruct proper world-space
+        // ray directions from NDC coordinates, accounting for FOV and aspect ratio.
+        glm::mat4 viewRot = glm::mat4(glm::mat3(viewMatrix));
+        pc.invViewProj    = glm::inverse(projMatrix * viewRot);
         pc.sunDir         = glm::vec4(dn.sunDir(), 0.f);
         pc.params         = glm::vec4(dn.sunIntensity(), cloudTime, 1.f, 0.f);
         pc.camPos         = glm::vec4(camPos, 0.f);
@@ -142,6 +143,18 @@ struct SkyGodRayRenderer {
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                            0, sizeof(SkyPC), &pc);
         vkCmdDraw(cmd, 3, 1, 0, 0);
+    }
+
+    // Keep old signature for backward compat but add proj overload
+    void drawSky(VkCommandBuffer cmd, VkExtent2D extent,
+                 const glm::mat4& viewMatrix,
+                 const DayNight& dn,
+                 glm::vec3 camPos) const {
+        // Fallback: reconstruct a reasonable projection
+        float aspect = (float)extent.width / std::max((float)extent.height, 1.f);
+        glm::mat4 proj = glm::perspective(glm::radians(70.f), aspect, 0.05f, 1000.f);
+        proj[1][1] *= -1; // Vulkan Y flip
+        drawSky(cmd, extent, viewMatrix, proj, dn, camPos);
     }
 
     void drawGodRays(VkCommandBuffer, VkExtent2D, const glm::mat4&, const DayNight&) const {}
