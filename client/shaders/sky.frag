@@ -1,6 +1,6 @@
 #version 450
 
-layout(location = 0) in vec3 fragRayDir;
+layout(location = 0) in vec2 fragNDC;
 
 layout(push_constant) uniform PC {
     mat4  invViewProj;
@@ -38,7 +38,7 @@ float miePhase(float cosTheta) {
     return (1.0-g2)/(4.0*3.14159*pow(1.0+g2-2.0*g*cosTheta,1.5));
 }
 
-// ── Aurora / Northern Lights ──────────────────────────────────────────────────
+// ── Aurora ────────────────────────────────────────────────────────────────────
 float auroraWave(vec2 p, float t) {
     float wave = 0.0;
     wave += sin(p.x * 1.2 + t * 0.3) * 0.5;
@@ -49,56 +49,42 @@ float auroraWave(vec2 p, float t) {
 }
 
 vec3 aurora(vec3 ray, float night, float time) {
-    if (night < 0.05 || ray.y < 0.05) return vec3(0.0);
-
-    // Project onto a virtual curtain high in the sky
+    if (night < 0.15 || ray.y < 0.05) return vec3(0.0);
     float t = 1.0 / max(ray.y, 0.05);
     vec2 uv = ray.xz * t * 0.15;
-
-    // Multiple curtain layers for depth
     vec3 col = vec3(0.0);
-
     for (int layer = 0; layer < 3; layer++) {
         float lf = float(layer);
         vec2 luv = uv * (0.8 + lf * 0.3) + vec2(lf * 3.7, lf * 1.3);
-
         float wave = auroraWave(luv, time + lf * 2.0);
-
-        // Vertical falloff — aurora sits in a band
         float band = ray.y * (3.0 + lf * 0.5);
         float vertFade = smoothstep(0.3, 0.8, band) * smoothstep(2.5, 1.2, band);
-
-        // Horizontal concentration from the wave
-        float intensity = smoothstep(0.2, 0.7, wave) * vertFade;
-        intensity *= smoothstep(0.0, 0.15, ray.y); // fade at horizon
-
-        // Light blue / cyan / teal palette
-        vec3 c1 = vec3(0.15, 0.55, 0.85);  // light blue
-        vec3 c2 = vec3(0.10, 0.75, 0.70);  // teal
-        vec3 c3 = vec3(0.30, 0.70, 0.95);  // brighter blue
-
-        float colorMix = vnoise(luv * 0.7 + vec2(time * 0.05)) ;
+        float intensity = smoothstep(0.45, 0.8, wave) * vertFade;
+        intensity *= smoothstep(0.0, 0.18, ray.y);
+        vec3 c1 = vec3(0.10, 0.42, 0.65);
+        vec3 c2 = vec3(0.05, 0.52, 0.48);
+        vec3 c3 = vec3(0.16, 0.52, 0.72);
+        float colorMix = vnoise(luv * 0.7 + vec2(time * 0.05));
         vec3 auroraCol = mix(c1, c2, colorMix);
         auroraCol = mix(auroraCol, c3, smoothstep(0.5, 0.9, wave) * 0.5);
-
-        // Slight shimmer
-        float shimmer = 0.8 + 0.2 * sin(time * 3.0 + luv.x * 5.0 + lf * 1.7);
-
-        col += auroraCol * intensity * shimmer * (0.4 - lf * 0.08);
+        float shimmer = 0.85 + 0.15 * sin(time * 3.0 + luv.x * 5.0 + lf * 1.7);
+        col += auroraCol * intensity * shimmer * (0.12 - lf * 0.03);
     }
-
-    return col * night * night * 0.7;
+    return col * night * night * 0.35;
 }
 
 void main() {
-    vec3  ray    = normalize(fragRayDir);
+    // Reconstruct ray direction per-pixel from NDC.
+    // This avoids interpolation artifacts across the full-screen triangle.
+    vec4 world = pc.invViewProj * vec4(fragNDC, 1.0, 1.0);
+    vec3 ray = normalize(world.xyz / world.w);
+
     vec3  sun    = normalize(pc.sunDir.xyz);
     float sunI   = clamp(pc.params.x, 0.0, 1.0);
     float time   = pc.params.y;
     float cspeed = pc.params.z;
     vec3  camPos = pc.camPos.xyz;
 
-    // Below horizon
     if (ray.y < -0.05) {
         outColor = vec4(0.01, 0.01, 0.015, 1.0);
         return;
@@ -125,10 +111,8 @@ void main() {
     vec3 zenithCol= mix(zenithNight, zenithDay, sunI);
     vec3 skyCol   = mix(horizCol, zenithCol, hSmooth);
 
-    // Rayleigh
     skyCol += vec3(0.0, 0.015, 0.05) * sunI * (1.0-hSmooth) * 0.6;
 
-    // Mie
     float mie  = miePhase(cosTheta) * sunI;
     vec3 mieC  = mix(vec3(1.0, 0.50, 0.12), vec3(1.0, 0.90, 0.78), sunI);
     skyCol    += mieC * mie * 0.10;
@@ -138,22 +122,19 @@ void main() {
     vec3  sunColor = mix(vec3(1.0, 0.35, 0.07), vec3(1.1, 1.02, 0.82), sunI);
     skyCol        += sunColor * sunDisk * (0.3 + sunI * 0.7);
 
-    // ── Stars — significantly more dense and varied ───────────────────────────
+    // ── Stars ─────────────────────────────────────────────────────────────────
     float night = clamp(1.0 - sunI*2.5, 0.0, 1.0);
     if (night > 0.01 && ray.y > 0.0) {
-        // Layer 1: dense small stars
         vec2 starUV1 = vec2(atan(ray.x, ray.z), asin(clamp(ray.y,0.0,1.0))) * 28.0;
         vec2 cell1   = floor(starUV1);
         float sh1    = hash(cell1);
-        float bright1= step(0.92, sh1); // more stars (was 0.968)
+        float bright1= step(0.92, sh1);
         vec2  off1   = vec2(hash(cell1+0.1), hash(cell1+0.2)) - 0.5;
         float dist1  = length(fract(starUV1) - 0.5 + off1*0.3);
         float star1  = bright1 * smoothstep(0.12, 0.0, dist1) * (0.2 + fract(sh1*137.5)*0.5);
-        // Twinkle
         float twinkle1 = 0.6 + 0.4 * sin(time * (2.0 + sh1 * 4.0) + sh1 * 50.0);
         skyCol += vec3(0.65, 0.75, 1.0) * star1 * night * night * twinkle1;
 
-        // Layer 2: medium stars, different grid
         vec2 starUV2 = vec2(atan(ray.x, ray.z), asin(clamp(ray.y,0.0,1.0))) * 16.0;
         vec2 cell2   = floor(starUV2);
         float sh2    = hash(cell2 + 77.7);
@@ -162,11 +143,9 @@ void main() {
         float dist2  = length(fract(starUV2) - 0.5 + off2*0.25);
         float star2  = bright2 * smoothstep(0.14, 0.0, dist2) * (0.3 + fract(sh2*97.3)*0.7);
         float twinkle2 = 0.7 + 0.3 * sin(time * (1.5 + sh2 * 3.0) + sh2 * 30.0);
-        // Slight color variation — some warm, some cool
         vec3 starCol2 = mix(vec3(0.80, 0.85, 1.0), vec3(1.0, 0.90, 0.75), step(0.5, fract(sh2*43.1)));
         skyCol += starCol2 * star2 * night * night * twinkle2;
 
-        // Layer 3: rare bright stars with glow
         vec2 starUV3 = vec2(atan(ray.x, ray.z), asin(clamp(ray.y,0.0,1.0))) * 8.0;
         vec2 cell3   = floor(starUV3);
         float sh3    = hash(cell3 + 333.3);
@@ -178,7 +157,6 @@ void main() {
         float twinkle3 = 0.8 + 0.2 * sin(time * 1.2 + sh3 * 20.0);
         skyCol += vec3(0.85, 0.90, 1.0) * (star3 + glow3) * night * night * twinkle3;
 
-        // Milky way band — faint diffuse glow along a stripe
         float milkyAngle = atan(ray.x, ray.z) * 0.5 + ray.y * 1.5;
         float milky = smoothstep(0.7, 0.0, abs(sin(milkyAngle + 0.3)));
         float milkyNoise = vnoise(vec2(atan(ray.x,ray.z)*3.0, ray.y*6.0) + time*0.01);
@@ -195,36 +173,28 @@ void main() {
         skyCol += vec3(0.68, 0.75, 0.88) * (moonDisk*0.5 + moonGlow) * moonVis;
     }
 
-    // ── Aurora / Northern Lights ──────────────────────────────────────────────
+    // ── Aurora ────────────────────────────────────────────────────────────────
     skyCol += aurora(ray, night, time);
 
     // ── Clouds ────────────────────────────────────────────────────────────────
     if (ray.y > 0.01) {
         float cloudAlt = 800.0;
         float t        = (cloudAlt - camPos.y) / max(ray.y, 0.01);
-
         if (t > 0.0 && t < 15000.0) {
             vec2 worldXZ = camPos.xz + ray.xz * t;
             vec2 uv      = worldXZ * 0.000075 + vec2(time*cspeed*0.007, time*cspeed*0.004);
-
             float cloud  = fbmCloud(uv);
             float thresh = 0.44;
             float cover  = smoothstep(thresh, thresh+0.22, cloud);
-
             cover *= smoothstep(0.01, 0.12, ray.y);
             cover *= clamp(1.0 - t/12000.0, 0.0, 1.0);
-
             vec3 cLight  = mix(vec3(0.09,0.09,0.12), vec3(0.68,0.74,0.80), sunI);
             vec3 cShadow = mix(vec3(0.03,0.03,0.05), vec3(0.25,0.28,0.33), sunI);
             float edge   = clamp(cosTheta*0.5+0.5, 0.0, 1.0);
             vec3  cCol   = mix(cShadow, cLight, edge);
             cCol         = mix(cCol, vec3(0.78,0.35,0.10), dusk*cover*0.4);
-
-            // At night, clouds slightly lit by aurora
-            if (night > 0.1) {
+            if (night > 0.1)
                 cCol += vec3(0.02, 0.06, 0.10) * night * cover * 0.3;
-            }
-
             skyCol = mix(skyCol, cCol, cover * 0.88);
         }
     }

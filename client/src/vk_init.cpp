@@ -1047,9 +1047,9 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
   if (trees)
     trees->draw(cmd, viewProj, ctx.swapchain.extent);
 
-  // -- Da God Rays ----------
+ // --- Da Sky ---------------------
   if (dayNight) {
-    ctx.skyGodRay.drawGodRays(cmd, ctx.swapchain.extent, viewProj, *dayNight);
+    ctx.skyGodRay.drawSky(cmd, ctx.swapchain.extent, view, proj, *dayNight, camPos);
   }
   // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

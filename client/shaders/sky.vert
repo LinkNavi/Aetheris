@@ -1,9 +1,9 @@
 #version 450
 
-layout(location = 0) out vec3 fragRayDir;
+layout(location = 0) out vec2 fragNDC;
 
 layout(push_constant) uniform PC {
-    mat4  invViewRot;  // now: inverse(proj * mat4(mat3(view)))
+    mat4  invViewProj;
     vec4  sunDir;
     vec4  params;
     vec4  camPos;
@@ -15,9 +15,6 @@ void main() {
     else if (gl_VertexIndex == 1) ndc = vec2( 3.0, -1.0);
     else                          ndc = vec2(-1.0,  3.0);
 
-    // Reconstruct world-space ray direction through inverse(proj * viewRot)
-    vec4 dir   = pc.invViewRot * vec4(ndc, 1.0, 1.0);
-    fragRayDir = normalize(dir.xyz / dir.w);
-
+    fragNDC = ndc;
     gl_Position = vec4(ndc, 0.9999, 1.0);
 }

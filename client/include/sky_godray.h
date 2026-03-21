@@ -130,9 +130,9 @@ struct SkyGodRayRenderer {
         vkCmdSetScissor(cmd, 0, 1, &sc);
 
         SkyPC pc;
-        // Build rotation-only view (strip translation), combine with projection,
-        // then invert. This lets the vertex shader reconstruct proper world-space
-        // ray directions from NDC coordinates, accounting for FOV and aspect ratio.
+        // Strip translation from view (rotation only), then invert proj*viewRot.
+        // This gives a matrix that maps NDC corner positions to world-space
+        // ray directions correctly regardless of camera position.
         glm::mat4 viewRot = glm::mat4(glm::mat3(viewMatrix));
         pc.invViewProj    = glm::inverse(projMatrix * viewRot);
         pc.sunDir         = glm::vec4(dn.sunDir(), 0.f);
@@ -145,15 +145,14 @@ struct SkyGodRayRenderer {
         vkCmdDraw(cmd, 3, 1, 0, 0);
     }
 
-    // Keep old signature for backward compat but add proj overload
+    // Keep old signature for backward compat
     void drawSky(VkCommandBuffer cmd, VkExtent2D extent,
                  const glm::mat4& viewMatrix,
                  const DayNight& dn,
                  glm::vec3 camPos) const {
-        // Fallback: reconstruct a reasonable projection
         float aspect = (float)extent.width / std::max((float)extent.height, 1.f);
         glm::mat4 proj = glm::perspective(glm::radians(70.f), aspect, 0.05f, 1000.f);
-        proj[1][1] *= -1; // Vulkan Y flip
+        proj[1][1] *= -1;
         drawSky(cmd, extent, viewMatrix, proj, dn, camPos);
     }
 

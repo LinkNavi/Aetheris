@@ -410,23 +410,24 @@ int main(int argc, char **argv) {
 
     // ── Render ───────────────────────────────────────────────────────────
     window.getSize(w, h);
-    float aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
-    glm::mat4 vp = camera.viewProj(aspect);
-    glm::mat4 proj = camera.proj(aspect);
+  
 
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     hud.draw(clientStats);
-    remotePlayers.drawNametags(vp, w, h);
+   // remotePlayers.drawNametags(vp, w, h);
     viewModel.drawDebugUI();
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
 
     debugMenu.draw(player.position(), server, dayNight);
     ImGui::Render();
-
+    float aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
+    glm::mat4 vp = camera.viewProj(aspect);
+    glm::mat4 proj = camera.proj(aspect);
     int rdXZ = (int)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
+
     vk_draw(ctx, vp,camera.view(), &treeRenderer, dayNight.sunIntensity(),
             dayNight.skyColor(), rdXZ, camera.position, &viewModel, proj,
             &remotePlayers, &dayNight);
