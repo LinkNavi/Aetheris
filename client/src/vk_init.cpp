@@ -24,10 +24,10 @@ static void check(VkResult r, const char *msg) {
     throw std::runtime_error(msg);
 }
 struct GlobalPC {
-    glm::mat4 viewProj;
-    glm::vec4 params;
-    glm::vec4 camPos;
-    glm::vec4 sunDir;  // ← add this
+  glm::mat4 viewProj;
+  glm::vec4 params;
+  glm::vec4 camPos;
+  glm::vec4 sunDir; // ← add this
 };
 static std::vector<uint32_t> loadSpv(const char *path) {
   std::ifstream f(path, std::ios::binary | std::ios::ate);
@@ -136,6 +136,315 @@ static void createDepthResources(VkContext &ctx) {
   check(
       vkCreateImageView(ctx.device.device, &vCI, nullptr, &ctx.depthImageView),
       "depth view");
+}
+
+static void createOffscreenResources(VkContext &ctx) {
+  VkFormat colorFmt = ctx.swapchain.image_format;
+  VkExtent2D ext = ctx.swapchain.extent;
+
+  // Color attachment
+  {
+    VkImageCreateInfo ic{};
+    ic.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    ic.imageType = VK_IMAGE_TYPE_2D;
+    ic.format = colorFmt;
+    ic.extent = {ext.width, ext.height, 1};
+    ic.mipLevels = 1;
+    ic.arrayLayers = 1;
+    ic.samples = VK_SAMPLE_COUNT_1_BIT;
+    ic.tiling = VK_IMAGE_TILING_OPTIMAL;
+    ic.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    VmaAllocationCreateInfo ac{};
+    ac.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    vmaCreateImage(ctx.allocator, &ic, &ac, &ctx.offscreenColor,
+                   &ctx.offscreenColorAlloc, nullptr);
+
+    VkImageViewCreateInfo vc{};
+    vc.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    vc.image = ctx.offscreenColor;
+    vc.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    vc.format = colorFmt;
+    vc.subresourceRange = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+    vkCreateImageView(ctx.device.device, &vc, nullptr, &ctx.offscreenColorView);
+  }
+
+  // Depth attachment (reuse format)
+  {
+    VkImageCreateInfo ic{};
+    ic.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    ic.imageType = VK_IMAGE_TYPE_2D;
+    ic.format = VK_FORMAT_D32_SFLOAT;
+    ic.extent = {ext.width, ext.height, 1};
+    ic.mipLevels = 1;
+    ic.arrayLayers = 1;
+    ic.samples = VK_SAMPLE_COUNT_1_BIT;
+    ic.tiling = VK_IMAGE_TILING_OPTIMAL;
+    ic.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
+               VK_IMAGE_USAGE_SAMPLED_BIT;
+    VmaAllocationCreateInfo ac{};
+    ac.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+    vmaCreateImage(ctx.allocator, &ic, &ac, &ctx.offscreenDepth,
+                   &ctx.offscreenDepthAlloc, nullptr);
+
+    VkImageViewCreateInfo vc{};
+    vc.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    vc.image = ctx.offscreenDepth;
+    vc.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    vc.format = VK_FORMAT_D32_SFLOAT;
+    vc.subresourceRange = {VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1};
+    vkCreateImageView(ctx.device.device, &vc, nullptr, &ctx.offscreenDepthView);
+  }
+
+  // Sampler for reading in godray pass
+  {
+    VkSamplerCreateInfo sc{};
+    sc.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    sc.magFilter = VK_FILTER_LINEAR;
+    sc.minFilter = VK_FILTER_LINEAR;
+    sc.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    sc.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    sc.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    vkCreateSampler(ctx.device.device, &sc, nullptr, &ctx.offscreenSampler);
+  }
+
+  // Offscreen render pass
+  {
+    VkAttachmentDescription colorAtt{};
+    colorAtt.format = colorFmt;
+    colorAtt.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorAtt.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    colorAtt.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAtt.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAtt.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    colorAtt.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    colorAtt.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+    VkAttachmentDescription depthAtt{};
+    depthAtt.format = VK_FORMAT_D32_SFLOAT;
+    depthAtt.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAtt.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAtt.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depthAtt.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAtt.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAtt.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depthAtt.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+    VkAttachmentReference colorRef{0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+    VkAttachmentReference depthRef{
+        1, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+
+    VkSubpassDescription subpass{};
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &colorRef;
+    subpass.pDepthStencilAttachment = &depthRef;
+
+    VkSubpassDependency deps[2]{};
+    deps[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+    deps[0].dstSubpass = 0;
+    deps[0].srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    deps[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    deps[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    deps[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    deps[1].srcSubpass = 0;
+    deps[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+    deps[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    deps[1].dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    deps[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    deps[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+    VkAttachmentDescription atts[] = {colorAtt, depthAtt};
+    VkRenderPassCreateInfo rpCI{};
+    rpCI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    rpCI.attachmentCount = 2;
+    rpCI.pAttachments = atts;
+    rpCI.subpassCount = 1;
+    rpCI.pSubpasses = &subpass;
+    rpCI.dependencyCount = 2;
+    rpCI.pDependencies = deps;
+    vkCreateRenderPass(ctx.device.device, &rpCI, nullptr, &ctx.offscreenPass);
+  }
+
+  // Offscreen framebuffer
+  {
+    VkImageView atts[] = {ctx.offscreenColorView, ctx.offscreenDepthView};
+    VkFramebufferCreateInfo fbCI{};
+    fbCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    fbCI.renderPass = ctx.offscreenPass;
+    fbCI.attachmentCount = 2;
+    fbCI.pAttachments = atts;
+    fbCI.width = ext.width;
+    fbCI.height = ext.height;
+    fbCI.layers = 1;
+    vkCreateFramebuffer(ctx.device.device, &fbCI, nullptr, &ctx.offscreenFB);
+  }
+}
+
+static void createGodrayPipeline(VkContext &ctx) {
+  // Descriptor set layout: binding 0 = color, binding 1 = depth
+  VkDescriptorSetLayoutBinding bindings[2]{};
+  bindings[0].binding = 0;
+  bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[0].descriptorCount = 1;
+  bindings[0].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  bindings[1].binding = 1;
+  bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  bindings[1].descriptorCount = 1;
+  bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  VkDescriptorSetLayoutCreateInfo dsCI{};
+  dsCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  dsCI.bindingCount = 2;
+  dsCI.pBindings = bindings;
+  vkCreateDescriptorSetLayout(ctx.device.device, &dsCI, nullptr,
+                              &ctx.godrayDsLayout);
+
+  VkDescriptorPoolSize poolSizes[1]{
+      {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2}};
+  VkDescriptorPoolCreateInfo dpCI{};
+  dpCI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  dpCI.maxSets = 1;
+  dpCI.poolSizeCount = 1;
+  dpCI.pPoolSizes = poolSizes;
+  vkCreateDescriptorPool(ctx.device.device, &dpCI, nullptr, &ctx.godrayDsPool);
+
+  VkDescriptorSetAllocateInfo dsAI{};
+  dsAI.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  dsAI.descriptorPool = ctx.godrayDsPool;
+  dsAI.descriptorSetCount = 1;
+  dsAI.pSetLayouts = &ctx.godrayDsLayout;
+  vkAllocateDescriptorSets(ctx.device.device, &dsAI, &ctx.godrayDsSet);
+
+  // Write descriptors
+  VkDescriptorImageInfo colorInfo{};
+  colorInfo.sampler = ctx.offscreenSampler;
+  colorInfo.imageView = ctx.offscreenColorView;
+  colorInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+  VkDescriptorImageInfo depthInfo{};
+  depthInfo.sampler = ctx.offscreenSampler;
+  depthInfo.imageView = ctx.offscreenDepthView;
+  depthInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+  VkWriteDescriptorSet writes[2]{};
+  writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[0].dstSet = ctx.godrayDsSet;
+  writes[0].dstBinding = 0;
+  writes[0].descriptorCount = 1;
+  writes[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writes[0].pImageInfo = &colorInfo;
+  writes[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  writes[1].dstSet = ctx.godrayDsSet;
+  writes[1].dstBinding = 1;
+  writes[1].descriptorCount = 1;
+  writes[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  writes[1].pImageInfo = &depthInfo;
+  vkUpdateDescriptorSets(ctx.device.device, 2, writes, 0, nullptr);
+
+  // Push constants: sunScreenPos, intensity, exposure, decay, density, weight,
+  // pad
+  VkPushConstantRange pcr{};
+  pcr.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+  pcr.size = sizeof(float) * 8;
+
+  VkPipelineLayoutCreateInfo plCI{};
+  plCI.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  plCI.setLayoutCount = 1;
+  plCI.pSetLayouts = &ctx.godrayDsLayout;
+  plCI.pushConstantRangeCount = 1;
+  plCI.pPushConstantRanges = &pcr;
+  vkCreatePipelineLayout(ctx.device.device, &plCI, nullptr, &ctx.godrayLayout);
+
+  auto vc = loadSpv(AssetPath::get("godray_vert.spv").c_str());
+  auto fc = loadSpv(AssetPath::get("godray_frag.spv").c_str());
+  VkShaderModule vm = makeModule(ctx.device.device, vc);
+  VkShaderModule fm = makeModule(ctx.device.device, fc);
+
+  VkPipelineShaderStageCreateInfo stages[2]{};
+  stages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+  stages[0].module = vm;
+  stages[0].pName = "main";
+  stages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+  stages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+  stages[1].module = fm;
+  stages[1].pName = "main";
+
+  VkPipelineVertexInputStateCreateInfo vi{};
+  vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+  VkPipelineInputAssemblyStateCreateInfo ia{};
+  ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  VkDynamicState dynStates[] = {VK_DYNAMIC_STATE_VIEWPORT,
+                                VK_DYNAMIC_STATE_SCISSOR};
+  VkPipelineDynamicStateCreateInfo dyn{};
+  dyn.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+  dyn.dynamicStateCount = 2;
+  dyn.pDynamicStates = dynStates;
+  VkPipelineViewportStateCreateInfo vps{};
+  vps.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+  vps.viewportCount = 1;
+  vps.scissorCount = 1;
+  VkPipelineRasterizationStateCreateInfo rs{};
+  rs.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+  rs.polygonMode = VK_POLYGON_MODE_FILL;
+  rs.cullMode = VK_CULL_MODE_NONE;
+  rs.lineWidth = 1.f;
+  VkPipelineMultisampleStateCreateInfo ms{};
+  ms.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+  ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+  VkPipelineDepthStencilStateCreateInfo ds{};
+  ds.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  VkPipelineColorBlendAttachmentState ba{};
+  ba.colorWriteMask = 0xF;
+  VkPipelineColorBlendStateCreateInfo bl{};
+  bl.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+  bl.attachmentCount = 1;
+  bl.pAttachments = &ba;
+
+  VkGraphicsPipelineCreateInfo pCI{};
+  pCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+  pCI.stageCount = 2;
+  pCI.pStages = stages;
+  pCI.pVertexInputState = &vi;
+  pCI.pInputAssemblyState = &ia;
+  pCI.pViewportState = &vps;
+  pCI.pRasterizationState = &rs;
+  pCI.pMultisampleState = &ms;
+  pCI.pDepthStencilState = &ds;
+  pCI.pColorBlendState = &bl;
+  pCI.pDynamicState = &dyn;
+  pCI.layout = ctx.godrayLayout;
+  pCI.renderPass = ctx.renderPass;
+  vkCreateGraphicsPipelines(ctx.device.device, VK_NULL_HANDLE, 1, &pCI, nullptr,
+                            &ctx.godrayPipeline);
+
+  vkDestroyShaderModule(ctx.device.device, vm, nullptr);
+  vkDestroyShaderModule(ctx.device.device, fm, nullptr);
+}
+
+static void destroyOffscreenResources(VkContext &ctx) {
+  if (ctx.offscreenFB)
+    vkDestroyFramebuffer(ctx.device.device, ctx.offscreenFB, nullptr);
+  if (ctx.offscreenPass)
+    vkDestroyRenderPass(ctx.device.device, ctx.offscreenPass, nullptr);
+  if (ctx.offscreenSampler)
+    vkDestroySampler(ctx.device.device, ctx.offscreenSampler, nullptr);
+  if (ctx.offscreenColorView)
+    vkDestroyImageView(ctx.device.device, ctx.offscreenColorView, nullptr);
+  if (ctx.offscreenColor)
+    vmaDestroyImage(ctx.allocator, ctx.offscreenColor, ctx.offscreenColorAlloc);
+  if (ctx.offscreenDepthView)
+    vkDestroyImageView(ctx.device.device, ctx.offscreenDepthView, nullptr);
+  if (ctx.offscreenDepth)
+    vmaDestroyImage(ctx.allocator, ctx.offscreenDepth, ctx.offscreenDepthAlloc);
+  ctx.offscreenFB = VK_NULL_HANDLE;
+  ctx.offscreenPass = VK_NULL_HANDLE;
+  ctx.offscreenSampler = VK_NULL_HANDLE;
+  ctx.offscreenColorView = VK_NULL_HANDLE;
+  ctx.offscreenColor = VK_NULL_HANDLE;
+  ctx.offscreenDepthView = VK_NULL_HANDLE;
+  ctx.offscreenDepth = VK_NULL_HANDLE;
 }
 
 // ── vk_init
@@ -381,6 +690,8 @@ VkContext vk_init(GLFWwindow *window) {
           "framebuf");
   }
 
+  createOffscreenResources(ctx);
+  createGodrayPipeline(ctx);
   // ── Descriptor set layout ─────────────────────────────────────────────────
   {
     VkDescriptorSetLayoutBinding binding{};
@@ -586,7 +897,7 @@ VkContext vk_init(GLFWwindow *window) {
   pCI.pDepthStencilState = &ds;
   pCI.pColorBlendState = &blend;
   pCI.layout = ctx.pipelineLayout;
-  pCI.renderPass = ctx.renderPass;
+  pCI.renderPass = ctx.offscreenPass;
   check(vkCreateGraphicsPipelines(ctx.device.device, VK_NULL_HANDLE, 1, &pCI,
                                   nullptr, &ctx.pipeline),
         "pipeline");
@@ -624,7 +935,7 @@ VkContext vk_init(GLFWwindow *window) {
     check(vkCreateFence(ctx.device.device, &fenCI, nullptr, &ctx.inFlight[i]),
           "fence");
   }
-  ctx.skyGodRay.init(ctx.device.device, ctx.allocator, ctx.renderPass,
+  ctx.skyGodRay.init(ctx.device.device, ctx.allocator, ctx.offscreenPass,
                      ctx.swapchain.extent,
                      AssetPath::get("sky_vert.spv").c_str(),
                      AssetPath::get("sky_frag.spv").c_str());
@@ -981,40 +1292,35 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
   VkCommandBufferBeginInfo bI{};
   bI.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   vkBeginCommandBuffer(cmd, &bI);
-
+  // ── Pass 1: scene → offscreen ─────────────────────────────────────────────
   VkClearValue clears[2]{};
   clears[0].color = {{0.f, 0.f, 0.f, 1.f}};
   clears[1].depthStencil = {1.f, 0};
 
   VkRenderPassBeginInfo rpBI{};
   rpBI.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  rpBI.renderPass = ctx.renderPass;
-  rpBI.framebuffer = ctx.framebuffers[imageIndex];
+  rpBI.renderPass = ctx.offscreenPass;
+  rpBI.framebuffer = ctx.offscreenFB;
   rpBI.renderArea.extent = ctx.swapchain.extent;
   rpBI.clearValueCount = 2;
   rpBI.pClearValues = clears;
-
   vkCmdBeginRenderPass(cmd, &rpBI, VK_SUBPASS_CONTENTS_INLINE);
-  VkViewport vp{};
-  vp.x = 0.f;
-  vp.y = 0.f;
-  vp.width = (float)ctx.swapchain.extent.width;
-  vp.height = (float)ctx.swapchain.extent.height;
-  vp.minDepth = 0.f;
-  vp.maxDepth = 1.f;
-  vkCmdSetViewport(cmd, 0, 1, &vp);
 
-  VkRect2D sc{};
-  sc.offset = {0, 0};
-  sc.extent = ctx.swapchain.extent;
+  VkViewport vp{0,
+                0,
+                (float)ctx.swapchain.extent.width,
+                (float)ctx.swapchain.extent.height,
+                0.f,
+                1.f};
+  vkCmdSetViewport(cmd, 0, 1, &vp);
+  VkRect2D sc{{0, 0}, ctx.swapchain.extent};
   vkCmdSetScissor(cmd, 0, 1, &sc);
 
-  // --- Da Sky ---------------------
-  if (dayNight) {
+  // Sky
+  if (dayNight)
     ctx.skyGodRay.drawSky(cmd, ctx.swapchain.extent, view, *dayNight, camPos);
-  }
 
-  // ── Terrain ───────────────────────────────────────────────────────────────
+  // Terrain
   vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
   VkDeviceSize zero = 0;
   vkCmdBindVertexBuffers(cmd, 0, 1, &ctx.mega.vertexBuffer, &zero);
@@ -1028,33 +1334,68 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
   float chunkSize = (float)ChunkData::SIZE;
   float fogEnd = (renderDistXZ * 2 - 1) * chunkSize * 0.85f;
   float fogStart = fogEnd * 0.70f;
-glm::vec3 sd = dayNight ? dayNight->sunDir() : glm::vec3(0.f, 1.f, 0.f);
-GlobalPC gpc{viewProj,
-             {sunIntensity, fogStart, fogEnd, 0.f},
-             {camPos.x, camPos.y, camPos.z, 0.f},
-             {sd.x, sd.y, sd.z, 0.f}};  // ← add this line
+  glm::vec3 sd = dayNight ? dayNight->sunDir() : glm::vec3(0.f, 1.f, 0.f);
+  GlobalPC terrainPC{viewProj,
+                     {sunIntensity, fogStart, fogEnd, 0.f},
+                     {camPos.x, camPos.y, camPos.z, 0.f},
+                     {sd.x, sd.y, sd.z, 0.f}};
   vkCmdPushConstants(cmd, ctx.pipelineLayout,
                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                     0, sizeof(GlobalPC), &gpc);
-
+                     0, sizeof(GlobalPC), &terrainPC);
   if (drawCount > 0)
     vkCmdDrawIndexedIndirect(cmd, ctx.indirectBuffer[frame], 0, drawCount,
                              sizeof(DrawCmd));
 
-  // ── View model (drawn after terrain, depth test disabled so always on top) ─
   if (viewModel)
     viewModel->draw(cmd, proj, ctx.swapchain.extent);
-  if (remotePlayers && viewModel)
+  if (remotePlayers)
     remotePlayers->draw(cmd, viewProj);
   if (trees)
     trees->draw(cmd, viewProj, ctx.swapchain.extent);
 
- 
-  // ── ImGui ─────────────────────────────────────────────────────────────────
+  vkCmdEndRenderPass(cmd);
+
+  // ── Pass 2: godray post-process + ImGui → swapchain ───────────────────────
+  VkRenderPassBeginInfo rpBI2{};
+  rpBI2.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  rpBI2.renderPass = ctx.renderPass;
+  rpBI2.framebuffer = ctx.framebuffers[imageIndex];
+  rpBI2.renderArea.extent = ctx.swapchain.extent;
+  rpBI2.clearValueCount = 2;
+  rpBI2.pClearValues = clears;
+  vkCmdBeginRenderPass(cmd, &rpBI2, VK_SUBPASS_CONTENTS_INLINE);
+
+  vkCmdSetViewport(cmd, 0, 1, &vp);
+  vkCmdSetScissor(cmd, 0, 1, &sc);
+
+  // Godray fullscreen pass
+  struct GodrayPC {
+    glm::vec2 sunScreenPos;
+    float intensity, exposure, decay, density, weight, pad;
+  };
+  glm::vec4 sunClip =
+      viewProj * glm::vec4(glm::normalize(dayNight ? dayNight->sunDir()
+                                                   : glm::vec3(0, 1, 0)) *
+                               1000.f,
+                           1.f);
+  glm::vec2 sunScreen{0.5f, 0.5f};
+  if (sunClip.w > 0.f) {
+    sunScreen.x = sunClip.x / sunClip.w * 0.5f + 0.5f;
+    sunScreen.y = -sunClip.y / sunClip.w * 0.5f + 0.5f;
+  }
+  float si = dayNight ? dayNight->sunIntensity() : 0.f;
+  GodrayPC gpc{sunScreen, si, 0.85f, 0.97f, 0.7f, 0.4f, 0.f};
+
+  vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.godrayPipeline);
+  vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          ctx.godrayLayout, 0, 1, &ctx.godrayDsSet, 0, nullptr);
+  vkCmdPushConstants(cmd, ctx.godrayLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+                     sizeof(GodrayPC), &gpc);
+  vkCmdDraw(cmd, 3, 1, 0, 0);
+
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);
   vkEndCommandBuffer(cmd);
-
   // ── Submit ────────────────────────────────────────────────────────────────
   VkPipelineStageFlags waitStage =
       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -1084,26 +1425,57 @@ GlobalPC gpc{viewProj,
 void vk_destroy(VkContext &ctx) {
   vkDeviceWaitIdle(ctx.device.device);
 
+  // ── Sync objects first ────────────────────────────────────────────────────
   for (int i = 0; i < VkContext::FRAMES_IN_FLIGHT; i++) {
     vkDestroySemaphore(ctx.device.device, ctx.imageAvailable[i], nullptr);
     vkDestroySemaphore(ctx.device.device, ctx.renderFinished[i], nullptr);
     vkDestroyFence(ctx.device.device, ctx.inFlight[i], nullptr);
   }
-
   vkDestroyFence(ctx.device.device, ctx.uploadFence, nullptr);
 
+  // ── Pipelines ─────────────────────────────────────────────────────────────
   vkDestroyPipeline(ctx.device.device, ctx.pipeline, nullptr);
   vkDestroyPipelineLayout(ctx.device.device, ctx.pipelineLayout, nullptr);
+  if (ctx.godrayPipeline)
+    vkDestroyPipeline(ctx.device.device, ctx.godrayPipeline, nullptr);
+  if (ctx.godrayLayout)
+    vkDestroyPipelineLayout(ctx.device.device, ctx.godrayLayout, nullptr);
+
+  // ── Descriptor pools/layouts ──────────────────────────────────────────────
   vkDestroyDescriptorPool(ctx.device.device, ctx.dsPool, nullptr);
   vkDestroyDescriptorSetLayout(ctx.device.device, ctx.dsLayout, nullptr);
+  if (ctx.godrayDsPool)
+    vkDestroyDescriptorPool(ctx.device.device, ctx.godrayDsPool, nullptr);
+  if (ctx.godrayDsLayout)
+    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.godrayDsLayout,
+                                 nullptr);
+  if (ctx.atlasPool)
+    vkDestroyDescriptorPool(ctx.device.device, ctx.atlasPool, nullptr);
+  if (ctx.atlasLayout)
+    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.atlasLayout, nullptr);
+  vkDestroyDescriptorPool(ctx.device.device, ctx.imguiPool, nullptr);
 
+  // ── Framebuffers + render passes ──────────────────────────────────────────
   for (auto &fb : ctx.framebuffers)
     vkDestroyFramebuffer(ctx.device.device, fb, nullptr);
-
   vkDestroyRenderPass(ctx.device.device, ctx.renderPass, nullptr);
+
+  // ── Command pool (frees all command buffers) ──────────────────────────────
+  vkDestroyCommandPool(ctx.device.device, ctx.commandPool, nullptr);
+
+  // ── VMA-managed resources (must be before vmaDestroyAllocator) ────────────
+  ctx.skyGodRay.destroy(ctx.device.device, ctx.allocator);
+  destroyOffscreenResources(ctx);
 
   vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
   vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
+
+  if (ctx.atlasSampler)
+    vkDestroySampler(ctx.device.device, ctx.atlasSampler, nullptr);
+  if (ctx.atlasImageView)
+    vkDestroyImageView(ctx.device.device, ctx.atlasImageView, nullptr);
+  if (ctx.atlasImage)
+    vmaDestroyImage(ctx.allocator, ctx.atlasImage, ctx.atlasAlloc);
 
   for (int i = 0; i < 2; i++) {
     vmaDestroyBuffer(ctx.allocator, ctx.indirectBuffer[i],
@@ -1111,28 +1483,18 @@ void vk_destroy(VkContext &ctx) {
     vmaDestroyBuffer(ctx.allocator, ctx.perChunkBuffer[i],
                      ctx.perChunkAlloc[i]);
   }
-
   vmaDestroyBuffer(ctx.allocator, ctx.mega.vertexBuffer, ctx.mega.vertexAlloc);
   vmaDestroyBuffer(ctx.allocator, ctx.mega.indexBuffer, ctx.mega.indexAlloc);
   vmaDestroyBuffer(ctx.allocator, ctx.stagingBuffer, ctx.stagingAlloc);
 
-  vkDestroyCommandPool(ctx.device.device, ctx.commandPool, nullptr);
-  if (ctx.atlasSampler)
-    vkDestroySampler(ctx.device.device, ctx.atlasSampler, nullptr);
-  if (ctx.atlasImageView)
-    vkDestroyImageView(ctx.device.device, ctx.atlasImageView, nullptr);
-  if (ctx.atlasImage)
-    vmaDestroyImage(ctx.allocator, ctx.atlasImage, ctx.atlasAlloc);
-  if (ctx.atlasPool)
-    vkDestroyDescriptorPool(ctx.device.device, ctx.atlasPool, nullptr);
-  if (ctx.atlasLayout)
-    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.atlasLayout, nullptr);
+  // ── Swapchain image views ─────────────────────────────────────────────────
   for (auto &iv : ctx.swapImageViews)
     vkDestroyImageView(ctx.device.device, iv, nullptr);
 
+  // ── VMA allocator last ────────────────────────────────────────────────────
   vmaDestroyAllocator(ctx.allocator);
 
-  ctx.skyGodRay.destroy(ctx.device.device, ctx.allocator);
+  // ── vkb cleanup ───────────────────────────────────────────────────────────
   vkb::destroy_swapchain(ctx.swapchain);
   vkb::destroy_device(ctx.device);
   vkDestroySurfaceKHR(ctx.instance.instance, ctx.surface, nullptr);
@@ -1183,9 +1545,20 @@ void vk_resize(VkContext &ctx, GLFWwindow *window) {
     vkCreateFramebuffer(ctx.device.device, &fbCI, nullptr,
                         &ctx.framebuffers[i]);
   }
-
+  destroyOffscreenResources(ctx);
+  if (ctx.godrayPipeline)
+    vkDestroyPipeline(ctx.device.device, ctx.godrayPipeline, nullptr);
+  if (ctx.godrayLayout)
+    vkDestroyPipelineLayout(ctx.device.device, ctx.godrayLayout, nullptr);
+  if (ctx.godrayDsPool)
+    vkDestroyDescriptorPool(ctx.device.device, ctx.godrayDsPool, nullptr);
+  if (ctx.godrayDsLayout)
+    vkDestroyDescriptorSetLayout(ctx.device.device, ctx.godrayDsLayout,
+                                 nullptr);
+  createOffscreenResources(ctx);
+  createGodrayPipeline(ctx);
   ctx.skyGodRay.destroy(ctx.device.device, ctx.allocator);
-  ctx.skyGodRay.init(ctx.device.device, ctx.allocator, ctx.renderPass,
+  ctx.skyGodRay.init(ctx.device.device, ctx.allocator, ctx.offscreenPass,
                      ctx.swapchain.extent,
                      AssetPath::get("sky_vert.spv").c_str(),
                      AssetPath::get("sky_frag.spv").c_str());

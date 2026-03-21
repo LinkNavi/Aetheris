@@ -5,464 +5,497 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 
-// ── SAT helpers ───────────────────────────────────────────────────────────────
+// ── SAT helpers
+// ───────────────────────────────────────────────────────────────
 
 static float projectAABB(glm::vec3 n, glm::vec3 half) {
-    return std::abs(n.x)*half.x + std::abs(n.y)*half.y + std::abs(n.z)*half.z;
+  return std::abs(n.x) * half.x + std::abs(n.y) * half.y +
+         std::abs(n.z) * half.z;
 }
 
 static bool axisTest(glm::vec3 axis, glm::vec3 centre, glm::vec3 half,
-                     glm::vec3 a, glm::vec3 b, glm::vec3 c,
-                     float& depth, glm::vec3& mtvAxis) {
-    float len2 = glm::dot(axis, axis);
-    if (len2 < 1e-8f) return true;
-    glm::vec3 n = axis / std::sqrt(len2);
-    float pa = glm::dot(n, a - centre), pb = glm::dot(n, b - centre), pc = glm::dot(n, c - centre);
-    float lo = std::min({pa,pb,pc}), hi = std::max({pa,pb,pc});
-    float r  = projectAABB(n, half);
-    if (lo > r || hi < -r) return false;
-    float overlap = std::min(r - lo, hi + r);
-    if (overlap < depth) { depth = overlap; mtvAxis = n; }
+                     glm::vec3 a, glm::vec3 b, glm::vec3 c, float &depth,
+                     glm::vec3 &mtvAxis) {
+  float len2 = glm::dot(axis, axis);
+  if (len2 < 1e-8f)
     return true;
+  glm::vec3 n = axis / std::sqrt(len2);
+  float pa = glm::dot(n, a - centre), pb = glm::dot(n, b - centre),
+        pc = glm::dot(n, c - centre);
+  float lo = std::min({pa, pb, pc}), hi = std::max({pa, pb, pc});
+  float r = projectAABB(n, half);
+  if (lo > r || hi < -r)
+    return false;
+  float overlap = std::min(r - lo, hi + r);
+  if (overlap < depth) {
+    depth = overlap;
+    mtvAxis = n;
+  }
+  return true;
 }
 
-bool PlayerController::aabbTriTest(glm::vec3 mn, glm::vec3 mx,
-                                    glm::vec3 a, glm::vec3 b, glm::vec3 c,
-                                    glm::vec3& outMTV) const {
-    glm::vec3 half   = (mx - mn) * 0.5f;
-    glm::vec3 centre = (mn + mx) * 0.5f;
-    glm::vec3 ab = b-a, bc = c-b, ca = a-c;
-    float     depth  = 1e9f;
-    glm::vec3 mtvAxis{0,1,0};
-    glm::vec3 axes[3] = {{1,0,0},{0,1,0},{0,0,1}};
+bool PlayerController::aabbTriTest(glm::vec3 mn, glm::vec3 mx, glm::vec3 a,
+                                   glm::vec3 b, glm::vec3 c,
+                                   glm::vec3 &outMTV) const {
+  glm::vec3 half = (mx - mn) * 0.5f;
+  glm::vec3 centre = (mn + mx) * 0.5f;
+  glm::vec3 ab = b - a, bc = c - b, ca = a - c;
+  float depth = 1e9f;
+  glm::vec3 mtvAxis{0, 1, 0};
+  glm::vec3 axes[3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
 
-    for (auto& ax : axes)
-        if (!axisTest(ax, centre, half, a, b, c, depth, mtvAxis)) return false;
-    if (!axisTest(glm::cross(ab, c-a), centre, half, a, b, c, depth, mtvAxis)) return false;
-    for (auto& e : {ab, bc, ca})
-        for (auto& ax : axes)
-            if (!axisTest(glm::cross(e, ax), centre, half, a, b, c, depth, mtvAxis)) return false;
+  for (auto &ax : axes)
+    if (!axisTest(ax, centre, half, a, b, c, depth, mtvAxis))
+      return false;
+  if (!axisTest(glm::cross(ab, c - a), centre, half, a, b, c, depth, mtvAxis))
+    return false;
+  for (auto &e : {ab, bc, ca})
+    for (auto &ax : axes)
+      if (!axisTest(glm::cross(e, ax), centre, half, a, b, c, depth, mtvAxis))
+        return false;
 
-    if (glm::dot(mtvAxis, a - centre) > 0) mtvAxis = -mtvAxis;
-    outMTV = mtvAxis * depth;
-    return true;
+  if (glm::dot(mtvAxis, a - centre) > 0)
+    mtvAxis = -mtvAxis;
+  outMTV = mtvAxis * depth;
+  return true;
 }
 
-// ── Möller–Trumbore ray-triangle intersection ─────────────────────────────────
+// ── Möller–Trumbore ray-triangle intersection
+// ─────────────────────────────────
 bool PlayerController::rayTriTest(glm::vec3 orig, glm::vec3 dir, float maxDist,
-                                   glm::vec3 a, glm::vec3 b, glm::vec3 c,
-                                   float& outT) const {
-    constexpr float EPS = 1e-7f;
-    glm::vec3 ab = b - a, ac = c - a;
-    glm::vec3 h  = glm::cross(dir, ac);
-    float det    = glm::dot(ab, h);
-    if (std::abs(det) < EPS) return false;
-    float invDet = 1.f / det;
-    glm::vec3 s  = orig - a;
-    float u      = glm::dot(s, h) * invDet;
-    if (u < 0.f || u > 1.f) return false;
-    glm::vec3 q  = glm::cross(s, ab);
-    float v      = glm::dot(dir, q) * invDet;
-    if (v < 0.f || u + v > 1.f) return false;
-    float t      = glm::dot(ac, q) * invDet;
-    if (t < EPS || t > maxDist) return false;
-    outT = t;
-    return true;
+                                  glm::vec3 a, glm::vec3 b, glm::vec3 c,
+                                  float &outT) const {
+  constexpr float EPS = 1e-7f;
+  glm::vec3 ab = b - a, ac = c - a;
+  glm::vec3 h = glm::cross(dir, ac);
+  float det = glm::dot(ab, h);
+  if (std::abs(det) < EPS)
+    return false;
+  float invDet = 1.f / det;
+  glm::vec3 s = orig - a;
+  float u = glm::dot(s, h) * invDet;
+  if (u < 0.f || u > 1.f)
+    return false;
+  glm::vec3 q = glm::cross(s, ab);
+  float v = glm::dot(dir, q) * invDet;
+  if (v < 0.f || u + v > 1.f)
+    return false;
+  float t = glm::dot(ac, q) * invDet;
+  if (t < EPS || t > maxDist)
+    return false;
+  outT = t;
+  return true;
 }
 
-// ── Raycast ground detection ──────────────────────────────────────────────────
-bool PlayerController::raycastGround(const CTransform& tf, const CAABB& box,
-                                      float& outHitY) const {
-    // Tighter parameters to avoid "floating" feel
-    constexpr float RAY_START  = 0.02f;  // just barely above feet
-    constexpr float RAY_LEN    = 0.25f;  // short ray — only detect ground very close
-    constexpr float FOOT_INSET = 0.08f;
+// ── Raycast ground detection
+// ──────────────────────────────────────────────────
+bool PlayerController::raycastGround(const CTransform &tf, const CAABB &box,
+                                     float &outHitY) const {
+  // Tighter parameters to avoid "floating" feel
+  constexpr float RAY_START = 0.02f; // just barely above feet
+  constexpr float RAY_LEN = 0.25f; // short ray — only detect ground very close
+  constexpr float FOOT_INSET = 0.08f;
 
-    float footY   = tf.pos.y - box.half.y;
-    float origY   = footY + RAY_START;
-    float maxDist = RAY_LEN;
+  float footY = tf.pos.y - box.half.y;
+  float origY = footY + RAY_START;
+  float maxDist = RAY_LEN;
 
-    float inset = box.half.x - FOOT_INSET;
-    // 5 rays: centre + 4 corners
-    glm::vec3 origins[5] = {
-        {tf.pos.x,         origY, tf.pos.z        },
-        {tf.pos.x + inset, origY, tf.pos.z + inset},
-        {tf.pos.x - inset, origY, tf.pos.z + inset},
-        {tf.pos.x + inset, origY, tf.pos.z - inset},
-        {tf.pos.x - inset, origY, tf.pos.z - inset},
-    };
-    glm::vec3 dir{0.f, -1.f, 0.f};
+  float inset = box.half.x - FOOT_INSET;
+  // 5 rays: centre + 4 corners
+  glm::vec3 origins[5] = {
+      {tf.pos.x, origY, tf.pos.z},
+      {tf.pos.x + inset, origY, tf.pos.z + inset},
+      {tf.pos.x - inset, origY, tf.pos.z + inset},
+      {tf.pos.x + inset, origY, tf.pos.z - inset},
+      {tf.pos.x - inset, origY, tf.pos.z - inset},
+  };
+  glm::vec3 dir{0.f, -1.f, 0.f};
 
-    int sz = ChunkData::SIZE;
-    int cx = (int)std::floor(tf.pos.x / sz);
-    int cy = (int)std::floor(tf.pos.y / sz);
-    int cz = (int)std::floor(tf.pos.z / sz);
+  int sz = ChunkData::SIZE;
+  int cx = (int)std::floor(tf.pos.x / sz);
+  int cy = (int)std::floor(tf.pos.y / sz);
+  int cz = (int)std::floor(tf.pos.z / sz);
 
-    float bestT = maxDist + 1.f;
-    bool  hit   = false;
+  float bestT = maxDist + 1.f;
+  bool hit = false;
 
-    for (int dx = -1; dx <= 1; dx++)
+  for (int dx = -1; dx <= 1; dx++)
     for (int dy = -1; dy <= 1; dy++)
-    for (int dz = -1; dz <= 1; dz++) {
-        auto it = _triSoups.find({cx+dx, cy+dy, cz+dz});
-        if (it == _triSoups.end()) continue;
-        const auto& tris = it->second.tris;
+      for (int dz = -1; dz <= 1; dz++) {
+        auto it = _triSoups.find({cx + dx, cy + dy, cz + dz});
+        if (it == _triSoups.end())
+          continue;
+        const auto &tris = it->second.tris;
         for (size_t i = 0; i + 2 < tris.size(); i += 3) {
-            glm::vec3 edge1 = tris[i+1] - tris[i];
-            glm::vec3 edge2 = tris[i+2] - tris[i];
-            glm::vec3 n = glm::cross(edge1, edge2);
-            if (n.y < 0.1f) continue;
+          glm::vec3 edge1 = tris[i + 1] - tris[i];
+          glm::vec3 edge2 = tris[i + 2] - tris[i];
+          glm::vec3 n = glm::cross(edge1, edge2);
+          if (n.y < 0.1f)
+            continue;
 
-            for (auto& orig : origins) {
-                float t;
-                if (rayTriTest(orig, dir, maxDist, tris[i], tris[i+1], tris[i+2], t)) {
-                    if (t < bestT) {
-                        bestT   = t;
-                        outHitY = orig.y - t;
-                        hit     = true;
-                    }
-                }
+          for (auto &orig : origins) {
+            float t;
+            if (rayTriTest(orig, dir, maxDist, tris[i], tris[i + 1],
+                           tris[i + 2], t)) {
+              if (t < bestT) {
+                bestT = t;
+                outHitY = orig.y - t;
+                hit = true;
+              }
             }
+          }
         }
-    }
-   
-    return hit;
+      }
+
+  return hit;
 }
 
-// ── PlayerController ──────────────────────────────────────────────────────────
+// ── PlayerController
+// ──────────────────────────────────────────────────────────
 
-PlayerController::PlayerController(entt::registry& reg, Camera& cam)
-    : _reg(reg), _cam(cam)
-{
-    _player = reg.create();
-    reg.emplace<CTransform>(_player, glm::vec3{0.f, 80.f, 0.f});
-    reg.emplace<CVelocity> (_player);
-    reg.emplace<CAABB>     (_player);
-    reg.emplace<CGrounded> (_player);
-    reg.emplace<CStamina>  (_player);
-    reg.emplace<CHealth>   (_player);
-    reg.emplace<CAttack>   (_player);
-    reg.emplace<CParry>    (_player);
-    reg.emplace<CDodge>    (_player);
-    reg.emplace<CInventory>(_player);
+PlayerController::PlayerController(entt::registry &reg, Camera &cam)
+    : _reg(reg), _cam(cam) {
+  _player = reg.create();
+  reg.emplace<CTransform>(_player, glm::vec3{0.f, 80.f, 0.f});
+  reg.emplace<CVelocity>(_player);
+  reg.emplace<CAABB>(_player);
+  reg.emplace<CGrounded>(_player);
+  reg.emplace<CStamina>(_player);
+  reg.emplace<CHealth>(_player);
+  reg.emplace<CAttack>(_player);
+  reg.emplace<CParry>(_player);
+  reg.emplace<CDodge>(_player);
+  reg.emplace<CInventory>(_player);
 }
 
-void PlayerController::addChunkMesh(const ChunkMesh& mesh) {
-    if (mesh.vertices.empty()) return;
-    ChunkTriSoup soup;
-    int sz = ChunkData::SIZE;
-    glm::vec3 offset{
-        (float)(mesh.coord.x * sz),
-        (float)(mesh.coord.y * sz),
-        (float)(mesh.coord.z * sz)
-    };
-    for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3) {
-        soup.tris.push_back(mesh.vertices[mesh.indices[i  ]].pos + offset);
-        soup.tris.push_back(mesh.vertices[mesh.indices[i+1]].pos + offset);
-        soup.tris.push_back(mesh.vertices[mesh.indices[i+2]].pos + offset);
-    }
-    _triSoups[mesh.coord] = std::move(soup);
+void PlayerController::addChunkMesh(const ChunkMesh &mesh) {
+  if (mesh.vertices.empty())
+    return;
+  ChunkTriSoup soup;
+  int sz = ChunkData::SIZE;
+  glm::vec3 offset{(float)(mesh.coord.x * sz), (float)(mesh.coord.y * sz),
+                   (float)(mesh.coord.z * sz)};
+  for (size_t i = 0; i + 2 < mesh.indices.size(); i += 3) {
+    soup.tris.push_back(mesh.vertices[mesh.indices[i]].pos + offset);
+    soup.tris.push_back(mesh.vertices[mesh.indices[i + 1]].pos + offset);
+    soup.tris.push_back(mesh.vertices[mesh.indices[i + 2]].pos + offset);
+  }
+  _triSoups[mesh.coord] = std::move(soup);
 }
 
-void PlayerController::removeChunk(ChunkCoord coord) {
-    _triSoups.erase(coord);
-}
+void PlayerController::removeChunk(ChunkCoord coord) { _triSoups.erase(coord); }
 
 void PlayerController::setSpawnPosition(glm::vec3 pos) {
-_spawnWaitTime = 0.f;  // add this
-    // If respawning near same location, keep existing tri-soups
-    bool keepSoups = _spawned &&
-                     glm::length(pos - _reg.get<CTransform>(_player).pos) < 64.f;
+  _spawnWaitTime = 0.f; // add this
+  // If respawning near same location, keep existing tri-soups
+  bool keepSoups =
+      _spawned && glm::length(pos - _reg.get<CTransform>(_player).pos) < 64.f;
 
-    _pendingSpawn    = pos;
-    _hasPendingSpawn = true;
-    _spawned         = false;
-    _smoothVel       = {0.f, 0.f, 0.f};
+  _pendingSpawn = pos;
+  _hasPendingSpawn = true;
+  _spawned = false;
+  _smoothVel = {0.f, 0.f, 0.f};
 
-    if (!keepSoups) {
-        _triSoups.clear();
-    }
-    buildRequiredChunks(pos);
+  if (!keepSoups) {
+    _triSoups.clear();
+  }
+  buildRequiredChunks(pos);
 }
 
 void PlayerController::buildRequiredChunks(glm::vec3 pos) {
-    _requiredChunks.clear();
-    int sz = ChunkData::SIZE;
-    int cx = (int)std::floor(pos.x / sz);
-    int cy = (int)std::floor(pos.y / sz);
-    int cz = (int)std::floor(pos.z / sz);
-    for (int dx = -1; dx <= 1; dx++)
+  _requiredChunks.clear();
+  int sz = ChunkData::SIZE;
+  int cx = (int)std::floor(pos.x / sz);
+  int cy = (int)std::floor(pos.y / sz);
+  int cz = (int)std::floor(pos.z / sz);
+  for (int dx = -1; dx <= 1; dx++)
     for (int dz = -1; dz <= 1; dz++)
-    for (int dy = -1; dy <= 1; dy++)
-        _requiredChunks.insert({cx+dx, cy+dy, cz+dz});
+      for (int dy = -1; dy <= 1; dy++)
+        _requiredChunks.insert({cx + dx, cy + dy, cz + dz});
 }
 
 bool PlayerController::spawnChunksReady() const {
-    if (!_hasPendingSpawn) return false;
-    int N = ChunkData::SIZE;
-    int cx = (int)std::floor(_pendingSpawn.x / N);
-    int cy = (int)std::floor(_pendingSpawn.y / N);
-    int cz = (int)std::floor(_pendingSpawn.z / N);
-    // Just need the chunk at spawn and the one below
-    ChunkCoord atSpawn   {cx,   cy,   cz  };
-    ChunkCoord belowSpawn{cx,   cy-1, cz  };
-    return _triSoups.count(atSpawn) && _triSoups.count(belowSpawn);
+  if (!_hasPendingSpawn)
+    return false;
+  int N = ChunkData::SIZE;
+  int cx = (int)std::floor(_pendingSpawn.x / N);
+  int cz = (int)std::floor(_pendingSpawn.z / N);
+  // Check a 3-chunk vertical window below spawn for any geometry
+  float checkY = _pendingSpawn.y - Config::PLAYER_HEIGHT - 2.f;
+  for (int dy = 0; dy <= 2; dy++) {
+    int cy = (int)std::floor((checkY - dy * (float)N) / N);
+    if (_triSoups.count({cx, cy, cz}))
+      return true;
+  }
+  return false;
 }
 
 float PlayerController::spawnProgress() const {
-    if (_spawned || _requiredChunks.empty()) return _spawned ? 1.f : 0.f;
-    int have = 0;
-    for (const auto& cc : _requiredChunks)
-        if (_triSoups.count(cc)) have++;
-    return (float)have / (float)_requiredChunks.size();
+  if (_spawned || _requiredChunks.empty())
+    return _spawned ? 1.f : 0.f;
+  int have = 0;
+  for (const auto &cc : _requiredChunks)
+    if (_triSoups.count(cc))
+      have++;
+  return (float)have / (float)_requiredChunks.size();
 }
 
 glm::vec3 PlayerController::position() const {
-    return _reg.get<CTransform>(_player).pos;
+  return _reg.get<CTransform>(_player).pos;
 }
 
-// ── resolveCollision ──────────────────────────────────────────────────────────
-void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
-                                         const CAABB& box, CGrounded& gr) {
-    glm::vec3 half = box.half;
-    int sz = ChunkData::SIZE;
-    int cx = (int)std::floor(tf.pos.x / sz);
-    int cy = (int)std::floor(tf.pos.y / sz);
-    int cz = (int)std::floor(tf.pos.z / sz);
+// ── resolveCollision
+// ──────────────────────────────────────────────────────────
+void PlayerController::resolveCollision(CTransform &tf, CVelocity &vel,
+                                        const CAABB &box, CGrounded &gr) {
+  glm::vec3 half = box.half;
+  int sz = ChunkData::SIZE;
+  int cx = (int)std::floor(tf.pos.x / sz);
+  int cy = (int)std::floor(tf.pos.y / sz);
+  int cz = (int)std::floor(tf.pos.z / sz);
 
-    for (int iter = 0; iter < 4; iter++) {
-        glm::vec3 mn = tf.pos - half;
-        glm::vec3 mx = tf.pos + half;
+  for (int iter = 0; iter < 4; iter++) {
+    glm::vec3 mn = tf.pos - half;
+    glm::vec3 mx = tf.pos + half;
 
-        for (int dx = -1; dx <= 1; dx++)
-        for (int dy = -1; dy <= 1; dy++)
+    for (int dx = -1; dx <= 1; dx++)
+      for (int dy = -1; dy <= 1; dy++)
         for (int dz = -1; dz <= 1; dz++) {
-            auto it = _triSoups.find({cx+dx, cy+dy, cz+dz});
-            if (it == _triSoups.end()) continue;
-            for (size_t i = 0; i + 2 < it->second.tris.size(); i += 3) {
-                glm::vec3 mtv;
-                if (!aabbTriTest(mn, mx,
-                        it->second.tris[i], it->second.tris[i+1], it->second.tris[i+2],
-                        mtv)) continue;
+          auto it = _triSoups.find({cx + dx, cy + dy, cz + dz});
+          if (it == _triSoups.end())
+            continue;
+          for (size_t i = 0; i + 2 < it->second.tris.size(); i += 3) {
+            glm::vec3 mtv;
+            if (!aabbTriTest(mn, mx, it->second.tris[i], it->second.tris[i + 1],
+                             it->second.tris[i + 2], mtv))
+              continue;
 
-                glm::vec3 mtvN = glm::normalize(mtv);
+            glm::vec3 mtvN = glm::normalize(mtv);
 
-                // If pushing upward, mark grounded
-                if (mtvN.y > 0.7f) {
-                    gr.grounded = true;
-                    mtv  = glm::vec3(0.f, mtv.y, 0.f);
-                    mtvN = glm::vec3(0.f, 1.f, 0.f);
-                } else if (std::abs(mtvN.y) > 0.7f) {
-                    mtv  = glm::vec3(0.f, mtv.y, 0.f);
-                    mtvN = glm::vec3(0.f, mtvN.y < 0.f ? -1.f : 1.f, 0.f);
-                }
-
-                tf.pos += mtv;
-                mn = tf.pos - half;
-                mx = tf.pos + half;
-
-                float vDot = glm::dot(vel.vel, mtvN);
-                if (vDot < 0.f) vel.vel -= mtvN * vDot;
+            // If pushing upward, mark grounded
+            if (mtvN.y > 0.7f) {
+              gr.grounded = true;
+              mtv = glm::vec3(0.f, mtv.y, 0.f);
+              mtvN = glm::vec3(0.f, 1.f, 0.f);
+            } else if (std::abs(mtvN.y) > 0.7f) {
+              mtv = glm::vec3(0.f, mtv.y, 0.f);
+              mtvN = glm::vec3(0.f, mtvN.y < 0.f ? -1.f : 1.f, 0.f);
             }
+
+            tf.pos += mtv;
+            mn = tf.pos - half;
+            mx = tf.pos + half;
+
+            float vDot = glm::dot(vel.vel, mtvN);
+            if (vDot < 0.f)
+              vel.vel -= mtvN * vDot;
+          }
         }
-    }
+  }
 }
 
-void PlayerController::update(float dt, const Input& input, CombatSystem* combat) {
-    // ── Spawn gate ────────────────────────────────────────────────────────────
-   if (!_spawned) {
+void PlayerController::update(float dt, const Input &input,
+                              CombatSystem *combat) {
+  // ── Spawn gate ────────────────────────────────────────────────────────────
+  if (!_spawned) {
     _spawnWaitTime += dt;
     if (spawnChunksReady() || _spawnWaitTime > SPAWN_TIMEOUT) {
-        _reg.get<CTransform>(_player).pos = _pendingSpawn;
-        _reg.get<CVelocity> (_player).vel = {0.f, 0.f, 0.f};
-        _hasPendingSpawn = false;
-        _spawned         = true;
-        _spawnWaitTime   = 0.f;
+      _reg.get<CTransform>(_player).pos = _pendingSpawn;
+      _reg.get<CVelocity>(_player).vel = {0.f, 0.f, 0.f};
+      _hasPendingSpawn = false;
+      _spawned = true;
+      _spawnWaitTime = 0.f;
     } else {
-        _cam.applyMouse(input.mouseDelta());
-        return;
+      _cam.applyMouse(input.mouseDelta());
+      return;
     }
-}
+  }
 
-    auto& tf  = _reg.get<CTransform>(_player);
-    auto& vel = _reg.get<CVelocity> (_player);
-    auto& box = _reg.get<CAABB>     (_player);
-    auto& gr  = _reg.get<CGrounded> (_player);
-    auto& sta = _reg.get<CStamina>  (_player);
-    auto& hp  = _reg.get<CHealth>   (_player);
+  auto &tf = _reg.get<CTransform>(_player);
+  auto &vel = _reg.get<CVelocity>(_player);
+  auto &box = _reg.get<CAABB>(_player);
+  auto &gr = _reg.get<CGrounded>(_player);
+  auto &sta = _reg.get<CStamina>(_player);
+  auto &hp = _reg.get<CHealth>(_player);
 
-    if (hp.dead) {
-        _cam.applyMouse(input.mouseDelta());
-        return;
-    }
-
-    // ── Chunk unload ──────────────────────────────────────────────────────────
-    {
-        int cx = (int)std::floor(tf.pos.x / ChunkData::SIZE);
-        int cy = (int)std::floor(tf.pos.y / ChunkData::SIZE);
-        int cz = (int)std::floor(tf.pos.z / ChunkData::SIZE);
-        for (auto it = _triSoups.begin(); it != _triSoups.end(); ) {
-            const auto& cc = it->first;
-            if (std::abs(cc.x - cx) > Config::CHUNK_RADIUS_XZ + 1 ||
-                std::abs(cc.y - cy) > Config::CHUNK_RADIUS_Y  + 1 ||
-                std::abs(cc.z - cz) > Config::CHUNK_RADIUS_XZ + 1)
-                it = _triSoups.erase(it);
-            else
-                ++it;
-        }
-    }
-
+  if (hp.dead) {
     _cam.applyMouse(input.mouseDelta());
+    return;
+  }
 
-    // ── Wish direction ────────────────────────────────────────────────────────
-    glm::vec3 fwd = _cam.forward(); fwd.y = 0.f;
-    float fwdLen = glm::length(fwd);
-    if (fwdLen > 0.001f) fwd /= fwdLen;
-    glm::vec3 right = glm::normalize(glm::cross(fwd, glm::vec3{0,1,0}));
-
-    glm::vec3 wishDir{0.f};
-    bool movingFwd  = input.key(GLFW_KEY_W);
-    bool movingBack = input.key(GLFW_KEY_S);
-    bool movingR    = input.key(GLFW_KEY_D);
-    bool movingL    = input.key(GLFW_KEY_A);
-
-    if (movingFwd)  wishDir += fwd;
-    if (movingBack) wishDir -= fwd;
-    if (movingR)    wishDir += right;
-    if (movingL)    wishDir -= right;
-    float wishLen = glm::length(wishDir);
-    if (wishLen > 0.001f) wishDir /= wishLen;
-
-    // ── Combat input ──────────────────────────────────────────────────────────
-    auto& atk = _reg.get<CAttack>(_player);
-    auto& dod = _reg.get<CDodge> (_player);
-
-    if (combat) {
-        if (input.keyDown(GLFW_KEY_F))
-            combat->playerLightAttack(_player, _cam.forward());
-        if (input.keyDown(GLFW_KEY_G))
-            combat->playerHeavyAttack(_player, _cam.forward());
-        if (input.keyDown(GLFW_KEY_Q))
-            combat->playerParry(_player);
-        if (input.keyDown(GLFW_KEY_LEFT_CONTROL) && wishLen > 0.001f)
-            combat->playerDodge(_player, wishDir);
+  // ── Chunk unload ──────────────────────────────────────────────────────────
+  {
+    int cx = (int)std::floor(tf.pos.x / ChunkData::SIZE);
+    int cy = (int)std::floor(tf.pos.y / ChunkData::SIZE);
+    int cz = (int)std::floor(tf.pos.z / ChunkData::SIZE);
+    for (auto it = _triSoups.begin(); it != _triSoups.end();) {
+      const auto &cc = it->first;
+      if (std::abs(cc.x - cx) > Config::CHUNK_RADIUS_XZ + 3 ||
+          std::abs(cc.y - cy) > Config::CHUNK_RADIUS_Y + 3 ||
+          std::abs(cc.z - cz) > Config::CHUNK_RADIUS_XZ + 3)
+        it = _triSoups.erase(it);
+      else
+        ++it;
     }
+  }
 
-    // ── Stamina ───────────────────────────────────────────────────────────────
-    if (sta.depleted) {
-        sta.depleteCooldown -= dt;
-        if (sta.depleteCooldown <= 0.f) sta.depleted = false;
+  _cam.applyMouse(input.mouseDelta());
+
+  // ── Wish direction ────────────────────────────────────────────────────────
+  glm::vec3 fwd = _cam.forward();
+  fwd.y = 0.f;
+  float fwdLen = glm::length(fwd);
+  if (fwdLen > 0.001f)
+    fwd /= fwdLen;
+  glm::vec3 right = glm::normalize(glm::cross(fwd, glm::vec3{0, 1, 0}));
+
+  glm::vec3 wishDir{0.f};
+  bool movingFwd = input.key(GLFW_KEY_W);
+  bool movingBack = input.key(GLFW_KEY_S);
+  bool movingR = input.key(GLFW_KEY_D);
+  bool movingL = input.key(GLFW_KEY_A);
+
+  if (movingFwd)
+    wishDir += fwd;
+  if (movingBack)
+    wishDir -= fwd;
+  if (movingR)
+    wishDir += right;
+  if (movingL)
+    wishDir -= right;
+  float wishLen = glm::length(wishDir);
+  if (wishLen > 0.001f)
+    wishDir /= wishLen;
+
+  // ── Combat input ──────────────────────────────────────────────────────────
+  auto &atk = _reg.get<CAttack>(_player);
+  auto &dod = _reg.get<CDodge>(_player);
+
+  if (combat) {
+    if (input.keyDown(GLFW_KEY_F))
+      combat->playerLightAttack(_player, _cam.forward());
+    if (input.keyDown(GLFW_KEY_G))
+      combat->playerHeavyAttack(_player, _cam.forward());
+    if (input.keyDown(GLFW_KEY_Q))
+      combat->playerParry(_player);
+    if (input.keyDown(GLFW_KEY_LEFT_CONTROL) && wishLen > 0.001f)
+      combat->playerDodge(_player, wishDir);
+  }
+
+  // ── Stamina ───────────────────────────────────────────────────────────────
+  if (sta.depleted) {
+    sta.depleteCooldown -= dt;
+    if (sta.depleteCooldown <= 0.f)
+      sta.depleted = false;
+  }
+
+  bool sprinting = input.key(GLFW_KEY_LEFT_SHIFT) && !sta.depleted &&
+                   sta.current > 0.f && atk.isIdle() && !dod.isRolling() &&
+                   wishLen > 0.001f;
+
+  if (sprinting) {
+    sta.current -= sta.sprintCost * dt;
+    if (sta.current <= 0.f) {
+      sta.current = 0.f;
+      sta.depleted = true;
+      sta.depleteCooldown = 1.5f;
+      sprinting = false;
     }
+  } else if (!sta.depleted) {
+    sta.current = std::min(sta.current + sta.regenRate * dt, sta.max);
+  }
 
-    bool sprinting = input.key(GLFW_KEY_LEFT_SHIFT)
-                     && !sta.depleted
-                     && sta.current > 0.f
-                     && atk.isIdle()
-                     && !dod.isRolling()
-                     && wishLen > 0.001f;
+  // ── Target speed ──────────────────────────────────────────────────────────
+  float baseSpeed =
+      Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f);
+  if (!atk.isIdle())
+    baseSpeed *= 0.3f;
 
-    if (sprinting) {
-        sta.current -= sta.sprintCost * dt;
-        if (sta.current <= 0.f) {
-            sta.current = 0.f;
-            sta.depleted = true;
-            sta.depleteCooldown = 1.5f;
-            sprinting = false;
-        }
-    } else if (!sta.depleted) {
-        sta.current = std::min(sta.current + sta.regenRate * dt, sta.max);
+  float speedMult = 1.f;
+  if (movingBack && !movingFwd)
+    speedMult = 0.65f;
+  else if ((movingL || movingR) && !movingFwd && !movingBack)
+    speedMult = 0.85f;
+  float targetSpeed = baseSpeed * speedMult;
+
+  // ── Gravity ───────────────────────────────────────────────────────────────
+  constexpr float MAX_FALL = 60.f;
+  if (!gr.grounded) {
+    vel.vel.y += Config::GRAVITY * dt;
+    if (vel.vel.y < -MAX_FALL)
+      vel.vel.y = -MAX_FALL;
+  }
+
+  // ── Sub-step integrate + collide ──────────────────────────────────────────
+  // Reset grounded before collision — collision resolve will set it if floor
+  // contact
+  gr.grounded = false;
+
+  const int SUBSTEPS = 4;
+  const float subDt = dt / (float)SUBSTEPS;
+  for (int s = 0; s < SUBSTEPS; s++) {
+    tf.pos += vel.vel * subDt;
+    resolveCollision(tf, vel, box, gr);
+  }
+
+  // ── Raycast ground detection (supplement collision-based grounding) ───────
+  float hitY = 0.f;
+  bool rayHit = raycastGround(tf, box, hitY);
+
+  if (rayHit && vel.vel.y <= 0.01f) {
+    float footY = tf.pos.y - box.half.y;
+    float snapDist = hitY - footY + box.half.y;
+    // Only snap if very close (within ray range)
+    if (std::abs(tf.pos.y - (hitY + box.half.y)) < 0.20f) {
+      tf.pos.y = hitY + box.half.y;
+      vel.vel.y = 0.f;
     }
+    gr.grounded = true;
+  }
 
-    // ── Target speed ──────────────────────────────────────────────────────────
-    float baseSpeed = Config::WALK_SPEED * (sprinting ? Config::SPRINT_MULT : 1.f);
-    if (!atk.isIdle()) baseSpeed *= 0.3f;
+  // ── Horizontal movement ───────────────────────────────────────────────────
+  if (dod.isRolling() && combat) {
+    glm::vec3 dv = combat->getDodgeVelocity(_player);
+    _smoothVel.x = dv.x;
+    _smoothVel.z = dv.z;
+  } else if (gr.grounded) {
+    glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
 
-    float speedMult = 1.f;
-    if (movingBack && !movingFwd)          speedMult = 0.65f;
-    else if ((movingL || movingR) &&
-             !movingFwd && !movingBack)    speedMult = 0.85f;
-    float targetSpeed = baseSpeed * speedMult;
+    float accel = (wishLen > 0.001f) ? Config::GROUND_ACCEL : Config::FRICTION;
+    float blend = std::min(accel * dt, 1.f);
+    _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;
+    _smoothVel.z += (targetHoriz.z - _smoothVel.z) * blend;
 
-    // ── Gravity ───────────────────────────────────────────────────────────────
-    constexpr float MAX_FALL = 60.f;
-    if (!gr.grounded) {
-        vel.vel.y += Config::GRAVITY * dt;
-        if (vel.vel.y < -MAX_FALL) vel.vel.y = -MAX_FALL;
+    vel.vel.x = _smoothVel.x;
+    vel.vel.z = _smoothVel.z;
+
+    // Jump
+    if (input.keyDown(GLFW_KEY_SPACE) && !sta.depleted &&
+        sta.current >= sta.jumpCost && atk.isIdle() && !dod.isRolling()) {
+      sta.current -= sta.jumpCost;
+      vel.vel.y = Config::JUMP_VEL;
+      gr.grounded = false;
     }
+  } else {
+    // Air control
+    glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
+    float blend = std::min(Config::AIR_ACCEL * dt, 1.f);
+    _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;
+    _smoothVel.z += (targetHoriz.z - _smoothVel.z) * blend;
+    vel.vel.x = _smoothVel.x;
+    vel.vel.z = _smoothVel.z;
+  }
 
-    // ── Sub-step integrate + collide ──────────────────────────────────────────
-    // Reset grounded before collision — collision resolve will set it if floor contact
-    gr.grounded = false;
+  // ── Head bob ──────────────────────────────────────────────────────────────
+  if (gr.grounded && wishLen > 0.001f) {
+    static float bobTime = 0.f;
+    float speed = glm::length(glm::vec3{vel.vel.x, 0.f, vel.vel.z});
+    bobTime += dt * speed * 0.4f;
+    float bobY = std::sin(bobTime * 2.f) * 0.04f;
+    float bobX = std::sin(bobTime) * 0.02f;
+    _cam.position.y += bobY;
+    _cam.position += _cam.right() * bobX;
+  }
 
-    const int SUBSTEPS = 4;
-    const float subDt = dt / (float)SUBSTEPS;
-    for (int s = 0; s < SUBSTEPS; s++) {
-        tf.pos += vel.vel * subDt;
-        resolveCollision(tf, vel, box, gr);
-    }
-
-    // ── Raycast ground detection (supplement collision-based grounding) ───────
-    float hitY = 0.f;
-    bool rayHit = raycastGround(tf, box, hitY);
-
-    if (rayHit && vel.vel.y <= 0.01f) {
-        float footY = tf.pos.y - box.half.y;
-        float snapDist = hitY - footY + box.half.y;
-        // Only snap if very close (within ray range)
-        if (std::abs(tf.pos.y - (hitY + box.half.y)) < 0.20f) {
-            tf.pos.y = hitY + box.half.y;
-            vel.vel.y = 0.f;
-        }
-        gr.grounded = true;
-    }
-
-    // ── Horizontal movement ───────────────────────────────────────────────────
-    if (dod.isRolling() && combat) {
-        glm::vec3 dv = combat->getDodgeVelocity(_player);
-        _smoothVel.x = dv.x;
-        _smoothVel.z = dv.z;
-    } else if (gr.grounded) {
-        glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
-
-        float accel  = (wishLen > 0.001f) ? Config::GROUND_ACCEL : Config::FRICTION;
-        float blend  = std::min(accel * dt, 1.f);
-        _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;
-        _smoothVel.z += (targetHoriz.z - _smoothVel.z) * blend;
-
-        vel.vel.x = _smoothVel.x;
-        vel.vel.z = _smoothVel.z;
-
-        // Jump
-        if (input.keyDown(GLFW_KEY_SPACE)
-            && !sta.depleted
-            && sta.current >= sta.jumpCost
-            && atk.isIdle()
-            && !dod.isRolling())
-        {
-            sta.current -= sta.jumpCost;
-            vel.vel.y   = Config::JUMP_VEL;
-            gr.grounded = false;
-        }
-    } else {
-        // Air control
-        glm::vec3 targetHoriz = wishDir * (wishLen > 0.001f ? targetSpeed : 0.f);
-        float blend = std::min(Config::AIR_ACCEL * dt, 1.f);
-        _smoothVel.x += (targetHoriz.x - _smoothVel.x) * blend;
-        _smoothVel.z += (targetHoriz.z - _smoothVel.z) * blend;
-        vel.vel.x = _smoothVel.x;
-        vel.vel.z = _smoothVel.z;
-    }
-
-    // ── Head bob ──────────────────────────────────────────────────────────────
-    if (gr.grounded && wishLen > 0.001f) {
-        static float bobTime = 0.f;
-        float speed = glm::length(glm::vec3{vel.vel.x, 0.f, vel.vel.z});
-        bobTime += dt * speed * 0.4f;
-        float bobY = std::sin(bobTime * 2.f) * 0.04f;
-        float bobX = std::sin(bobTime) * 0.02f;
-        _cam.position.y += bobY;
-        _cam.position += _cam.right() * bobX;
-    }
-
-    _cam.position = tf.pos + glm::vec3{0.f, box.half.y * 0.85f, 0.f};
+  _cam.position = tf.pos + glm::vec3{0.f, box.half.y * 0.85f, 0.f};
 }

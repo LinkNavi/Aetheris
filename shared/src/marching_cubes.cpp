@@ -114,7 +114,7 @@ ChunkMesh marchChunk(const ChunkData& chunk) {
             // faces lose their grass. Upward-sloping faces keep grass.
             // This was the main bug: smooth normals pulled flatN.y down
             // even for mostly-upward faces, so everything became dirt.
-           if(mat == (uint8_t)BlockMat::Grass && flatN.y < -.5f)
+           if(mat == (uint8_t)BlockMat::Grass && flatN.y < -1.5f)
     mat = (uint8_t)BlockMat::Dirt;
 
             uint32_t tint = packNeutralTint(mat);

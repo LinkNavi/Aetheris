@@ -17,19 +17,63 @@ float hash(vec2 p) {
     p += dot(p, p + 34.23);
     return fract(p.x * p.y);
 }
+float hash3(vec3 p) {
+    p = fract(p * vec3(234.34, 435.345, 321.123));
+    p += dot(p, p + 34.23);
+    return fract(p.x * p.y + p.y * p.z);
+}
 float vnoise(vec2 p) {
     vec2 i = floor(p), f = fract(p);
     f = f*f*(3.0-2.0*f);
     return mix(mix(hash(i),           hash(i+vec2(1,0)), f.x),
                mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y);
 }
-float fbmCloud(vec2 p) {
-    float v=0.0, amp=0.5, freq=1.0;
-    for (int i=0; i<6; i++) {
-        v    += vnoise(p*freq)*amp;
-        amp  *= 0.5;
-        freq *= 2.1;
-    }
+float vnoise3(vec3 p) {
+    vec3 i = floor(p), f = fract(p);
+    f = f*f*(3.0-2.0*f);
+    float v000 = hash3(i);
+    float v100 = hash3(i+vec3(1,0,0));
+    float v010 = hash3(i+vec3(0,1,0));
+    float v110 = hash3(i+vec3(1,1,0));
+    float v001 = hash3(i+vec3(0,0,1));
+    float v101 = hash3(i+vec3(1,0,1));
+    float v011 = hash3(i+vec3(0,1,1));
+    float v111 = hash3(i+vec3(1,1,1));
+    return mix(mix(mix(v000,v100,f.x),mix(v010,v110,f.x),f.y),
+               mix(mix(v001,v101,f.x),mix(v011,v111,f.x),f.y),f.z);
+}
+
+// Multi-octave cloud fbm with 3D noise for volume feel
+float cloudFbm(vec2 p, float time) {
+    float v   = 0.0;
+    float amp = 0.5;
+    float freq = 1.0;
+    // Base large shapes
+    v += vnoise(p * freq + vec2(time * 0.012, time * 0.008)) * amp;
+    amp *= 0.55; freq *= 2.1;
+    v += vnoise(p * freq + vec2(time * 0.018, -time * 0.010)) * amp;
+    amp *= 0.55; freq *= 2.1;
+    v += vnoise(p * freq - vec2(time * 0.022, time * 0.014)) * amp;
+    amp *= 0.50; freq *= 2.2;
+    v += vnoise(p * freq + vec2(time * 0.030, time * 0.020)) * amp;
+    amp *= 0.45; freq *= 2.3;
+    // Fine detail
+    v += vnoise(p * freq - vec2(time * 0.040, time * 0.025)) * amp;
+    amp *= 0.40; freq *= 2.4;
+    v += vnoise(p * freq + vec2(time * 0.055, time * 0.035)) * amp;
+    return v;
+}
+
+// Secondary smaller cloud layer
+float cloudFbmDetail(vec2 p, float time) {
+    float v   = 0.0;
+    float amp = 0.5;
+    float freq = 1.8;
+    v += vnoise(p * freq + vec2(time * 0.020, time * 0.013)) * amp;
+    amp *= 0.5; freq *= 2.1;
+    v += vnoise(p * freq - vec2(time * 0.028, time * 0.018)) * amp;
+    amp *= 0.5; freq *= 2.2;
+    v += vnoise(p * freq + vec2(time * 0.038, -time * 0.022)) * amp;
     return v;
 }
 
@@ -74,8 +118,6 @@ vec3 aurora(vec3 ray, float night, float time) {
 }
 
 void main() {
-    // Reconstruct ray direction per-pixel from NDC.
-    // This avoids interpolation artifacts across the full-screen triangle.
     vec4 world = pc.invViewProj * vec4(fragNDC, 1.0, 1.0);
     vec3 ray = normalize(world.xyz / world.w);
 
@@ -92,25 +134,22 @@ void main() {
 
     float cosTheta = dot(ray, sun);
     float cosSunUp = sun.y;
-
-    float h       = clamp(ray.y, 0.0, 1.0);
-    float hSmooth = h*h*(3.0-2.0*h);
-
-    float dusk = clamp(1.0 - abs(cosSunUp - 0.10) / 0.28, 0.0, 1.0);
+    float h        = clamp(ray.y, 0.0, 1.0);
+    float hSmooth  = h*h*(3.0-2.0*h);
+    float dusk     = clamp(1.0 - abs(cosSunUp - 0.10) / 0.28, 0.0, 1.0);
     dusk *= dusk;
 
     // ── Sky gradient ──────────────────────────────────────────────────────────
-    vec3 zenithNight  = vec3(0.004, 0.006, 0.025);
-    vec3 zenithDay    = vec3(0.10,  0.25,  0.65);
-    vec3 horizNight   = vec3(0.007, 0.010, 0.030);
-    vec3 horizDay     = vec3(0.45,  0.62,  0.85);
-    vec3 horizDusk    = vec3(0.72,  0.28,  0.05);
+    vec3 zenithNight = vec3(0.004, 0.006, 0.025);
+    vec3 zenithDay   = vec3(0.10,  0.25,  0.65);
+    vec3 horizNight  = vec3(0.007, 0.010, 0.030);
+    vec3 horizDay    = vec3(0.45,  0.62,  0.85);
+    vec3 horizDusk   = vec3(0.72,  0.28,  0.05);
 
-    vec3 horizCol = mix(horizNight, horizDay, sunI);
-    horizCol      = mix(horizCol,   horizDusk, dusk * 0.7);
-    vec3 zenithCol= mix(zenithNight, zenithDay, sunI);
-    vec3 skyCol   = mix(horizCol, zenithCol, hSmooth);
-
+    vec3 horizCol  = mix(horizNight, horizDay, sunI);
+    horizCol       = mix(horizCol,   horizDusk, dusk * 0.7);
+    vec3 zenithCol = mix(zenithNight, zenithDay, sunI);
+    vec3 skyCol    = mix(horizCol, zenithCol, hSmooth);
     skyCol += vec3(0.0, 0.015, 0.05) * sunI * (1.0-hSmooth) * 0.6;
 
     float mie  = miePhase(cosTheta) * sunI;
@@ -123,7 +162,7 @@ void main() {
     skyCol        += sunColor * sunDisk * (0.3 + sunI * 0.7);
 
     // ── Stars ─────────────────────────────────────────────────────────────────
-    float night = clamp(1.0 - sunI*2.5, 0.0, 1.0);
+    float night = clamp(1.0 - sunI * 3.5, 0.0, 1.0); // stricter day cutoff
     if (night > 0.01 && ray.y > 0.0) {
         vec2 starUV1 = vec2(atan(ray.x, ray.z), asin(clamp(ray.y,0.0,1.0))) * 28.0;
         vec2 cell1   = floor(starUV1);
@@ -145,22 +184,6 @@ void main() {
         float twinkle2 = 0.7 + 0.3 * sin(time * (1.5 + sh2 * 3.0) + sh2 * 30.0);
         vec3 starCol2 = mix(vec3(0.80, 0.85, 1.0), vec3(1.0, 0.90, 0.75), step(0.5, fract(sh2*43.1)));
         skyCol += starCol2 * star2 * night * night * twinkle2;
-
-        vec2 starUV3 = vec2(atan(ray.x, ray.z), asin(clamp(ray.y,0.0,1.0))) * 8.0;
-        vec2 cell3   = floor(starUV3);
-        float sh3    = hash(cell3 + 333.3);
-        float bright3= step(0.975, sh3);
-        vec2  off3   = vec2(hash(cell3+7.7), hash(cell3+9.9)) - 0.5;
-        float dist3  = length(fract(starUV3) - 0.5 + off3*0.2);
-        float star3  = bright3 * smoothstep(0.18, 0.0, dist3);
-        float glow3  = bright3 * smoothstep(0.4, 0.0, dist3) * 0.15;
-        float twinkle3 = 0.8 + 0.2 * sin(time * 1.2 + sh3 * 20.0);
-        skyCol += vec3(0.85, 0.90, 1.0) * (star3 + glow3) * night * night * twinkle3;
-
-        float milkyAngle = atan(ray.x, ray.z) * 0.5 + ray.y * 1.5;
-        float milky = smoothstep(0.7, 0.0, abs(sin(milkyAngle + 0.3)));
-        float milkyNoise = vnoise(vec2(atan(ray.x,ray.z)*3.0, ray.y*6.0) + time*0.01);
-        skyCol += vec3(0.12, 0.15, 0.25) * milky * milkyNoise * night * night * 0.15;
     }
 
     // ── Moon ──────────────────────────────────────────────────────────────────
@@ -177,25 +200,53 @@ void main() {
     skyCol += aurora(ray, night, time);
 
     // ── Clouds ────────────────────────────────────────────────────────────────
-    if (ray.y > 0.01) {
-        float cloudAlt = 800.0;
-        float t        = (cloudAlt - camPos.y) / max(ray.y, 0.01);
-        if (t > 0.0 && t < 15000.0) {
-            vec2 worldXZ = camPos.xz + ray.xz * t;
-            vec2 uv      = worldXZ * 0.000075 + vec2(time*cspeed*0.007, time*cspeed*0.004);
-            float cloud  = fbmCloud(uv);
-            float thresh = 0.44;
-            float cover  = smoothstep(thresh, thresh+0.22, cloud);
-            cover *= smoothstep(0.01, 0.12, ray.y);
-            cover *= clamp(1.0 - t/12000.0, 0.0, 1.0);
-            vec3 cLight  = mix(vec3(0.09,0.09,0.12), vec3(0.68,0.74,0.80), sunI);
-            vec3 cShadow = mix(vec3(0.03,0.03,0.05), vec3(0.25,0.28,0.33), sunI);
-            float edge   = clamp(cosTheta*0.5+0.5, 0.0, 1.0);
-            vec3  cCol   = mix(cShadow, cLight, edge);
-            cCol         = mix(cCol, vec3(0.78,0.35,0.10), dusk*cover*0.4);
-            if (night > 0.1)
-                cCol += vec3(0.02, 0.06, 0.10) * night * cover * 0.3;
-            skyCol = mix(skyCol, cCol, cover * 0.88);
+    if (ray.y > 0.005) {
+        // Layer 1: cumulus at 900m absolute
+        float cloudAlt1 = 900.0;
+        if (camPos.y < cloudAlt1) {
+            float t1 = (cloudAlt1 - camPos.y) / ray.y;
+            if (t1 > 0.0 && t1 < 20000.0) {
+                vec2 worldXZ  = camPos.xz + ray.xz * t1;
+                vec2 uv1      = worldXZ * 0.000055;
+                vec2 warp     = vec2(vnoise(uv1*2.3+vec2(time*0.008,0.0)),
+                                     vnoise(uv1*2.3+vec2(0.0,time*0.008))) * 0.15;
+                float cloud   = mix(cloudFbm(uv1,time*cspeed),
+                                    cloudFbm(uv1+warp,time*cspeed), 0.6);
+                float cover   = smoothstep(0.32, 0.50, cloud);
+                cover *= smoothstep(0.005, 0.10, ray.y);
+                cover *= clamp(1.0 - t1/16000.0, 0.0, 1.0);
+                if (cover > 0.001) {
+                    float shadow     = cloudFbm(uv1*1.3+vec2(0.05), time*cspeed);
+                    float topLight   = smoothstep(0.3, 0.8, cloud);
+                    float bottomShad = 1.0 - smoothstep(0.3, 0.7, shadow)*0.5;
+                    vec3  cLit       = mix(vec3(0.12,0.14,0.20), vec3(0.95,0.97,1.00), sunI);
+                    vec3  cShad      = mix(vec3(0.05,0.06,0.10), vec3(0.55,0.58,0.65), sunI);
+                    cLit  = mix(cLit,  vec3(0.90,0.45,0.15), dusk*0.5);
+                    cShad = mix(cShad, vec3(0.54,0.27,0.09), dusk*0.4);
+                    float silver     = pow(max(cosTheta,0.0),4.0)*sunI*0.3;
+                    vec3  cloudCol   = mix(cShad, cLit, topLight*bottomShad)+vec3(silver);
+                    if (night > 0.1) cloudCol += vec3(0.03,0.05,0.12)*night*cover;
+                    skyCol = mix(skyCol, cloudCol, cover*0.92);
+                }
+            }
+        }
+        // Layer 2: cirrus at 2200m absolute
+        float cloudAlt2 = 2200.0;
+        if (camPos.y < cloudAlt2) {
+            float t2 = (cloudAlt2 - camPos.y) / ray.y;
+            if (t2 > 0.0 && t2 < 30000.0) {
+                vec2  worldXZ2 = camPos.xz + ray.xz * t2;
+                vec2  uv2      = worldXZ2 * 0.000030;
+                float cirrus   = cloudFbmDetail(uv2, time*cspeed*0.7);
+                float cover2   = smoothstep(0.48, 0.73, cirrus)*0.55;
+                cover2 *= smoothstep(0.01, 0.15, ray.y);
+                cover2 *= clamp(1.0 - t2/25000.0, 0.0, 1.0);
+                if (cover2 > 0.001) {
+                    vec3 cirrusCol = mix(vec3(0.70,0.75,0.85), vec3(0.92,0.95,1.00), sunI);
+                    cirrusCol = mix(cirrusCol, vec3(0.85,0.55,0.25), dusk*0.6);
+                    skyCol = mix(skyCol, cirrusCol, cover2*0.75);
+                }
+            }
         }
     }
 

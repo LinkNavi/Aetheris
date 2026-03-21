@@ -63,7 +63,23 @@ struct VkContext {
     vkb::Instance  instance;
     vkb::Device    device;
     vkb::Swapchain swapchain;
+VkImage       offscreenColor      = VK_NULL_HANDLE;
+VkImageView   offscreenColorView  = VK_NULL_HANDLE;
+VmaAllocation offscreenColorAlloc = nullptr;
+VkImage       offscreenDepth      = VK_NULL_HANDLE;
+VkImageView   offscreenDepthView  = VK_NULL_HANDLE;
+VmaAllocation offscreenDepthAlloc = nullptr;
+VkSampler     offscreenSampler    = VK_NULL_HANDLE;
 
+VkRenderPass              offscreenPass       = VK_NULL_HANDLE;
+VkFramebuffer             offscreenFB         = VK_NULL_HANDLE;
+
+// Godray post-process pipeline
+VkDescriptorSetLayout     godrayDsLayout      = VK_NULL_HANDLE;
+VkDescriptorPool          godrayDsPool        = VK_NULL_HANDLE;
+VkDescriptorSet           godrayDsSet         = VK_NULL_HANDLE;
+VkPipelineLayout          godrayLayout        = VK_NULL_HANDLE;
+VkPipeline                godrayPipeline      = VK_NULL_HANDLE;
 SkyGodRayRenderer skyGodRay;
     VkDescriptorPool imguiPool = VK_NULL_HANDLE;
 

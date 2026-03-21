@@ -185,5 +185,5 @@ glm::vec3 ChunkManager::findSpawnPos() {
     }
   }
 
-  return {bestX, bestSY + Config::PLAYER_HEIGHT + 2.f, bestZ};
+  return {bestX, bestSY + Config::PLAYER_HEIGHT + 20.f, bestZ};
 }

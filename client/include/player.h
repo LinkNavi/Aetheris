@@ -25,7 +25,7 @@ struct CStamina {
     float depleteCooldown = 0.f;
 };
 
-static constexpr float SPAWN_TIMEOUT = 8.f;
+static constexpr float SPAWN_TIMEOUT = 15.f;
 struct ChunkTriSoup { std::vector<glm::vec3> tris; };
 
 // ── PlayerController ──────────────────────────────────────────────────────────

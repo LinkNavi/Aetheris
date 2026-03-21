@@ -434,7 +434,7 @@ int main(int argc, char **argv) {
   }
 
   if (server) {
-    enet_peer_disconnect(server, 0);
+    enet_peer_disconnect_now(server, 0);
     enet_host_flush(host.get());
     // Drain ENet until disconnect acknowledged or timeout
     ENetEvent ev2;
