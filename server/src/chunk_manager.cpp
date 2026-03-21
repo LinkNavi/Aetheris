@@ -65,12 +65,7 @@ void ChunkManager::scheduleChunk(ClientState &cs, ChunkCoord coord) {
 void ChunkManager::generateAndEnqueue(ENetPeer *peer, ChunkCoord coord) {
   ChunkData data = generateChunk(coord);
 
-  // Register terrain with the water simulator so it knows which voxels are
-  // solid. This must happen before any water simulation ticks that touch this
-  // chunk. The waterSim pointer is set by main after construction.
-  if (waterSim) {
-    waterSim->addTerrain(data);
-  }
+
 
   ChunkMesh mesh = marchChunk(data);
   auto bytes = ChunkDataPacket::from(mesh).serialize();

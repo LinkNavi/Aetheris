@@ -2,7 +2,7 @@
 #include "log.h"
 #include "view_model.h"
 #include "vk_context.h"
-#include "water_renderer.h"
+
 #include <algorithm>
 #include <cstring>
 #include <fstream>
@@ -887,8 +887,8 @@ void vk_remove_chunk(VkContext &ctx, ChunkCoord coord) {
 // ── Draw
 // ──────────────────────────────────────────────────────────────────────
 
-void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* trees, const WaterRenderer* water,
-             float sunIntensity, glm::vec3 skyColor,
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* trees,
+	     float sunIntensity, glm::vec3 skyColor,
              int renderDistXZ, glm::vec3 camPos,
              const ViewModelRenderer* viewModel,
              const glm::mat4& proj,
@@ -1034,8 +1034,8 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* tree
     remotePlayers->draw(cmd, viewProj);
   if (trees)
     trees->draw(cmd, viewProj, ctx.swapchain.extent);
-if (water) water->draw(cmd, viewProj, ctx.swapchain.extent,
-                       camPos, sunIntensity);
+
+
   // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);

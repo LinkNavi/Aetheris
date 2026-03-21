@@ -74,7 +74,7 @@ client_src = files(
   'src/mesh_builder.cpp',
   'src/window.cpp',
   'src/vk_init.cpp',
-'src/water_renderer.cpp',
+
 
 'src/tree_renderer.cpp',
 'src/main_menu.cpp',

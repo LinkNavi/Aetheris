@@ -9,7 +9,7 @@
 #include <deque>
 #include "chunk.h"
 #include "tree_renderer.h"
-#include "water_renderer.h"
+
 struct ViewModelRenderer;
 class RemotePlayerRenderer;
 
@@ -138,8 +138,7 @@ void vk_load_atlas(VkContext& ctx, const char* path);
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
 void vk_resize(VkContext& ctx, GLFWwindow* window);
-void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* trees, const WaterRenderer* water,
-
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* trees, 
              float sunIntensity, glm::vec3 skyColor,
              int renderDistXZ, glm::vec3 camPos,
              const ViewModelRenderer* viewModel,

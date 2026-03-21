@@ -11,7 +11,7 @@
 #include "packets.h"
 #include "config.h"
 #include "thread_pool.h"
-#include "water_simulator.h"
+
 
 struct ClientState {
     ENetPeer*  peer      = nullptr;
@@ -33,7 +33,7 @@ class ChunkManager {
 public:
     // Set this after construction so chunk generation can register terrain
     // with the water simulator
-    WaterSimulator* waterSim = nullptr;
+
 
     explicit ChunkManager(int genThreads = 0);
 
