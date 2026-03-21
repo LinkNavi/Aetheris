@@ -3,7 +3,7 @@
 layout(location = 0) in vec3  inPos;
 layout(location = 1) in vec3  inNormal;
 layout(location = 2) in vec2  inUV;
-layout(location = 3) in uint  inTint;   // was 'material', now carries packed tint
+layout(location = 3) in uint  inTint;
 
 struct ChunkData {
     mat4 model;
@@ -15,8 +15,9 @@ layout(set = 0, binding = 0) readonly buffer ChunkBuffer {
 
 layout(push_constant) uniform PC {
     mat4 viewProj;
-    vec4 params;   // x=sunIntensity, y=fogStart, z=fogEnd
+    vec4 params;    // x=sunIntensity, y=fogStart, z=fogEnd, w=unused
     vec4 camPos;
+    vec4 sunDir;    // xyz=sun direction, w=unused
 } pc;
 
 layout(location = 0) out vec3  fragNormal;
@@ -24,6 +25,7 @@ layout(location = 1) out float sunIntensity;
 layout(location = 2) out vec2  fragUV;
 layout(location = 3) out float fragDist;
 layout(location = 4) out flat uint fragTint;
+layout(location = 5) out vec3  fragSunDir;
 
 void main() {
     ChunkData cd  = chunks[gl_InstanceIndex];
@@ -34,4 +36,5 @@ void main() {
     fragUV        = inUV;
     fragDist      = length(worldPos.xyz - pc.camPos.xyz);
     fragTint      = inTint;
+    fragSunDir    = pc.sunDir.xyz;
 }

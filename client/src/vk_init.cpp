@@ -24,9 +24,10 @@ static void check(VkResult r, const char *msg) {
     throw std::runtime_error(msg);
 }
 struct GlobalPC {
-  glm::mat4 viewProj;
-  glm::vec4 params; // x=sunIntensity, y=fogStart, z=fogEnd, w=unused
-  glm::vec4 camPos; // xyz=camera world pos, w=unused
+    glm::mat4 viewProj;
+    glm::vec4 params;
+    glm::vec4 camPos;
+    glm::vec4 sunDir;  // ← add this
 };
 static std::vector<uint32_t> loadSpv(const char *path) {
   std::ifstream f(path, std::ios::binary | std::ios::ate);
@@ -1027,10 +1028,11 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
   float chunkSize = (float)ChunkData::SIZE;
   float fogEnd = (renderDistXZ * 2 - 1) * chunkSize * 0.85f;
   float fogStart = fogEnd * 0.70f;
-
-  GlobalPC gpc{viewProj,
-               {sunIntensity, fogStart, fogEnd, 0.f},
-               {camPos.x, camPos.y, camPos.z, 0.f}};
+glm::vec3 sd = dayNight ? dayNight->sunDir() : glm::vec3(0.f, 1.f, 0.f);
+GlobalPC gpc{viewProj,
+             {sunIntensity, fogStart, fogEnd, 0.f},
+             {camPos.x, camPos.y, camPos.z, 0.f},
+             {sd.x, sd.y, sd.z, 0.f}};  // ← add this line
   vkCmdPushConstants(cmd, ctx.pipelineLayout,
                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                      0, sizeof(GlobalPC), &gpc);
@@ -1047,10 +1049,7 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
   if (trees)
     trees->draw(cmd, viewProj, ctx.swapchain.extent);
 
- // --- Da Sky ---------------------
-  if (dayNight) {
-    ctx.skyGodRay.drawSky(cmd, ctx.swapchain.extent, view, proj, *dayNight, camPos);
-  }
+ 
   // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);
