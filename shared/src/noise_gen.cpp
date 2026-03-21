@@ -1,7 +1,24 @@
 #include "noise_gen.h"
+#include "tree_gen.h"
 #include "config.h"
 #include <cmath>
 #include <cstdint>
+
+// ── Global tree library — generated once ─────────────────────────────────────
+static TreeLibrary g_treeLib;
+static bool        g_treeLibReady = false;
+
+void initTreeLibrary(int64_t seed) {
+    if (g_treeLibReady) return;
+    g_treeLib.generate(seed);
+    g_treeLibReady = true;
+}
+
+const TreeLibrary& getTreeLibrary() {
+    return g_treeLib;
+}
+
+// ── Hash / value noise ────────────────────────────────────────────────────────
 
 static float hashNoise(int64_t seed, int x, int y, int z) {
     uint64_t h = (uint64_t)seed;
@@ -56,6 +73,9 @@ float sampleSurfaceY(float wx, float wz) {
 }
 
 ChunkData generateChunk(ChunkCoord coord) {
+    // Ensure tree library is ready
+    initTreeLibrary((int64_t)Config::WORLD_SEED);
+
     ChunkData data;
     data.coord = coord;
 
@@ -66,9 +86,10 @@ ChunkData generateChunk(ChunkCoord coord) {
     constexpr float   hHeight  = 80.f;
     constexpr float   seaLevel = 64.f;
     constexpr float   sandLevel = seaLevel + 4.f;
-    constexpr float   dirtDepth = 4.f;   // voxels below surface = dirt
-    constexpr float   stoneDepth = 10.f; // deeper than this = stone
+    constexpr float   dirtDepth = 4.f;
+    constexpr float   stoneDepth = 10.f;
 
+    // ── Pass 1: terrain density ───────────────────────────────────────────────
     for (int x = 0; x < P; x++)
     for (int z = 0; z < P; z++) {
         float wx = (float)(coord.x * N + x);
@@ -93,25 +114,22 @@ ChunkData generateChunk(ChunkCoord coord) {
             if (density < -2.f) density = -2.f;
             data.values[x][y][z] = -density;
 
-            // Material assignment
             float depthBelow = surfaceY - wy;
             uint8_t mat;
             if (surfaceY <= sandLevel + 2.f) {
-                // Near sea level — sand
                 mat = (uint8_t)BlockMat::Sand;
             } else if (depthBelow <= 1.f) {
-                // Top layer — grass
                 mat = (uint8_t)BlockMat::Grass;
             } else if (depthBelow <= dirtDepth) {
-                // Shallow subsurface — dirt
                 mat = (uint8_t)BlockMat::Dirt;
             } else {
-                // Deep — stone
                 mat = (uint8_t)BlockMat::Stone;
             }
             data.materials[x][y][z] = mat;
         }
     }
+
+  
 
     return data;
 }

@@ -28,7 +28,12 @@ public:
         // Don't assign player ID yet - wait for auth
         _pending[peer] = {};
     }
-
+void broadcastToAll(const std::vector<uint8_t>& bytes) {
+    for (auto& [id, player] : _players) {
+        if (player.authenticated)
+            Net::sendReliable(player.peer, bytes);
+    }
+}
     void onPeerDisconnect(ENetPeer* peer, ENetHost* host) {
         _pending.erase(peer);
         auto it = _peerToId.find(peer);

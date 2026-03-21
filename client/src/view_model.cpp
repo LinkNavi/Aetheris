@@ -142,15 +142,16 @@ void ViewModelRenderer::init(VkDevice device, VmaAllocator /*allocator*/,
   ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-  VkViewport vp{0, 0, (float)extent.width, (float)extent.height, 0.f, 1.f};
-  VkRect2D sc{{0, 0}, extent};
   VkPipelineViewportStateCreateInfo vs{};
   vs.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
   vs.viewportCount = 1;
-  vs.pViewports = &vp;
   vs.scissorCount = 1;
-  vs.pScissors = &sc;
-
+  VkDynamicState dynStates[] = {VK_DYNAMIC_STATE_VIEWPORT,
+                                VK_DYNAMIC_STATE_SCISSOR};
+  VkPipelineDynamicStateCreateInfo dynState{};
+  dynState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+  dynState.dynamicStateCount = 2;
+  dynState.pDynamicStates = dynStates;
   VkPipelineRasterizationStateCreateInfo raster{};
   raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   raster.polygonMode = VK_POLYGON_MODE_FILL;
@@ -179,6 +180,7 @@ void ViewModelRenderer::init(VkDevice device, VmaAllocator /*allocator*/,
   pCI.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
   pCI.stageCount = 2;
   pCI.pStages = stages;
+  pCI.pDynamicState = &dynState;
   pCI.pVertexInputState = &vertexInput;
   pCI.pInputAssemblyState = &ia;
   pCI.pViewportState = &vs;
@@ -300,10 +302,24 @@ void ViewModelRenderer::drawDebugUI() {
   animEditor.draw(anim);
 }
 
-void ViewModelRenderer::draw(VkCommandBuffer cmd, const glm::mat4 &proj) const {
+void ViewModelRenderer::draw(VkCommandBuffer cmd, const glm::mat4 &proj,
+                             VkExtent2D extent) const {
   if (activeMesh < 0 || activeMesh >= (int)meshes.size())
     return;
 
+  VkViewport vp{};
+  vp.x = 0.f;
+  vp.y = 0.f;
+  vp.width = (float)extent.width;
+  vp.height = (float)extent.height;
+  vp.minDepth = 0.f;
+  vp.maxDepth = 1.f;
+  vkCmdSetViewport(cmd, 0, 1, &vp);
+
+  VkRect2D sc{};
+  sc.offset = {0, 0};
+  sc.extent = extent;
+  vkCmdSetScissor(cmd, 0, 1, &sc);
   const auto &mesh = meshes[activeMesh];
   const auto &t = transforms[activeMesh];
 

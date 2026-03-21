@@ -76,8 +76,7 @@ struct ViewModelRenderer {
 
     // Record draw commands. Call after terrain draw, still inside render pass.
     // proj: same projection matrix used for the scene.
-    void draw(VkCommandBuffer cmd, const glm::mat4& proj) const;
-
+  void draw(VkCommandBuffer cmd, const glm::mat4& proj, VkExtent2D extent) const;
     // Draw ImGui panels (transform debug + animation editor).
     // Only shown when uiVisible == true.
     void drawDebugUI();

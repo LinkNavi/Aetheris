@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "config.h"
 #include "day_night.h"
+#include "debug_menu.h"
 #include "gltf_loader.h"
 #include "hud.h"
 #include "input.h"
@@ -10,15 +11,19 @@
 #include "inventory.h"
 #include "inventory_ui.h"
 #include "log.h"
+#include "main_menu.h"
 #include "mesh_builder.h"
 #include "mp_packets.h"
 #include "net_common.h"
+#include "noise_gen.h"
 #include "packets.h"
 #include "player.h"
 #include "player_stats.h"
 #include "remote_players.h"
+#include "tree_renderer.h"
 #include "view_model.h"
 #include "vk_context.h"
+#include "water_renderer.h"
 #include "window.h"
 #include <chrono>
 #include <enet/enet.h>
@@ -26,11 +31,12 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-#include "main_menu.h"
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <tiny_gltf.h>
+std::unordered_map<ChunkCoord, WaterChunk, ChunkCoordHash> pendingWater;
+
 int main(int argc, char **argv) {
   AssetPath::init(argv[0]);
   Log::init("aetheris_client.log");
@@ -94,8 +100,8 @@ int main(int argc, char **argv) {
     imInfo.DescriptorPool = ctx.imguiPool;
     imInfo.MinImageCount = 2;
     imInfo.ImageCount = (uint32_t)ctx.swapImages.size();
-    imInfo.UseDynamicRendering = false;
-    imInfo.RenderPass = ctx.renderPass;
+    imInfo.PipelineInfoMain.RenderPass = ctx.renderPass;
+    imInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
     ImGui_ImplVulkan_Init(&imInfo);
   }
@@ -121,17 +127,30 @@ int main(int argc, char **argv) {
   // ── Load player model for remote players ──────────────────────────────────
   {
     std::string playerGlb = AssetPath::get("player.glb");
-    if (remotePlayers.loadModel(ctx.device.device, ctx.allocator,
-                                 ctx.commandPool, ctx.graphicsQueue,
-                                 ctx.renderPass, ctx.swapchain.extent,
-                                 playerGlb.c_str(),
-                                 AssetPath::get("player_vert.spv").c_str(),
-                                 AssetPath::get("player_frag.spv").c_str())) {
+    if (remotePlayers.loadModel(
+            ctx.device.device, ctx.allocator, ctx.commandPool,
+            ctx.graphicsQueue, ctx.renderPass, ctx.swapchain.extent,
+            playerGlb.c_str(), AssetPath::get("player_vert.spv").c_str(),
+            AssetPath::get("player_frag.spv").c_str())) {
       Log::info("Player model loaded for multiplayer.");
     } else {
       Log::warn("No player.glb found — remote players will be invisible.");
     }
   }
+  TreeRenderer treeRenderer;
+  treeRenderer.init(ctx.device.device, ctx.allocator, ctx.commandPool,
+                    ctx.graphicsQueue, ctx.renderPass, ctx.swapchain.extent,
+                    AssetPath::get("tree_trunk_vert.spv").c_str(),
+                    AssetPath::get("tree_trunk_frag.spv").c_str(),
+                    AssetPath::get("tree_leaf_vert.spv").c_str(),
+                    AssetPath::get("tree_leaf_frag.spv").c_str());
+  WaterRenderer waterRenderer;
+  waterRenderer.init(ctx.device.device, ctx.allocator, ctx.commandPool,
+                     ctx.graphicsQueue, ctx.renderPass, ctx.swapchain.extent,
+                     AssetPath::get("water_vert.spv").c_str(),
+                     AssetPath::get("water_frag.spv").c_str());
+
+  DebugMenu debugMenu;
 
   bool enemiesSpawned = false;
   bool authSent = false;
@@ -149,12 +168,24 @@ int main(int argc, char **argv) {
     auto now = Clock::now();
     float dt = std::chrono::duration<float>(now - prev).count();
     prev = now;
-    if (dt > 0.05f) dt = 0.05f;
+    if (dt > 0.05f)
+      dt = 0.05f;
     input.beginFrame();
-
+    int w, h;
+    window.getSize(w, h);
+    static int prevW = w, prevH = h;
+    if (w != prevW || h != prevH) {
+      prevW = w;
+      prevH = h;
+      if (w > 0 && h > 0) {
+        vk_resize(ctx, window.handle());
+      }
+    }
     if (gameState != GameState::InGame) {
-      if (input.cursorCaptured()) input.captureCursor(false);
-      int w, h; window.getSize(w, h);
+      if (input.cursorCaptured())
+        input.captureCursor(false);
+      int w, h;
+      window.getSize(w, h);
 
       ImGui_ImplVulkan_NewFrame();
       ImGui_ImplGlfw_NewFrame();
@@ -163,15 +194,19 @@ int main(int argc, char **argv) {
       GameState next = mainMenu.draw(dt, w, h);
 
       if (next == GameState::Connecting) {
-        if (mainMenu.pendingServerIP == "__QUIT__") break;
+        if (mainMenu.pendingServerIP == "__QUIT__")
+          break;
 
-        const char* ip = mainMenu.pendingServerIP.c_str();
+        const char *ip = mainMenu.pendingServerIP.c_str();
         int port = mainMenu.pendingServerPort;
 
         ENetAddress addr2{};
         if (enet_address_set_host(&addr2, ip) == 0) {
           addr2.port = (uint16_t)port;
-          if (server) { enet_peer_disconnect_now(server, 0); server = nullptr; }
+          if (server) {
+            enet_peer_disconnect_now(server, 0);
+            server = nullptr;
+          }
           server = enet_host_connect(host.get(), &addr2, 2, 0);
           if (server) {
             ENetEvent ev2;
@@ -187,6 +222,13 @@ int main(int argc, char **argv) {
               enet_host_flush(host.get());
               authSent = true;
 
+              RenderDistPacket rd;
+              rd.xz = (uint8_t)std::clamp(
+                  (int)mainMenu.settings().renderDistance, 1, 255);
+              rd.y = 4;
+              Net::sendReliable(server, rd.serialize());
+
+              enet_host_flush(host.get());
               gameState = GameState::InGame;
               input.captureCursor(true);
 
@@ -205,10 +247,13 @@ int main(int argc, char **argv) {
       }
 
       ImGui::Render();
-      vk_draw(ctx, glm::mat4(1.f), 0.f, {0.02f, 0.02f, 0.08f}, nullptr, glm::mat4(1.f));
+
+      vk_draw(ctx, glm::mat4(1.f), nullptr, nullptr, 0.f, {0.02f, 0.02f, 0.08f},
+              2, glm::vec3(0.f), nullptr, glm::mat4(1.f), nullptr);
       continue;
     }
-    if (!server) continue;
+    if (!server)
+      continue;
     auto &cinv = reg.get<CInventory>(player.entity());
 
     // ── ] key — toggle viewmodel UI panels ───────────────────────────────
@@ -260,7 +305,7 @@ int main(int argc, char **argv) {
             Log::info("Loot available: corpse uid=" +
                       std::to_string(pkt.corpseUID));
 
-          // ── Stats packets from server ────────────────────────────────
+            // ── Stats packets from server ────────────────────────────────
           } else if (pid == (uint8_t)StatsPacketID::StatsSync) {
             auto pkt = StatsSyncPacket::deserialize(d, len);
             clientStats.applySync(pkt);
@@ -269,11 +314,12 @@ int main(int argc, char **argv) {
             auto pkt = StatsDeltaPacket::deserialize(d, len);
             clientStats.applyDelta(pkt);
 
-          // ── Multiplayer packets ──────────────────────────────────────
+            // ── Multiplayer packets ──────────────────────────────────────
           } else if (pid == (uint8_t)MPPacketID::AuthResponse) {
             auto pkt = AuthResponsePacket::deserialize(d, len);
             if (pkt.accepted) {
-              Log::info("Auth accepted: " + pkt.message + " (id=" + std::to_string(pkt.playerId) + ")");
+              Log::info("Auth accepted: " + pkt.message +
+                        " (id=" + std::to_string(pkt.playerId) + ")");
               remotePlayers.localPlayerId = pkt.playerId;
             } else {
               Log::warn("Auth rejected: " + pkt.message);
@@ -288,12 +334,33 @@ int main(int argc, char **argv) {
 
           } else if (pid == (uint8_t)MPPacketID::PlayerDespawn) {
             auto pkt = PlayerDespawnPacket::deserialize(d, len);
-            Log::info("Remote player left (id=" + std::to_string(pkt.playerId) + ")");
+            Log::info("Remote player left (id=" + std::to_string(pkt.playerId) +
+                      ")");
             remotePlayers.onDespawn(pkt.playerId);
 
           } else if (pid == (uint8_t)MPPacketID::PlayerPosSync) {
             auto pkt = PlayerPosSyncPacket::deserialize(d, len);
             remotePlayers.onPosSync(pkt);
+          } else if (pid == (uint8_t)PacketID::TreeSpawn) {
+            auto pkt = TreeSpawnPacket::deserialize(d, len);
+            for (auto &t : pkt.trees) {
+              treeRenderer.addTree({t.wx, t.wy, t.wz}, t.yaw, t.scale,
+                                   t.templateIdx);
+            }
+          } else if (pid == (uint8_t)PacketID::WaterChunkData) {
+            auto pkt = WaterChunkDataPacket::deserialize(d, len);
+            // Build water chunk from packet
+            WaterChunk wc;
+            wc.coord = pkt.coord;
+            int S = ChunkData::SIZE;
+            for (int x = 0; x < S; x++)
+              for (int y = 0; y < S; y++)
+                for (int z = 0; z < S; z++)
+                  wc.set(x, y, z, pkt.levels[x * S * S + y * S + z]);
+            // Need terrain to build mesh — store water chunks and remesh when
+            // terrain available Simple approach: keep a pending water map, mesh
+            // when terrain chunk exists
+            pendingWater[pkt.coord] = wc;
           }
         }
         enet_packet_destroy(ev.packet);
@@ -301,11 +368,14 @@ int main(int argc, char **argv) {
         Log::info("Disconnected from server");
         server = nullptr;
         gameState = GameState::MainMenu;
+        treeRenderer.clearTrees();
+        pendingWater.clear();
         break;
       }
     }
 
-    if (!server) continue;
+    if (!server)
+      continue;
 
     // ── Poll finished meshes ──────────────────────────────────────────────
     readyMeshes.clear();
@@ -352,7 +422,13 @@ int main(int argc, char **argv) {
     bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible;
     if (!uiOpen && !input.cursorCaptured())
       input.captureCursor(true);
-
+    if (input.keyDown(GLFW_KEY_F3)) {
+      debugMenu.toggle();
+      if (debugMenu.visible)
+        input.captureCursor(false);
+      else if (!uiOpen)
+        input.captureCursor(true);
+    }
     // ── Spawn test enemies ────────────────────────────────────────────────
     if (player.isSpawned() && !enemiesSpawned) {
       glm::vec3 base = player.position();
@@ -377,7 +453,7 @@ int main(int argc, char **argv) {
       if (heavyAttack)
         viewModel.triggerHeavyAttack();
     }
-
+    treeRenderer.update(dt);
     combat.update(dt, player.entity());
     dayNight.update(dt);
     viewModel.update(dt);
@@ -400,7 +476,7 @@ int main(int argc, char **argv) {
     }
 
     // ── Render ────────────────────────────────────────────────────────────
-    int w, h;
+
     window.getSize(w, h);
     float aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
     glm::mat4 vp = camera.viewProj(aspect);
@@ -418,10 +494,14 @@ int main(int argc, char **argv) {
 
     viewModel.drawDebugUI();
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
-
+    waterRenderer.update(dt);
+    debugMenu.draw(player.position(), server);
     ImGui::Render();
-    vk_draw(ctx, vp, dayNight.sunIntensity(), dayNight.skyColor(), &viewModel,
-            proj, &remotePlayers);
+    int rdXZ = (int)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
+
+    vk_draw(ctx, vp, &treeRenderer, &waterRenderer, dayNight.sunIntensity(),
+            dayNight.skyColor(), rdXZ, camera.position, &viewModel, proj,
+            &remotePlayers);
   }
 
   if (server) {
@@ -430,9 +510,11 @@ int main(int argc, char **argv) {
   }
   ImGui_ImplVulkan_Shutdown();
   ImGui_ImplGlfw_Shutdown();
+  treeRenderer.destroy(ctx.device.device, ctx.allocator);
   ImGui::DestroyContext();
   vkDestroyDescriptorPool(ctx.device.device, imguiPool, nullptr);
   vkDeviceWaitIdle(ctx.device.device);
+  waterRenderer.destroy(ctx.device.device, ctx.allocator);
   remotePlayers.destroy(ctx.device.device, ctx.allocator);
   viewModel.destroy(ctx.device.device, ctx.allocator);
   vk_destroy(ctx);

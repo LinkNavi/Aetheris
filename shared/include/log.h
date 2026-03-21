@@ -3,7 +3,7 @@
 #include <ctime>
 #include <mutex>
 #include <string_view>
-
+#include <string>
 // Cross-platform signal handling
 #include <csignal>
 #ifdef _WIN32

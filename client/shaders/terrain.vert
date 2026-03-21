@@ -14,17 +14,21 @@ layout(set = 0, binding = 0) readonly buffer ChunkBuffer {
 
 layout(push_constant) uniform PC {
     mat4 viewProj;
-    vec4 params;
+    vec4 params;   // x=sunIntensity, y=fogStart, z=fogEnd
+    vec4 camPos;   // xyz=camera world pos
 } pc;
 
 layout(location = 0) out vec3  fragNormal;
 layout(location = 1) out float sunIntensity;
 layout(location = 2) out vec2  fragUV;
+layout(location = 3) out float fragDist;
 
 void main() {
-    ChunkData cd = chunks[gl_InstanceIndex];
-    gl_Position  = pc.viewProj * cd.model * vec4(inPos, 1.0);
-    fragNormal   = normalize(mat3(cd.model) * inNormal);
-    sunIntensity = cd.params.x;
-    fragUV       = inUV;
+    ChunkData cd    = chunks[gl_InstanceIndex];
+    vec4 worldPos   = cd.model * vec4(inPos, 1.0);
+    gl_Position     = pc.viewProj * worldPos;
+    fragNormal      = normalize(mat3(cd.model) * inNormal);
+    sunIntensity    = cd.params.x;
+    fragUV          = inUV;
+    fragDist        = length(worldPos.xyz - pc.camPos.xyz);
 }

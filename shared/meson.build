@@ -3,6 +3,8 @@ shared_src = files(
   'src/marching_cubes.cpp',
   'src/noise_gen.cpp',
   'src/gltf_loader.cpp',
+  'src/tree_gen.cpp',
+  'src/water_sim.cpp',
 )
 
 stb_inc = include_directories('../thirdparty')

@@ -9,6 +9,8 @@ enum class BlockMat : uint8_t {
     Dirt  = 1,
     Grass = 2,
     Sand  = 3,
+    Bark  = 4,   // tree trunk
+    Leaves = 5,  // tree canopy
 };
 
 struct Vertex {

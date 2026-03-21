@@ -2,6 +2,7 @@
 #include "log.h"
 #include "view_model.h"
 #include "vk_context.h"
+#include "water_renderer.h"
 #include <algorithm>
 #include <cstring>
 #include <fstream>
@@ -22,7 +23,11 @@ static void check(VkResult r, const char *msg) {
   if (r != VK_SUCCESS)
     throw std::runtime_error(msg);
 }
-
+struct GlobalPC {
+  glm::mat4 viewProj;
+  glm::vec4 params; // x=sunIntensity, y=fogStart, z=fogEnd, w=unused
+  glm::vec4 camPos; // xyz=camera world pos, w=unused
+};
 static std::vector<uint32_t> loadSpv(const char *path) {
   std::ifstream f(path, std::ios::binary | std::ios::ate);
   if (!f)
@@ -507,20 +512,16 @@ VkContext vk_init(GLFWwindow *window) {
   ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 
-  VkViewport vp{};
-  vp.width = (float)ctx.swapchain.extent.width;
-  vp.height = (float)ctx.swapchain.extent.height;
-  vp.maxDepth = 1.f;
-  VkRect2D sc2{};
-  sc2.extent = ctx.swapchain.extent;
-
   VkPipelineViewportStateCreateInfo vs{};
   vs.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
   vs.viewportCount = 1;
-  vs.pViewports = &vp;
   vs.scissorCount = 1;
-  vs.pScissors = &sc2;
-
+  VkDynamicState dynStates[] = {VK_DYNAMIC_STATE_VIEWPORT,
+                                VK_DYNAMIC_STATE_SCISSOR};
+  VkPipelineDynamicStateCreateInfo dynState{};
+  dynState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+  dynState.dynamicStateCount = 2;
+  dynState.pDynamicStates = dynStates;
   VkPipelineRasterizationStateCreateInfo raster{};
   raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   raster.polygonMode = VK_POLYGON_MODE_FILL;
@@ -549,7 +550,9 @@ VkContext vk_init(GLFWwindow *window) {
   VkPushConstantRange pushRange{};
   pushRange.stageFlags =
       VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-  pushRange.size = sizeof(glm::mat4) + sizeof(glm::vec4);
+
+  pushRange.size = sizeof(GlobalPC);
+
   VkDescriptorSetLayout setLayouts[] = {ctx.dsLayout, ctx.atlasLayout};
 
   VkPipelineLayoutCreateInfo layoutCI{};
@@ -572,6 +575,7 @@ VkContext vk_init(GLFWwindow *window) {
   pCI.pVertexInputState = &vertexInput;
   pCI.pInputAssemblyState = &ia;
   pCI.pViewportState = &vs;
+  pCI.pDynamicState = &dynState;
   pCI.pRasterizationState = &raster;
   pCI.pMultisampleState = &ms;
   pCI.pDepthStencilState = &ds;
@@ -798,11 +802,43 @@ static void flushUploads(VkContext &ctx) {
     gpu.vertexOffset = ctx.mega.allocVerts(vc);
     gpu.indexOffset = ctx.mega.allocInds(ic);
     if (gpu.vertexOffset == UINT32_MAX || gpu.indexOffset == UINT32_MAX) {
+      // Release what we allocated
       if (gpu.vertexOffset != UINT32_MAX)
         ctx.mega.releaseVerts(gpu.vertexOffset, vc);
       if (gpu.indexOffset != UINT32_MAX)
         ctx.mega.releaseInds(gpu.indexOffset, ic);
-      continue;
+
+      // Evict farthest chunk to make room
+      ChunkCoord farthest{};
+      float bestDist = -1.f;
+      float cs = (float)ChunkData::SIZE;
+      for (auto &[coord, g] : ctx.chunks) {
+        glm::vec3 cpos{(float)coord.x * cs, (float)coord.y * cs,
+                       (float)coord.z * cs};
+        float d = glm::length(cpos - ctx.lastCamPos);
+        if (d > bestDist) {
+          bestDist = d;
+          farthest = coord;
+        }
+      }
+      if (bestDist > 0.f) {
+        auto it = ctx.chunks.find(farthest);
+        ctx.mega.releaseVerts(it->second.vertexOffset, it->second.vertexCount);
+        ctx.mega.releaseInds(it->second.indexOffset, it->second.indexCount);
+        ctx.chunks.erase(it);
+        // Retry allocation
+        gpu.vertexOffset = ctx.mega.allocVerts(vc);
+        gpu.indexOffset = ctx.mega.allocInds(ic);
+        if (gpu.vertexOffset == UINT32_MAX || gpu.indexOffset == UINT32_MAX) {
+          if (gpu.vertexOffset != UINT32_MAX)
+            ctx.mega.releaseVerts(gpu.vertexOffset, vc);
+          if (gpu.indexOffset != UINT32_MAX)
+            ctx.mega.releaseInds(gpu.indexOffset, ic);
+          continue; // give up on this chunk
+        }
+        // fall through to copy
+      } else
+        continue;
     }
     VkDeviceSize vSize = vc * sizeof(Vertex);
     VkDeviceSize iSize = ic * sizeof(uint32_t);
@@ -851,13 +887,16 @@ void vk_remove_chunk(VkContext &ctx, ChunkCoord coord) {
 // ── Draw
 // ──────────────────────────────────────────────────────────────────────
 
-void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
-             glm::vec3 skyColor, const ViewModelRenderer *viewModel,
-             const glm::mat4 &proj, const RemotePlayerRenderer *remotePlayers) {
-  // just before the drawCount loop:
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* trees, const WaterRenderer* water,
+             float sunIntensity, glm::vec3 skyColor,
+             int renderDistXZ, glm::vec3 camPos,
+             const ViewModelRenderer* viewModel,
+             const glm::mat4& proj,
+             const RemotePlayerRenderer* remotePlayers) {
 
   flushUploads(ctx);
 
+  ctx.lastCamPos = camPos;
   uint32_t frame = ctx.currentFrame;
   vkWaitForFences(ctx.device.device, 1, &ctx.inFlight[frame], VK_TRUE,
                   UINT64_MAX);
@@ -948,6 +987,19 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
   rpBI.pClearValues = clears;
 
   vkCmdBeginRenderPass(cmd, &rpBI, VK_SUBPASS_CONTENTS_INLINE);
+  VkViewport vp{};
+  vp.x = 0.f;
+  vp.y = 0.f;
+  vp.width = (float)ctx.swapchain.extent.width;
+  vp.height = (float)ctx.swapchain.extent.height;
+  vp.minDepth = 0.f;
+  vp.maxDepth = 1.f;
+  vkCmdSetViewport(cmd, 0, 1, &vp);
+
+  VkRect2D sc{};
+  sc.offset = {0, 0};
+  sc.extent = ctx.swapchain.extent;
+  vkCmdSetScissor(cmd, 0, 1, &sc);
 
   // ── Terrain ───────────────────────────────────────────────────────────────
   vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
@@ -960,11 +1012,13 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
   vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
                           ctx.pipelineLayout, 1, 1, &ctx.atlasSet, 0, nullptr);
 
-  struct GlobalPC {
-    glm::mat4 viewProj;
-    glm::vec4 params;
-  };
-  GlobalPC gpc{viewProj, {sunIntensity, 0.f, 0.f, 0.f}};
+  float chunkSize = (float)ChunkData::SIZE;
+  float fogEnd = (renderDistXZ * 2 - 1) * chunkSize * 0.85f;
+  float fogStart = fogEnd * 0.70f;
+
+  GlobalPC gpc{viewProj,
+               {sunIntensity, fogStart, fogEnd, 0.f},
+               {camPos.x, camPos.y, camPos.z, 0.f}};
   vkCmdPushConstants(cmd, ctx.pipelineLayout,
                      VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                      0, sizeof(GlobalPC), &gpc);
@@ -975,9 +1029,13 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, float sunIntensity,
 
   // ── View model (drawn after terrain, depth test disabled so always on top) ─
   if (viewModel)
-    viewModel->draw(cmd, proj);
+    viewModel->draw(cmd, proj, ctx.swapchain.extent);
   if (remotePlayers && viewModel)
-  remotePlayers->draw(cmd, viewProj);
+    remotePlayers->draw(cmd, viewProj);
+  if (trees)
+    trees->draw(cmd, viewProj, ctx.swapchain.extent);
+if (water) water->draw(cmd, viewProj, ctx.swapchain.extent,
+                       camPos, sunIntensity);
   // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);
@@ -1064,4 +1122,50 @@ void vk_destroy(VkContext &ctx) {
   vkb::destroy_device(ctx.device);
   vkDestroySurfaceKHR(ctx.instance.instance, ctx.surface, nullptr);
   vkb::destroy_instance(ctx.instance);
+}
+
+void vk_resize(VkContext &ctx, GLFWwindow *window) {
+  vkDeviceWaitIdle(ctx.device.device);
+
+  // Destroy old framebuffers + depth + swapchain image views
+  for (auto &fb : ctx.framebuffers)
+    vkDestroyFramebuffer(ctx.device.device, fb, nullptr);
+  vkDestroyImageView(ctx.device.device, ctx.depthImageView, nullptr);
+  vmaDestroyImage(ctx.allocator, ctx.depthImage, ctx.depthAlloc);
+  for (auto &iv : ctx.swapImageViews)
+    vkDestroyImageView(ctx.device.device, iv, nullptr);
+
+  // Recreate swapchain
+  int w, h;
+  glfwGetFramebufferSize(window, &w, &h);
+  auto sc = vkb::SwapchainBuilder{ctx.device}
+                .set_desired_format({VK_FORMAT_B8G8R8A8_SRGB,
+                                     VK_COLOR_SPACE_SRGB_NONLINEAR_KHR})
+                .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+                .set_desired_extent(w, h)
+                .set_old_swapchain(ctx.swapchain)
+                .build();
+  vkb::destroy_swapchain(ctx.swapchain);
+  ctx.swapchain = sc.value();
+  ctx.swapImages = ctx.swapchain.get_images().value();
+  ctx.swapImageViews = ctx.swapchain.get_image_views().value();
+
+  // Recreate depth
+  createDepthResources(ctx);
+
+  // Recreate framebuffers
+  ctx.framebuffers.resize(ctx.swapImageViews.size());
+  for (size_t i = 0; i < ctx.swapImageViews.size(); i++) {
+    VkImageView atts[] = {ctx.swapImageViews[i], ctx.depthImageView};
+    VkFramebufferCreateInfo fbCI{};
+    fbCI.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    fbCI.renderPass = ctx.renderPass;
+    fbCI.attachmentCount = 2;
+    fbCI.pAttachments = atts;
+    fbCI.width = ctx.swapchain.extent.width;
+    fbCI.height = ctx.swapchain.extent.height;
+    fbCI.layers = 1;
+    vkCreateFramebuffer(ctx.device.device, &fbCI, nullptr,
+                        &ctx.framebuffers[i]);
+  }
 }

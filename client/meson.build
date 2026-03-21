@@ -9,6 +9,7 @@ imgui_src = files(
   '../thirdparty/imgui/imgui_widgets.cpp',
   '../thirdparty/imgui/backends/imgui_impl_glfw.cpp',
   '../thirdparty/imgui/backends/imgui_impl_vulkan.cpp',
+
 )
 # ── Compile shaders ───────────────────────────────────────────────────────────
 terrain_vert_spv = custom_target('terrain_vert_spv',
@@ -45,20 +46,50 @@ player_frag_spv = custom_target('player_frag_spv',
                                 output           : 'player_frag.spv',
                                 command          : [glslc, '@INPUT@', '-o', '@OUTPUT@'],
                                 build_by_default : true)
+tree_trunk_vert_spv = custom_target('tree_trunk_vert_spv',
+    input: 'shaders/tree_trunk.vert', output: 'tree_trunk_vert.spv',
+    command: [glslc, '@INPUT@', '-o', '@OUTPUT@'], build_by_default: true)
+
+tree_trunk_frag_spv = custom_target('tree_trunk_frag_spv',
+    input: 'shaders/tree_trunk.frag', output: 'tree_trunk_frag.spv',
+    command: [glslc, '@INPUT@', '-o', '@OUTPUT@'], build_by_default: true)
+
+tree_leaf_vert_spv = custom_target('tree_leaf_vert_spv',
+    input: 'shaders/tree_leaf.vert', output: 'tree_leaf_vert.spv',
+    command: [glslc, '@INPUT@', '-o', '@OUTPUT@'], build_by_default: true)
+
+tree_leaf_frag_spv = custom_target('tree_leaf_frag_spv',
+    input: 'shaders/tree_leaf.frag', output: 'tree_leaf_frag.spv',
+    command: [glslc, '@INPUT@', '-o', '@OUTPUT@'], build_by_default: true)
+water_vert_spv = custom_target('water_vert_spv',
+    input: 'shaders/water.vert', output: 'water_vert.spv',
+    command: [glslc, '@INPUT@', '-o', '@OUTPUT@'], build_by_default: true)
+
+water_frag_spv = custom_target('water_frag_spv',
+    input: 'shaders/water.frag', output: 'water_frag.spv',
+    command: [glslc, '@INPUT@', '-o', '@OUTPUT@'], build_by_default: true)
 # ── Client executable ─────────────────────────────────────────────────────────
 client_src = files(
   'src/main.cpp',
   'src/mesh_builder.cpp',
   'src/window.cpp',
   'src/vk_init.cpp',
+'src/water_renderer.cpp',
 
+'src/tree_renderer.cpp',
 'src/main_menu.cpp',
   'src/input.cpp',
   'src/player.cpp',
   'src/view_model.cpp',
   '../thirdparty/vk-bootstrap/src/VkBootstrap.cpp',
 )
-
+foreach asset : ['atlas.png', 'arm.glb', 'player.glb']
+  configure_file(
+    input  : '../' + asset,
+    output : asset,
+    copy   : true
+  )
+endforeach
 executable('client', client_src + imgui_src,
            include_directories : [
              'include',

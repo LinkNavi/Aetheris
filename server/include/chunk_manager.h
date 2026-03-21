@@ -6,6 +6,7 @@
 #include <queue>
 #include <mutex>
 #include <climits>
+#include <algorithm>
 #include "chunk.h"
 #include "packets.h"
 #include "config.h"
@@ -14,6 +15,8 @@
 struct ClientState {
     ENetPeer*  peer      = nullptr;
     ChunkCoord lastChunk = {INT_MIN, INT_MIN, INT_MIN};
+    int        renderDistXZ = Config::CHUNK_RADIUS_XZ;
+    int        renderDistY  = Config::CHUNK_RADIUS_Y;
     std::unordered_set<ChunkCoord, ChunkCoordHash> sentChunks;
     std::unordered_set<ChunkCoord, ChunkCoordHash> pendingChunks;
 };
@@ -22,6 +25,7 @@ struct ReadyChunk {
     ENetPeer*            peer;
     ChunkCoord           coord;
     std::vector<uint8_t> bytes;
+    std::vector<uint8_t> treeBytes; // add this
 };
 
 class ChunkManager {
@@ -38,7 +42,14 @@ public:
     void flushReady(ENetHost* host);
 
     float findSpawnY(float wx, float wz);
-
+void setClientRenderDist(ENetPeer* peer, int xz, int y) {
+    ClientState* cs = findClient(peer);
+    if (!cs) return;
+    cs->renderDistXZ = std::clamp(xz, 1, 255);
+    cs->renderDistY  = std::clamp(y,  1, 32);
+    // force re-evaluation next move
+    cs->lastChunk = {INT_MIN, INT_MIN, INT_MIN};
+}
 private:
     ThreadPool _pool;
 

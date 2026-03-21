@@ -170,11 +170,19 @@ void PlayerController::removeChunk(ChunkCoord coord) {
 }
 
 void PlayerController::setSpawnPosition(glm::vec3 pos) {
+_spawnWaitTime = 0.f;  // add this
+    // If respawning near same location, keep existing tri-soups
+    bool keepSoups = _spawned &&
+                     glm::length(pos - _reg.get<CTransform>(_player).pos) < 64.f;
+
     _pendingSpawn    = pos;
     _hasPendingSpawn = true;
     _spawned         = false;
-    _triSoups.clear();
-    _smoothVel = {0.f, 0.f, 0.f};
+    _smoothVel       = {0.f, 0.f, 0.f};
+
+    if (!keepSoups) {
+        _triSoups.clear();
+    }
     buildRequiredChunks(pos);
 }
 
@@ -193,10 +201,12 @@ void PlayerController::buildRequiredChunks(glm::vec3 pos) {
 bool PlayerController::spawnChunksReady() const {
     if (!_hasPendingSpawn) return false;
     int N = ChunkData::SIZE;
-    ChunkCoord atSpawn   { (int)std::floor(_pendingSpawn.x / N),
-                           (int)std::floor(_pendingSpawn.y / N),
-                           (int)std::floor(_pendingSpawn.z / N) };
-    ChunkCoord belowSpawn{ atSpawn.x, atSpawn.y - 1, atSpawn.z };
+    int cx = (int)std::floor(_pendingSpawn.x / N);
+    int cy = (int)std::floor(_pendingSpawn.y / N);
+    int cz = (int)std::floor(_pendingSpawn.z / N);
+    // Just need the chunk at spawn and the one below
+    ChunkCoord atSpawn   {cx,   cy,   cz  };
+    ChunkCoord belowSpawn{cx,   cy-1, cz  };
     return _triSoups.count(atSpawn) && _triSoups.count(belowSpawn);
 }
 
@@ -261,17 +271,19 @@ void PlayerController::resolveCollision(CTransform& tf, CVelocity& vel,
 
 void PlayerController::update(float dt, const Input& input, CombatSystem* combat) {
     // ── Spawn gate ────────────────────────────────────────────────────────────
-    if (!_spawned) {
-        if (spawnChunksReady()) {
-            _reg.get<CTransform>(_player).pos = _pendingSpawn;
-            _reg.get<CVelocity> (_player).vel = {0.f, 0.f, 0.f};
-            _hasPendingSpawn = false;
-            _spawned         = true;
-        } else {
-            _cam.applyMouse(input.mouseDelta());
-            return;
-        }
+   if (!_spawned) {
+    _spawnWaitTime += dt;
+    if (spawnChunksReady() || _spawnWaitTime > SPAWN_TIMEOUT) {
+        _reg.get<CTransform>(_player).pos = _pendingSpawn;
+        _reg.get<CVelocity> (_player).vel = {0.f, 0.f, 0.f};
+        _hasPendingSpawn = false;
+        _spawned         = true;
+        _spawnWaitTime   = 0.f;
+    } else {
+        _cam.applyMouse(input.mouseDelta());
+        return;
     }
+}
 
     auto& tf  = _reg.get<CTransform>(_player);
     auto& vel = _reg.get<CVelocity> (_player);

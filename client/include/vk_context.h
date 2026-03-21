@@ -8,7 +8,8 @@
 #include <unordered_map>
 #include <deque>
 #include "chunk.h"
-
+#include "tree_renderer.h"
+#include "water_renderer.h"
 struct ViewModelRenderer;
 class RemotePlayerRenderer;
 
@@ -25,8 +26,8 @@ struct PendingUpload {
     std::vector<uint32_t> indices;
 };
 
-static constexpr uint32_t MEGA_VERTEX_CAP = 1 << 21;
-static constexpr uint32_t MEGA_INDEX_CAP  = 1 << 21;
+static constexpr uint32_t MEGA_VERTEX_CAP = 1 << 25; // 32M
+static constexpr uint32_t MEGA_INDEX_CAP  = 1 << 25;
 
 struct MegaBuffer {
     VkBuffer      vertexBuffer = VK_NULL_HANDLE;
@@ -71,14 +72,15 @@ struct VkContext {
     VkBuffer      stagingBuffer = VK_NULL_HANDLE;
     VmaAllocation stagingAlloc  = nullptr;
     void*         stagingMapped = nullptr;
-    VkDeviceSize  stagingSize   = 64 * 1024 * 1024;
-
+  VkDeviceSize stagingSize = 256 * 1024 * 1024; // 256MB up from 64MB
+// in VkContext struct:
+glm::vec3 lastCamPos{0.f};
     VkCommandBuffer uploadCmd   = VK_NULL_HANDLE;
     VkFence         uploadFence = VK_NULL_HANDLE;
 
     MegaBuffer mega;
 
-    static constexpr uint32_t MAX_DRAW_CHUNKS = 512;
+  static constexpr uint32_t MAX_DRAW_CHUNKS = 8192;
 
     VkBuffer      indirectBuffer[2] = {};
     VmaAllocation indirectAlloc[2]  = {};
@@ -135,12 +137,14 @@ struct VkContext {
 void vk_load_atlas(VkContext& ctx, const char* path);
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
+void vk_resize(VkContext& ctx, GLFWwindow* window);
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* trees, const WaterRenderer* water,
 
-void      vk_draw(VkContext& ctx, const glm::mat4& viewProj,
-                  float sunIntensity, glm::vec3 skyColor,
-                  const ViewModelRenderer* viewModel = nullptr,
-                  const glm::mat4& proj = glm::mat4(1.f),
-                  const RemotePlayerRenderer* remotePlayers = nullptr);
+             float sunIntensity, glm::vec3 skyColor,
+             int renderDistXZ, glm::vec3 camPos,
+             const ViewModelRenderer* viewModel,
+             const glm::mat4& proj,
+             const RemotePlayerRenderer* remotePlayers);
 
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
 void      vk_remove_chunk(VkContext& ctx, ChunkCoord coord);
