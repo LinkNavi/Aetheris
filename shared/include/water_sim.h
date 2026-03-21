@@ -6,8 +6,6 @@
 #include "chunk.h"
 
 // Water level per voxel: 0 = empty, 1-8 = water amount (8 = full)
-// Stored as a separate grid alongside ChunkData density
-
 static constexpr int WATER_MAX   = 8;
 static constexpr int WATER_EMPTY = 0;
 
@@ -25,7 +23,7 @@ struct WaterChunk {
     }
 };
 
-// Per-chunk water mesh — flat quads at water surface
+// Per-chunk water mesh — now produced by marching cubes
 struct WaterVertex {
     glm::vec3 pos;
     glm::vec2 uv;
@@ -39,5 +37,11 @@ struct WaterMesh {
     std::vector<uint32_t>   indices;
 };
 
-// Build a flat water mesh for a chunk given its water grid and terrain density
+// Build water mesh using marching cubes on the water density field.
+// Water density = (waterSurfaceY - wy), clamped to zero where terrain is solid.
+// This guarantees the water shoreline exactly matches the terrain mesh.
 WaterMesh buildWaterMesh(const WaterChunk& water, const ChunkData& terrain);
+
+// Get the water surface Y for a given world XZ position (biome-aware).
+// Defined in noise_gen.cpp alongside terrain generation.
+float getWaterSurfaceY(float wx, float wz);

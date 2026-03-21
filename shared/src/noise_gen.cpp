@@ -4,7 +4,6 @@
 #include <cmath>
 #include <cstdint>
 
-// ── Global tree library — generated once ─────────────────────────────────────
 static TreeLibrary g_treeLib;
 static bool        g_treeLibReady = false;
 
@@ -17,8 +16,6 @@ void initTreeLibrary(int64_t seed) {
 const TreeLibrary& getTreeLibrary() {
     return g_treeLib;
 }
-
-// ── Hash / value noise ────────────────────────────────────────────────────────
 
 static float hashNoise(int64_t seed, int x, int y, int z) {
     uint64_t h = (uint64_t)seed;
@@ -61,19 +58,27 @@ static float fbm(int64_t seed, float x, float y, float z, int octaves) {
     return n * 2.f - 1.f;
 }
 
+// Use 64.5 so water surface sits mid-voxel, avoiding degenerate density=0
+// at integer Y boundaries. This gives clean marching cubes crossings.
+static constexpr float BASE_SEA_LEVEL = 64.5f;
+
 float sampleSurfaceY(float wx, float wz) {
     constexpr float hscale   = 0.008f;
     constexpr float hHeight  = 80.f;
-    constexpr float seaLevel = 64.f;
     const int64_t   seed     = (int64_t)Config::WORLD_SEED;
 
     float base   = fbm(seed,         wx * hscale,        0.f, wz * hscale,        4);
     float detail = fbm(seed + 111111, wx * hscale * 3.f, 0.f, wz * hscale * 3.f, 3) * 0.25f;
-    return seaLevel + (base + detail) * hHeight + 2.f;
+    return BASE_SEA_LEVEL + (base + detail) * hHeight + 2.f;
+}
+
+float getWaterSurfaceY(float wx, float wz) {
+    // Per-biome water levels go here later.
+    // For now, flat global sea level.
+    return BASE_SEA_LEVEL;
 }
 
 ChunkData generateChunk(ChunkCoord coord) {
-    // Ensure tree library is ready
     initTreeLibrary((int64_t)Config::WORLD_SEED);
 
     ChunkData data;
@@ -84,12 +89,9 @@ ChunkData generateChunk(ChunkCoord coord) {
     const     int64_t seed     = (int64_t)Config::WORLD_SEED;
     constexpr float   hscale   = 0.008f;
     constexpr float   hHeight  = 80.f;
-    constexpr float   seaLevel = 64.f;
-    constexpr float   sandLevel = seaLevel + 4.f;
+    constexpr float   sandLevel = BASE_SEA_LEVEL + 4.f;
     constexpr float   dirtDepth = 4.f;
-    constexpr float   stoneDepth = 10.f;
 
-    // ── Pass 1: terrain density ───────────────────────────────────────────────
     for (int x = 0; x < P; x++)
     for (int z = 0; z < P; z++) {
         float wx = (float)(coord.x * N + x);
@@ -97,7 +99,7 @@ ChunkData generateChunk(ChunkCoord coord) {
 
         float base    = fbm(seed,         wx * hscale,        0.f, wz * hscale,        4);
         float detail  = fbm(seed + 111111, wx * hscale * 3.f, 0.f, wz * hscale * 3.f, 3) * 0.25f;
-        float surfaceY = seaLevel + (base + detail) * hHeight;
+        float surfaceY = BASE_SEA_LEVEL + (base + detail) * hHeight;
 
         for (int y = 0; y < P; y++) {
             float wy = (float)(coord.y * N + y);
@@ -128,8 +130,6 @@ ChunkData generateChunk(ChunkCoord coord) {
             data.materials[x][y][z] = mat;
         }
     }
-
-  
 
     return data;
 }
