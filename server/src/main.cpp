@@ -102,7 +102,10 @@ int main(int argc, char **argv) {
             invMgr.onPlayerConnect(ev.peer, peerToUID(ev.peer));
             statsMgr.onPlayerConnect(ev.peer);
 
+            // Try to load saved position, fall back to default spawn
             glm::vec3 sp = defaultSpawn;
+            invMgr.loadPlayerPos(peerToUID(ev.peer), sp);
+
             positions[ev.peer] = sp;
             chunks.updateClient(ev.peer, sp.x, sp.y, sp.z);
             chunks.flushReady(host.get());
@@ -128,6 +131,8 @@ int main(int argc, char **argv) {
           chunks.updateClient(ev.peer, mv.x, mv.y, mv.z);
           invMgr.onPlayerMove(ev.peer, pos);
           mpMgr.onPlayerMove(ev.peer, mv.x, mv.y, mv.z, mv.yaw, mv.pitch);
+          // Save position every move packet (cheap, just 12 bytes)
+          invMgr.savePlayerPos(peerToUID(ev.peer), pos);
         } else if (pid == (uint8_t)PacketID::RespawnRequest) {
           glm::vec3 sp = defaultSpawn;
           positions[ev.peer] = sp;

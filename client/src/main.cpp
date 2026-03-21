@@ -436,7 +436,19 @@ int main(int argc, char **argv) {
   if (server) {
     enet_peer_disconnect(server, 0);
     enet_host_flush(host.get());
-  }
+    // Drain ENet until disconnect acknowledged or timeout
+    ENetEvent ev2;
+    uint32_t timeout = 2000; // 2 seconds max
+    while (enet_host_service(host.get(), &ev2, timeout) > 0) {
+        if (ev2.type == ENET_EVENT_TYPE_RECEIVE)
+            enet_packet_destroy(ev2.packet);
+        else if (ev2.type == ENET_EVENT_TYPE_DISCONNECT)
+            break;
+        timeout = 100; // after first event, shorter waits
+    }
+    server = nullptr;
+}
+meshBuilder.cancelPending();
   ImGui_ImplVulkan_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   treeRenderer.destroy(ctx.device.device, ctx.allocator);

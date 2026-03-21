@@ -19,7 +19,11 @@ class MeshBuilder {
 public:
     // nThreads=0 → auto (hardware_concurrency - 1, min 1)
     explicit MeshBuilder(int nThreads = 0);
-
+void cancelPending() {
+    // Drain the ready queue to unblock any waiting submits
+    std::lock_guard lk(_readyMu);
+    while (!_ready.empty()) _ready.pop();
+}
     // Push raw packet bytes. Copies the data — safe to call right before
     // enet_packet_destroy(). Non-blocking.
     void submit(const uint8_t* data, size_t len);

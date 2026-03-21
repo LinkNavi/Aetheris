@@ -45,18 +45,40 @@ public:
         _playerUIDs[peer] = uid;
         _playerInvs[peer] = loadPlayerInv(uid);
     }
+void savePlayerPos(uint64_t uid, glm::vec3 pos) {
+    std::string path = std::string(PLAYER_INV_DIR) + std::to_string(uid) + ".pos";
+    std::ofstream f(path, std::ios::binary | std::ios::trunc);
+    if (!f) return;
+    f.write((char*)&pos.x, 4);
+    f.write((char*)&pos.y, 4);
+    f.write((char*)&pos.z, 4);
+}
 
-    void onPlayerDisconnect(ENetPeer* peer) {
-        auto it = _playerUIDs.find(peer);
-        if (it != _playerUIDs.end()) {
-            savePlayerInv(it->second, _playerInvs[peer]);
-            _playerUIDs.erase(it);
-        }
-        _playerInvs.erase(peer);
-        _playerPos.erase(peer);
-        for (auto& [uid, chest] : _chests)
-            if (chest.lockedBy == peer) chest.lockedBy = nullptr;
+// Returns false if no saved position exists
+bool loadPlayerPos(uint64_t uid, glm::vec3& outPos) {
+    std::string path = std::string(PLAYER_INV_DIR) + std::to_string(uid) + ".pos";
+    std::ifstream f(path, std::ios::binary);
+    if (!f) return false;
+    f.read((char*)&outPos.x, 4);
+    f.read((char*)&outPos.y, 4);
+    f.read((char*)&outPos.z, 4);
+    return f.good();
+}
+  void onPlayerDisconnect(ENetPeer* peer) {
+    auto it = _playerUIDs.find(peer);
+    if (it != _playerUIDs.end()) {
+        savePlayerInv(it->second, _playerInvs[peer]);
+        // Save position on disconnect
+        auto posIt = _playerPos.find(peer);
+        if (posIt != _playerPos.end())
+            savePlayerPos(it->second, posIt->second);
+        _playerUIDs.erase(it);
     }
+    _playerInvs.erase(peer);
+    _playerPos.erase(peer);
+    for (auto& [uid, chest] : _chests)
+        if (chest.lockedBy == peer) chest.lockedBy = nullptr;
+}
 
     void onPlayerMove(ENetPeer* peer, glm::vec3 pos) {
         _playerPos[peer] = pos;
