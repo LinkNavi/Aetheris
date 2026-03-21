@@ -22,7 +22,8 @@ int main(int argc, char **argv) {
   Log::init("aetheris_server.log");
   Log::installCrashHandlers();
   Log::info("Server starting");
-
+  float worldTime = 0.25f; // start at dawn
+  float timeBroadcastAccum = 0.f;
   Net::init();
   Net::Host host(Config::SERVER_PORT, 32);
 
@@ -35,11 +36,21 @@ int main(int argc, char **argv) {
   TreeSystem treeSys(getTreeLibrary());
 
   for (int i = 1; i + 1 < argc; i++) {
-    if (std::string(argv[i]) == "--auth-host") mpMgr.authHost = argv[++i];
-    else if (std::string(argv[i]) == "--auth-port") mpMgr.authPort = std::atoi(argv[++i]);
+    if (std::string(argv[i]) == "--auth-host")
+      mpMgr.authHost = argv[++i];
+    else if (std::string(argv[i]) == "--auth-port")
+      mpMgr.authPort = std::atoi(argv[++i]);
   }
-  Log::info("Auth server: " + mpMgr.authHost + ":" + std::to_string(mpMgr.authPort));
-  Log::info(std::string("Listening on port ") + std::to_string(Config::SERVER_PORT));
+  Log::info("Auth server: " + mpMgr.authHost + ":" +
+            std::to_string(mpMgr.authPort));
+  Log::info(std::string("Listening on port ") +
+            std::to_string(Config::SERVER_PORT));
+
+  // Find a good land spawn once at startup
+  glm::vec3 defaultSpawn = chunks.findSpawnPos();
+  Log::info("Default spawn: " + std::to_string(defaultSpawn.x) + ", " +
+            std::to_string(defaultSpawn.y) + ", " +
+            std::to_string(defaultSpawn.z));
 
   std::unordered_map<ENetPeer *, glm::vec3> positions;
 
@@ -52,10 +63,20 @@ int main(int argc, char **argv) {
     auto now = Clock::now();
     float dt = std::chrono::duration<float>(now - lastTick).count();
     lastTick = now;
-    if (dt > 0.1f) dt = 0.1f;
+    if (dt > 0.1f)
+      dt = 0.1f;
 
     treeSys.update(dt);
+    worldTime += dt / Config::DAY_LENGTH_SECONDS;
+    if (worldTime > 1.f)
+      worldTime -= 1.f;
 
+    timeBroadcastAccum += dt;
+    if (timeBroadcastAccum >= 1.0f) {
+      timeBroadcastAccum = 0.f;
+      WorldTimePacket pkt{worldTime};
+      mpMgr.broadcastToAll(pkt.serialize());
+    }
     ENetEvent ev;
     while (enet_host_service(host.get(), &ev, 0) > 0) {
       switch (ev.type) {
@@ -67,7 +88,10 @@ int main(int argc, char **argv) {
       case ENET_EVENT_TYPE_RECEIVE: {
         const uint8_t *d = ev.packet->data;
         size_t len = ev.packet->dataLength;
-        if (len == 0) { enet_packet_destroy(ev.packet); break; }
+        if (len == 0) {
+          enet_packet_destroy(ev.packet);
+          break;
+        }
         uint8_t pid = d[0];
 
         if (pid == (uint8_t)MPPacketID::AuthRequest) {
@@ -77,21 +101,25 @@ int main(int argc, char **argv) {
             chunks.addClient(ev.peer);
             invMgr.onPlayerConnect(ev.peer, peerToUID(ev.peer));
             statsMgr.onPlayerConnect(ev.peer);
-            float surfaceY = chunks.findSpawnY(0.f, 0.f);
-            float spawnY = surfaceY + Config::PLAYER_HEIGHT + 2.f;
-            positions[ev.peer] = {0.f, spawnY, 0.f};
-            chunks.updateClient(ev.peer, 0.f, spawnY, 0.f);
+
+            glm::vec3 sp = defaultSpawn;
+            positions[ev.peer] = sp;
+            chunks.updateClient(ev.peer, sp.x, sp.y, sp.z);
             chunks.flushReady(host.get());
-            SpawnPositionPacket sp{0.f, spawnY, 0.f};
-            Net::sendReliable(ev.peer, sp.serialize());
+            Net::sendReliable(
+                ev.peer, SpawnPositionPacket{sp.x, sp.y, sp.z}.serialize());
             invMgr.sendInventoryState(ev.peer);
             statsMgr.sendFullSync(ev.peer);
             enet_host_flush(host.get());
           }
-          enet_packet_destroy(ev.packet); break;
+          enet_packet_destroy(ev.packet);
+          break;
         }
 
-        if (!mpMgr.isAuthenticated(ev.peer)) { enet_packet_destroy(ev.packet); break; }
+        if (!mpMgr.isAuthenticated(ev.peer)) {
+          enet_packet_destroy(ev.packet);
+          break;
+        }
 
         if (pid == (uint8_t)PacketID::PlayerMove) {
           auto mv = PlayerMovePacket::deserialize(d, len);
@@ -101,22 +129,25 @@ int main(int argc, char **argv) {
           invMgr.onPlayerMove(ev.peer, pos);
           mpMgr.onPlayerMove(ev.peer, mv.x, mv.y, mv.z, mv.yaw, mv.pitch);
         } else if (pid == (uint8_t)PacketID::RespawnRequest) {
-          float surfaceY = chunks.findSpawnY(0.f, 0.f);
-          float spawnY = surfaceY + Config::PLAYER_HEIGHT + 2.f;
-          positions[ev.peer] = {0.f, spawnY, 0.f};
+          glm::vec3 sp = defaultSpawn;
+          positions[ev.peer] = sp;
           chunks.resetClient(ev.peer);
-          chunks.updateClient(ev.peer, 0.f, spawnY, 0.f);
+          chunks.updateClient(ev.peer, sp.x, sp.y, sp.z);
           chunks.flushReady(host.get());
-          Net::sendReliable(ev.peer, SpawnPositionPacket{0.f, spawnY, 0.f}.serialize());
+          Net::sendReliable(ev.peer,
+                            SpawnPositionPacket{sp.x, sp.y, sp.z}.serialize());
           statsMgr.respawn(ev.peer);
           enet_host_flush(host.get());
         } else if (pid == (uint8_t)InvPacketID::ChestOpenReq) {
-          invMgr.onChestOpenReq(ev.peer, ChestOpenReqPacket::deserialize(d, len));
+          invMgr.onChestOpenReq(ev.peer,
+                                ChestOpenReqPacket::deserialize(d, len));
           enet_host_flush(host.get());
         } else if (pid == (uint8_t)InvPacketID::ChestCloseReq) {
-          invMgr.onChestCloseReq(ev.peer, ChestCloseReqPacket::deserialize(d, len));
+          invMgr.onChestCloseReq(ev.peer,
+                                 ChestCloseReqPacket::deserialize(d, len));
         } else if (pid == (uint8_t)InvPacketID::InventoryMoveReq) {
-          invMgr.onInventoryMoveReq(ev.peer, InventoryMoveReqPacket::deserialize(d, len));
+          invMgr.onInventoryMoveReq(
+              ev.peer, InventoryMoveReqPacket::deserialize(d, len));
           enet_host_flush(host.get());
         } else if (pid == (uint8_t)PacketID::RenderDist) {
           auto pkt = RenderDistPacket::deserialize(d, len);
@@ -125,13 +156,17 @@ int main(int argc, char **argv) {
           auto pkt = SpawnTreePacket::deserialize(d, len);
           TreeSpawnPacket treePkt;
           TreeSpawnPacket::Entry e;
-          e.wx = pkt.wx; e.wy = pkt.wy; e.wz = pkt.wz; e.yaw = 0.f;
+          e.wx = pkt.wx;
+          e.wy = pkt.wy;
+          e.wz = pkt.wz;
+          e.yaw = 0.f;
           e.scale = 0.9f + (float)(rand() % 100) / 500.f;
           e.templateIdx = (uint8_t)(rand() % TREE_TEMPLATE_COUNT);
           treePkt.trees.push_back(e);
           Net::sendReliable(ev.peer, treePkt.serialize());
         }
-        enet_packet_destroy(ev.packet); break;
+        enet_packet_destroy(ev.packet);
+        break;
       }
 
       case ENET_EVENT_TYPE_DISCONNECT:
@@ -142,22 +177,28 @@ int main(int argc, char **argv) {
         statsMgr.onPlayerDisconnect(ev.peer);
         positions.erase(ev.peer);
         break;
-      default: break;
+      default:
+        break;
       }
     }
 
     statsMgr.update(dt);
     statsFlushAccum += dt;
     if (statsFlushAccum >= 0.1f) {
-      statsFlushAccum = 0.f; statsMgr.flushDirty(); enet_host_flush(host.get());
+      statsFlushAccum = 0.f;
+      statsMgr.flushDirty();
+      enet_host_flush(host.get());
     }
     possBroadcastAccum += dt;
     if (possBroadcastAccum >= 0.05f) {
-      possBroadcastAccum = 0.f; mpMgr.broadcastPositions(host.get()); enet_host_flush(host.get());
+      possBroadcastAccum = 0.f;
+      mpMgr.broadcastPositions(host.get());
+      enet_host_flush(host.get());
     }
     chunks.flushReady(host.get());
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
 
-  Net::deinit(); Log::shutdown();
+  Net::deinit();
+  Log::shutdown();
 }

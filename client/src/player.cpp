@@ -125,8 +125,7 @@ bool PlayerController::raycastGround(const CTransform& tf, const CAABB& box,
             }
         }
     }
-    if (hit == true){
-    Log::info("hit");}
+   
     return hit;
 }
 

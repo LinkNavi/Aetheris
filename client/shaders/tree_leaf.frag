@@ -12,24 +12,25 @@ layout(push_constant) uniform PC {
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    // Discard nearly transparent pixels
     if (fragAlpha < 0.01) discard;
 
-    // Leaf color — two greens blended by noise
-    vec3 leafDark  = vec3(0.08, 0.22, 0.06);
-    vec3 leafLight = vec3(0.18, 0.42, 0.10);
-    // Slight yellow-green on bright spots
-    vec3 leafBright = vec3(0.28, 0.52, 0.08);
+    // Darker, more muted greens — bleak forest palette
+    vec3 leafDark   = vec3(0.04, 0.10, 0.03);
+    vec3 leafMid    = vec3(0.07, 0.16, 0.05);
+    vec3 leafLight  = vec3(0.10, 0.22, 0.06);
 
     float n = clamp(fragNoise, 0.0, 1.0);
     vec3 leafCol;
     if (n > 0.6)
-        leafCol = mix(leafLight, leafBright, (n - 0.6) / 0.4);
+        leafCol = mix(leafMid, leafLight, (n - 0.6) / 0.4);
     else
-        leafCol = mix(leafDark, leafLight, n / 0.6);
+        leafCol = mix(leafDark, leafMid, n / 0.6);
 
-    // Simple top-down lighting — underside darker
-    float light = 0.4 + 0.6 * fragAlpha; // brighter toward center of quad
+    // Desaturate toward grey-green
+    float lum = dot(leafCol, vec3(0.299, 0.587, 0.114));
+    leafCol = mix(leafCol, vec3(lum * 0.6), 0.35);
 
-    outColor = vec4(leafCol * light, fragAlpha * 0.92);
+    float light = 0.3 + 0.4 * fragAlpha;
+
+    outColor = vec4(leafCol * light, fragAlpha * 0.88);
 }

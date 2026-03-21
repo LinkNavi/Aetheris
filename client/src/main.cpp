@@ -222,8 +222,8 @@ int main(int argc, char **argv) {
       }
 
       ImGui::Render();
-      vk_draw(ctx, glm::mat4(1.f), nullptr, 0.f, {0.02f, 0.02f, 0.08f}, 2,
-              glm::vec3(0.f), nullptr, glm::mat4(1.f), nullptr);
+      vk_draw(ctx, glm::mat4(1.f), glm::mat4(1.f),nullptr, 0.f, {0.02f, 0.02f, 0.08f}, 2,
+              glm::vec3(0.f), nullptr, glm::mat4(1.f), nullptr, nullptr);
       continue;
     }
 
@@ -289,6 +289,10 @@ int main(int argc, char **argv) {
             for (auto &t : pkt.trees)
               treeRenderer.addTree({t.wx, t.wy, t.wz}, t.yaw, t.scale,
                                    t.templateIdx);
+          } else if (pid == (uint8_t)PacketID::WorldTime) {
+            auto pkt = WorldTimePacket::deserialize(d, len);
+            if (!debugMenu.timeOverride) // ← only sync if not overriding
+              dayNight.time = pkt.time;
           }
         }
         enet_packet_destroy(ev.packet);
@@ -389,7 +393,7 @@ int main(int argc, char **argv) {
     dayNight.update(dt);
     viewModel.update(dt);
     remotePlayers.update(dt);
-
+    ctx.skyGodRay.update(dt);
     if (input.keyPressed(GLFW_KEY_R)) {
       Net::sendReliable(server, RespawnRequestPacket{}.serialize());
       enet_host_flush(host.get());
@@ -419,13 +423,13 @@ int main(int argc, char **argv) {
     viewModel.drawDebugUI();
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
 
-    debugMenu.draw(player.position(), server);
+    debugMenu.draw(player.position(), server, dayNight);
     ImGui::Render();
 
     int rdXZ = (int)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
-    vk_draw(ctx, vp, &treeRenderer, dayNight.sunIntensity(),
+    vk_draw(ctx, vp,camera.view(), &treeRenderer, dayNight.sunIntensity(),
             dayNight.skyColor(), rdXZ, camera.position, &viewModel, proj,
-            &remotePlayers);
+            &remotePlayers, &dayNight);
   }
 
   if (server) {

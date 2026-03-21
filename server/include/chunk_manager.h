@@ -7,11 +7,11 @@
 #include <mutex>
 #include <climits>
 #include <algorithm>
+#include <glm/vec3.hpp>
 #include "chunk.h"
 #include "packets.h"
 #include "config.h"
 #include "thread_pool.h"
-
 
 struct ClientState {
     ENetPeer*  peer      = nullptr;
@@ -31,10 +31,6 @@ struct ReadyChunk {
 
 class ChunkManager {
 public:
-    // Set this after construction so chunk generation can register terrain
-    // with the water simulator
-
-
     explicit ChunkManager(int genThreads = 0);
 
     void addClient   (ENetPeer* peer);
@@ -43,10 +39,10 @@ public:
 
     void updateClient(ENetPeer* peer, float wx, float wy, float wz);
 
-    // Call every server tick from the ENet thread — sends finished chunks
     void flushReady(ENetHost* host);
 
-    float findSpawnY(float wx, float wz);
+    float      findSpawnY  (float wx, float wz);   // kept for compat
+    glm::vec3  findSpawnPos();                      // searches for land spawn
 
     void setClientRenderDist(ENetPeer* peer, int xz, int y) {
         ClientState* cs = findClient(peer);

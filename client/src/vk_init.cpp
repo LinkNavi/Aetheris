@@ -487,7 +487,7 @@ VkContext vk_init(GLFWwindow *window) {
   vBinding.stride = sizeof(Vertex);
   vBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-  VkVertexInputAttributeDescription attrs[3]{};
+  VkVertexInputAttributeDescription attrs[4]{};
   attrs[0].binding = 0;
   attrs[0].location = 0;
   attrs[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -496,16 +496,20 @@ VkContext vk_init(GLFWwindow *window) {
   attrs[1].location = 1;
   attrs[1].format = VK_FORMAT_R32G32B32_SFLOAT;
   attrs[1].offset = offsetof(Vertex, normal);
+  attrs[2].binding = 0;
+  attrs[2].location = 2;
+  attrs[2].format = VK_FORMAT_R32G32_SFLOAT;
+  attrs[2].offset = offsetof(Vertex, uv);
+  attrs[3].binding = 0;
+  attrs[3].location = 3;
+  attrs[3].format = VK_FORMAT_R32_UINT;
+  attrs[3].offset = offsetof(Vertex, material);
 
   VkPipelineVertexInputStateCreateInfo vertexInput{};
   vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexInput.vertexBindingDescriptionCount = 1;
   vertexInput.pVertexBindingDescriptions = &vBinding;
-  vertexInput.vertexAttributeDescriptionCount = 3;
-  attrs[2].binding = 0;
-  attrs[2].location = 2;
-  attrs[2].format = VK_FORMAT_R32G32_SFLOAT;
-  attrs[2].offset = offsetof(Vertex, uv);
+  vertexInput.vertexAttributeDescriptionCount = 4;
   vertexInput.pVertexAttributeDescriptions = attrs;
 
   VkPipelineInputAssemblyStateCreateInfo ia{};
@@ -619,7 +623,10 @@ VkContext vk_init(GLFWwindow *window) {
     check(vkCreateFence(ctx.device.device, &fenCI, nullptr, &ctx.inFlight[i]),
           "fence");
   }
-
+  ctx.skyGodRay.init(ctx.device.device, ctx.allocator, ctx.renderPass,
+                     ctx.swapchain.extent,
+                     AssetPath::get("sky_vert.spv").c_str(),
+                     AssetPath::get("sky_frag.spv").c_str());
   Log::info("Vulkan initialised");
   return ctx;
 }
@@ -887,12 +894,12 @@ void vk_remove_chunk(VkContext &ctx, ChunkCoord coord) {
 // ── Draw
 // ──────────────────────────────────────────────────────────────────────
 
-void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* trees,
-	     float sunIntensity, glm::vec3 skyColor,
+void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
+             const TreeRenderer *trees, float sunIntensity, glm::vec3 skyColor,
              int renderDistXZ, glm::vec3 camPos,
-             const ViewModelRenderer* viewModel,
-             const glm::mat4& proj,
-             const RemotePlayerRenderer* remotePlayers) {
+             const ViewModelRenderer *viewModel, const glm::mat4 &proj,
+             const RemotePlayerRenderer *remotePlayers,
+             const DayNight *dayNight) {
 
   flushUploads(ctx);
 
@@ -975,7 +982,7 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* tree
   vkBeginCommandBuffer(cmd, &bI);
 
   VkClearValue clears[2]{};
-  clears[0].color = {{skyColor.r, skyColor.g, skyColor.b, 1.f}};
+  clears[0].color = {{0.f, 0.f, 0.f, 1.f}};
   clears[1].depthStencil = {1.f, 0};
 
   VkRenderPassBeginInfo rpBI{};
@@ -1000,6 +1007,11 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* tree
   sc.offset = {0, 0};
   sc.extent = ctx.swapchain.extent;
   vkCmdSetScissor(cmd, 0, 1, &sc);
+
+  // --- Da Sky ---------------------
+  if (dayNight) {
+    ctx.skyGodRay.drawSky(cmd, ctx.swapchain.extent, view, *dayNight, camPos);
+  }
 
   // ── Terrain ───────────────────────────────────────────────────────────────
   vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, ctx.pipeline);
@@ -1035,7 +1047,10 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const TreeRenderer* tree
   if (trees)
     trees->draw(cmd, viewProj, ctx.swapchain.extent);
 
-
+  // -- Da God Rays ----------
+  if (dayNight) {
+    ctx.skyGodRay.drawGodRays(cmd, ctx.swapchain.extent, viewProj, *dayNight);
+  }
   // ── ImGui ─────────────────────────────────────────────────────────────────
   ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
   vkCmdEndRenderPass(cmd);
@@ -1118,6 +1133,7 @@ void vk_destroy(VkContext &ctx) {
 
   vmaDestroyAllocator(ctx.allocator);
 
+  ctx.skyGodRay.destroy(ctx.device.device, ctx.allocator);
   vkb::destroy_swapchain(ctx.swapchain);
   vkb::destroy_device(ctx.device);
   vkDestroySurfaceKHR(ctx.instance.instance, ctx.surface, nullptr);
@@ -1168,4 +1184,10 @@ void vk_resize(VkContext &ctx, GLFWwindow *window) {
     vkCreateFramebuffer(ctx.device.device, &fbCI, nullptr,
                         &ctx.framebuffers[i]);
   }
+
+  ctx.skyGodRay.destroy(ctx.device.device, ctx.allocator);
+  ctx.skyGodRay.init(ctx.device.device, ctx.allocator, ctx.renderPass,
+                     ctx.swapchain.extent,
+                     AssetPath::get("sky_vert.spv").c_str(),
+                     AssetPath::get("sky_frag.spv").c_str());
 }

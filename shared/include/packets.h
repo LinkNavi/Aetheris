@@ -17,6 +17,7 @@ enum class PacketID : uint8_t {
   WaterChunkData = 0x09,
   WaterPlace     = 0x0A,
   SpawnTree      = 0x0B,
+ WorldTime = 0x0C,
 };
 
 inline void writeU8(std::vector<uint8_t> &b, uint8_t v) { b.push_back(v); }
@@ -217,5 +218,20 @@ struct SpawnTreePacket {
     static SpawnTreePacket deserialize(const uint8_t* d, size_t) {
         SpawnTreePacket p; size_t o = 1;
         p.wx = readF32(d, o); p.wy = readF32(d, o); p.wz = readF32(d, o); return p;
+    }
+};
+
+struct WorldTimePacket {
+    float time;
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> b;
+        writeU8(b, (uint8_t)PacketID::WorldTime);
+        writeF32(b, time);
+        return b;
+    }
+    static WorldTimePacket deserialize(const uint8_t* d, size_t) {
+        WorldTimePacket p; size_t o = 1;
+        p.time = readF32(d, o);
+        return p;
     }
 };
