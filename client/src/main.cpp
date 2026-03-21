@@ -35,7 +35,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <tiny_gltf.h>
+
 std::unordered_map<ChunkCoord, WaterChunk, ChunkCoordHash> pendingWater;
+std::unordered_map<ChunkCoord, ChunkData, ChunkCoordHash> terrainCache;
 
 int main(int argc, char **argv) {
   AssetPath::init(argv[0]);
@@ -137,6 +139,7 @@ int main(int argc, char **argv) {
       Log::warn("No player.glb found — remote players will be invisible.");
     }
   }
+
   TreeRenderer treeRenderer;
   treeRenderer.init(ctx.device.device, ctx.allocator, ctx.commandPool,
                     ctx.graphicsQueue, ctx.renderPass, ctx.swapchain.extent,
@@ -144,6 +147,7 @@ int main(int argc, char **argv) {
                     AssetPath::get("tree_trunk_frag.spv").c_str(),
                     AssetPath::get("tree_leaf_vert.spv").c_str(),
                     AssetPath::get("tree_leaf_frag.spv").c_str());
+
   WaterRenderer waterRenderer;
   waterRenderer.init(ctx.device.device, ctx.allocator, ctx.commandPool,
                      ctx.graphicsQueue, ctx.renderPass, ctx.swapchain.extent,
@@ -164,13 +168,18 @@ int main(int argc, char **argv) {
   float netAccum = 0.f;
   std::vector<ChunkMesh> readyMeshes;
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // MAIN LOOP
+  // ════════════════════════════════════════════════════════════════════════════
   while (!window.shouldClose()) {
     auto now = Clock::now();
     float dt = std::chrono::duration<float>(now - prev).count();
     prev = now;
     if (dt > 0.05f)
       dt = 0.05f;
+
     input.beginFrame();
+
     int w, h;
     window.getSize(w, h);
     static int prevW = w, prevH = h;
@@ -181,9 +190,12 @@ int main(int argc, char **argv) {
         vk_resize(ctx, window.handle());
       }
     }
+
+    // ── Main menu ─────────────────────────────────────────────────────────
     if (gameState != GameState::InGame) {
       if (input.cursorCaptured())
         input.captureCursor(false);
+
       int w, h;
       window.getSize(w, h);
 
@@ -214,7 +226,6 @@ int main(int argc, char **argv) {
                 ev2.type == ENET_EVENT_TYPE_CONNECT) {
               Log::info(std::string("Connected to ") + ip);
 
-              // Send auth request immediately
               AuthRequestPacket authReq;
               authReq.username = mainMenu.pendingUsername;
               authReq.token = mainMenu.account().sessionToken;
@@ -227,12 +238,11 @@ int main(int argc, char **argv) {
                   (int)mainMenu.settings().renderDistance, 1, 255);
               rd.y = 4;
               Net::sendReliable(server, rd.serialize());
-
               enet_host_flush(host.get());
+
               gameState = GameState::InGame;
               input.captureCursor(true);
 
-              // Clear remote players from previous session
               remotePlayers.players.clear();
               remotePlayers.localPlayerId = 0;
 
@@ -247,16 +257,19 @@ int main(int argc, char **argv) {
       }
 
       ImGui::Render();
-
-      vk_draw(ctx, glm::mat4(1.f), nullptr, nullptr, 0.f, {0.02f, 0.02f, 0.08f},
-              2, glm::vec3(0.f), nullptr, glm::mat4(1.f), nullptr);
+      vk_draw(ctx, glm::mat4(1.f), nullptr, nullptr, 0.f,
+              {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr,
+              glm::mat4(1.f), nullptr);
       continue;
     }
+
+    // ── In-game ───────────────────────────────────────────────────────────
     if (!server)
       continue;
+
     auto &cinv = reg.get<CInventory>(player.entity());
 
-    // ── ] key — toggle viewmodel UI panels ───────────────────────────────
+    // ── ] key — toggle viewmodel UI panels ──────────────────────────────
     if (input.keyDown(GLFW_KEY_RIGHT_BRACKET)) {
       viewModel.uiVisible = !viewModel.uiVisible;
       viewModel.animEditor.open = viewModel.uiVisible;
@@ -266,7 +279,7 @@ int main(int argc, char **argv) {
         input.captureCursor(true);
     }
 
-    // ── Receive packets ───────────────────────────────────────────────────
+    // ── Receive packets ──────────────────────────────────────────────────
     ENetEvent ev;
     while (enet_host_service(host.get(), &ev, 0) > 0) {
       if (ev.type == ENET_EVENT_TYPE_RECEIVE) {
@@ -305,7 +318,6 @@ int main(int argc, char **argv) {
             Log::info("Loot available: corpse uid=" +
                       std::to_string(pkt.corpseUID));
 
-            // ── Stats packets from server ────────────────────────────────
           } else if (pid == (uint8_t)StatsPacketID::StatsSync) {
             auto pkt = StatsSyncPacket::deserialize(d, len);
             clientStats.applySync(pkt);
@@ -314,7 +326,6 @@ int main(int argc, char **argv) {
             auto pkt = StatsDeltaPacket::deserialize(d, len);
             clientStats.applyDelta(pkt);
 
-            // ── Multiplayer packets ──────────────────────────────────────
           } else if (pid == (uint8_t)MPPacketID::AuthResponse) {
             auto pkt = AuthResponsePacket::deserialize(d, len);
             if (pkt.accepted) {
@@ -323,7 +334,6 @@ int main(int argc, char **argv) {
               remotePlayers.localPlayerId = pkt.playerId;
             } else {
               Log::warn("Auth rejected: " + pkt.message);
-              // Could kick back to menu, for now just log
             }
 
           } else if (pid == (uint8_t)MPPacketID::PlayerSpawn) {
@@ -334,22 +344,23 @@ int main(int argc, char **argv) {
 
           } else if (pid == (uint8_t)MPPacketID::PlayerDespawn) {
             auto pkt = PlayerDespawnPacket::deserialize(d, len);
-            Log::info("Remote player left (id=" + std::to_string(pkt.playerId) +
-                      ")");
+            Log::info("Remote player left (id=" +
+                      std::to_string(pkt.playerId) + ")");
             remotePlayers.onDespawn(pkt.playerId);
 
           } else if (pid == (uint8_t)MPPacketID::PlayerPosSync) {
             auto pkt = PlayerPosSyncPacket::deserialize(d, len);
             remotePlayers.onPosSync(pkt);
+
           } else if (pid == (uint8_t)PacketID::TreeSpawn) {
             auto pkt = TreeSpawnPacket::deserialize(d, len);
             for (auto &t : pkt.trees) {
               treeRenderer.addTree({t.wx, t.wy, t.wz}, t.yaw, t.scale,
                                    t.templateIdx);
             }
+
           } else if (pid == (uint8_t)PacketID::WaterChunkData) {
             auto pkt = WaterChunkDataPacket::deserialize(d, len);
-            // Build water chunk from packet
             WaterChunk wc;
             wc.coord = pkt.coord;
             int S = ChunkData::SIZE;
@@ -357,35 +368,61 @@ int main(int argc, char **argv) {
               for (int y = 0; y < S; y++)
                 for (int z = 0; z < S; z++)
                   wc.set(x, y, z, pkt.levels[x * S * S + y * S + z]);
-            // Need terrain to build mesh — store water chunks and remesh when
-            // terrain available Simple approach: keep a pending water map, mesh
-            // when terrain chunk exists
-            pendingWater[pkt.coord] = wc;
+
+            // Try to mesh immediately if terrain already cached
+            auto terrainIt = terrainCache.find(pkt.coord);
+            if (terrainIt != terrainCache.end()) {
+              WaterMesh wm = buildWaterMesh(wc, terrainIt->second);
+              waterRenderer.uploadChunk(ctx.device.device, ctx.allocator,
+                                        ctx.commandPool, ctx.graphicsQueue, wm);
+            } else {
+              pendingWater[pkt.coord] = wc; // defer until terrain arrives
+            }
           }
         }
         enet_packet_destroy(ev.packet);
+
       } else if (ev.type == ENET_EVENT_TYPE_DISCONNECT) {
         Log::info("Disconnected from server");
         server = nullptr;
         gameState = GameState::MainMenu;
         treeRenderer.clearTrees();
         pendingWater.clear();
+        terrainCache.clear();
         break;
       }
-    }
+    } // end enet event loop
 
     if (!server)
       continue;
 
-    // ── Poll finished meshes ──────────────────────────────────────────────
+    // ── Poll finished meshes ─────────────────────────────────────────────
     readyMeshes.clear();
     meshBuilder.poll(readyMeshes, 4);
     for (auto &mesh : readyMeshes) {
       player.addChunkMesh(mesh);
       vk_upload_chunk(ctx, mesh);
+      terrainCache[mesh.coord] = generateChunk(mesh.coord);
     }
 
-    // ── Hotbar mode (Tab) + slot select (1-8) ────────────────────────────
+    // ── Flush pending water now that terrain may have arrived ────────────
+    for (auto it = pendingWater.begin(); it != pendingWater.end(); ) {
+      auto terrainIt = terrainCache.find(it->first);
+      if (terrainIt != terrainCache.end()) {
+        WaterMesh wm = buildWaterMesh(it->second, terrainIt->second);
+        waterRenderer.uploadChunk(ctx.device.device, ctx.allocator,
+                                  ctx.commandPool, ctx.graphicsQueue, wm);
+        it = pendingWater.erase(it);
+      } else {
+        ++it;
+      }
+    }
+
+    // Cap terrain cache size
+    if (terrainCache.size() > 512)
+      terrainCache.clear();
+
+    // ── Hotbar mode (Tab) + slot select (1-8) ───────────────────────────
     {
       bool tabPressed = input.keyDown(GLFW_KEY_TAB);
       int numKey = 0;
@@ -397,11 +434,10 @@ int main(int argc, char **argv) {
           numKey = k + 1;
           break;
         }
-
       invUI.handleInput(cinv, tabPressed, numKey);
     }
 
-    // ── Inventory toggle (I) ──────────────────────────────────────────────
+    // ── Inventory toggle (I) ─────────────────────────────────────────────
     if (input.keyDown(GLFW_KEY_I)) {
       cinv.open = !cinv.open;
       if (!cinv.open && chestMirror.open) {
@@ -412,24 +448,31 @@ int main(int argc, char **argv) {
       input.captureCursor(!cinv.open);
     }
 
-    // ── Chest interaction (E) ─────────────────────────────────────────────
+    // ── Chest interaction (E) ────────────────────────────────────────────
     if (input.keyDown(GLFW_KEY_E) && !chestMirror.open) {
       ChestOpenReqPacket req{1};
       Net::sendReliable(server, req.serialize());
       enet_host_flush(host.get());
     }
 
-    bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible;
+    // ── uiOpen — drives cursor capture and input suppression ────────────
+    bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
+                  debugMenu.visible;
     if (!uiOpen && !input.cursorCaptured())
       input.captureCursor(true);
+
+    // ── F3 debug menu ────────────────────────────────────────────────────
     if (input.keyDown(GLFW_KEY_F3)) {
       debugMenu.toggle();
+      // cursor state is handled by the uiOpen block above on the next frame,
+      // but we also handle it immediately here for responsiveness
       if (debugMenu.visible)
         input.captureCursor(false);
-      else if (!uiOpen)
+      else if (!cinv.open && !chestMirror.open && !viewModel.uiVisible)
         input.captureCursor(true);
     }
-    // ── Spawn test enemies ────────────────────────────────────────────────
+
+    // ── Spawn test enemies ───────────────────────────────────────────────
     if (player.isSpawned() && !enemiesSpawned) {
       glm::vec3 base = player.position();
       combat.spawnEnemy(base + glm::vec3{5.f, 0.f, 0.f});
@@ -438,9 +481,8 @@ int main(int argc, char **argv) {
       enemiesSpawned = true;
     }
 
-    // ── Update ────────────────────────────────────────────────────────────
-    bool suppressInput = uiOpen;
-    if (suppressInput) {
+    // ── Update ───────────────────────────────────────────────────────────
+    if (uiOpen) {
       player.update(dt, input, nullptr);
     } else {
       bool lightAttack = input.keyDown(GLFW_KEY_F);
@@ -459,13 +501,13 @@ int main(int argc, char **argv) {
     viewModel.update(dt);
     remotePlayers.update(dt);
 
-    // ── Respawn ───────────────────────────────────────────────────────────
+    // ── Respawn ──────────────────────────────────────────────────────────
     if (input.keyPressed(GLFW_KEY_R)) {
       Net::sendReliable(server, RespawnRequestPacket{}.serialize());
       enet_host_flush(host.get());
     }
 
-    // ── Send position (20 Hz) ─────────────────────────────────────────────
+    // ── Send position (20 Hz) ────────────────────────────────────────────
     netAccum += dt;
     if (netAccum >= 0.05f) {
       netAccum = 0.f;
@@ -475,8 +517,7 @@ int main(int argc, char **argv) {
       enet_host_flush(host.get());
     }
 
-    // ── Render ────────────────────────────────────────────────────────────
-
+    // ── Render ───────────────────────────────────────────────────────────
     window.getSize(w, h);
     float aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
     glm::mat4 vp = camera.viewProj(aspect);
@@ -486,24 +527,22 @@ int main(int argc, char **argv) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    // Draw HUD (always visible)
     hud.draw(clientStats);
-
-    // Draw nametags for remote players
     remotePlayers.drawNametags(vp, w, h);
-
     viewModel.drawDebugUI();
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
     waterRenderer.update(dt);
     debugMenu.draw(player.position(), server);
     ImGui::Render();
-    int rdXZ = (int)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
 
+    int rdXZ = (int)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
     vk_draw(ctx, vp, &treeRenderer, &waterRenderer, dayNight.sunIntensity(),
             dayNight.skyColor(), rdXZ, camera.position, &viewModel, proj,
             &remotePlayers);
-  }
 
+  } // end main loop
+
+  // ── Shutdown ─────────────────────────────────────────────────────────────
   if (server) {
     enet_peer_disconnect(server, 0);
     enet_host_flush(host.get());

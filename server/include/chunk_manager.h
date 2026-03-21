@@ -11,6 +11,7 @@
 #include "packets.h"
 #include "config.h"
 #include "thread_pool.h"
+#include "water_simulator.h"
 
 struct ClientState {
     ENetPeer*  peer      = nullptr;
@@ -25,11 +26,15 @@ struct ReadyChunk {
     ENetPeer*            peer;
     ChunkCoord           coord;
     std::vector<uint8_t> bytes;
-    std::vector<uint8_t> treeBytes; // add this
+    std::vector<uint8_t> treeBytes;
 };
 
 class ChunkManager {
 public:
+    // Set this after construction so chunk generation can register terrain
+    // with the water simulator
+    WaterSimulator* waterSim = nullptr;
+
     explicit ChunkManager(int genThreads = 0);
 
     void addClient   (ENetPeer* peer);
@@ -42,18 +47,19 @@ public:
     void flushReady(ENetHost* host);
 
     float findSpawnY(float wx, float wz);
-void setClientRenderDist(ENetPeer* peer, int xz, int y) {
-    ClientState* cs = findClient(peer);
-    if (!cs) return;
-    cs->renderDistXZ = std::clamp(xz, 1, 255);
-    cs->renderDistY  = std::clamp(y,  1, 32);
-    // force re-evaluation next move
-    cs->lastChunk = {INT_MIN, INT_MIN, INT_MIN};
-}
+
+    void setClientRenderDist(ENetPeer* peer, int xz, int y) {
+        ClientState* cs = findClient(peer);
+        if (!cs) return;
+        cs->renderDistXZ = std::clamp(xz, 1, 255);
+        cs->renderDistY  = std::clamp(y,  1, 32);
+        cs->lastChunk = {INT_MIN, INT_MIN, INT_MIN};
+    }
+
 private:
     ThreadPool _pool;
 
-    std::mutex _cacheMu;
+    mutable std::mutex _cacheMu;
     std::unordered_map<ChunkCoord, std::vector<uint8_t>, ChunkCoordHash> _cache;
 
     std::mutex _readyMu;

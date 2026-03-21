@@ -24,7 +24,7 @@ struct CStamina {
     bool  depleted = false;
     float depleteCooldown = 0.f;
 };
-float _spawnWaitTime = 0.f;
+
 static constexpr float SPAWN_TIMEOUT = 8.f;
 struct ChunkTriSoup { std::vector<glm::vec3> tris; };
 
@@ -60,6 +60,7 @@ private:
     Camera&         _cam;
     entt::entity    _player;
 
+float _spawnWaitTime = 0.f;
     std::unordered_map<ChunkCoord, ChunkTriSoup, ChunkCoordHash> _triSoups;
 
     bool      _spawned         = false;

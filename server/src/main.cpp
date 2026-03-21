@@ -15,9 +15,53 @@
 #include <chrono>
 #include <enet/enet.h>
 #include <unordered_map>
+
 static uint64_t peerToUID(ENetPeer *peer) { return (uint64_t)(uintptr_t)peer; }
 
 static constexpr int TREE_TEMPLATE_COUNT = 6;
+static constexpr int SEA_LEVEL = 64; // must match seaLevel in noise_gen.cpp
+
+// Helper: send all currently simulated water chunks to a single peer
+static void sendWaterStateToPeer(ENetPeer *peer, WaterSimulator &waterSim,
+                                  int rdXZ, int rdY) {
+    int S = ChunkData::SIZE;
+    for (int cx = -rdXZ; cx <= rdXZ; cx++)
+    for (int cz = -rdXZ; cz <= rdXZ; cz++)
+    for (int cy = -rdY;  cy <= rdY;  cy++) {
+        ChunkCoord cc{cx, cy, cz};
+        const WaterChunk *wc = waterSim.getWater(cc);
+        if (!wc || wc->empty()) continue;
+
+        WaterChunkDataPacket wpkt;
+        wpkt.coord = cc;
+        for (int x = 0; x < S; x++)
+            for (int y = 0; y < S; y++)
+                for (int z = 0; z < S; z++)
+                    wpkt.levels[x * S * S + y * S + z] = wc->get(x, y, z);
+        Net::sendReliable(peer, wpkt.serialize());
+    }
+}
+
+// Seed the water simulator with sea-level water for a radius around the origin.
+// Called once on first client connect so there is visible water in the world.
+static void seedSeaLevelWater(WaterSimulator &waterSim, ChunkManager &chunks,
+                               int radius) {
+    Log::info("Seeding sea-level water (radius=" + std::to_string(radius) + ")...");
+    for (int wx = -radius; wx <= radius; wx++)
+    for (int wz = -radius; wz <= radius; wz++) {
+        float surfY = chunks.findSpawnY((float)wx, (float)wz);
+        if (surfY > (float)(SEA_LEVEL + 2))
+            continue; // above sea level — no water here
+
+        // Fill from surface up to sea level
+        int topY = SEA_LEVEL;
+        int botY = (int)std::floor(surfY);
+        for (int wy = botY; wy <= topY; wy++)
+            waterSim.placeWater(wx, wy, wz, WATER_MAX);
+    }
+    Log::info("Sea-level water seeded.");
+}
+
 int main(int argc, char **argv) {
   Log::init("aetheris_server.log");
   Log::installCrashHandlers();
@@ -25,14 +69,21 @@ int main(int argc, char **argv) {
 
   Net::init();
   Net::Host host(Config::SERVER_PORT, 32);
+
   WaterSimulator waterSim;
   float waterTickAccum = 0.f;
+
   ChunkManager chunks(1);
+  // Give ChunkManager access to the water simulator so generated terrain
+  // gets registered and water can flow correctly
+  chunks.waterSim = &waterSim;
+
   InventoryManager invMgr;
   StatsManager statsMgr;
   MultiplayerManager mpMgr;
   initTreeLibrary((int64_t)Config::WORLD_SEED);
   TreeSystem treeSys(getTreeLibrary());
+
   // Parse auth server config from args: --auth-host X --auth-port Y
   for (int i = 1; i + 1 < argc; i++) {
     if (std::string(argv[i]) == "--auth-host")
@@ -42,7 +93,6 @@ int main(int argc, char **argv) {
   }
   Log::info("Auth server: " + mpMgr.authHost + ":" +
             std::to_string(mpMgr.authPort));
-
   Log::info(std::string("Listening on port ") +
             std::to_string(Config::SERVER_PORT));
 
@@ -53,26 +103,27 @@ int main(int argc, char **argv) {
   float statsFlushAccum = 0.f;
   float possBroadcastAccum = 0.f;
 
+  bool waterSeeded = false;
+
   while (true) {
     auto now = Clock::now();
     float dt = std::chrono::duration<float>(now - lastTick).count();
     lastTick = now;
     if (dt > 0.1f)
       dt = 0.1f;
-    auto dirtyTrees = treeSys.update(dt);
-    ENetEvent ev;
 
+    auto dirtyTrees = treeSys.update(dt);
+
+    // ── Water simulation tick ─────────────────────────────────────────────
     waterTickAccum += dt;
     if (waterTickAccum >= WaterSimulator::TICK_RATE) {
       waterTickAccum = 0.f;
       auto changedChunks = waterSim.tick();
 
       for (auto &cc : changedChunks) {
-        auto *wc = waterSim.getWater(cc);
-        if (!wc)
-          continue;
+        const WaterChunk *wc = waterSim.getWater(cc);
+        if (!wc) continue;
 
-        // Build and send WaterChunkDataPacket to all clients
         WaterChunkDataPacket wpkt;
         wpkt.coord = cc;
         int S = ChunkData::SIZE;
@@ -81,20 +132,17 @@ int main(int argc, char **argv) {
             for (int z = 0; z < S; z++)
               wpkt.levels[x * S * S + y * S + z] = wc->get(x, y, z);
 
-        auto bytes = wpkt.serialize();
-        // Send to all authenticated clients
-        // (add a broadcast helper to MultiplayerManager or iterate peers)
-        mpMgr.broadcastToAll(bytes);
+        mpMgr.broadcastToAll(wpkt.serialize());
       }
     }
 
+    ENetEvent ev;
     while (enet_host_service(host.get(), &ev, 0) > 0) {
       switch (ev.type) {
 
       case ENET_EVENT_TYPE_CONNECT: {
         Log::info("Peer connected (awaiting auth)");
         mpMgr.onPeerConnect(ev.peer);
-        // Don't do chunk/inv/stats setup until authenticated
         break;
       }
 
@@ -108,13 +156,29 @@ int main(int argc, char **argv) {
 
         uint8_t pid = d[0];
 
-        // ── Auth request (must come first) ────────────────────────
+        // ── Auth request ───────────────────────────────────────────────
         if (pid == (uint8_t)MPPacketID::AuthRequest) {
           auto req = AuthRequestPacket::deserialize(d, len);
           mpMgr.onAuthRequest(ev.peer, req, host.get());
 
-          // If authenticated, do normal connect setup
           if (mpMgr.isAuthenticated(ev.peer)) {
+            // Seed water on first ever client connect (world startup)
+            if (!waterSeeded) {
+              waterSeeded = true;
+              // Pre-generate spawn area terrain so the simulator knows
+              // what is solid before we place water
+              Log::info("Pre-generating spawn terrain for water seeding...");
+              int pregenRadius = 3; // chunks
+              int N = ChunkData::SIZE;
+              for (int cx = -pregenRadius; cx <= pregenRadius; cx++)
+              for (int cy = -2; cy <= 2; cy++)
+              for (int cz = -pregenRadius; cz <= pregenRadius; cz++) {
+                ChunkData data = generateChunk({cx, cy, cz});
+                waterSim.addTerrain(data);
+              }
+              seedSeaLevelWater(waterSim, chunks, pregenRadius * N);
+            }
+
             chunks.addClient(ev.peer);
             invMgr.onPlayerConnect(ev.peer, peerToUID(ev.peer));
             statsMgr.onPlayerConnect(ev.peer);
@@ -131,6 +195,12 @@ int main(int argc, char **argv) {
 
             invMgr.sendInventoryState(ev.peer);
             statsMgr.sendFullSync(ev.peer);
+
+            // Send all existing water chunks to this client
+            sendWaterStateToPeer(ev.peer, waterSim,
+                                  Config::CHUNK_RADIUS_XZ,
+                                  Config::CHUNK_RADIUS_Y);
+
             enet_host_flush(host.get());
           }
 
@@ -159,12 +229,16 @@ int main(int argc, char **argv) {
 
           chunks.resetClient(ev.peer);
           chunks.updateClient(ev.peer, 0.f, spawnY, 0.f);
-          chunks.flushReady(
-              host.get()); // flush chunks BEFORE sending spawn pos
+          chunks.flushReady(host.get());
 
           SpawnPositionPacket sp{0.f, spawnY, 0.f};
           Net::sendReliable(ev.peer, sp.serialize());
           statsMgr.respawn(ev.peer);
+
+          // Re-send water state after respawn
+          sendWaterStateToPeer(ev.peer, waterSim,
+                                Config::CHUNK_RADIUS_XZ,
+                                Config::CHUNK_RADIUS_Y);
           enet_host_flush(host.get());
 
         } else if (pid == (uint8_t)InvPacketID::ChestOpenReq) {
@@ -180,10 +254,12 @@ int main(int argc, char **argv) {
           auto req = InventoryMoveReqPacket::deserialize(d, len);
           invMgr.onInventoryMoveReq(ev.peer, req);
           enet_host_flush(host.get());
+
         } else if (pid == (uint8_t)PacketID::RenderDist) {
           auto pkt = RenderDistPacket::deserialize(d, len);
           Log::info("RenderDist set: xz=" + std::to_string(pkt.xz));
           chunks.setClientRenderDist(ev.peer, pkt.xz, pkt.y);
+
         } else if (pid == (uint8_t)PacketID::WaterPlace) {
           auto pkt = WaterPlacePacket::deserialize(d, len);
           if (pkt.level > 0)
@@ -193,8 +269,6 @@ int main(int argc, char **argv) {
 
         } else if (pid == (uint8_t)PacketID::SpawnTree) {
           auto pkt = SpawnTreePacket::deserialize(d, len);
-          // For now just broadcast a tree spawn packet back to all clients
-          // near that position (reuse TreeSpawnPacket)
           TreeSpawnPacket treePkt;
           TreeSpawnPacket::Entry e;
           e.wx = pkt.wx;
@@ -206,6 +280,7 @@ int main(int argc, char **argv) {
           treePkt.trees.push_back(e);
           Net::sendReliable(ev.peer, treePkt.serialize());
         }
+
         enet_packet_destroy(ev.packet);
         break;
       }
@@ -233,7 +308,6 @@ int main(int argc, char **argv) {
       enet_host_flush(host.get());
     }
 
-    // Broadcast player positions at ~20Hz
     possBroadcastAccum += dt;
     if (possBroadcastAccum >= 0.05f) {
       possBroadcastAccum = 0.f;

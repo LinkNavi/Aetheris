@@ -6,7 +6,6 @@
 #include <cmath>
 #include "packets.h"
 
-
 static constexpr int TREE_TEMPLATE_COUNT = 6;
 
 static ChunkCoord worldToChunk(float wx, float wy, float wz) {
@@ -42,21 +41,14 @@ void ChunkManager::resetClient(ENetPeer *peer) {
   cs->lastChunk = {INT_MIN, INT_MIN, INT_MIN};
 }
 
-// ── scheduleChunk
-// ───────────────────────────────────────────────────────────── Called on ENet
-// thread. Checks cache; if hit sends immediately, else submits a generation
-// task to the thread pool.
-
 void ChunkManager::scheduleChunk(ClientState &cs, ChunkCoord coord) {
   if (cs.sentChunks.count(coord) || cs.pendingChunks.count(coord))
     return;
 
-  // Check cache under lock
   {
     std::lock_guard lk(_cacheMu);
     auto it = _cache.find(coord);
     if (it != _cache.end()) {
-      // Already generated — push straight to ready queue
       std::lock_guard rlk(_readyMu);
       _ready.push({cs.peer, coord, it->second});
       cs.sentChunks.insert(coord);
@@ -72,6 +64,14 @@ void ChunkManager::scheduleChunk(ClientState &cs, ChunkCoord coord) {
 
 void ChunkManager::generateAndEnqueue(ENetPeer *peer, ChunkCoord coord) {
   ChunkData data = generateChunk(coord);
+
+  // Register terrain with the water simulator so it knows which voxels are
+  // solid. This must happen before any water simulation ticks that touch this
+  // chunk. The waterSim pointer is set by main after construction.
+  if (waterSim) {
+    waterSim->addTerrain(data);
+  }
+
   ChunkMesh mesh = marchChunk(data);
   auto bytes = ChunkDataPacket::from(mesh).serialize();
 
@@ -112,10 +112,6 @@ void ChunkManager::generateAndEnqueue(ENetPeer *peer, ChunkCoord coord) {
   }
 }
 
-// ── updateClient
-// ────────────────────────────────────────────────────────────── Called when a
-// PlayerMove packet arrives. Only schedules new chunks.
-
 void ChunkManager::updateClient(ENetPeer *peer, float wx, float wy, float wz) {
   ClientState *cs = findClient(peer);
   if (!cs)
@@ -126,7 +122,6 @@ void ChunkManager::updateClient(ENetPeer *peer, float wx, float wy, float wz) {
     return;
   cs->lastChunk = center;
 
-  // Collect all chunks in range, sorted by distance
   struct CoordDist {
     ChunkCoord coord;
     int distSq;
@@ -138,11 +133,10 @@ void ChunkManager::updateClient(ENetPeer *peer, float wx, float wy, float wz) {
   for (int dx = -cs->renderDistXZ; dx <= cs->renderDistXZ; dx++)
     for (int dy = -cs->renderDistY; dy <= cs->renderDistY; dy++)
       for (int dz = -cs->renderDistXZ; dz <= cs->renderDistXZ; dz++) {
-        int dsq = dx * dx + dy * dy * 4 + dz * dz; // weight Y less
+        int dsq = dx * dx + dy * dy * 4 + dz * dz;
         pending.push_back({{center.x + dx, center.y + dy, center.z + dz}, dsq});
       }
 
-  // Sort closest first
   std::sort(pending.begin(), pending.end(),
             [](const CoordDist &a, const CoordDist &b) {
               return a.distSq < b.distSq;
@@ -151,12 +145,6 @@ void ChunkManager::updateClient(ENetPeer *peer, float wx, float wy, float wz) {
   for (auto &cd : pending)
     scheduleChunk(*cs, cd.coord);
 }
-
-// ── flushReady
-// ──────────────────────────────────────────────────────────────── Called every
-// server tick from the ENet thread. Drains the ready queue and sends packets.
-// ENet is not thread-safe so all enet_peer_send calls must happen here, not in
-// the worker threads.
 
 void ChunkManager::flushReady(ENetHost *host) {
   std::queue<ReadyChunk> batch;
@@ -168,8 +156,6 @@ void ChunkManager::flushReady(ENetHost *host) {
   bool sent = false;
   while (!batch.empty()) {
     ReadyChunk &rc = batch.front();
-
-    // Mark pendingChunks as sent (peer might be gone — check)
     ClientState *cs = findClient(rc.peer);
 
     if (cs) {
@@ -194,9 +180,6 @@ void ChunkManager::flushReady(ENetHost *host) {
   if (sent)
     enet_host_flush(host);
 }
-
-// ── findSpawnY
-// ────────────────────────────────────────────────────────────────
 
 float ChunkManager::findSpawnY(float wx, float wz) {
   return sampleSurfaceY(wx, wz);
