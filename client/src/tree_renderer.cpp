@@ -229,20 +229,20 @@ TreeMeshData buildTreeMesh(int templateIdx, int sides, float trunkHeight,
 
       // Leaf cluster at sub-branch tip
       addLeafCluster(d.leafVerts, d.leafIndices, subBase + sbDir * sbLen,
-                     canopyRadius * 0.6f, 20 + (int)(rng(s) * 10),
+                     canopyRadius * 0.6f, 20 + ( 5),
                      s); // was 8+6
     }
 
     // Leaf cluster at branch tip
     addLeafCluster(d.leafVerts, d.leafIndices, branchTip,
                    canopyRadius * (0.7f + rng(s) * 0.3f),
-                   30 + (int)(rng(s) * 15), s); // was 12+10
+                   30 + (int)(1), s); // was 12+10
   }
 
   // Main canopy cluster at trunk top
   addLeafCluster(d.leafVerts, d.leafIndices,
                  trunkTip + glm::vec3(leanX, canopyRadius * 0.4f, leanZ),
-                 canopyRadius * 1.2f, 60 + (int)(rng(s) * 25), s); // was 20+15
+                 canopyRadius * 1.2f, 60 + (int)(2), s); // was 20+15
 
   return d;
 }

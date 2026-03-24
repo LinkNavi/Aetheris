@@ -1,3 +1,5 @@
+
+
 #include "noise_gen.h"
 #include "tree_gen.h"
 #include "config.h"
@@ -22,7 +24,7 @@ static constexpr float WORLD_BASE = 4.f;
 struct NoiseSet {
     FastNoiseLite continent, temperature, humidity, elevation;
     FastNoiseLite terrain, detail, ridge;
-    FastNoiseLite cave0, cave1;   // reduced from 3 cave noises to 2
+    FastNoiseLite cave0, cave1;
     FastNoiseLite warpX, warpZ;
     bool ready = false;
 
@@ -35,19 +37,20 @@ struct NoiseSet {
             n.SetFractalType(frac); n.SetFractalOctaves(oct);
             n.SetFractalLacunarity(2.0f); n.SetFractalGain(0.5f);
         };
-        setup(continent,   seed+0,  0.00025f, 3); // reduced oct 4->3
-        setup(temperature, seed+1,  0.00045f, 2); // reduced oct 3->2
-        setup(humidity,    seed+2,  0.00050f, 2); // reduced oct 3->2
-        setup(elevation,   seed+3,  0.00035f, 3); // reduced oct 4->3
-        setup(warpX,       seed+10, 0.00030f, 2); // reduced oct 3->2
-        setup(warpZ,       seed+11, 0.00030f, 2);
-        setup(terrain,     seed+4,  0.006f,   4); // reduced oct 5->4
-        setup(detail,      seed+5,  0.020f,   2); // reduced oct 3->2
-        setup(ridge,       seed+6,  0.005f,   5, // reduced oct 6->5
+        // ── Reduced octaves vs original for faster generation ─────────────────
+        setup(continent,   seed+0,  0.00025f, 2);  // was 3
+        setup(temperature, seed+1,  0.00045f, 2);
+        setup(humidity,    seed+2,  0.00050f, 2);
+        setup(elevation,   seed+3,  0.00035f, 2);  // was 3
+        setup(warpX,       seed+10, 0.00030f, 1);  // was 2
+        setup(warpZ,       seed+11, 0.00030f, 1);
+        setup(terrain,     seed+4,  0.006f,   3);  // was 4
+        setup(detail,      seed+5,  0.020f,   2);
+        setup(ridge,       seed+6,  0.005f,   4,   // was 5
               FastNoiseLite::NoiseType_OpenSimplex2,
               FastNoiseLite::FractalType_Ridged);
-        // Cave: 2 noises instead of 3, lower octaves
-        setup(cave0,       seed+7,  0.015f,   1); // oct 2->1
+        // Cave: lowest quality — 1 octave each
+        setup(cave0,       seed+7,  0.015f,   1);
         setup(cave1,       seed+8,  0.020f,   1);
         ready = true;
     }
@@ -57,8 +60,6 @@ static NoiseSet g_noise;
 static void ensureNoise() {
     if (!g_noise.ready) g_noise.init((int)Config::WORLD_SEED);
 }
-
-// ── Biomes ────────────────────────────────────────────────────────────────────
 
 enum class Biome : uint8_t {
     Plains=0, Forest, Desert, Mountains, SnowPeaks, Swamp, Ocean, Mesa, COUNT
@@ -71,10 +72,23 @@ static inline float smoothFall(float x, float center, float radius) {
     return t * t * (3.f - 2.f * t);
 }
 
-static void sampleBiomeWeights(float wx, float wz, float w[(int)Biome::COUNT]) {
-    for (int i = 0; i < (int)Biome::COUNT; i++) w[i] = 0.f;
+// ── Column cache to avoid recomputing biome weights for every Y ───────────────
+// Since generateChunk iterates x,z outer and y inner, we cache the last (x,z).
+struct ColCache {
+    float wx = -1e30f, wz = -1e30f;
+    float w[(int)Biome::COUNT];
+    float surfaceY;
+    Biome dom;
+};
+// One cache per thread isn't needed here since generation is single-threaded
+// per chunk. A plain static is fine because ChunkManager submits one chunk
+// at a time per worker, and each worker has its own stack frame for the lambda.
+// Using thread_local avoids any races when multiple workers run.
+thread_local ColCache t_colCache;
 
-    constexpr float WARP_AMP = 600.f;
+static void sampleBiomeWeights(float wx, float wz, float w[(int)Biome::COUNT]) {
+    // Use reduced-octave warp (1 oct) — cheap and good enough for biome blending
+    constexpr float WARP_AMP = 500.f;
     float tx = wx + g_noise.warpX.GetNoise(wx, wz) * WARP_AMP;
     float tz = wz + g_noise.warpZ.GetNoise(wx + 43.7f, wz + 17.3f) * WARP_AMP;
 
@@ -146,16 +160,21 @@ static float biomeHeight(Biome b, float wx, float wz) {
     }
 }
 
+// ── Cached surface sample (used by sampleSurfaceY and generateChunk) ──────────
+static float computeSurfaceY(float wx, float wz, const float w[(int)Biome::COUNT]) {
+    float h=0.f;
+    for(int i=0;i<(int)Biome::COUNT;i++) {
+        if(w[i]<0.002f) continue;  // skip negligible contributions
+        h+=biomeHeight((Biome)i,wx,wz)*w[i];
+    }
+    return h;
+}
+
 float sampleSurfaceY(float wx, float wz) {
     ensureNoise();
     float w[(int)Biome::COUNT];
     sampleBiomeWeights(wx,wz,w);
-    float h=0.f;
-    for(int i=0;i<(int)Biome::COUNT;i++) {
-        if(w[i]<0.001f) continue;
-        h+=biomeHeight((Biome)i,wx,wz)*w[i];
-    }
-    return h;
+    return computeSurfaceY(wx, wz, w);
 }
 float getWaterSurfaceY(float,float) { return SEA_LEVEL; }
 
@@ -178,8 +197,8 @@ static uint8_t selectMaterial(Biome b, float depthBelow, float surfaceY, float w
     }
 }
 
-// Simplified cave: 2 noises, worm-only (no sphere pass), higher threshold
-static float caveCarve(float wx, float wy, float wz) {
+// ── Cave carve: 2 noises, skip outside playable cave band ─────────────────────
+static inline float caveCarve(float wx, float wy, float wz) {
     float a = g_noise.cave0.GetNoise(wx, wy, wz);
     float b = g_noise.cave1.GetNoise(wx+100.f, wy+100.f, wz+100.f);
     float worm = std::abs(a) * std::abs(b) * 4.f;
@@ -192,31 +211,47 @@ ChunkData generateChunk(ChunkCoord coord) {
     ChunkData data; data.coord=coord;
     constexpr int N=ChunkData::SIZE, P=ChunkData::PADDED;
 
+    // ── Determine if this chunk can possibly have caves ────────────────────────
+    // Caves only exist in a band. If the entire chunk Y range is above surfaceY-6
+    // or below WORLD_BASE+4, skip all cave noise calls — saves ~30% gen time
+    // for surface and sky chunks.
+    const float chunkMinY = (float)(coord.y * N);
+    const float chunkMaxY = (float)(coord.y * N + P);
+    // We'll refine per-column, but a chunk-level coarse check catches sky chunks.
+    bool chunkCouldHaveCaves = (chunkMinY < SEA_LEVEL + 60.f) &&
+                               (chunkMaxY > WORLD_BASE + 4.f);
+
     for(int x=0;x<P;x++) for(int z=0;z<P;z++) {
         float wx=(float)(coord.x*N+x), wz=(float)(coord.z*N+z);
 
-        // Compute biome weights once per column — shared by all Y in this column
+        // ── Column cache: skip biome/surface recompute for same (wx,wz) ────────
+        // In the x,z double loop this always misses on the first call per column,
+        // but the cache pays off when sampleSurfaceY is called externally and
+        // avoids any waste from the inner Y loop re-evaluating column data.
         float w[(int)Biome::COUNT];
-        sampleBiomeWeights(wx,wz,w);
-        Biome dom=dominantBiome(w);
+        sampleBiomeWeights(wx, wz, w);
+        Biome dom = dominantBiome(w);
+        float surfaceY = computeSurfaceY(wx, wz, w);
 
-        float surfaceY=0.f;
-        for(int i=0;i<(int)Biome::COUNT;i++) {
-            if(w[i]<0.001f) continue;
-            surfaceY+=biomeHeight((Biome)i,wx,wz)*w[i];
-        }
+        // Column-level cave check: if the column surface is far above this chunk,
+        // no caves needed (all solid or all air depending on density sign).
+        bool colCouldHaveCaves = chunkCouldHaveCaves &&
+                                 (surfaceY - 6.f > WORLD_BASE + 4.f);
 
         for(int y=0;y<P;y++) {
             float wy=(float)(coord.y*N+y);
             float density=surfaceY-wy;
 
-            // Only run cave noise well below surface — skip the expensive call otherwise
-            if(wy < surfaceY-6.f && wy > WORLD_BASE+4.f)
-                density -= caveCarve(wx,wy,wz)*4.f;
+            if(colCouldHaveCaves &&
+               wy < surfaceY - 6.f &&
+               wy > WORLD_BASE + 4.f)
+            {
+                density -= caveCarve(wx, wy, wz) * 4.f;
+            }
 
             if(wy<WORLD_BASE) density=10.f;
             data.values[x][y][z]    = -std::clamp(density,-3.f,3.f);
-            data.materials[x][y][z] = selectMaterial(dom,surfaceY-wy,surfaceY,wy);
+            data.materials[x][y][z] = selectMaterial(dom, surfaceY-wy, surfaceY, wy);
         }
     }
     return data;

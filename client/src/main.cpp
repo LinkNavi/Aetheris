@@ -69,7 +69,24 @@ int main(int argc, char **argv) {
                  AssetPath::get("viewmodel_vert.spv").c_str(),
                  AssetPath::get("viewmodel_frag.spv").c_str());
   viewModel.animEditor.open = false;
-
+  {
+    //       // Intel integrated = vendorID 0x8086. Sandy Bridge HD 3000 =
+    //       deviceID
+    //       // 0x0116 (mobile) or 0x0112 (desktop). We just check for Intel.
+    VkPhysicalDeviceProperties props{};
+    vkGetPhysicalDeviceProperties(ctx.device.physical_device.physical_device,
+                                  &props);
+    bool isIntelIntegrated =
+        (props.vendorID == 0x8086) &&
+        (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
+    if (isIntelIntegrated) {
+      Log::info("Low-end Intel GPU detected — enabling performance mode");
+      // Force render distance down
+      mainMenu.settings().renderDistance = 2.f;
+      // Disable vsync for lower latency on this GPU
+      // (already handled by present mode patch in vk_init)
+    }
+  }
   VkDescriptorPool imguiPool;
   {
     VkDescriptorPoolSize poolSizes[] = {
@@ -97,8 +114,8 @@ int main(int argc, char **argv) {
     imInfo.DescriptorPool = ctx.imguiPool;
     imInfo.MinImageCount = 2;
     imInfo.ImageCount = (uint32_t)ctx.swapImages.size();
-   imInfo.RenderPass = ctx.renderPass;
-imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    imInfo.RenderPass = ctx.renderPass;
+    imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&imInfo);
   }
 
@@ -222,8 +239,9 @@ imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
       }
 
       ImGui::Render();
-      vk_draw(ctx, glm::mat4(1.f), glm::mat4(1.f),nullptr, 0.f, {0.02f, 0.02f, 0.08f}, 2,
-              glm::vec3(0.f), nullptr, glm::mat4(1.f), nullptr, nullptr);
+      vk_draw(ctx, glm::mat4(1.f), glm::mat4(1.f), nullptr, 0.f,
+              {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr, glm::mat4(1.f),
+              nullptr, nullptr);
       continue;
     }
 
@@ -388,7 +406,10 @@ imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
       if (heavyAttack)
         viewModel.triggerHeavyAttack();
     }
-    treeRenderer.update(dt);
+    if (dt < 0.040f)
+      treeRenderer.update(dt);
+    else
+      treeRenderer.update(0.016f);
     combat.update(dt, player.entity());
     dayNight.update(dt);
     viewModel.update(dt);
@@ -410,14 +431,13 @@ imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
     // ── Render ───────────────────────────────────────────────────────────
     window.getSize(w, h);
-  
 
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     hud.draw(clientStats);
-   // remotePlayers.drawNametags(vp, w, h);
+    // remotePlayers.drawNametags(vp, w, h);
     viewModel.drawDebugUI();
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
 
@@ -428,7 +448,7 @@ imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     glm::mat4 proj = camera.proj(aspect);
     int rdXZ = (int)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
 
-    vk_draw(ctx, vp,camera.view(), &treeRenderer, dayNight.sunIntensity(),
+    vk_draw(ctx, vp, camera.view(), &treeRenderer, dayNight.sunIntensity(),
             dayNight.skyColor(), rdXZ, camera.position, &viewModel, proj,
             &remotePlayers, &dayNight);
   }
@@ -440,15 +460,15 @@ imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ENetEvent ev2;
     uint32_t timeout = 2000; // 2 seconds max
     while (enet_host_service(host.get(), &ev2, timeout) > 0) {
-        if (ev2.type == ENET_EVENT_TYPE_RECEIVE)
-            enet_packet_destroy(ev2.packet);
-        else if (ev2.type == ENET_EVENT_TYPE_DISCONNECT)
-            break;
-        timeout = 100; // after first event, shorter waits
+      if (ev2.type == ENET_EVENT_TYPE_RECEIVE)
+        enet_packet_destroy(ev2.packet);
+      else if (ev2.type == ENET_EVENT_TYPE_DISCONNECT)
+        break;
+      timeout = 100; // after first event, shorter waits
     }
     server = nullptr;
-}
-meshBuilder.cancelPending();
+  }
+  meshBuilder.cancelPending();
   ImGui_ImplVulkan_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   treeRenderer.destroy(ctx.device.device, ctx.allocator);
