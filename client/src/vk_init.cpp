@@ -1350,8 +1350,12 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
     viewModel->draw(cmd, proj, ctx.swapchain.extent);
   if (remotePlayers)
     remotePlayers->draw(cmd, viewProj);
-  if (trees)
-    trees->draw(cmd, viewProj, ctx.swapchain.extent);
+ if (trees) {
+    float fogEnd   = (renderDistXZ * 2 - 1) * (float)ChunkData::SIZE * 0.85f;
+    float fogStart = fogEnd * 0.70f;
+    trees->draw(cmd, viewProj, ctx.swapchain.extent,
+                camPos, sd, sunIntensity, fogStart, fogEnd);
+}
 
   vkCmdEndRenderPass(cmd);
 

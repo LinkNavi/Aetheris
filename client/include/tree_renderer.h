@@ -45,7 +45,8 @@ TreeMeshData buildTreeMesh(int templateIdx, int sides,
                             float trunkHeight,
                             float trunkRadiusBase, float trunkRadiusTip,
                             int branchCount, float canopyRadius,
-                            uint32_t seed);
+                            uint32_t seed,
+                            float leafDensity);
 
 // ── GPU mesh ──────────────────────────────────────────────────────────────────
 
@@ -83,10 +84,13 @@ float leafDensity = 1.0f;
     void clearTrees();
     void removeTreesInChunk(int chunkX, int chunkZ);
 
+void rebuildMeshes();
     void update(float dt) { windTime += dt; }
 
     void draw(VkCommandBuffer cmd, const glm::mat4& viewProj,
-              VkExtent2D extent) const;
+          VkExtent2D extent,
+          glm::vec3 camPos, glm::vec3 sunDir,
+          float sunIntensity, float fogStart, float fogEnd) const;
 
 private:
     VkDevice     _device    = VK_NULL_HANDLE;

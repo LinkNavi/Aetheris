@@ -7,28 +7,35 @@ layout(location = 3) in float fragNoise;
 
 layout(push_constant) uniform PC {
     mat4  viewProj;
-    vec4  params; // x = windTime
+    vec4  params;  // x=windTime, y=sunIntensity, z=fogStart, w=fogEnd
+    vec4  camPos;
+    vec4  sunDir;
 } pc;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
-    vec3 sunDir  = normalize(vec3(0.6, 1.0, 0.4));
-    float diff   = max(dot(normalize(fragNormal), sunDir), 0.0);
-    float light  = clamp(0.08 + diff * 0.55, 0.0, 1.0); // dimmer ambient + weaker diffuse
+    float sunIntensity = pc.params.y;
+    vec3  sunDir       = normalize(pc.sunDir.xyz);
 
-    vec3 barkDark  = vec3(0.06, 0.04, 0.02);
-    vec3 barkLight = vec3(0.11, 0.07, 0.03);
+    float diff      = max(dot(normalize(fragNormal), sunDir), 0.0) * sunIntensity;
+    float skyBounce = max(dot(normalize(fragNormal), vec3(0,1,0)), 0.0) * 0.06 * sunIntensity;
+    float ambient   = mix(0.02, 0.08, sunIntensity) + skyBounce;
+    float light     = clamp(ambient + diff * 0.55, 0.0, 1.0);
 
-    float grain = fract(sin(fragUV.y * 47.3 + fragUV.x * 13.7) * 4375.5) * 0.06;
-    float n = clamp(fragNoise + grain, 0.0, 1.0);
+    float grain  = fract(sin(fragUV.y * 47.3 + fragUV.x * 13.7) * 4375.5) * 0.06;
+    float n      = clamp(fragNoise + grain, 0.0, 1.0);
+    vec3 barkCol = mix(vec3(0.06, 0.04, 0.02), vec3(0.11, 0.07, 0.03), n);
+    float lum    = dot(barkCol, vec3(0.299, 0.587, 0.114));
+    barkCol      = mix(barkCol, vec3(lum), 0.3) * 0.6;
+    vec3 lit     = barkCol * light;
 
-    vec3 barkCol = mix(barkDark, barkLight, n);
+    float fragDist  = length(fragPos - pc.camPos.xyz);
+    float fogFactor = clamp((fragDist - pc.params.z) / (pc.params.w - pc.params.z), 0.0, 1.0);
+    float dusk      = clamp(1.0 - abs(sunDir.y - 0.10) / 0.28, 0.0, 1.0);
+    dusk *= dusk;
+    vec3 fogColor = mix(mix(vec3(0.01,0.01,0.04), vec3(0.52,0.62,0.75), sunIntensity),
+                        vec3(0.60,0.28,0.10), dusk * 0.5);
 
-    // Desaturate slightly then push toward near-black
-    float lum = dot(barkCol, vec3(0.299, 0.587, 0.114));
-    barkCol = mix(barkCol, vec3(lum), 0.3);   // partial desaturate
-    barkCol *= 0.6;                            // overall darkening
-
-    outColor = vec4(barkCol * light, 1.0);
+    outColor = vec4(mix(lit, fogColor, fogFactor), 1.0);
 }

@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
                     AssetPath::get("tree_trunk_frag.spv").c_str(),
                     AssetPath::get("tree_leaf_vert.spv").c_str(),
                     AssetPath::get("tree_leaf_frag.spv").c_str());
-treeRenderer.leafDensity = mainMenu.settings().leafDensity;
+
   DebugMenu debugMenu;
   bool enemiesSpawned = false;
   bool authSent = false;
@@ -193,7 +193,12 @@ treeRenderer.leafDensity = mainMenu.settings().leafDensity;
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
       GameState next = mainMenu.draw(dt, w2, h2);
-
+      float prevLeafDensity = treeRenderer.leafDensity;
+      float newLeafDensity = mainMenu.settings().leafDensity;
+      if (newLeafDensity != prevLeafDensity) {
+        treeRenderer.leafDensity = newLeafDensity;
+        treeRenderer.rebuildMeshes();
+      }
       if (next == GameState::Connecting) {
         if (mainMenu.pendingServerIP == "__QUIT__")
           break;

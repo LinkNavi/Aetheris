@@ -13,7 +13,9 @@ layout(location = 7) in float instSeed;
 
 layout(push_constant) uniform PC {
     mat4  viewProj;
-    vec4  params; // x = windTime
+    vec4  params;  // x=windTime, y=sunIntensity, z=fogStart, w=fogEnd
+    vec4  camPos;
+    vec4  sunDir;
 } pc;
 
 layout(location = 0) out vec3  fragPos;

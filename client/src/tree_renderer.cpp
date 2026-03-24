@@ -229,7 +229,8 @@ TreeMeshData buildTreeMesh(int templateIdx, int sides, float trunkHeight,
 
       // Leaf cluster at sub-branch tip
       addLeafCluster(d.leafVerts, d.leafIndices, subBase + sbDir * sbLen,
-                     canopyRadius * 0.6f, leafDensity * (20 + (int)(rng(s) * 10)),
+                     canopyRadius * 0.6f,
+                     leafDensity * (20 + (int)(rng(s) * 10)),
                      s); // was 8+6
     }
 
@@ -598,8 +599,9 @@ void TreeRenderer::init(VkDevice device, VmaAllocator allocator,
 
   for (int i = 0; i < TREE_TEMPLATE_COUNT; i++) {
     auto &p = params[i];
-    TreeMeshData mesh = buildTreeMesh(i, 4, p.h, p.rb, p.rt, p.br, p.cr,
-                                  (uint32_t)(12345 + i * 9999), leafDensity);
+    TreeMeshData mesh =
+        buildTreeMesh(i, 4, p.h, p.rb, p.rt, p.br, p.cr,
+                      (uint32_t)(12345 + i * 9999), leafDensity);
     uploadMesh(pool, queue, i, mesh);
     Log::info("Tree template " + std::to_string(i) + ": " +
               std::to_string(_meshes[i].trunkIdxCount) + " trunk tris, " +
@@ -648,7 +650,45 @@ void TreeRenderer::clearTrees() {
     v.clear();
   _instDirty = true;
 }
-
+void TreeRenderer::rebuildMeshes() {
+  vkDeviceWaitIdle(_device);
+  for (int i = 0; i < TREE_TEMPLATE_COUNT; i++) {
+    auto &m = _meshes[i];
+    if (m.trunkVBuf) {
+      vmaDestroyBuffer(_allocator, m.trunkVBuf, m.trunkVAlloc);
+      m.trunkVBuf = VK_NULL_HANDLE;
+    }
+    if (m.trunkIBuf) {
+      vmaDestroyBuffer(_allocator, m.trunkIBuf, m.trunkIAlloc);
+      m.trunkIBuf = VK_NULL_HANDLE;
+    }
+    if (m.leafVBuf) {
+      vmaDestroyBuffer(_allocator, m.leafVBuf, m.leafVAlloc);
+      m.leafVBuf = VK_NULL_HANDLE;
+    }
+    if (m.leafIBuf) {
+      vmaDestroyBuffer(_allocator, m.leafIBuf, m.leafIAlloc);
+      m.leafIBuf = VK_NULL_HANDLE;
+    }
+  }
+  struct Params {
+    float h, rb, rt, cr;
+    int br;
+  };
+  Params params[TREE_TEMPLATE_COUNT] = {
+      {6.f, 0.80f, 0.35f, 2.2f, 4}, {8.f, 0.95f, 0.42f, 2.8f, 5},
+      {5.f, 0.70f, 0.30f, 1.9f, 3}, {10.f, 1.10f, 0.50f, 3.4f, 6},
+      {7.f, 0.88f, 0.38f, 2.5f, 4}, {9.f, 1.00f, 0.45f, 3.0f, 5},
+  };
+  for (int i = 0; i < TREE_TEMPLATE_COUNT; i++) {
+    auto &p = params[i];
+    TreeMeshData mesh =
+        buildTreeMesh(i, 4, p.h, p.rb, p.rt, p.br, p.cr,
+                      (uint32_t)(12345 + i * 9999), leafDensity);
+    uploadMesh(_pool, _queue, i, mesh);
+  }
+  _instDirty = true;
+}
 void TreeRenderer::removeTreesInChunk(int chunkX, int chunkZ) {
   float mn = (float)(chunkX * (int)ChunkData::SIZE);
   float mz = (float)(chunkZ * (int)ChunkData::SIZE);
@@ -688,7 +728,9 @@ void TreeRenderer::uploadInstances(VkCommandPool pool, VkQueue queue) {
 // ──────────────────────────────────────────────────────────────────────
 
 void TreeRenderer::draw(VkCommandBuffer cmd, const glm::mat4 &viewProj,
-                        VkExtent2D extent) const {
+                        VkExtent2D extent, glm::vec3 camPos, glm::vec3 sunDir,
+                        float sunIntensity, float fogStart,
+                        float fogEnd) const {
   if (_instDirty) {
     const_cast<TreeRenderer *>(this)->uploadInstances(_pool, _queue);
   }
@@ -700,9 +742,14 @@ void TreeRenderer::draw(VkCommandBuffer cmd, const glm::mat4 &viewProj,
 
   struct PC {
     glm::mat4 viewProj;
-    glm::vec4 params;
+    glm::vec4 params; // x=windTime, y=sunIntensity, z=fogStart, w=fogEnd
+    glm::vec4 camPos;
+    glm::vec4 sunDir;
   };
-  PC pc{viewProj, {windTime, 0.f, 0.f, 0.f}};
+ PC pc{viewProj,
+      {windTime, sunIntensity, fogStart, fogEnd},
+      {camPos.x, camPos.y, camPos.z, 0.f},
+      {sunDir.x, sunDir.y, sunDir.z, 0.f}};
 
   // ── Draw trunks ───────────────────────────────────────────────────────────
   vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _trunkPipeline);
