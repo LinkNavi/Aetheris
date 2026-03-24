@@ -45,7 +45,7 @@ client_src = files(
   'src/view_model.cpp',
   '../thirdparty/vk-bootstrap/src/VkBootstrap.cpp',
 )
-foreach asset : ['atlas.png', 'arm.glb', 'player.glb']
+foreach asset : ['atlas.png', 'arm.glb', 'player.glb', 'grimoire.glb']
   configure_file(input : '../' + asset, output : asset, copy : true)
 endforeach
 executable('client', client_src + imgui_src,

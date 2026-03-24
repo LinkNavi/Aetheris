@@ -3,81 +3,107 @@
 #include <vk_mem_alloc.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <unordered_map>
 #include "gltf_loader.h"
 #include "view_model_anim.h"
+#include "item.h"
 
-// GPU buffers for one loaded GLB mesh
 struct ViewModelMesh {
-    VkBuffer      vertBuf   = VK_NULL_HANDLE;
-    VmaAllocation vertAlloc = nullptr;
-    VkBuffer      idxBuf    = VK_NULL_HANDLE;
-    VmaAllocation idxAlloc  = nullptr;
+    VkBuffer      vertBuf    = VK_NULL_HANDLE;
+    VmaAllocation vertAlloc  = nullptr;
+    VkBuffer      idxBuf     = VK_NULL_HANDLE;
+    VmaAllocation idxAlloc   = nullptr;
     uint32_t      indexCount = 0;
 };
 
-// Position/rotation/scale of the weapon in view space.
-// Tweak per weapon to sit correctly in the player's hand.
 struct ViewModelTransform {
-    glm::vec3 offset   = { 0.25f, -0.28f, -0.45f };
-    glm::vec3 rotation = { 0.f,   0.f,    0.f };
-    glm::vec3 scale    = { 1.f,   1.f,    1.f };
-    glm::vec3 meshCenter = { 0.f, 0.f, 0.f }; // auto-centering offset
+    glm::vec3 offset     = { 0.25f, -0.28f, -0.45f };
+    glm::vec3 rotation   = { 0.f,    0.f,    0.f };
+    glm::vec3 scale      = { 1.f,    1.f,    1.f };
+    glm::vec3 meshCenter = { 0.f,    0.f,    0.f };
 };
 
-// Owns the viewmodel pipeline, all loaded meshes, and the animation system.
+// One entry per registered item type
+struct ItemViewModel {
+    int                meshIdx          = -1;
+    ViewModelTransform mainTransform;    // right hand
+    ViewModelTransform offhandTransform; // left hand
+};
+
+enum class DebugHandSlot { MainHand = 0, OffHand = 1 };
+
 struct ViewModelRenderer {
-    // Pipeline objects
+    // ── Vulkan ────────────────────────────────────────────────────────────
     VkPipeline            pipeline       = VK_NULL_HANDLE;
     VkPipelineLayout      pipelineLayout = VK_NULL_HANDLE;
 
-    // Loaded meshes — index returned by loadMesh()
-    std::vector<ViewModelMesh> meshes;
+    std::vector<ViewModelMesh>      meshes;
+    std::vector<ViewModelTransform> transforms; // base transform per mesh slot
 
-    // Which mesh is currently equipped (-1 = nothing / fists)
-    int activeMesh = -1;
+    // ── Item registry ─────────────────────────────────────────────────────
+    // Key: (int)ItemID
+    std::unordered_map<int, ItemViewModel> itemRegistry;
 
-    // Per-weapon hand transforms (base pose, edited via transform panel)
-    std::vector<ViewModelTransform> transforms;
+    // Special mesh slots
+    int armMeshIdx     = -1; // arm.glb — always visible
+    int activeMeshIdx  = -1; // current main-hand item mesh (-1 = fists)
+    int offhandMeshIdx = -1; // current offhand item mesh  (-1 = nothing)
 
-    // ── Animation system ───────────────────────────────────────────────────
-    AnimationPlayer      anim;
-    ViewModelAnimEditor  animEditor;
+    // Live transforms for the active slots (copied from registry on swap,
+    // then editable in debug UI without touching the registry)
+    ViewModelTransform activeMainTransform;
+    ViewModelTransform activeOffhandTransform;
 
-    // ── UI toggle (] key) ──────────────────────────────────────────────────
-    // Both the transform debug panel and the animation editor share this flag.
-    bool uiVisible = false;
+    // Last seen item IDs — detect changes cheaply
+    ItemID lastMainHandId = ItemID::None;
+    ItemID lastOffhandId  = ItemID::None;
 
-    void setActiveMesh(int idx) { activeMesh = idx; }
+    // ── Animation ─────────────────────────────────────────────────────────
+    AnimationPlayer     anim;        // main hand
+    AnimationPlayer     offhandAnim; // offhand (idle only by default)
+    ViewModelAnimEditor animEditor;
 
-    // Call once per frame with delta time to advance animation
-    void update(float dt) {
-        anim.update(dt);
+    // ── Debug UI ──────────────────────────────────────────────────────────
+    bool          uiVisible = false;
+    DebugHandSlot debugSlot = DebugHandSlot::MainHand;
 
-        // Advance animation editor preview if it's playing
-        // (editor manages its own previewTime internally via ImGui::GetIO().DeltaTime)
-    }
-
-    // Trigger attack animations from combat input
-    void triggerLightAttack() { anim.play(AnimSlot::LightAttack); }
-    void triggerHeavyAttack() { anim.play(AnimSlot::HeavyAttack); }
-
-    // ── Lifecycle ─────────────────────────────────────────────────────────
+    // ── Lifecycle ──────────────────────────────────────────────────────────
     void init(VkDevice device, VmaAllocator allocator,
               VkRenderPass renderPass, VkExtent2D extent,
               const char* vertSpv, const char* fragSpv);
 
     void destroy(VkDevice device, VmaAllocator allocator);
 
-    // Upload a GLB to GPU. Returns mesh index or -1 on failure.
+    // Upload a GLB to GPU, returns mesh index.
     int loadMesh(VkDevice device, VmaAllocator allocator,
                  VkCommandPool pool, VkQueue queue,
                  const GltfModel& model,
                  ViewModelTransform transform = {});
 
-    // Record draw commands. Call after terrain draw, still inside render pass.
-    // proj: same projection matrix used for the scene.
-  void draw(VkCommandBuffer cmd, const glm::mat4& proj, VkExtent2D extent) const;
-    // Draw ImGui panels (transform debug + animation editor).
-    // Only shown when uiVisible == true.
+    // Register an already-loaded mesh as the view model for an item.
+    // offhandTransform: leave default-constructed and it will mirror mainTransform.
+    void registerItemMesh(ItemID id, int meshIdx,
+                          ViewModelTransform mainTransform,
+                          ViewModelTransform offhandTransform = {});
+
+    // Call every frame with whatever is currently held in each hand.
+    // Swaps meshes only when the ID changes.
+    void syncEquipped(ItemID mainHandId, ItemID offhandId);
+
+    // ── Per-frame ──────────────────────────────────────────────────────────
+    void update(float dt) { anim.update(dt); offhandAnim.update(dt); }
+
+    void triggerLightAttack() { anim.play(AnimSlot::LightAttack); }
+    void triggerHeavyAttack() { anim.play(AnimSlot::HeavyAttack); }
+
+    void draw(VkCommandBuffer cmd, const glm::mat4& proj, VkExtent2D extent) const;
     void drawDebugUI();
+
+private:
+    void drawMesh(VkCommandBuffer cmd, const glm::mat4& proj,
+                  int meshIdx, const ViewModelTransform& t,
+                  const AnimationPlayer& ap, bool mirrorX) const;
+
+    void drawTransformEditor(ViewModelTransform& t, const AnimationPlayer& ap,
+                             ItemID itemId, bool isOffhand);
 };

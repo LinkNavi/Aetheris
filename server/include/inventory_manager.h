@@ -106,8 +106,14 @@ public:
     p.inv = it->second;
     Net::sendReliable(peer, p.serialize());
   }
-
-  // ── Death / corpse ────────────────────────────────────────────────────────
+  bool giveItem(ENetPeer* peer, ItemID id, int count) {
+      auto it = _playerInvs.find(peer);
+      if (it == _playerInvs.end()) return false;
+      int leftover = it->second.add(id, count);
+      savePlayerInv(_playerUIDs[peer], it->second);
+      sendInventoryState(peer);   // push updated inv to client immediately
+      return leftover == 0;       // true = all items fit
+  }  // ── Death / corpse ────────────────────────────────────────────────────────
 
   uint32_t onPlayerDeath(ENetPeer *dead, glm::vec3 pos, ENetPeer *killer) {
     auto it = _playerInvs.find(dead);

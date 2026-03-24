@@ -1,3 +1,4 @@
+#include "chat_manager.h"
 #include "chunk_manager.h"
 #include "config.h"
 #include "inv_packets.h"
@@ -9,18 +10,17 @@
 #include "noise_gen.h"
 #include "packets.h"
 #include "player_stats.h"
+#include "spell_packets.h"
 #include "stats_manager.h"
 #include "tree_system.h"
 #include <chrono>
 #include <enet/enet.h>
 #include <unordered_map>
-#include "spell_packets.h"
-
 static uint64_t peerToUID(ENetPeer *peer) { return (uint64_t)(uintptr_t)peer; }
 static constexpr int TREE_TEMPLATE_COUNT = 6;
-static bool hasGrimoireEquipped(const Inventory& inv) {
-    const ItemStack& offhand = inv.offhandSlot();
-    return offhand.id == ItemID::WpnGrimoire;
+static bool hasGrimoireEquipped(const Inventory &inv) {
+  const ItemStack &offhand = inv.offhandSlot();
+  return offhand.id == ItemID::WpnGrimoire;
 }
 int main(int argc, char **argv) {
   Log::init("aetheris_server.log");
@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
   initTreeLibrary((int64_t)Config::WORLD_SEED);
   TreeSystem treeSys(getTreeLibrary());
 
+  ChatManager chatMgr(mpMgr, invMgr);
   for (int i = 1; i + 1 < argc; i++) {
     if (std::string(argv[i]) == "--auth-host")
       mpMgr.authHost = argv[++i];
@@ -181,6 +182,10 @@ int main(int argc, char **argv) {
             break;
           }
           // handle spell
+        } else if (pid == (uint8_t)ChatPacketID::ChatMessage) {
+          chatMgr.onMessage(ev.peer, ChatMessagePacket::deserialize(d, len),
+                            host.get());
+          enet_host_flush(host.get());
         }
         enet_packet_destroy(ev.packet);
         break;
