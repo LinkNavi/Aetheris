@@ -70,7 +70,7 @@ static constexpr int TREE_TEMPLATE_COUNT = 6;
 class TreeRenderer {
 public:
     float windTime = 0.f;
-
+float leafDensity = 1.0f;
     void init(VkDevice device, VmaAllocator allocator,
               VkCommandPool pool, VkQueue queue,
               VkRenderPass renderPass, VkExtent2D extent,

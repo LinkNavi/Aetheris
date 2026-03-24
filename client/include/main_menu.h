@@ -23,7 +23,7 @@ struct GameSettings {
     int   fov            = 70;
     float fovF           = 70.f;
     float mouseSens      = 0.10f;
-
+float leafDensity = 1.0f; // 0=no leaves, 1=full leaves
     float masterVolume   = 1.0f;
     float musicVolume    = 0.6f;
     float sfxVolume      = 0.8f;

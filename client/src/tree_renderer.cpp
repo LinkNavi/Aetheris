@@ -155,10 +155,10 @@ static void addLeafCluster(std::vector<LeafVertex> &verts,
 
 // ── Build tree mesh
 // ───────────────────────────────────────────────────────────
-
 TreeMeshData buildTreeMesh(int templateIdx, int sides, float trunkHeight,
                            float trunkRadiusBase, float trunkRadiusTip,
-                           int branchCount, float canopyRadius, uint32_t seed) {
+                           int branchCount, float canopyRadius, uint32_t seed,
+                           float leafDensity = 1.0f) {
   TreeMeshData d;
   uint32_t s = seed;
 
@@ -229,20 +229,21 @@ TreeMeshData buildTreeMesh(int templateIdx, int sides, float trunkHeight,
 
       // Leaf cluster at sub-branch tip
       addLeafCluster(d.leafVerts, d.leafIndices, subBase + sbDir * sbLen,
-                     canopyRadius * 0.6f, 20 + ( 5),
+                     canopyRadius * 0.6f, leafDensity * (20 + (int)(rng(s) * 10)),
                      s); // was 8+6
     }
 
     // Leaf cluster at branch tip
     addLeafCluster(d.leafVerts, d.leafIndices, branchTip,
                    canopyRadius * (0.7f + rng(s) * 0.3f),
-                   30 + (int)(1), s); // was 12+10
+                   leafDensity * (30 + (int)(rng(s) * 15)), s); // was 12+10
   }
 
   // Main canopy cluster at trunk top
   addLeafCluster(d.leafVerts, d.leafIndices,
                  trunkTip + glm::vec3(leanX, canopyRadius * 0.4f, leanZ),
-                 canopyRadius * 1.2f, 60 + (int)(2), s); // was 20+15
+                 canopyRadius * 1.2f, leafDensity * (60 + (int)(rng(s) * 25)),
+                 s); // was 20+15
 
   return d;
 }
@@ -598,7 +599,7 @@ void TreeRenderer::init(VkDevice device, VmaAllocator allocator,
   for (int i = 0; i < TREE_TEMPLATE_COUNT; i++) {
     auto &p = params[i];
     TreeMeshData mesh = buildTreeMesh(i, 4, p.h, p.rb, p.rt, p.br, p.cr,
-                                      (uint32_t)(12345 + i * 9999));
+                                  (uint32_t)(12345 + i * 9999), leafDensity);
     uploadMesh(pool, queue, i, mesh);
     Log::info("Tree template " + std::to_string(i) + ": " +
               std::to_string(_meshes[i].trunkIdxCount) + " trunk tris, " +

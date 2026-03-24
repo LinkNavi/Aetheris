@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
                     AssetPath::get("tree_trunk_frag.spv").c_str(),
                     AssetPath::get("tree_leaf_vert.spv").c_str(),
                     AssetPath::get("tree_leaf_frag.spv").c_str());
-
+treeRenderer.leafDensity = mainMenu.settings().leafDensity;
   DebugMenu debugMenu;
   bool enemiesSpawned = false;
   bool authSent = false;

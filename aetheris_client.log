@@ -1,0 +1,15 @@
+[13:02:36][INFO] Client starting
+[13:02:36][INFO] Vulkan 1.2 detected
+[13:02:36][INFO] Shaders loaded
+[13:02:36][INFO] Vulkan initialised
+[13:02:36][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[13:02:36][INFO] ViewModelRenderer initialised
+[13:02:36][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[13:02:36][INFO] Player model: 4364 verts, h=4.870493
+[13:02:37][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
+[13:02:37][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
+[13:02:37][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
+[13:02:37][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
+[13:02:37][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
+[13:02:37][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
+[13:02:39][INFO] Client shutdown

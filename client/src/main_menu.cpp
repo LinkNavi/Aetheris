@@ -52,7 +52,8 @@ void GameSettings::save(const char* path) const {
       << "sfx_vol "         << sfxVolume      << "\n"
       << "last_server "     << lastServer     << "\n"
       << "server_port "     << serverPort     << "\n"
-      << "auth_port "       << authPort       << "\n";
+      << "auth_port "       << authPort       << "\n"
+      << "leaf_density " << leafDensity << "\n";
 }
 void GameSettings::load(const char* path) {
     std::ifstream f(path);
@@ -667,6 +668,7 @@ GameState MainMenu::drawSettings(ImDrawList* dl, float cx, float cy,
         drawSlider(dl,"Render Distance",lx,cy2,panW-60.f,_settings.renderDistance,1.f,128.f,"%.0f chunks"); cy2+=rowH;
         drawSlider(dl,"Field of View",lx,cy2,panW-60.f,_settings.fovF,60.f,110.f,"%.0f"); cy2+=rowH;
         _settings.fov=(int)_settings.fovF;
+drawSlider(dl,"Leaf Density",lx,cy2,panW-60.f,_settings.leafDensity,0.f,5.f,"%.2f"); cy2+=rowH;
         drawToggle(dl,"VSync",lx,cy2,_settings.vsync); cy2+=rowH+10.f;
         drawSectionHeader(dl,font,"INPUT",lx,cy2,panW-60.f); cy2+=22.f;
         drawSlider(dl,"Mouse Sensitivity",lx,cy2,panW-60.f,_settings.mouseSens,0.01f,0.5f,"%.3f");
