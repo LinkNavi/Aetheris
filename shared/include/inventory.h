@@ -43,11 +43,10 @@ struct ItemStack {
 };
 
 struct Inventory {
-    std::array<ItemStack, INV_SIZE>                       grid;
-    std::array<ItemStack, EQUIP_SLOTS>                    equipSlots;
-    std::array<ItemStack, HOTBAR_SIZE * HOTBAR_MODE_COUNT> hotbars; // 24 slots
+    std::array<ItemStack, INV_SIZE>                        grid;
+    std::array<ItemStack, EQUIP_SLOTS>                     equipSlots;
+    std::array<ItemStack, HOTBAR_SIZE * HOTBAR_MODE_COUNT> hotbars;
 
-    // ── Hotbar accessors ──────────────────────────────────────────────────────
     ItemStack& hotbarSlot(HotbarMode mode, int slot) {
         return hotbars[(int)mode * HOTBAR_SIZE + slot];
     }
@@ -58,12 +57,15 @@ struct Inventory {
         return (int)mode * HOTBAR_SIZE + slot;
     }
 
-    // ── Equip accessors ───────────────────────────────────────────────────────
-    ItemStack& weaponSlot()     { return equipSlots[EQUIP_WEAPON]; }
-    ItemStack& offhandSlot()    { return equipSlots[EQUIP_OFFHAND]; }
-    ItemStack& totemSlot(int i) { return equipSlots[EQUIP_TOTEM_0 + i]; }
+    ItemStack& weaponSlot()              { return equipSlots[EQUIP_WEAPON]; }
+    const ItemStack& weaponSlot() const  { return equipSlots[EQUIP_WEAPON]; }
 
-    // ── Add to bag (returns leftover count) ───────────────────────────────────
+    ItemStack& offhandSlot()             { return equipSlots[EQUIP_OFFHAND]; }
+    const ItemStack& offhandSlot() const { return equipSlots[EQUIP_OFFHAND]; }
+
+    ItemStack& totemSlot(int i)              { return equipSlots[EQUIP_TOTEM_0 + i]; }
+    const ItemStack& totemSlot(int i) const  { return equipSlots[EQUIP_TOTEM_0 + i]; }
+
     int add(ItemID itemId, int n) {
         const ItemDef& def = getItemDef(itemId);
         for (auto& s : grid) {
@@ -107,7 +109,6 @@ struct Inventory {
         return true;
     }
 };
-
 // ── ECS components ─────────────────────────────────────────────────────────────
 struct CInventory {
     Inventory  inv;
@@ -121,3 +122,5 @@ struct CChest {
     uint32_t  uid           = 0;
     float     interactRange = 3.5f;
 };
+
+

@@ -97,8 +97,8 @@ int main(int argc, char **argv) {
     imInfo.DescriptorPool = ctx.imguiPool;
     imInfo.MinImageCount = 2;
     imInfo.ImageCount = (uint32_t)ctx.swapImages.size();
-    imInfo.PipelineInfoMain.RenderPass = ctx.renderPass;
-    imInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+   imInfo.RenderPass = ctx.renderPass;
+imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     ImGui_ImplVulkan_Init(&imInfo);
   }
 

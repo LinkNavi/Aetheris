@@ -14,10 +14,14 @@
 #include <chrono>
 #include <enet/enet.h>
 #include <unordered_map>
+#include "spell_packets.h"
 
 static uint64_t peerToUID(ENetPeer *peer) { return (uint64_t)(uintptr_t)peer; }
 static constexpr int TREE_TEMPLATE_COUNT = 6;
-
+static bool hasGrimoireEquipped(const Inventory& inv) {
+    const ItemStack& offhand = inv.offhandSlot();
+    return offhand.id == ItemID::WpnGrimoire;
+}
 int main(int argc, char **argv) {
   Log::init("aetheris_server.log");
   Log::installCrashHandlers();
@@ -169,6 +173,14 @@ int main(int argc, char **argv) {
           e.templateIdx = (uint8_t)(rand() % TREE_TEMPLATE_COUNT);
           treePkt.trees.push_back(e);
           Net::sendReliable(ev.peer, treePkt.serialize());
+        } else if (pid == (uint8_t)SpellPacketID::SpellCastReq) {
+          auto pkt = SpellCastReqPacket::deserialize(d, len);
+          auto *inv = invMgr.getPlayerInvPublic(ev.peer);
+          if (!inv || !hasGrimoireEquipped(*inv)) {
+            enet_packet_destroy(ev.packet);
+            break;
+          }
+          // handle spell
         }
         enet_packet_destroy(ev.packet);
         break;
