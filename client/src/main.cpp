@@ -422,6 +422,11 @@ int main(int argc, char **argv) {
       }
 
     }
+bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
+                  debugMenu.visible || chat.isOpen();
+bool spellKeyDown = !chat.isOpen() && !uiOpen && input.keyDown(GLFW_KEY_R);
+    bool spellKeyHeld = !chat.isOpen() && !uiOpen && input.key(GLFW_KEY_R);
+    bool spellKeyUp   = !spellKeyHeld && spellUI.phase == 1;
     spellUI.localMana = clientStats.mana;
     spellUI.maxMana   = clientStats.manaMax;
     spellUI.update(dt);
@@ -449,8 +454,7 @@ int main(int argc, char **argv) {
       }
     }
     // ── UI open state ──────────────────────────────────────────────────────────
-    bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
-                  debugMenu.visible || chat.isOpen();
+   
 
     // Cursor capture: release when any UI is open, recapture when all closed
     if (uiOpen && input.cursorCaptured())
@@ -472,7 +476,7 @@ int main(int argc, char **argv) {
                            cinv.inv.offhandSlot().id);
 
     // ── Update ────────────────────────────────────────────────────────────────
-    if (uiOpen) {
+    if (uiOpen || chat.isOpen()) {
       player.update(dt, input, nullptr);
     } else {
       bool lightAttack = input.keyDown(GLFW_KEY_F);
@@ -491,7 +495,7 @@ int main(int argc, char **argv) {
     remotePlayers.update(dt);
     ctx.skyGodRay.update(dt);
 
-    if (!chat.isOpen() && input.keyPressed(GLFW_KEY_R)) {
+    if (!chat.isOpen() && input.keyPressed(GLFW_KEY_Y)) {
       Net::sendReliable(server, RespawnRequestPacket{}.serialize());
       enet_host_flush(host.get());
     }

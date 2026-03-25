@@ -1,8 +1,12 @@
 #pragma once
 #include <memory>
 #include <string>
+#include <variant>
+#include <utility>
+#include <string>
 #include <vector>
-#include <cstdint>
+#include <vector>
+
 namespace Aether {
 
 // ── Forward declarations ──────────────────────────────────────────────────────
@@ -56,7 +60,7 @@ struct Vec3Expr {
 };
 
 // ── Expr variant ──────────────────────────────────────────────────────────────
-#include <variant>
+
 using ExprVariant = std::variant<
     NumberExpr, StringExpr, BoolExpr, NullExpr,
     IdentExpr, BinopExpr, UnaryExpr, AssignExpr,
