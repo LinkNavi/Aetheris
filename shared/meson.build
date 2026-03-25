@@ -4,6 +4,9 @@ shared_src = files(
   'src/noise_gen.cpp',
   'src/gltf_loader.cpp',
   'src/tree_gen.cpp',
+  'src/aes/aether_lexer.cpp',
+  'src/aes/aether_parser.cpp',
+  'src/aes/aether_vm.cpp',
 )
 
 stb_inc = include_directories('../thirdparty')

@@ -366,7 +366,7 @@ void TreeRenderer::createPipelines(VkDevice device, VkRenderPass rp,
   // ── Shared push constant: mat4 viewProj + vec4(windTime,0,0,0) ──────────
   VkPushConstantRange pcr{};
   pcr.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-  pcr.size = sizeof(glm::mat4) + sizeof(glm::vec4);
+  pcr.size = sizeof(glm::mat4) + sizeof(glm::vec4) * 3; // viewProj + params + camPos + sunDir
 
   VkPipelineLayoutCreateInfo li{};
   li.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

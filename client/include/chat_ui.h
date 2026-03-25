@@ -95,7 +95,7 @@ private:
         int   visibleLines = 12;
         float winH  = lineH * visibleLines + 8.f;
         float x     = 10.f;
-        float y     = io.DisplaySize.y - winH - (_inputOpen ? 38.f : 10.f);
+        float y     = io.DisplaySize.y * 0.5f - winH;
 
         ImGui::SetNextWindowPos({x, y}, ImGuiCond_Always);
         ImGui::SetNextWindowSize({winW, winH}, ImGuiCond_Always);
@@ -162,7 +162,7 @@ private:
         ImGuiIO& io = ImGui::GetIO();
         float winW  = 460.f;
         float x     = 10.f;
-        float y     = io.DisplaySize.y - 36.f;
+        float y     = io.DisplaySize.y * 0.5f;
 
         ImGui::SetNextWindowPos({x, y}, ImGuiCond_Always);
         ImGui::SetNextWindowSize({winW, 30.f}, ImGuiCond_Always);

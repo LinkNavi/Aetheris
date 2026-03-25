@@ -26,6 +26,9 @@
 #include "view_model.h"
 #include "vk_context.h"
 #include "window.h"
+#include "spell_charge_ui.h"
+#include "spell_charge_packets.h"
+#include "spell_packets.h"
 
 #include <chrono>
 #include <cstring>
@@ -58,6 +61,7 @@ int main(int argc, char **argv) {
   DayNight dayNight;
   MeshBuilder meshBuilder(1);
   InventoryUI invUI;
+  SpellChargeUI spellUI;
   HUD hud;
   ClientStats clientStats;
   MainMenu mainMenu;
@@ -114,8 +118,13 @@ int main(int argc, char **argv) {
     imInfo.DescriptorPool = ctx.imguiPool;
     imInfo.MinImageCount = 2;
     imInfo.ImageCount = (uint32_t)ctx.swapImages.size();
+#if IMGUI_VERSION_NUM >= 19260
+    imInfo.PipelineInfoMain.RenderPass = ctx.renderPass;
+    imInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+#elif IMGUI_VERSION_NUM >= 18960
     imInfo.RenderPass = ctx.renderPass;
     imInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+#endif
     ImGui_ImplVulkan_Init(&imInfo);
   }
 
@@ -139,18 +148,16 @@ int main(int argc, char **argv) {
   // Tune positions live with the ] key (Main Hand / Off Hand tabs).
   {
     // Grimoire / book
-    GltfModel bookModel = loadGlb(AssetPath::get("book.glb").c_str());
+    GltfModel bookModel = loadGlb(AssetPath::get("grimoire.glb").c_str());
     if (bookModel.valid) {
       int idx = viewModel.loadMesh(ctx.device.device, ctx.allocator,
                                    ctx.commandPool, ctx.graphicsQueue,
                                    bookModel, {});
       ViewModelTransform main, offhand;
-      main.offset   = { 0.20f, -0.25f, -0.40f};
-      main.rotation = {-10.f,   0.f,    0.f};
-      main.scale    = { 0.18f,  0.18f,  0.18f};
-      offhand.offset   = {-0.22f, -0.28f, -0.38f};
-      offhand.rotation = {-15.f,  175.f,   5.f};
-      offhand.scale    = { 0.18f,  0.18f,  0.18f};
+      offhand.offset   = {0.4300f, -0.2400f, -0.5950f};
+      offhand.rotation = {-15.0f, 79.0f, 68.0f};
+      offhand.scale    = {0.18000f, 0.18000f, 0.18000f};
+
       viewModel.registerItemMesh(ItemID::WpnGrimoire, idx, main, offhand);
     }
   }
@@ -279,7 +286,6 @@ int main(int argc, char **argv) {
     // ── View model debug toggle ────────────────────────────────────────────────
     if (!chat.isOpen() && input.keyDown(GLFW_KEY_RIGHT_BRACKET)) {
       viewModel.uiVisible    = !viewModel.uiVisible;
-      animEditor.open        = viewModel.uiVisible; // kept for compat
       viewModel.animEditor.open = viewModel.uiVisible;
       if (viewModel.uiVisible && !cinv.open)
         input.captureCursor(false);
@@ -343,6 +349,15 @@ int main(int argc, char **argv) {
           } else if (pid == (uint8_t)ChatPacketID::ChatBroadcast) {
             auto pkt = ChatBroadcastPacket::deserialize(d, len);
             chat.pushMessage(pkt.username, pkt.text);
+          } else if (pid == (uint8_t)SpellChargePacketID::State) {
+            auto pkt = SpellCastStatePacket::deserialize(d, len);
+            spellUI.applyState(pkt);
+
+          } else if (pid == (uint8_t)SpellPacketID::SpellCastAck) {
+            auto pkt = SpellCastAckPacket::deserialize(d, len);
+            // TODO: spawn projectile VFX at pkt.originX/Y/Z in direction pkt.dirX/Y/Z
+            // For now just log it
+            // Log::info("Spell ack: " + pkt.spellName);
           }
         }
         enet_packet_destroy(ev.packet);
@@ -355,6 +370,7 @@ int main(int argc, char **argv) {
         terrainCache.clear();
         break;
       }
+
     }
 
     if (!server) continue;
@@ -404,8 +420,34 @@ int main(int argc, char **argv) {
         else if (!cinv.open && !chestMirror.open && !viewModel.uiVisible)
           input.captureCursor(true);
       }
-    }
 
+    }
+    spellUI.localMana = clientStats.mana;
+    spellUI.maxMana   = clientStats.manaMax;
+    spellUI.update(dt);
+
+    if (!chat.isOpen() && !cinv.open && !uiOpen) {
+      if (spellKeyDown && spellUI.phase == 0) {
+        // Pick which spell to cast based on active hotbar slot
+        // For now hardcode "fireball" — later read from hotbar item
+        std::string spellName = "fireball";
+
+        // Aim: use camera forward projected out 20 units
+        glm::vec3 aimPos = camera.position + camera.forward() * 20.f;
+        spellUI.onKeyDown(GLFW_KEY_R, spellName,
+                          aimPos.x, aimPos.y, aimPos.z,
+                          server);
+      }
+
+      if (spellKeyUp) {
+        spellUI.onKeyUp(server);
+      }
+
+      // ESC or E cancels mid-cast
+      if (input.keyDown(GLFW_KEY_ESCAPE) && spellUI.phase != 0) {
+        spellUI.onCancel(server);
+      }
+    }
     // ── UI open state ──────────────────────────────────────────────────────────
     bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
                   debugMenu.visible || chat.isOpen();
@@ -476,6 +518,7 @@ int main(int argc, char **argv) {
     invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
     debugMenu.draw(player.position(), server, dayNight);
     chat.draw(dt, appTime, server);
+    spellUI.draw();
 
     ImGui::Render();
 

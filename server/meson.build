@@ -1,6 +1,7 @@
 server_src = files(
   'src/main.cpp',
   'src/chunk_manager.cpp',
+
 )
 
 executable('server', server_src,
