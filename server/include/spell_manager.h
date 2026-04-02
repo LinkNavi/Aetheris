@@ -81,7 +81,12 @@ const CastState* getCurrentFiringState() { return _firingState; }
 ENetPeer*        getCurrentFiringPeer()  { return _firingPeer; }
     // Load a single spell from source string (for preset spells)
     bool loadSpellSource(const std::string& name, const std::string& src);
-
+struct SpellMeta { float baseMana; float castTime; };
+SpellMeta getSpellMeta(const std::string& name) const {
+    auto it = _spells.find(name);
+    if (it == _spells.end()) return {20.f, 0.5f};
+    return {it->second.baseMana, it->second.baseTime};
+}
     // ── Per-frame update ──────────────────────────────────────────────────────
     // Call every server tick. Advances wind-up timers, fires spells on completion.
     // Returns list of peers whose cast completed this frame (for sending acks).

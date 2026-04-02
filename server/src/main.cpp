@@ -65,35 +65,40 @@ int main(int argc, char **argv) {
   spellMgr.loadSpellsFromDir("spells/");
 
   // ── Wire spell primitives ─────────────────────────────────────────────────
-spellMgr.registerNative("aoe_damage", [&](Aether::NativeArgs args,
-                                           Aether::NativeNamedArgs named) -> Aether::Value {
-    float radius   = named.count("radius") ? (float)named["radius"].asNumber() : 2.f;
-    float fraction = named.count("damage") ? (float)named["damage"].asNumber() : 1.f;
-    fraction = std::clamp(fraction, 0.f, 1.f);
+  spellMgr.registerNative(
+      "aoe_damage",
+      [&](Aether::NativeArgs args,
+          Aether::NativeNamedArgs named) -> Aether::Value {
+        float radius =
+            named.count("radius") ? (float)named["radius"].asNumber() : 2.f;
+        float fraction =
+            named.count("damage") ? (float)named["damage"].asNumber() : 1.f;
+        fraction = std::clamp(fraction, 0.f, 1.f);
 
-    float* budget = spellMgr.getFiringBudget();
-    if (!budget || *budget <= 0.f) return Aether::Value::null();
+        float *budget = spellMgr.getFiringBudget();
+        if (!budget || *budget <= 0.f)
+          return Aether::Value::null();
 
-    float damage = *budget * fraction;
-    *budget -= damage;
+        float damage = *budget * fraction;
+        *budget -= damage;
 
-    const CastState* cs = spellMgr.getCurrentFiringState();
-    if (!cs) return Aether::Value::null();
-    glm::vec3 targetPos{cs->aimX, cs->aimY, cs->aimZ};
+        const CastState *cs = spellMgr.getCurrentFiringState();
+        if (!cs)
+          return Aether::Value::null();
+        glm::vec3 targetPos{cs->aimX, cs->aimY, cs->aimZ};
 
-    ENetPeer* caster = spellMgr.getCurrentFiringPeer();
-    for (auto& [p, pos] : positions) {
-        if (p == caster) continue;
-        if (glm::length(pos - targetPos) <= radius)
+        ENetPeer *caster = spellMgr.getCurrentFiringPeer();
+        for (auto &[p, pos] : positions) {
+          if (p == caster)
+            continue;
+          if (glm::length(pos - targetPos) <= radius)
             statsMgr.applyDamage(p, damage);
-    }
+        }
 
-    Log::info("aoe_damage: " + std::to_string(damage) + " budget left: " + std::to_string(*budget));
-    return Aether::Value::null();
-});
-
-
-
+        Log::info("aoe_damage: " + std::to_string(damage) +
+                  " budget left: " + std::to_string(*budget));
+        return Aether::Value::null();
+      });
 
   spellMgr.registerNative(
       "aoe_heal",
@@ -156,8 +161,6 @@ spellMgr.registerNative("aoe_damage", [&](Aether::NativeArgs args,
   Log::info("Default spawn: " + std::to_string(defaultSpawn.x) + ", " +
             std::to_string(defaultSpawn.y) + ", " +
             std::to_string(defaultSpawn.z));
-
-
 
   using Clock = std::chrono::steady_clock;
   auto lastTick = Clock::now();
@@ -371,11 +374,36 @@ spellMgr.registerNative("aoe_damage", [&](Aether::NativeArgs args,
           chatMgr.onMessage(ev.peer, ChatMessagePacket::deserialize(d, len),
                             host.get());
           enet_host_flush(host.get());
-        }
+        } else if (pid == (uint8_t)SpellBookPacketID::CompileReq) {
+          auto pkt = SpellCompileReqPacket::deserialize(d, len);
+          SpellCompileAckPacket ack;
+          ack.spellName = pkt.spellName;
+          bool ok = spellMgr.loadSpellSource(pkt.spellName, pkt.source);
+          ack.success = ok ? 1 : 0;
+          if (!ok) {
+            ack.error = "Compile failed — check syntax";
+          } else {
+            auto *def = spellMgr.getCastState(ev.peer); // reuse to get def
+            // Find the loaded spell's metadata
+            ack.baseMana = 20.f; // SpellManager doesn't expose def directly
+            ack.castTime = 0.5f; // add a getter or expose baseMana
+          }
+          Net::sendReliable(ev.peer, ack.serialize());
+          enet_host_flush(host.get());
 
-        enet_packet_destroy(ev.packet);
-        break;
-      }
+        } else if (pid == (uint8_t)SpellBookPacketID::LoadoutSet) {
+          // Client is just updating their local loadout mapping
+          // Server doesn't need to do anything — spells are already loaded
+          // by name at cast time. Just ack silently.
+
+        } else if (pid == (uint8_t)SpellBookPacketID::DeleteReq) {
+          auto pkt = SpellDeleteReqPacket::deserialize(d, len);
+          // Nothing to do server-side for now — spells stay loaded in VM
+          // Could remove from _spells map if needed
+
+          enet_packet_destroy(ev.packet);
+          break;
+        }
 
       case ENET_EVENT_TYPE_DISCONNECT:
         Log::info("Peer disconnected");
@@ -390,93 +418,93 @@ spellMgr.registerNative("aoe_damage", [&](Aether::NativeArgs args,
       default:
         break;
       }
-    }
+      }
 
-    // ── Stats update ──────────────────────────────────────────────────────
-    statsMgr.update(dt);
-    statsFlushAccum += dt;
-    if (statsFlushAccum >= 0.1f) {
-      statsFlushAccum = 0.f;
-      statsMgr.flushDirty();
-      enet_host_flush(host.get());
-    }
+      // ── Stats update ──────────────────────────────────────────────────────
+      statsMgr.update(dt);
+      statsFlushAccum += dt;
+      if (statsFlushAccum >= 0.1f) {
+        statsFlushAccum = 0.f;
+        statsMgr.flushDirty();
+        enet_host_flush(host.get());
+      }
 
-    // ── Position broadcast ────────────────────────────────────────────────
-    possBroadcastAccum += dt;
-    if (possBroadcastAccum >= 0.05f) {
-      possBroadcastAccum = 0.f;
-      mpMgr.broadcastPositions(host.get());
-      enet_host_flush(host.get());
-    }
+      // ── Position broadcast ────────────────────────────────────────────────
+      possBroadcastAccum += dt;
+      if (possBroadcastAccum >= 0.05f) {
+        possBroadcastAccum = 0.f;
+        mpMgr.broadcastPositions(host.get());
+        enet_host_flush(host.get());
+      }
 
-    // ── Spell system update ───────────────────────────────────────────────
-    // Tick charging players
-    for (auto &[peer, pos] : positions) {
-      auto *cs = spellMgr.getCastState(peer);
-      if (!cs || !cs->isCharging())
-        continue;
-      auto *stats = statsMgr.get(peer);
-      if (!stats)
-        continue;
-      spellMgr.tickCharge(peer, dt, *stats);
-      statsMgr.markDirty(peer);
-    }
-
-    // Fire completed casts
-    auto firedSpells = spellMgr.update(dt);
-    for (auto &ev2 : firedSpells) {
-      auto posIt = positions.find(ev2.peer);
-      if (posIt == positions.end())
-        continue;
-
-      glm::vec3 casterPos = posIt->second;
-      glm::vec3 targetPos{ev2.aimX, ev2.aimY, ev2.aimZ};
-
-      Log::info("Spell fired: " + ev2.spellName +
-                " potency=" + std::to_string(ev2.potency) +
-                " mana=" + std::to_string(ev2.manaSpent));
-
-      // Send ack to caster
-      SpellCastAckPacket ack;
-      ack.spellName = ev2.spellName;
-      ack.originX = casterPos.x;
-      ack.originY = casterPos.y;
-      ack.originZ = casterPos.z;
-      glm::vec3 dir{0, 0, 1};
-      float len = glm::length(targetPos - casterPos);
-      if (len > 0.001f)
-        dir = (targetPos - casterPos) / len;
-      ack.dirX = dir.x;
-      ack.dirY = dir.y;
-      ack.dirZ = dir.z;
-      ack.hasProjectile = 1;
-      Net::sendReliable(ev2.peer, ack.serialize());
-
-      // Send idle cast state (cast completed)
-      SpellCastStatePacket statePkt{0, 0, 0, 0, 0};
-      Net::sendReliable(ev2.peer, statePkt.serialize());
-    }
-
-    // Push cast state to clients at 10hz
-    spellStateAccum += dt;
-    if (spellStateAccum >= 0.1f) {
-      spellStateAccum = 0.f;
+      // ── Spell system update ───────────────────────────────────────────────
+      // Tick charging players
       for (auto &[peer, pos] : positions) {
         auto *cs = spellMgr.getCastState(peer);
-        if (!cs || cs->isIdle())
+        if (!cs || !cs->isCharging())
           continue;
-        SpellCastStatePacket pkt{(uint8_t)cs->phase, cs->manaCommitted,
-                                 cs->castTimeTotal, cs->castTimeElapsed,
-                                 cs->interruptDC};
-        Net::sendReliable(peer, pkt.serialize());
+        auto *stats = statsMgr.get(peer);
+        if (!stats)
+          continue;
+        spellMgr.tickCharge(peer, dt, *stats);
+        statsMgr.markDirty(peer);
       }
-      enet_host_flush(host.get());
+
+      // Fire completed casts
+      auto firedSpells = spellMgr.update(dt);
+      for (auto &ev2 : firedSpells) {
+        auto posIt = positions.find(ev2.peer);
+        if (posIt == positions.end())
+          continue;
+
+        glm::vec3 casterPos = posIt->second;
+        glm::vec3 targetPos{ev2.aimX, ev2.aimY, ev2.aimZ};
+
+        Log::info("Spell fired: " + ev2.spellName +
+                  " potency=" + std::to_string(ev2.potency) +
+                  " mana=" + std::to_string(ev2.manaSpent));
+
+        // Send ack to caster
+        SpellCastAckPacket ack;
+        ack.spellName = ev2.spellName;
+        ack.originX = casterPos.x;
+        ack.originY = casterPos.y;
+        ack.originZ = casterPos.z;
+        glm::vec3 dir{0, 0, 1};
+        float len = glm::length(targetPos - casterPos);
+        if (len > 0.001f)
+          dir = (targetPos - casterPos) / len;
+        ack.dirX = dir.x;
+        ack.dirY = dir.y;
+        ack.dirZ = dir.z;
+        ack.hasProjectile = 1;
+        Net::sendReliable(ev2.peer, ack.serialize());
+
+        // Send idle cast state (cast completed)
+        SpellCastStatePacket statePkt{0, 0, 0, 0, 0};
+        Net::sendReliable(ev2.peer, statePkt.serialize());
+      }
+
+      // Push cast state to clients at 10hz
+      spellStateAccum += dt;
+      if (spellStateAccum >= 0.1f) {
+        spellStateAccum = 0.f;
+        for (auto &[peer, pos] : positions) {
+          auto *cs = spellMgr.getCastState(peer);
+          if (!cs || cs->isIdle())
+            continue;
+          SpellCastStatePacket pkt{(uint8_t)cs->phase, cs->manaCommitted,
+                                   cs->castTimeTotal, cs->castTimeElapsed,
+                                   cs->interruptDC};
+          Net::sendReliable(peer, pkt.serialize());
+        }
+        enet_host_flush(host.get());
+      }
+
+      chunks.flushReady(host.get());
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
-    chunks.flushReady(host.get());
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    Net::deinit();
+    Log::shutdown();
   }
-
-  Net::deinit();
-  Log::shutdown();
-}

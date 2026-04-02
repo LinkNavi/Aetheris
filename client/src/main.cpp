@@ -12,6 +12,7 @@
 #include "inv_packets.h"
 #include "inventory.h"
 #include "inventory_ui.h"
+#include "keybinds_impl.h"
 #include "log.h"
 #include "main_menu.h"
 #include "mesh_builder.h"
@@ -24,6 +25,7 @@
 #include "remote_players.h"
 #include "spell_charge_packets.h"
 #include "spell_charge_ui.h"
+#include "spell_editor.h"
 #include "spell_packets.h"
 #include "tree_renderer.h"
 #include "view_model.h"
@@ -69,6 +71,7 @@ int main(int argc, char **argv) {
   ClientChestMirror chestMirror;
   RemotePlayerRenderer remotePlayers;
   ChatUI chat;
+  SpellEditorUI spellEditor;
   float appTime = 0.f;
 
   ViewModelRenderer viewModel;
@@ -373,7 +376,10 @@ int main(int argc, char **argv) {
             // TODO: spawn projectile VFX at pkt.originX/Y/Z in direction
             // pkt.dirX/Y/Z For now just log it Log::info("Spell ack: " +
             // pkt.spellName);
-          }
+          }  else if (pid == (uint8_t)SpellBookPacketID::CompileAck) {
+        auto pkt = SpellCompileAckPacket::deserialize(d, len);
+        spellEditor.onCompileAck(cinv, pkt);
+      }
         }
         enet_packet_destroy(ev.packet);
       } else if (ev.type == ENET_EVENT_TYPE_DISCONNECT) {
@@ -417,7 +423,10 @@ int main(int argc, char **argv) {
           break;
         }
       invUI.handleInput(cinv, tabPressed, numKey);
-
+      if (kb.isDown(Action::SpellEditor, input) && !chat.isOpen()) {
+        spellEditor.open = !spellEditor.open;
+        input.captureCursor(!spellEditor.open);
+      }
       if (kb.isDown(Action::Inventory, input)) {
         cinv.open = !cinv.open;
         if (!cinv.open && chestMirror.open) {
@@ -442,8 +451,8 @@ int main(int argc, char **argv) {
           input.captureCursor(true);
       }
     }
-    bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
-                  debugMenu.visible || chat.isOpen();
+   bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
+              debugMenu.visible || chat.isOpen() || spellEditor.open;
     bool canCast = !chat.isOpen() && !uiOpen && !clientStats.dead;
 
     spellUI.localMana = clientStats.mana;
@@ -569,7 +578,7 @@ int main(int argc, char **argv) {
     debugMenu.draw(player.position(), server, dayNight);
     chat.draw(dt, appTime, server);
     spellUI.draw();
-
+bool spellEdOpen = spellEditor.draw(cinv, server);
     ImGui::Render();
 
     float aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;

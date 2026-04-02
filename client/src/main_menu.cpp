@@ -783,7 +783,7 @@ GameState MainMenu::drawSettings(ImDrawList *dl, float cx, float cy, int sw,
               colAlpha(COL_TEAL_DIM, 0.8f), 1.f);
   static const char *TABS[] = {"GRAPHICS", "AUDIO", "NETWORK", "KEYS"};
   float tabW = (panW - 40.f) / 4.f, tabH = 28.f, tabY = panY + 56.f;
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 4; i++)
     if (drawTab(dl, font, TABS[i], panX + 20.f + i * tabW, tabY, tabW, tabH,
                 _settingsTab == i))
       _settingsTab = i;
