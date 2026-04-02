@@ -29,7 +29,7 @@ struct CastState {
     enum class Phase { Idle, Charging, WindUp, Firing };
 
     Phase       phase          = Phase::Idle;
-
+float potencyBudget = 0.f;   // set when spell fires, consumed by primitives
     // Charging
     std::string spellName;
     float       manaCommitted  = 0.f;
@@ -76,7 +76,9 @@ class SpellManager {
 public:
     // Load all .aes files from a directory
     void loadSpellsFromDir(const std::string& dir);
-
+float*           getFiringBudget()       { return _isFiring ? &_firingBudget : nullptr; }
+const CastState* getCurrentFiringState() { return _firingState; }
+ENetPeer*        getCurrentFiringPeer()  { return _firingPeer; }
     // Load a single spell from source string (for preset spells)
     bool loadSpellSource(const std::string& name, const std::string& src);
 
@@ -92,6 +94,7 @@ public:
         uint32_t    targetId;
     };
     std::vector<FireEvent> update(float dt);
+
 
     // ── Player actions ────────────────────────────────────────────────────────
 
@@ -136,6 +139,10 @@ private:
         std::unordered_map<std::string, float>>  _cooldowns;
     std::vector<std::pair<std::string,Aether::NativeFn>> _pendingNatives;
 
+float            _firingBudget = 0.f;
+bool             _isFiring     = false;
+const CastState* _firingState  = nullptr;
+ENetPeer*        _firingPeer   = nullptr;
     SpellDef*   findSpell(const std::string& name);
     CastState&  stateFor(ENetPeer* peer);
     void        tickCooldowns(float dt);

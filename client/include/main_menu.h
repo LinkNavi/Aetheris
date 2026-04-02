@@ -6,7 +6,8 @@
 #include <cmath>
 #include <cstdint>
 #include "http_client.h"
-
+#include "input.h"
+#include "keybinds.h"
 enum class GameState {
     MainMenu,
     Settings,
@@ -59,11 +60,10 @@ public:
     MainMenu();
 
     // Returns current GameState. When Connecting, read pendingServerIP/Port.
-    GameState draw(float dt, int screenW, int screenH);
-
+    GameState draw(float dt, int screenW, int screenH, const Input* input = nullptr);
     GameSettings& settings() { return _settings; }
     AccountState& account()  { return _account; }
-
+Keybinds& keybinds() { return _keybinds; }
     std::string pendingServerIP;
     int         pendingServerPort = 7777;
     char        pendingUsername[64] = {};
@@ -72,13 +72,14 @@ private:
     GameState    _state = GameState::MainMenu;
     GameSettings _settings;
     AccountState _account;
-
+Keybinds _keybinds;
+int      _rebindingAction = -1;
     static constexpr int MAX_PARTICLES = 80;
     MenuParticle _particles[MAX_PARTICLES]{};
     float        _time        = 0.f;
     int          _hoveredBtn  = -1;
     int          _settingsTab = 0;
-
+const Input* _lastInput = nullptr;
     // Account / login
     char  _accUser[64]     = {};
     char  _accPass[64]     = {};

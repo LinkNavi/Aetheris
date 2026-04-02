@@ -22,13 +22,13 @@
 #include "player.h"
 #include "player_stats.h"
 #include "remote_players.h"
+#include "spell_charge_packets.h"
+#include "spell_charge_ui.h"
+#include "spell_packets.h"
 #include "tree_renderer.h"
 #include "view_model.h"
 #include "vk_context.h"
 #include "window.h"
-#include "spell_charge_ui.h"
-#include "spell_charge_packets.h"
-#include "spell_packets.h"
 
 #include <chrono>
 #include <cstring>
@@ -128,35 +128,37 @@ int main(int argc, char **argv) {
     ImGui_ImplVulkan_Init(&imInfo);
   }
 
-  // ── Load arm ────────────────────────────────────────────────────────────────
+  // ── Load arm
+  // ────────────────────────────────────────────────────────────────
   {
     std::string glbPath = AssetPath::get("arm.glb");
     GltfModel model = loadGlb(glbPath.c_str());
     if (model.valid) {
       ViewModelTransform t;
-      t.offset   = {0.3900f, -0.2250f, -0.4050f};
+      t.offset = {0.3900f, -0.2250f, -0.4050f};
       t.rotation = {-28.5f, 359.0f, -154.0f};
-      t.scale    = {0.21600f, 0.21300f, 0.21600f};
-      viewModel.armMeshIdx = viewModel.loadMesh(
-          ctx.device.device, ctx.allocator, ctx.commandPool,
-          ctx.graphicsQueue, model, t);
+      t.scale = {0.21600f, 0.21300f, 0.21600f};
+      viewModel.armMeshIdx =
+          viewModel.loadMesh(ctx.device.device, ctx.allocator, ctx.commandPool,
+                             ctx.graphicsQueue, model, t);
     }
   }
 
-  // ── Load item meshes ─────────────────────────────────────────────────────────
-  // Each GLB is loaded once and registered against an ItemID.
-  // Tune positions live with the ] key (Main Hand / Off Hand tabs).
+  // ── Load item meshes
+  // ───────────────────────────────────────────────────────── Each GLB is
+  // loaded once and registered against an ItemID. Tune positions live with the
+  // ] key (Main Hand / Off Hand tabs).
   {
     // Grimoire / book
     GltfModel bookModel = loadGlb(AssetPath::get("grimoire.glb").c_str());
     if (bookModel.valid) {
-      int idx = viewModel.loadMesh(ctx.device.device, ctx.allocator,
-                                   ctx.commandPool, ctx.graphicsQueue,
-                                   bookModel, {});
+      int idx =
+          viewModel.loadMesh(ctx.device.device, ctx.allocator, ctx.commandPool,
+                             ctx.graphicsQueue, bookModel, {});
       ViewModelTransform main, offhand;
-      offhand.offset   = {0.4300f, -0.2400f, -0.5950f};
+      offhand.offset = {0.4300f, -0.2400f, -0.5950f};
       offhand.rotation = {-15.0f, 79.0f, 68.0f};
-      offhand.scale    = {0.18000f, 0.18000f, 0.18000f};
+      offhand.scale = {0.18000f, 0.18000f, 0.18000f};
 
       viewModel.registerItemMesh(ItemID::WpnGrimoire, idx, main, offhand);
     }
@@ -191,12 +193,13 @@ int main(int argc, char **argv) {
   auto prev = Clock::now();
   float netAccum = 0.f;
   std::vector<ChunkMesh> readyMeshes;
-
+  Keybinds &kb = mainMenu.keybinds();
   while (!window.shouldClose()) {
     auto now = Clock::now();
     float dt = std::chrono::duration<float>(now - prev).count();
     prev = now;
-    if (dt > 0.05f) dt = 0.05f;
+    if (dt > 0.05f)
+      dt = 0.05f;
     appTime += dt;
 
     input.beginFrame();
@@ -205,35 +208,42 @@ int main(int argc, char **argv) {
     window.getSize(w, h);
     static int prevW = w, prevH = h;
     if (w != prevW || h != prevH) {
-      prevW = w; prevH = h;
-      if (w > 0 && h > 0) vk_resize(ctx, window.handle());
+      prevW = w;
+      prevH = h;
+      if (w > 0 && h > 0)
+        vk_resize(ctx, window.handle());
     }
 
-    // ── Main menu ─────────────────────────────────────────────────────────────
+    // ── Main menu
+    // ─────────────────────────────────────────────────────────────
     if (gameState != GameState::InGame) {
-      if (input.cursorCaptured()) input.captureCursor(false);
+      if (input.cursorCaptured())
+        input.captureCursor(false);
       int w2, h2;
       window.getSize(w2, h2);
       ImGui_ImplVulkan_NewFrame();
       ImGui_ImplGlfw_NewFrame();
       ImGui::NewFrame();
-      GameState next = mainMenu.draw(dt, w2, h2);
-
+      GameState next = mainMenu.draw(dt, w2, h2, &input);
       float prevLeafDensity = treeRenderer.leafDensity;
-      float newLeafDensity  = mainMenu.settings().leafDensity;
+      float newLeafDensity = mainMenu.settings().leafDensity;
       if (newLeafDensity != prevLeafDensity) {
         treeRenderer.leafDensity = newLeafDensity;
         treeRenderer.rebuildMeshes();
       }
 
       if (next == GameState::Connecting) {
-        if (mainMenu.pendingServerIP == "__QUIT__") break;
-        const char *ip   = mainMenu.pendingServerIP.c_str();
-        int          port = mainMenu.pendingServerPort;
+        if (mainMenu.pendingServerIP == "__QUIT__")
+          break;
+        const char *ip = mainMenu.pendingServerIP.c_str();
+        int port = mainMenu.pendingServerPort;
         ENetAddress addr2{};
         if (enet_address_set_host(&addr2, ip) == 0) {
           addr2.port = (uint16_t)port;
-          if (server) { enet_peer_disconnect_now(server, 0); server = nullptr; }
+          if (server) {
+            enet_peer_disconnect_now(server, 0);
+            server = nullptr;
+          }
           server = enet_host_connect(host.get(), &addr2, 2, 0);
           if (server) {
             ENetEvent ev2;
@@ -242,16 +252,18 @@ int main(int argc, char **argv) {
               Log::info(std::string("Connected to ") + ip);
               AuthRequestPacket authReq;
               authReq.username = mainMenu.pendingUsername;
-              authReq.token    = mainMenu.account().sessionToken;
+              authReq.token = mainMenu.account().sessionToken;
               Net::sendReliable(server, authReq.serialize());
               enet_host_flush(host.get());
               authSent = true;
               RenderDistPacket rd;
-              rd.xz = (uint8_t)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
-              rd.y  = 4;
+              rd.xz = (uint8_t)std::clamp(
+                  (int)mainMenu.settings().renderDistance, 1, 255);
+              rd.y = 4;
               Net::sendReliable(server, rd.serialize());
               enet_host_flush(host.get());
               gameState = GameState::InGame;
+              mainMenu.keybinds().load();
               input.captureCursor(true);
               remotePlayers.players.clear();
               remotePlayers.localPlayerId = 0;
@@ -268,24 +280,27 @@ int main(int argc, char **argv) {
 
       ImGui::Render();
       vk_draw(ctx, glm::mat4(1.f), glm::mat4(1.f), nullptr, 0.f,
-              {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr,
-              glm::mat4(1.f), nullptr, nullptr);
+              {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr, glm::mat4(1.f),
+              nullptr, nullptr);
       continue;
     }
 
-    if (!server) continue;
+    if (!server)
+      continue;
 
     auto &cinv = reg.get<CInventory>(player.entity());
 
-    // ── Chat key handling (before anything else so it can consume Enter) ───────
+    // ── Chat key handling (before anything else so it can consume Enter)
+    // ───────
     if (input.keyDown(GLFW_KEY_ENTER) || input.keyDown(GLFW_KEY_KP_ENTER))
       chat.onKeyDown(GLFW_KEY_ENTER);
     if (input.keyDown(GLFW_KEY_ESCAPE) && chat.isOpen())
       chat.onKeyDown(GLFW_KEY_ESCAPE);
 
-    // ── View model debug toggle ────────────────────────────────────────────────
+    // ── View model debug toggle
+    // ────────────────────────────────────────────────
     if (!chat.isOpen() && input.keyDown(GLFW_KEY_RIGHT_BRACKET)) {
-      viewModel.uiVisible    = !viewModel.uiVisible;
+      viewModel.uiVisible = !viewModel.uiVisible;
       viewModel.animEditor.open = viewModel.uiVisible;
       if (viewModel.uiVisible && !cinv.open)
         input.captureCursor(false);
@@ -293,12 +308,13 @@ int main(int argc, char **argv) {
         input.captureCursor(true);
     }
 
-    // ── Receive packets ────────────────────────────────────────────────────────
+    // ── Receive packets
+    // ────────────────────────────────────────────────────────
     ENetEvent ev;
     while (enet_host_service(host.get(), &ev, 0) > 0) {
       if (ev.type == ENET_EVENT_TYPE_RECEIVE) {
-        const uint8_t *d   = ev.packet->data;
-        size_t         len = ev.packet->dataLength;
+        const uint8_t *d = ev.packet->data;
+        size_t len = ev.packet->dataLength;
         if (len > 0) {
           uint8_t pid = d[0];
 
@@ -307,7 +323,7 @@ int main(int argc, char **argv) {
           } else if (pid == (uint8_t)PacketID::SpawnPosition) {
             auto sp = SpawnPositionPacket::deserialize(d, len);
             player.setSpawnPosition({sp.x, sp.y, sp.z});
-            enemiesSpawned  = false;
+            enemiesSpawned = false;
             chestMirror.open = false;
           } else if (pid == (uint8_t)InvPacketID::InventoryState) {
             invUI.applyState(cinv, InventoryStatePacket::deserialize(d, len));
@@ -317,8 +333,7 @@ int main(int argc, char **argv) {
             cinv.open = true;
             input.captureCursor(false);
           } else if (pid == (uint8_t)InvPacketID::InventoryMoveAck) {
-            invUI.applyAck(cinv,
-                           InventoryMoveAckPacket::deserialize(d, len),
+            invUI.applyAck(cinv, InventoryMoveAckPacket::deserialize(d, len),
                            chestMirror.open ? &chestMirror : nullptr);
           } else if (pid == (uint8_t)InvPacketID::LootAvailable) {
             auto pkt = LootAvailablePacket::deserialize(d, len);
@@ -355,27 +370,28 @@ int main(int argc, char **argv) {
 
           } else if (pid == (uint8_t)SpellPacketID::SpellCastAck) {
             auto pkt = SpellCastAckPacket::deserialize(d, len);
-            // TODO: spawn projectile VFX at pkt.originX/Y/Z in direction pkt.dirX/Y/Z
-            // For now just log it
-            // Log::info("Spell ack: " + pkt.spellName);
+            // TODO: spawn projectile VFX at pkt.originX/Y/Z in direction
+            // pkt.dirX/Y/Z For now just log it Log::info("Spell ack: " +
+            // pkt.spellName);
           }
         }
         enet_packet_destroy(ev.packet);
       } else if (ev.type == ENET_EVENT_TYPE_DISCONNECT) {
         Log::info("Disconnected from server");
         chat.pushSystem("Disconnected from server.");
-        server    = nullptr;
+        server = nullptr;
         gameState = GameState::MainMenu;
         treeRenderer.clearTrees();
         terrainCache.clear();
         break;
       }
-
     }
 
-    if (!server) continue;
+    if (!server)
+      continue;
 
-    // ── Poll finished meshes ───────────────────────────────────────────────────
+    // ── Poll finished meshes
+    // ───────────────────────────────────────────────────
     readyMeshes.clear();
     meshBuilder.poll(readyMeshes, 4);
     for (auto &mesh : readyMeshes) {
@@ -384,20 +400,25 @@ int main(int argc, char **argv) {
       ChunkData td = generateChunk(mesh.coord);
       terrainCache[mesh.coord] = td;
     }
-    if (terrainCache.size() > 512) terrainCache.clear();
+    if (terrainCache.size() > 512)
+      terrainCache.clear();
 
-    // ── Hotbar + inventory (suppress when chat open) ───────────────────────────
+    // ── Hotbar + inventory (suppress when chat open)
+    // ───────────────────────────
     if (!chat.isOpen()) {
       bool tabPressed = input.keyDown(GLFW_KEY_TAB);
-      int  numKey     = 0;
-      static const int NUM_KEYS[] = {
-          GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4,
-          GLFW_KEY_5, GLFW_KEY_6, GLFW_KEY_7, GLFW_KEY_8};
+      int numKey = 0;
+      static const int NUM_KEYS[] = {GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3,
+                                     GLFW_KEY_4, GLFW_KEY_5, GLFW_KEY_6,
+                                     GLFW_KEY_7, GLFW_KEY_8};
       for (int k = 0; k < 8; k++)
-        if (input.keyDown(NUM_KEYS[k])) { numKey = k + 1; break; }
+        if (input.keyDown(NUM_KEYS[k])) {
+          numKey = k + 1;
+          break;
+        }
       invUI.handleInput(cinv, tabPressed, numKey);
 
-      if (input.keyDown(GLFW_KEY_I)) {
+      if (kb.isDown(Action::Inventory, input)) {
         cinv.open = !cinv.open;
         if (!cinv.open && chestMirror.open) {
           ChestCloseReqPacket req{chestMirror.uid};
@@ -407,54 +428,72 @@ int main(int argc, char **argv) {
         input.captureCursor(!cinv.open);
       }
 
-      if (input.keyDown(GLFW_KEY_E) && !chestMirror.open) {
+      if (kb.isDown(Action::Interact, input) && !chestMirror.open) {
         ChestOpenReqPacket req{1};
         Net::sendReliable(server, req.serialize());
         enet_host_flush(host.get());
       }
 
-      if (input.keyDown(GLFW_KEY_F3)) {
+      if (kb.isDown(Action::DebugMenu, input)) {
         debugMenu.toggle();
         if (debugMenu.visible)
           input.captureCursor(false);
         else if (!cinv.open && !chestMirror.open && !viewModel.uiVisible)
           input.captureCursor(true);
       }
-
     }
-bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
+    bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
                   debugMenu.visible || chat.isOpen();
-bool spellKeyDown = !chat.isOpen() && !uiOpen && input.keyDown(GLFW_KEY_R);
-    bool spellKeyHeld = !chat.isOpen() && !uiOpen && input.key(GLFW_KEY_R);
-    bool spellKeyUp   = !spellKeyHeld && spellUI.phase == 1;
+    bool canCast = !chat.isOpen() && !uiOpen && !clientStats.dead;
+
     spellUI.localMana = clientStats.mana;
-    spellUI.maxMana   = clientStats.manaMax;
+    spellUI.maxMana = clientStats.manaMax;
     spellUI.update(dt);
 
-    if (!chat.isOpen() && !cinv.open && !uiOpen) {
-      if (spellKeyDown && spellUI.phase == 0) {
-        // Pick which spell to cast based on active hotbar slot
-        // For now hardcode "fireball" — later read from hotbar item
-        std::string spellName = "fireball";
-
-        // Aim: use camera forward projected out 20 units
-        glm::vec3 aimPos = camera.position + camera.forward() * 20.f;
-        spellUI.onKeyDown(GLFW_KEY_R, spellName,
-                          aimPos.x, aimPos.y, aimPos.z,
-                          server);
+    if (canCast) {
+      int activeSpellSlot = -1;
+      for (int slot = 0; slot < SPELL_SLOTS; slot++) {
+        Action a = (Action)((int)Action::SpellSlot1 + slot);
+        if (kb.isDown(a, input)) {
+          activeSpellSlot = slot;
+          break;
+        }
       }
 
-      if (spellKeyUp) {
+      // find which slot is held for release detection
+      int heldSpellSlot = -1;
+      for (int slot = 0; slot < SPELL_SLOTS; slot++) {
+        Action a = (Action)((int)Action::SpellSlot1 + slot);
+        if (kb.isHeld(a, input)) {
+          heldSpellSlot = slot;
+          break;
+        }
+      }
+
+      bool spellReleased = heldSpellSlot < 0 && spellUI.phase == 1;
+
+      if (activeSpellSlot >= 0 && spellUI.phase == 0) {
+        // get spell name from active slot — falls back to "fireball" until
+        // spell bar is implemented
+        SpellEntry *spell = cinv.inv.getActiveSpell(activeSpellSlot);
+        std::string spellName =
+            (spell && !spell->empty()) ? spell->name : "fireball";
+        glm::vec3 aimPos = camera.position + camera.forward() * 20.f;
+        spellUI.onKeyDown(
+            kb.get((Action)((int)Action::SpellSlot1 + activeSpellSlot)),
+            spellName, aimPos.x, aimPos.y, aimPos.z, server);
+      }
+
+      if (spellReleased) {
         spellUI.onKeyUp(server);
       }
 
-      // ESC or E cancels mid-cast
       if (input.keyDown(GLFW_KEY_ESCAPE) && spellUI.phase != 0) {
         spellUI.onCancel(server);
       }
     }
-    // ── UI open state ──────────────────────────────────────────────────────────
-   
+    // ── UI open state
+    // ──────────────────────────────────────────────────────────
 
     // Cursor capture: release when any UI is open, recapture when all closed
     if (uiOpen && input.cursorCaptured())
@@ -462,7 +501,8 @@ bool spellKeyDown = !chat.isOpen() && !uiOpen && input.keyDown(GLFW_KEY_R);
     else if (!uiOpen && !input.cursorCaptured())
       input.captureCursor(true);
 
-    // ── Spawn enemies once ─────────────────────────────────────────────────────
+    // ── Spawn enemies once
+    // ─────────────────────────────────────────────────────
     if (player.isSpawned() && !enemiesSpawned) {
       glm::vec3 base = player.position();
       combat.spawnEnemy(base + glm::vec3{5.f, 0.f, 0.f});
@@ -471,36 +511,41 @@ bool spellKeyDown = !chat.isOpen() && !uiOpen && input.keyDown(GLFW_KEY_R);
       enemiesSpawned = true;
     }
 
-    // ── Sync view model to equipped items ──────────────────────────────────────
-    viewModel.syncEquipped(cinv.inv.weaponSlot().id,
-                           cinv.inv.offhandSlot().id);
+    // ── Sync view model to equipped items
+    // ──────────────────────────────────────
+    viewModel.syncEquipped(cinv.inv.weaponSlot().id, cinv.inv.offhandSlot().id);
 
-    // ── Update ────────────────────────────────────────────────────────────────
+    // ── Update
+    // ────────────────────────────────────────────────────────────────
     if (uiOpen || chat.isOpen()) {
       player.update(dt, input, nullptr);
     } else {
-      bool lightAttack = input.keyDown(GLFW_KEY_F);
-      bool heavyAttack = input.keyDown(GLFW_KEY_G);
+      bool lightAttack = kb.isDown(Action::LightAttack, input);
+      bool heavyAttack = kb.isDown(Action::HeavyAttack, input);
       player.update(dt, input, &combat);
-      if (lightAttack) viewModel.triggerLightAttack();
-      if (heavyAttack) viewModel.triggerHeavyAttack();
+      if (lightAttack)
+        viewModel.triggerLightAttack();
+      if (heavyAttack)
+        viewModel.triggerHeavyAttack();
     }
 
-    if (dt < 0.040f) treeRenderer.update(dt);
-    else             treeRenderer.update(0.016f);
+    if (dt < 0.040f)
+      treeRenderer.update(dt);
+    else
+      treeRenderer.update(0.016f);
 
     combat.update(dt, player.entity());
     dayNight.update(dt);
     viewModel.update(dt);
     remotePlayers.update(dt);
     ctx.skyGodRay.update(dt);
-
-    if (!chat.isOpen() && input.keyPressed(GLFW_KEY_Y)) {
+    if (!chat.isOpen() && kb.isDown(Action::Respawn, input)) {
       Net::sendReliable(server, RespawnRequestPacket{}.serialize());
       enet_host_flush(host.get());
     }
 
-    // ── Network position send ──────────────────────────────────────────────────
+    // ── Network position send
+    // ──────────────────────────────────────────────────
     netAccum += dt;
     if (netAccum >= 0.05f) {
       netAccum = 0.f;
@@ -510,7 +555,8 @@ bool spellKeyDown = !chat.isOpen() && !uiOpen && input.keyDown(GLFW_KEY_R);
       enet_host_flush(host.get());
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // ── Render
+    // ────────────────────────────────────────────────────────────────
     window.getSize(w, h);
 
     ImGui_ImplVulkan_NewFrame();
@@ -526,9 +572,9 @@ bool spellKeyDown = !chat.isOpen() && !uiOpen && input.keyDown(GLFW_KEY_R);
 
     ImGui::Render();
 
-    float     aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
-    glm::mat4 vp     = camera.viewProj(aspect);
-    glm::mat4 proj   = camera.proj(aspect);
+    float aspect = (w > 0 && h > 0) ? (float)w / (float)h : 1.f;
+    glm::mat4 vp = camera.viewProj(aspect);
+    glm::mat4 proj = camera.proj(aspect);
     int rdXZ = (int)std::clamp((int)mainMenu.settings().renderDistance, 1, 255);
 
     vk_draw(ctx, vp, camera.view(), &treeRenderer, dayNight.sunIntensity(),

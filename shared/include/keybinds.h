@@ -1,0 +1,116 @@
+#pragma once
+#include <GLFW/glfw3.h>
+#include <string>
+#include <unordered_map>
+#include <fstream>
+
+enum class Action : uint8_t {
+    // Movement
+    MoveForward = 0,
+    MoveBack,
+    MoveLeft,
+    MoveRight,
+    Jump,
+    Sprint,
+    Crouch,
+    // Combat
+    LightAttack,
+    HeavyAttack,
+    Parry,
+    Dodge,
+    // Spells
+    SpellSlot1,
+    SpellSlot2,
+    SpellSlot3,
+    SpellSlot4,
+    SpellSlot5,
+    SpellEditor,    // open spell editor
+    // UI
+    Inventory,
+    Chat,
+    Interact,
+    DebugMenu,
+    Respawn,
+    COUNT
+};
+
+static constexpr const char* ACTION_NAMES[] = {
+    "Move Forward",
+    "Move Back",
+    "Move Left",
+    "Move Right",
+    "Jump",
+    "Sprint",
+    "Crouch",
+    "Light Attack",
+    "Heavy Attack",
+    "Parry",
+    "Dodge",
+    "Spell Slot 1",
+    "Spell Slot 2",
+    "Spell Slot 3",
+    "Spell Slot 4",
+    "Spell Slot 5",
+    "Spell Editor",
+    "Inventory",
+    "Chat",
+    "Interact",
+    "Debug Menu",
+    "Respawn",
+};
+
+struct Keybinds {
+    std::unordered_map<Action, int> binds;
+
+    // defaults
+    Keybinds() {
+        binds[Action::MoveForward]  = GLFW_KEY_W;
+        binds[Action::MoveBack]     = GLFW_KEY_S;
+        binds[Action::MoveLeft]     = GLFW_KEY_A;
+        binds[Action::MoveRight]    = GLFW_KEY_D;
+        binds[Action::Jump]         = GLFW_KEY_SPACE;
+        binds[Action::Sprint]       = GLFW_KEY_LEFT_SHIFT;
+        binds[Action::Crouch]       = GLFW_KEY_LEFT_CONTROL;
+        binds[Action::LightAttack]  = GLFW_KEY_F;
+        binds[Action::HeavyAttack]  = GLFW_KEY_G;
+        binds[Action::Parry]        = GLFW_KEY_Q;
+        binds[Action::Dodge]        = GLFW_KEY_LEFT_CONTROL;
+        binds[Action::SpellSlot1]   = GLFW_KEY_R;
+        binds[Action::SpellSlot2]   = GLFW_KEY_T;
+        binds[Action::SpellSlot3]   = GLFW_KEY_Y;  // note: Y was respawn, moved
+        binds[Action::SpellSlot4]   = GLFW_KEY_Z;
+        binds[Action::SpellSlot5]   = GLFW_KEY_X;
+        binds[Action::SpellEditor]  = GLFW_KEY_K;
+        binds[Action::Inventory]    = GLFW_KEY_I;
+        binds[Action::Chat]         = GLFW_KEY_ENTER;
+        binds[Action::Interact]     = GLFW_KEY_E;
+        binds[Action::DebugMenu]    = GLFW_KEY_F3;
+        binds[Action::Respawn]      = GLFW_KEY_P;
+    }
+
+    int get(Action a) const {
+        auto it = binds.find(a);
+        return it != binds.end() ? it->second : GLFW_KEY_UNKNOWN;
+    }
+
+    void set(Action a, int key) { binds[a] = key; }
+
+    bool isDown(Action a, const class Input& input) const;
+    bool isHeld(Action a, const class Input& input) const;
+    bool isUp  (Action a, const class Input& input) const; // held last frame, not this frame
+
+    void save(const char* path = "keybinds.cfg") const {
+        std::ofstream f(path);
+        if (!f) return;
+        for (auto& [action, key] : binds)
+            f << (int)action << " " << key << "\n";
+    }
+
+    void load(const char* path = "keybinds.cfg") {
+        std::ifstream f(path);
+        if (!f) return;
+        int action, key;
+        while (f >> action >> key)
+            binds[(Action)action] = key;
+    }
+};

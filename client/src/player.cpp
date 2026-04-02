@@ -215,19 +215,24 @@ void PlayerController::buildRequiredChunks(glm::vec3 pos) {
 }
 
 bool PlayerController::spawnChunksReady() const {
-  if (!_hasPendingSpawn)
+    if (!_hasPendingSpawn) return false;
+    int N = ChunkData::SIZE;
+    int cx = (int)std::floor(_pendingSpawn.x / N);
+    int cz = (int)std::floor(_pendingSpawn.z / N);
+
+    // Check a wider vertical window — 5 chunks down instead of 3
+    float checkY = _pendingSpawn.y - Config::PLAYER_HEIGHT - 2.f;
+    for (int dy = 0; dy <= 5; dy++) {
+        int cy = (int)std::floor((checkY - dy * (float)N) / N);
+        if (_triSoups.count({cx, cy, cz}))
+            return true;
+        // Also check adjacent XZ in case saved pos is near chunk border
+        for (int dx = -1; dx <= 1; dx++)
+        for (int dz = -1; dz <= 1; dz++)
+            if (_triSoups.count({cx+dx, cy, cz+dz}))
+                return true;
+    }
     return false;
-  int N = ChunkData::SIZE;
-  int cx = (int)std::floor(_pendingSpawn.x / N);
-  int cz = (int)std::floor(_pendingSpawn.z / N);
-  // Check a 3-chunk vertical window below spawn for any geometry
-  float checkY = _pendingSpawn.y - Config::PLAYER_HEIGHT - 2.f;
-  for (int dy = 0; dy <= 2; dy++) {
-    int cy = (int)std::floor((checkY - dy * (float)N) / N);
-    if (_triSoups.count({cx, cy, cz}))
-      return true;
-  }
-  return false;
 }
 
 float PlayerController::spawnProgress() const {
