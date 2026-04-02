@@ -1,4 +1,6 @@
+#include "aether_lexer.h"
 #include "aether_parser.h"
+#include "aether_ast.h"
 #include <stdexcept>
 
 namespace Aether {
@@ -127,13 +129,10 @@ StmtPtr Parser::parseWhile() {
 }
 
 StmtPtr Parser::parseFor() {
-    // for (i = 0; i < N; i++) { ... }
-    // simplified: for (let i = start; i < end; i++)
     int line = peek().line;
     advance(); // for
     expect(TokenType::LParen, "Expected '('");
 
-    // init: let i = expr or i = expr
     std::string varName;
     if (match(TokenType::KwLet)) {
         varName = peek().value;
@@ -146,17 +145,12 @@ StmtPtr Parser::parseFor() {
     auto fromExpr = parseExpr();
     expect(TokenType::Semicolon, "Expected ';'");
 
-    // condition: i < expr  (we extract the RHS as the 'to' value)
-    // parse the full condition expression and store it properly
-    // For simplicity: read identifier, comparator, and to-expr
     std::string condVar = peek().value;
     expect(TokenType::Identifier, "Expected loop var in condition");
-    // skip the comparator token (we assume < for now, store full cond)
     advance(); // < or <=
     auto toExpr = parseExpr();
     expect(TokenType::Semicolon, "Expected ';'");
 
-    // increment: skip (i++, i+=1, i = i + 1 — we auto-increment by 1)
     while (!check(TokenType::RParen) && !check(TokenType::Eof)) advance();
     expect(TokenType::RParen, "Expected ')'");
 
@@ -203,10 +197,8 @@ StmtPtr Parser::parseSpellDecl() {
     std::string name = peek().value;
     expect(TokenType::Identifier, "Expected spell name");
     expect(TokenType::LBrace, "Expected '{'");
-    // look for cast(params) { body }
     SpellDecl decl;
     decl.name = name;
-    // optional: parse cast(...) { ... } inside the braces
     if (check(TokenType::Identifier) && peek().value == "cast") {
         advance();
         expect(TokenType::LParen, "Expected '('");
@@ -235,7 +227,6 @@ ExprPtr Parser::parseExpr()       { return parseAssign(); }
 
 ExprPtr Parser::parseAssign() {
     int line = peek().line;
-    // peek ahead: ident followed by = / += / -= etc?
     if (check(TokenType::Identifier)) {
         int save = _pos;
         std::string name = advance().value;
@@ -254,7 +245,7 @@ ExprPtr Parser::parseAssign() {
             a.value = std::move(val);
             return makeExpr(std::move(a), line);
         }
-        _pos = save; // backtrack
+        _pos = save;
     }
     return parseOr();
 }
@@ -363,7 +354,6 @@ ExprPtr Parser::parsePostfix() {
 }
 
 ExprPtr Parser::parseCall(ExprPtr callee, int line) {
-    // callee must be an ident at this point
     std::string name;
     if (auto* id = std::get_if<IdentExpr>(&callee->node)) name = id->name;
 
@@ -372,7 +362,6 @@ ExprPtr Parser::parseCall(ExprPtr callee, int line) {
     call.callee = name;
 
     while (!check(TokenType::RParen) && !check(TokenType::Eof)) {
-        // named arg: ident: expr
         if (check(TokenType::Identifier) && peek(1).type == TokenType::Colon) {
             std::string argName = advance().value;
             advance(); // :
@@ -389,7 +378,7 @@ ExprPtr Parser::parseCall(ExprPtr callee, int line) {
 
 ExprPtr Parser::parsePrimary() {
     int line = peek().line;
-    auto& t = peek();
+    const Token& t = peek();
 
     if (t.type == TokenType::Number) {
         double v = std::stod(advance().value);
