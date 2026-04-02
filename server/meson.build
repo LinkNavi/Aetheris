@@ -1,7 +1,7 @@
 server_src = files(
   'src/main.cpp',
   'src/chunk_manager.cpp',
-
+  'src/spell_manager.cpp',
 )
 
 executable('server', server_src,
