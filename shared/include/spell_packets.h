@@ -13,11 +13,11 @@ enum class SpellPacketID : uint8_t {
  
 };
 enum class SpellBookPacketID : uint8_t {
-    CompileReq   = 0x50,  // client -> server: compile + save spell
-    CompileAck   = 0x51,  // server -> client: success/fail + metadata
-    LoadoutSet   = 0x52,  // client -> server: set active 5 slots
-    BookSync     = 0x53,  // server -> client: full spellbook on connect
-    DeleteReq    = 0x54,  // client -> server: delete a spell from book
+    CompileReq   = 0x60,  // was 0x50, conflicts with ChatMessage
+    CompileAck   = 0x61,  // was 0x51
+    LoadoutSet   = 0x62,  // was 0x52
+    BookSync     = 0x63,  // was 0x53
+    DeleteReq    = 0x64,  // was 0x54
 };
 // Client -> server: I want to cast this spell
 struct SpellCastReqPacket {
