@@ -832,72 +832,59 @@ GameState MainMenu::drawSettings(ImDrawList *dl, float cx, float cy, int sw,
     cy2 += 22.f;
     drawInputInt(dl, "Auth Server Port", lx, cy2, panW - 60.f,
                  _settings.authPort, 1024, 65535);
-} else if (_settingsTab == 3) {
+  } else if (_settingsTab == 3) {
     drawSectionHeader(dl, font, "KEYBINDS", lx, cy2, panW - 60.f);
     cy2 += 22.f;
 
-    // scrollable region
-    float scrollH = panH - (cy2 - panY) - 60.f;  // leave room for back button
+    float scrollH = panH - (cy2 - panY) - 60.f;
     ImGui::SetCursorScreenPos({lx, cy2});
     ImGui::BeginChild("##keybinds_scroll", {panW - 60.f, scrollH}, false,
                       ImGuiWindowFlags_NoBackground);
 
-    ImDrawList* sdl = ImGui::GetWindowDrawList();
-    float sy = ImGui::GetCursorScreenPos().y;
-    float sx = ImGui::GetCursorScreenPos().x;
-
     for (int i = 0; i < (int)Action::COUNT; i++) {
-        Action a = (Action)i;
-        int key = _keybinds.get(a);
+      Action a = (Action)i;
+      int key = _keybinds.get(a);
+      bool isRebinding = (_rebindingAction == i);
 
-        sdl->AddText(font, 14.f, {sx, sy + 2}, COL_WHITE_DIM, ACTION_NAMES[i]);
+      // Label
+      ImGui::TextColored({0.7f, 0.7f, 0.7f, 1.f}, "%s", ACTION_NAMES[i]);
+      ImGui::SameLine(160.f);
 
-        float bx = sx + 160.f;
-        bool isRebinding = (_rebindingAction == i);
-        ImU32 btnCol = isRebinding ? IM_COL32(60,120,60,220) : IM_COL32(12,18,26,220);
-        sdl->AddRectFilled({bx, sy}, {bx+120.f, sy+20.f}, btnCol, 2.f);
-        sdl->AddRect({bx, sy}, {bx+120.f, sy+20.f}, colAlpha(COL_PANEL_EDGE, 0.7f), 2.f, 0, 1.f);
+      // Key button
+      ImU32 btnCol =
+          isRebinding ? IM_COL32(60, 120, 60, 220) : IM_COL32(12, 18, 26, 220);
+      ImGui::PushStyleColor(ImGuiCol_Button,
+                            ImGui::ColorConvertU32ToFloat4(btnCol));
+      ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.2f, 0.3f, 0.5f, 1.f});
 
-        const char* keyName = isRebinding ? "Press a key..." : glfwGetKeyName(key, 0);
-        if (!keyName) keyName = "Unknown";
-        sdl->AddText(font, 13.f, {bx+4.f, sy+3.f}, COL_WHITE, keyName);
+      const char *keyName =
+          isRebinding ? "Press a key..." : glfwGetKeyName(key, 0);
+      if (!keyName)
+        keyName = "???";
 
-        ImGui::SetCursorScreenPos({bx, sy});
-        ImGui::PushID(i);
-        if (ImGui::InvisibleButton("##kb", {120.f, 20.f}))
-            _rebindingAction = i;
-        ImGui::PopID();
+      char btnLabel[64];
+      snprintf(btnLabel, sizeof(btnLabel), "%-16s##kb%d", keyName, i);
 
-        ImGui::SetCursorScreenPos({sx, sy + 26.f});
-        sy += 26.f;
+      if (ImGui::Button(btnLabel, {120.f, 0.f}))
+        _rebindingAction = i;
+
+      ImGui::PopStyleColor(2);
     }
 
     ImGui::EndChild();
+  }
 
-    if (_rebindingAction >= 0 && _lastInput) {
-        int k = _lastInput->lastKeyPressed();
-        if (k != GLFW_KEY_UNKNOWN && k != GLFW_KEY_ESCAPE) {
-            _keybinds.set((Action)_rebindingAction, k);
-            _rebindingAction = -1;
-            _keybinds.save();
-        } else if (k == GLFW_KEY_ESCAPE) {
-            _rebindingAction = -1;
-        }
-    }
-}
-
-    // capture next keypress if rebinding
-   if (_rebindingAction >= 0 && _lastInput) {
+  // capture next keypress if rebinding
+  if (_rebindingAction >= 0 && _lastInput) {
     int k = _lastInput->lastKeyPressed();
     if (k != GLFW_KEY_UNKNOWN && k != GLFW_KEY_ESCAPE) {
-        _keybinds.set((Action)_rebindingAction, k);
-        _rebindingAction = -1;
-        _keybinds.save();
+      _keybinds.set((Action)_rebindingAction, k);
+      _rebindingAction = -1;
+      _keybinds.save();
     } else if (k == GLFW_KEY_ESCAPE) {
-        _rebindingAction = -1;
+      _rebindingAction = -1;
     }
-}
-
+  }
 
   float bbY = panY + panH - 54.f;
   bool hBack = false, hApply = false;
@@ -1008,11 +995,13 @@ GameState MainMenu::drawConnecting(ImDrawList *dl, float cx, float cy, int sw,
 
 // ── Main draw
 // ─────────────────────────────────────────────────────────────────
-GameState MainMenu::draw(float dt, int screenW, int screenH, const Input* input) {
+GameState MainMenu::draw(float dt, int screenW, int screenH,
+                         const Input *input) {
   _time += dt;
   _panelSlide += ((0.f) - _panelSlide) * std::min(8.f * dt, 1.f);
   tickParticles(dt, screenW, screenH);
-if (input) _lastInput = input;
+  if (input)
+    _lastInput = input;
   ImDrawList *bgDl = ImGui::GetBackgroundDrawList();
   drawBackground(bgDl, _time, screenW, screenH);
   drawParticles(bgDl, screenW, screenH);
