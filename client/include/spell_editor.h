@@ -1,6 +1,7 @@
 #pragma once
 #include "aether_lexer.h"
 #include "inventory.h"
+#include "log.h"
 #include "net_common.h"
 #include "spell_packets.h"
 #include <array>
@@ -238,7 +239,7 @@ private:
       // Insert template
       const char *tmpl = "// mana: 20\n"
                          "// cast_time: 0.5\n\n"
-                         "fn my_spell() {\n"
+                         "spell my_spell() {\n"
                          "    aoe_damage(radius: 3.0, damage: 0.5);\n"
                          "}\n";
       strncpy(_editorBuf, tmpl, sizeof(_editorBuf) - 1);
@@ -670,11 +671,16 @@ ImGui::PushStyleColor(ImGuiCol_Text, {0.85f, 0.85f, 0.85f, 1.f});
   // ── Network ───────────────────────────────────────────────────────────────
   void sendCompile(ENetPeer *server) {
     _compiling = true;
+    Log::info("attempting to send comile req");
     _lastError.clear();
 
     SpellCompileReqPacket pkt;
     pkt.spellName = _nameBuf;
     pkt.source = _editorBuf;
+
+	  Log::info("req info:");
+	  Log::info(pkt.spellName);
+	  Log::info(pkt.source);
     Net::sendReliable(server, pkt.serialize());
   }
 

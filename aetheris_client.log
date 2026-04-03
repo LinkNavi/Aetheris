@@ -1,0 +1,18 @@
+[11:21:46][INFO] Client starting
+[11:21:46][INFO] Vulkan 1.2 detected
+[11:21:46][INFO] Shaders loaded
+[11:21:46][INFO] Vulkan initialised
+[11:21:46][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[11:21:46][INFO] ViewModelRenderer initialised
+[11:21:46][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[11:21:46][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
+[11:21:46][INFO] Registered item view model: id=6 meshIdx=1
+[11:21:46][INFO] Player model: 4364 verts, h=4.870493
+[11:21:46][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
+[11:21:46][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
+[11:21:46][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
+[11:21:46][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
+[11:21:46][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
+[11:21:46][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
+[11:21:50][INFO] Connected to 127.0.0.1
+[11:22:41][INFO] Client shutdown
