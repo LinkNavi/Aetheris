@@ -1,31 +1,19 @@
-[11:38:25][INFO] Client starting
-[11:38:25][INFO] Vulkan 1.2 detected
-[11:38:26][INFO] Shaders loaded
-[11:38:26][INFO] Vulkan initialised
-[11:38:26][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
-[11:38:26][INFO] ViewModelRenderer initialised
-[11:38:26][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
-[11:38:26][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
-[11:38:26][INFO] Registered item view model: id=6 meshIdx=1
-[11:38:26][INFO] Player model: 4364 verts, h=4.870493
-[11:38:26][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
-[11:38:26][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
-[11:38:26][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
-[11:38:26][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
-[11:38:26][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
-[11:38:26][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
-[11:38:28][INFO] Connected to 127.0.0.1
-[11:38:46][ERR ] Caught SIGABRT — flushing log
-[11:38:46][ERR ] ./build/client/client(+0x960c8) [0x5641b5a4f0c8]
-[11:38:46][ERR ] /usr/lib/libc.so.6(+0x3e2d0) [0x7fead732f2d0]
-[11:38:46][ERR ] /usr/lib/libc.so.6(+0x98a2c) [0x7fead7389a2c]
-[11:38:46][ERR ] /usr/lib/libc.so.6(gsignal+0x20) [0x7fead732f1a0]
-[11:38:46][ERR ] /usr/lib/libc.so.6(abort+0x26) [0x7fead73165fe]
-[11:38:46][ERR ] /usr/lib/libc.so.6(+0x26697) [0x7fead7317697]
-[11:38:46][ERR ] /usr/lib/libc.so.6(__assert_fail+0xc2) [0x7fead73270b2]
-[11:38:46][ERR ] ./build/client/client(+0x294b8) [0x5641b59e24b8]
-[11:38:46][ERR ] ./build/client/client(+0x5704d) [0x5641b5a1004d]
-[11:38:46][ERR ] ./build/client/client(+0x319de) [0x5641b59ea9de]
-[11:38:46][ERR ] /usr/lib/libc.so.6(+0x276c1) [0x7fead73186c1]
-[11:38:46][ERR ] /usr/lib/libc.so.6(__libc_start_main+0x89) [0x7fead73187f9]
-[11:38:46][ERR ] ./build/client/client(+0x35ae5) [0x5641b59eeae5]
+[10:50:02][INFO] Client starting
+[10:50:02][INFO] Vulkan 1.2 detected
+[10:50:02][INFO] Shaders loaded
+[10:50:02][INFO] Vulkan initialised
+[10:50:02][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[10:50:02][INFO] ViewModelRenderer initialised
+[10:50:02][INFO] Low-end Intel GPU detected — enabling performance mode
+[10:50:02][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[10:50:02][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
+[10:50:02][INFO] Registered item view model: id=6 meshIdx=1
+[10:50:02][INFO] Player model: 4364 verts, h=4.870493
+[10:50:02][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
+[10:50:02][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
+[10:50:02][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
+[10:50:02][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
+[10:50:02][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
+[10:50:02][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
+[10:50:15][INFO] Connected to 127.0.0.1
+[10:51:32][INFO] Client shutdown

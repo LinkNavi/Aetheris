@@ -1,4 +1,5 @@
 #include "spell_manager.h"
+#include "aether_ast.h"
 #include <algorithm>
 #include <fstream>
 #include <sstream>
@@ -91,10 +92,25 @@ bool SpellManager::loadSpellSource(const std::string &name,
     }
   }
 
+  // Detect runes by scanning the compiled AST for a RuneDecl
+  for (auto& s : def.script.prog.stmts) {
+    if (auto* rd = std::get_if<Aether::RuneDecl>(&s->node)) {
+      def.isRune  = true;
+      def.trigger = rd->trigger;
+      break;
+    }
+  }
+
   _spells[name] = std::move(def);
-  Log::info("Loaded spell: " + name +
-            " (mana=" + std::to_string((int)_spells[name].baseMana) +
-            " cast_time=" + std::to_string(_spells[name].baseTime) + "s)");
+  const auto& loaded = _spells[name];
+  if (loaded.isRune) {
+    Log::info("Loaded rune: " + name +
+              " (trigger=" + loaded.trigger + ")");
+  } else {
+    Log::info("Loaded spell: " + name +
+              " (mana=" + std::to_string((int)loaded.baseMana) +
+              " cast_time=" + std::to_string(loaded.baseTime) + "s)");
+  }
   return true;
 }
 
@@ -106,6 +122,27 @@ void SpellManager::registerNative(const std::string &name,
     def.script.vm.registerNative(name, fn);
 }
 
+// ── Rune helpers ─────────────────────────────────────────────────────────────
+
+bool SpellManager::isRune(const std::string& name) const {
+  auto it = _spells.find(name);
+  return it != _spells.end() && it->second.isRune;
+}
+
+Aether::ExecResult SpellManager::triggerRune(const std::string& name,
+                                              const std::string& triggerType,
+                                              std::vector<Aether::Value> args) {
+  SpellDef* def = findSpell(name);
+  if (!def)
+    return Aether::ExecResult::fail("Unknown rune: " + name);
+  if (!def->isRune)
+    return Aether::ExecResult::fail(name + " is a spell, not a rune");
+  if (!def->trigger.empty() && def->trigger != triggerType)
+    return Aether::ExecResult::fail("Rune " + name +
+                                    " does not respond to trigger: " + triggerType);
+  return def->script.call(name, std::move(args));
+}
+
 // ── beginCharge ──────────────────────────────────────────────────────────────
 
 bool SpellManager::beginCharge(ENetPeer *peer, const std::string &spellName,
@@ -115,6 +152,10 @@ bool SpellManager::beginCharge(ENetPeer *peer, const std::string &spellName,
   SpellDef *def = findSpell(spellName);
   if (!def) {
     Log::warn("Unknown spell: " + spellName);
+    return false;
+  }
+  if (def->isRune) {
+    Log::warn("Cannot cast rune as spell: " + spellName);
     return false;
   }
   if (stats.dead || stats.mana < def->baseMana)

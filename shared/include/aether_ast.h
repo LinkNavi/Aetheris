@@ -117,11 +117,18 @@ struct SpellDecl {
     StmtPtr                body;
 };
 
+struct RuneDecl {
+    std::string            name;
+    std::string            trigger;  // e.g. "on_enter", "on_activate"
+    std::vector<std::string> params;
+    StmtPtr                body;
+};
+
 // ── Stmt variant ──────────────────────────────────────────────────────────────
 using StmtVariant = std::variant<
     ExprStmt, LetStmt, ReturnStmt, BreakStmt, ContinueStmt,
     BlockStmt, IfStmt, WhileStmt, ForStmt,
-    FnDecl, SpellDecl
+    FnDecl, SpellDecl, RuneDecl
 >;
 
 struct Stmt {

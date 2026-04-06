@@ -17,10 +17,12 @@ namespace Aether { struct Script; }
 // ── Spell metadata (parsed from spell header fields) ─────────────────────────
 struct SpellDef {
     std::string          name;
-    float                baseMana     = 0.f;  // minimum mana to cast
-    float                baseTime     = 0.2f; // minimum cast time (seconds)
-    float                timeScale    = 1.0f; // how aggressively cast time grows
+    float                baseMana     = 0.f;
+    float                baseTime     = 0.2f;
+    float                timeScale    = 1.0f;
     bool                 requireStaff = false;
+    bool                 isRune       = false; // rune (placed) vs spell (cast)
+    std::string          trigger;              // e.g. "on_enter", "on_activate"
     Aether::Script       script;
 };
 
@@ -132,6 +134,15 @@ SpellMeta getSpellMeta(const std::string& name) const {
     // ── Native function registry ──────────────────────────────────────────────
     // Call this to wire spell primitives into the VM before firing spells
     void registerNative(const std::string& name, Aether::NativeFn fn);
+
+    // ── Rune triggering ───────────────────────────────────────────────────────
+    // Call when a world event matches a rune's trigger type.
+    // Returns the exec result so the caller can apply effects.
+    Aether::ExecResult triggerRune(const std::string& name,
+                                   const std::string& triggerType,
+                                   std::vector<Aether::Value> args = {});
+
+    bool isRune(const std::string& name) const;
 
     // ── State query ───────────────────────────────────────────────────────────
     const CastState* getCastState(ENetPeer* peer) const;

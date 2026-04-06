@@ -225,6 +225,12 @@ private:
   std::vector<HlLine> _hlLines;
   std::vector<int> _errorLines; // 1-based line numbers with errors
 
+  // State captured from InputTextMultiline's internal callback each frame
+  ImVec2 _editorChildPos{};
+  float  _editorScrollY  = 0.f;
+  int    _editorCursorByte = 0;
+  float  _editorChildH   = 0.f;
+
   // ── Spellbook list ────────────────────────────────────────────────────────
   void drawSpellList(CInventory &cinv) {
     ImGui::TextColored({0.6f, 0.4f, 1.f, 1.f}, "SPELLBOOK");
@@ -351,25 +357,23 @@ private:
     float edH = h - (_lastError.empty() && _lastMana <= 0.f ? 60.f : 96.f);
     edH = std::max(edH, 100.f);
 
-   ImGui::PushStyleColor(ImGuiCol_FrameBg, {0.08f, 0.05f, 0.12f, 1.f});
-ImGui::PushStyleColor(ImGuiCol_Text, {0.85f, 0.85f, 0.85f, 1.f});
-    ImVec2 editorPos = ImGui::GetCursorScreenPos();
+    _editorChildH = edH;
 
-    bool changed = ImGui::InputTextMultiline("##code", _editorBuf,
-                                             sizeof(_editorBuf), {-1.f, edH},
-                                             ImGuiInputTextFlags_AllowTabInput);
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, {0.08f, 0.05f, 0.12f, 1.f});
+    // Text is invisible — we draw our own colored text inside the callback
+    // so it shares the internal child window's draw list, scroll, and clip rect.
+    ImGui::PushStyleColor(ImGuiCol_Text, {0.f, 0.f, 0.f, 0.f});
+
+    bool changed = ImGui::InputTextMultiline(
+        "##code", _editorBuf, sizeof(_editorBuf), {-1.f, edH},
+        ImGuiInputTextFlags_AllowTabInput | ImGuiInputTextFlags_CallbackAlways,
+        _editCb, this);
     ImGui::PopStyleColor(2);
 
-   if (changed) {
-    _rebuildHighlight();
-    _rebuildErrorLines();
-}
-
-    // Draw highlighted text on top
-    //drawHighlight(editorPos, w, edH);
-
-    // Error line underlines
-   // drawErrorUnderlines(editorPos, w);
+    if (changed) {
+        _rebuildHighlight();
+        _rebuildErrorLines();
+    }
   }
 
   // ── Options right panel ───────────────────────────────────────────────────
@@ -494,7 +498,109 @@ ImGui::PushStyleColor(ImGuiCol_Text, {0.85f, 0.85f, 0.85f, 1.f});
     }
   }
 
-  // ── Highlight rendering ───────────────────────────────────────────────────
+  // ── InputTextMultiline callback ──────────────────────────────────────────
+  // Fires INSIDE the internal child window every frame, giving us the correct
+  // scroll offset and draw list for rendering colored text and the cursor.
+  static int _editCb(ImGuiInputTextCallbackData* d) {
+    auto* self = static_cast<SpellEditorUI*>(d->UserData);
+    self->_editorChildPos   = ImGui::GetWindowPos();
+    self->_editorScrollY    = ImGui::GetScrollY();
+    self->_editorCursorByte = d->CursorPos;
+    self->_drawOverlay();
+    return 0;
+  }
+
+  void _drawOverlay() {
+    ImDrawList* dl   = ImGui::GetWindowDrawList();
+    ImFont*     font = ImGui::GetFont();
+    float fontSize   = ImGui::GetFontSize();
+    float lineH      = ImGui::GetTextLineHeightWithSpacing();
+    ImVec2 cp        = _editorChildPos;
+    float  sy        = _editorScrollY;
+    float  h         = _editorChildH;
+
+    if (h <= 0.f) return;
+
+    // Pre-build line start pointers into the buffer
+    std::vector<const char*> lineStarts;
+    lineStarts.push_back(_editorBuf);
+    for (const char* p = _editorBuf; *p; p++)
+      if (*p == '\n') lineStarts.push_back(p + 1);
+
+    int firstLine = std::max(0, (int)(sy / lineH));
+    int lastLine  = std::min((int)_hlLines.size() - 1,
+                             firstLine + (int)(h / lineH) + 2);
+
+    ImVec2 clipMin = cp;
+    ImVec2 clipMax = {cp.x + 9999.f, cp.y + h};
+    dl->PushClipRect(clipMin, clipMax, true);
+
+    // ── Colored spans ───────────────────────────────────────────────────────
+    for (int li = firstLine; li <= lastLine && li < (int)_hlLines.size(); li++) {
+      float ly = cp.y - sy + li * lineH;
+      if (li >= (int)lineStarts.size()) break;
+      const char* lp  = lineStarts[li];
+      int         len = 0;
+      while (lp[len] && lp[len] != '\n') len++;
+
+      const HlLine& hl = _hlLines[li];
+
+      if (hl.spans.empty()) {
+        // No tokens — check for comment or render plain
+        const char* s = lp;
+        while (*s == ' ' || *s == '\t') s++;
+        ImU32 col = (s[0] == '/' && s[1] == '/')
+                        ? IM_COL32(100, 140, 100, 255)  // comment green
+                        : IM_COL32(210, 210, 210, 255); // default
+        if (len > 0)
+          dl->AddText(font, fontSize, {cp.x, ly}, col, lp, lp + len);
+      } else {
+        for (const HlSpan& sp : hl.spans) {
+          if (sp.col >= len) continue;
+          int drawLen = std::min(sp.len, len - sp.col);
+          if (drawLen <= 0) continue;
+          // Accurate pixel x via font measurement of prefix
+          float px = cp.x + font->CalcTextSizeA(
+                                 fontSize, FLT_MAX, 0.f, lp, lp + sp.col).x;
+          dl->AddText(font, fontSize, {px, ly}, sp.color,
+                      lp + sp.col, lp + sp.col + drawLen);
+        }
+      }
+    }
+
+    // ── Error underlines ────────────────────────────────────────────────────
+    for (int errLine : _errorLines) {
+      int   li = errLine - 1;
+      float ly = cp.y - sy + li * lineH + lineH - 3.f;
+      if (ly < cp.y - lineH || ly > cp.y + h) continue;
+      dl->AddLine({cp.x, ly}, {cp.x + 9999.f, ly},
+                  IM_COL32(255, 60, 60, 200), 1.5f);
+    }
+
+    // ── Cursor ──────────────────────────────────────────────────────────────
+    if (ImGui::IsWindowFocused()) {
+      double t = ImGui::GetTime();
+      if (fmod(t, 1.0) < 0.55) { // visible half of blink cycle
+        int line = 0, col = 0;
+        for (int i = 0; i < _editorCursorByte && _editorBuf[i]; i++) {
+          if (_editorBuf[i] == '\n') { line++; col = 0; }
+          else col++;
+        }
+        const char* lp = line < (int)lineStarts.size()
+                             ? lineStarts[line] : _editorBuf;
+        float px = cp.x + font->CalcTextSizeA(
+                               fontSize, FLT_MAX, 0.f, lp, lp + col).x;
+        float py = cp.y - sy + line * lineH;
+        if (py >= cp.y - lineH && py < cp.y + h)
+          dl->AddLine({px, py + 1.f}, {px, py + fontSize},
+                      IM_COL32(220, 220, 220, 220), 1.5f);
+      }
+    }
+
+    dl->PopClipRect();
+  }
+
+  // ── Highlight rebuild ─────────────────────────────────────────────────────
   void _rebuildHighlight() {
     _hlLines.clear();
     std::string src(_editorBuf);
@@ -567,104 +673,6 @@ ImGui::PushStyleColor(ImGuiCol_Text, {0.85f, 0.85f, 0.85f, 1.f});
         lineNo = lineNo * 10 + (e[p++] - '0');
       if (lineNo > 0)
         _errorLines.push_back(lineNo);
-    }
-  }
-
-  void drawHighlight(ImVec2 editorPos, float w, float h) {
-    if (_hlLines.empty())
-      return;
-
-    ImDrawList *dl = ImGui::GetWindowDrawList();
-    ImFont *font = ImGui::GetFont();
-    float fontSize = ImGui::GetFontSize();
-    float lineH = ImGui::GetTextLineHeightWithSpacing();
-
-    float scrollY = ImGui::GetScrollY();
-
-    float startY = editorPos.y - scrollY;
-    // Find visible line range
-    int firstLine = std::max(0, (int)(scrollY / lineH));
-    int lastLine =
-        std::min((int)_hlLines.size() - 1, firstLine + (int)(h / lineH) + 2);
-
-    // Clip rect
-    dl->PushClipRect(editorPos, {editorPos.x + w, editorPos.y + h}, true);
-
-    for (int li = firstLine; li <= lastLine; li++) {
-      float ly = startY + li * lineH;
-      if (ly > editorPos.y + h)
-        break;
-
-      const HlLine &hl = _hlLines[li];
-      // Get the raw line text to measure prefix widths
-      // We render each span at its column offset
-      for (const HlSpan &sp : hl.spans) {
-        // Measure pixel offset of span.col characters
-        // Use monospace assumption: each char = fontSize * 0.6
-        float charW = font->CalcTextSizeA(fontSize, FLT_MAX, 0.f, "M").x;
-        float px = editorPos.x + sp.col * charW + 4.f;
-
-        // Extract the actual substring
-        // Find line in _editorBuf
-        const char *buf = _editorBuf;
-        int lineStart = 0;
-        for (int row = 0; row < li && *buf; buf++) {
-          if (*buf == '\n') {
-            row++;
-            lineStart = (int)(buf - _editorBuf + 1);
-          }
-        }
-        // buf now points to start of line li
-        const char *linePtr = _editorBuf + lineStart;
-        int lineLen = 0;
-        while (linePtr[lineLen] && linePtr[lineLen] != '\n')
-          lineLen++;
-
-        if (sp.col >= lineLen)
-          continue;
-        int drawLen = std::min(sp.len, lineLen - sp.col);
-        if (drawLen <= 0)
-          continue;
-
-        dl->AddText(font, fontSize, {px, ly}, sp.color, linePtr + sp.col,
-                    linePtr + sp.col + drawLen);
-      }
-
-      // If no spans on this line, draw plain text
-      if (hl.spans.empty()) {
-        const char *buf = _editorBuf;
-        int lineStart = 0;
-        for (int row = 0; row < li && *buf; buf++) {
-          if (*buf == '\n') {
-            row++;
-            lineStart = (int)(buf - _editorBuf + 1);
-          }
-        }
-        const char *linePtr = _editorBuf + lineStart;
-        int lineLen = 0;
-        while (linePtr[lineLen] && linePtr[lineLen] != '\n')
-          lineLen++;
-        if (lineLen > 0)
-          dl->AddText(font, fontSize, {editorPos.x + 4.f, ly},
-                      IM_COL32(210, 210, 210, 255), linePtr, linePtr + lineLen);
-      }
-    }
-    dl->PopClipRect();
-  }
-
-  void drawErrorUnderlines(ImVec2 editorPos, float w) {
-    if (_errorLines.empty())
-      return;
-    ImDrawList *dl = ImGui::GetWindowDrawList();
-    float lineH = ImGui::GetTextLineHeightWithSpacing();
-
-    float scrollY = ImGui::GetScrollY();
-
-    for (int errLine : _errorLines) {
-      int li = errLine - 1; // 0-based
-      float ly = editorPos.y - scrollY + li * lineH + lineH - 3.f;
-      dl->AddLine({editorPos.x + 4.f, ly}, {editorPos.x + w - 4.f, ly},
-                  IM_COL32(255, 60, 60, 200), 1.5f);
     }
   }
 

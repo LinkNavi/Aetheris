@@ -73,6 +73,7 @@ StmtPtr Parser::parseStmt() {
     if (check(TokenType::KwReturn)) return parseReturn();
     if (check(TokenType::KwFn))     return parseFnDecl();
     if (check(TokenType::KwSpell))  return parseSpellDecl();
+    if (check(TokenType::KwRune))   return parseRuneDecl();
     if (check(TokenType::LBrace))   return parseBlock();
     if (match(TokenType::KwBreak))    { match(TokenType::Semicolon); return makeStmt(BreakStmt{}, line); }
     if (match(TokenType::KwContinue)) { match(TokenType::Semicolon); return makeStmt(ContinueStmt{}, line); }
@@ -196,10 +197,54 @@ StmtPtr Parser::parseSpellDecl() {
     advance(); // spell
     std::string name = peek().value;
     expect(TokenType::Identifier, "Expected spell name");
-    expect(TokenType::LBrace, "Expected '{'");
     SpellDecl decl;
     decl.name = name;
-    if (check(TokenType::Identifier) && peek().value == "cast") {
+    if (check(TokenType::LParen)) {
+        // Function-style: spell name(params) { body }
+        advance(); // (
+        while (!check(TokenType::RParen) && !check(TokenType::Eof)) {
+            decl.params.push_back(peek().value);
+            expect(TokenType::Identifier, "Expected param name");
+            match(TokenType::Comma);
+        }
+        expect(TokenType::RParen, "Expected ')'");
+        decl.body = parseBlock();
+    } else {
+        // Block-style: spell name { cast(params) { body } }
+        expect(TokenType::LBrace, "Expected '{'");
+        if (check(TokenType::Identifier) && peek().value == "cast") {
+            advance();
+            expect(TokenType::LParen, "Expected '('");
+            while (!check(TokenType::RParen) && !check(TokenType::Eof)) {
+                decl.params.push_back(peek().value);
+                expect(TokenType::Identifier, "Expected param name");
+                match(TokenType::Comma);
+            }
+            expect(TokenType::RParen, "Expected ')'");
+            decl.body = parseBlock();
+        }
+        expect(TokenType::RBrace, "Expected '}'");
+    }
+    return makeStmt(std::move(decl), line);
+}
+
+StmtPtr Parser::parseRuneDecl() {
+    int line = peek().line;
+    advance(); // rune
+    std::string name = peek().value;
+    expect(TokenType::Identifier, "Expected rune name");
+    expect(TokenType::LBrace, "Expected '{'");
+    RuneDecl decl;
+    decl.name = name;
+    // trigger: <identifier>
+    if (check(TokenType::Identifier) && peek().value == "trigger") {
+        advance();
+        expect(TokenType::Colon, "Expected ':' after trigger");
+        decl.trigger = peek().value;
+        expect(TokenType::Identifier, "Expected trigger name");
+    }
+    // on_trigger(params) { body }
+    if (check(TokenType::Identifier) && peek().value == "on_trigger") {
         advance();
         expect(TokenType::LParen, "Expected '('");
         while (!check(TokenType::RParen) && !check(TokenType::Eof)) {

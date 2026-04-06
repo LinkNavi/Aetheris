@@ -36,6 +36,7 @@ private:
     StmtPtr parseReturn();
     StmtPtr parseFnDecl();
     StmtPtr parseSpellDecl();
+    StmtPtr parseRuneDecl();
     StmtPtr parseExprStmt();
 
     // ── Expressions ───────────────────────────────────────────────────────

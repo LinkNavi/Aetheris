@@ -166,6 +166,14 @@ void Interpreter::loadDecls(std::shared_ptr<Env> env) {
             sf.closure = env;
             _fns[sp->name] = std::move(sf);
         }
+        if (auto* rn = std::get_if<RuneDecl>(&s->node)) {
+            ScriptFn sf;
+            sf.name    = rn->name;
+            sf.params  = rn->params;
+            sf.body    = rn->body.get();
+            sf.closure = env;
+            _fns[rn->name] = std::move(sf);
+        }
     }
 }
 
@@ -323,6 +331,14 @@ void Interpreter::execStmt(const Stmt& s, std::shared_ptr<Env> env) {
             _fns[node.name] = std::move(sf);
 
         } else if constexpr (std::is_same_v<T, SpellDecl>) {
+            ScriptFn sf;
+            sf.name    = node.name;
+            sf.params  = node.params;
+            sf.body    = node.body.get();
+            sf.closure = env;
+            _fns[node.name] = std::move(sf);
+
+        } else if constexpr (std::is_same_v<T, RuneDecl>) {
             ScriptFn sf;
             sf.name    = node.name;
             sf.params  = node.params;
