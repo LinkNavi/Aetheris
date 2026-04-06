@@ -141,25 +141,18 @@ int main(int argc, char **argv) {
         return Aether::Value::null();
       });
 
-  spellMgr.registerNative(
-      "projectile",
-      [&]([[maybe_unused]] Aether::NativeArgs args,
-          Aether::NativeNamedArgs named) -> Aether::Value {
-        float fraction =
-            named.count("damage") ? (float)named["damage"].asNumber() : 1.f;
-        fraction = std::clamp(fraction, 0.f, 1.f);
-
-        float *budget = spellMgr.getFiringBudget();
-        if (!budget || *budget <= 0.f)
-          return Aether::Value::null();
-
-        float damage = *budget * fraction;
-        *budget -= damage;
-
-        Log::info("projectile: damage=" + std::to_string(damage) +
-                  " budget left: " + std::to_string(*budget));
-        return Aether::Value::null();
-      });
+  spellMgr.registerNative("projectile",
+    [&](Aether::NativeArgs args, Aether::NativeNamedArgs named) -> Aether::Value {
+        float damage  = named.count("damage")  ? (float)named["damage"].asNumber()  : 1.f;
+        float radius  = named.count("radius")  ? (float)named["radius"].asNumber()  : 1.f;
+        SpellElement el = SpellElement::None;
+        if (named.count("element")) {
+            // parse string like "fire"
+            std::string es = named["element"].asString();
+            // map string to enum
+        }
+        // spawn projectile packet with element
+    });
 
   spellMgr.registerNative(
       "get_aim",

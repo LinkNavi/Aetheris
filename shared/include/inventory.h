@@ -73,6 +73,8 @@ struct Inventory {
   std::array<SpellEntry, SPELL_BOOK_SIZE> spellBook{};
   std::array<int, SPELL_SLOTS> activeSpells{-1, -1, -1, -1, -1};
 
+
+
   // helpers
   SpellEntry *getActiveSpell(int slot) {
     if (slot < 0 || slot >= SPELL_SLOTS)
@@ -178,7 +180,8 @@ struct CInventory {
   Inventory inv;
   bool open = false;
   HotbarMode hotbarMode = HotbarMode::Combat;
-  int hotbarActive = 0; // [0..HOTBAR_SIZE-1] within current mode
+  int hotbarActive = 0;
+  int activeSpellSlot = 0; // [0..SPELL_SLOTS-1]
 };
 
 struct CChest {

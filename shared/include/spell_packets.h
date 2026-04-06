@@ -1,7 +1,7 @@
 #pragma once
 #include "packets.h"
 #include <string>
-
+#include "spell_element.h"
 enum class SpellPacketID : uint8_t {
   SpellCastReq = 0x40,    // client -> server
   SpellCastAck = 0x41,    // server -> client: cast accepted + effects
@@ -177,13 +177,15 @@ struct RuneStateUpdatePacket {
   }
 };
 
-// Server -> all nearby clients: a projectile is in flight
 struct ProjectileSpawnPacket {
   uint32_t projectileId;
   float originX, originY, originZ;
   float dirX, dirY, dirZ;
   float speed;
-  std::string spellName; // so client knows which visual to use
+  SpellElement element;
+  float radius;
+  float lifetime;
+  std::string spellName;
 
   std::vector<uint8_t> serialize() const {
     std::vector<uint8_t> b;
@@ -196,10 +198,14 @@ struct ProjectileSpawnPacket {
     writeF32(b, dirY);
     writeF32(b, dirZ);
     writeF32(b, speed);
+    writeU8(b, (uint8_t)element);
+    writeF32(b, radius);
+    writeF32(b, lifetime);
     writeU32(b, (uint32_t)spellName.size());
     b.insert(b.end(), spellName.begin(), spellName.end());
     return b;
   }
+
   static ProjectileSpawnPacket deserialize(const uint8_t *d, size_t) {
     ProjectileSpawnPacket p;
     size_t o = 1;
@@ -211,6 +217,9 @@ struct ProjectileSpawnPacket {
     p.dirY = readF32(d, o);
     p.dirZ = readF32(d, o);
     p.speed = readF32(d, o);
+    p.element = (SpellElement)readU8(d, o);
+    p.radius = readF32(d, o);
+    p.lifetime = readF32(d, o);
     uint32_t len = readU32(d, o);
     p.spellName.assign((const char *)d + o, len);
     return p;

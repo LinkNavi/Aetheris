@@ -22,6 +22,7 @@
 #include "packets.h"
 #include "player.h"
 #include "player_stats.h"
+#include "projectile_manager.h"
 #include "remote_players.h"
 #include "spell_charge_packets.h"
 #include "spell_charge_ui.h"
@@ -39,6 +40,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
+#include <sys/types.h>
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -72,6 +74,7 @@ int main(int /*argc*/, char **argv) {
   RemotePlayerRenderer remotePlayers;
   ChatUI chat;
   SpellEditorUI spellEditor;
+  ProjectileManager projMgr;
   float appTime = 0.f;
 
   ViewModelRenderer viewModel;
@@ -357,6 +360,10 @@ int main(int /*argc*/, char **argv) {
           } else if (pid == (uint8_t)SpellBookPacketID::CompileAck) {
             spellEditor.onCompileAck(
                 cinv, SpellCompileAckPacket::deserialize(d, len));
+          } else if (pid == (uint8_t)SpellPacketID::ProjectileSpawn) {
+            projMgr.spawn(ProjectileSpawnPacket::deserialize(d, len));
+          } else if (pid == (uint8_t)SpellPacketID::ProjectileHit) {
+            projMgr.onHit(ProjectileHitPacket::deserialize(d, len));
           }
         }
         enet_packet_destroy(ev.packet);
@@ -399,7 +406,9 @@ int main(int /*argc*/, char **argv) {
           break;
         }
       invUI.handleInput(cinv, tabPressed, numKey);
-
+      if (kb.isDown(Action::CycleSpell, input)) {
+        cinv.activeSpellSlot = (cinv.activeSpellSlot + 1) % SPELL_SLOTS;
+      }
       // Spell editor toggle — requires grimoire
       if (kb.isDown(Action::SpellEditor, input)) {
         const ItemStack &offhand = cinv.inv.offhandSlot();
@@ -466,27 +475,23 @@ int main(int /*argc*/, char **argv) {
     spellUI.localMana = clientStats.mana;
     spellUI.maxMana = clientStats.manaMax;
     spellUI.update(dt);
-
+    projMgr.update(dt);
     if (canCast) {
-      int activeSpellSlot = -1, heldSpellSlot = -1;
-      for (int slot = 0; slot < SPELL_SLOTS; slot++) {
-        Action a = (Action)((int)Action::SpellSlot1 + slot);
-        if (kb.isDown(a, input) && activeSpellSlot < 0)
-          activeSpellSlot = slot;
-        if (kb.isHeld(a, input) && heldSpellSlot < 0)
-          heldSpellSlot = slot;
-      }
+      if (kb.isDown(Action::CycleSpell, input))
+        cinv.activeSpellSlot = (cinv.activeSpellSlot + 1) % SPELL_SLOTS;
 
-      bool spellReleased = (heldSpellSlot < 0 && spellUI.phase == 1);
+      bool castDown =
+          kb.isDown(Action::CastSpell, input); // or whatever cast key
+      bool castHeld = kb.isHeld(Action::CastSpell, input);
+      bool spellReleased = (!castHeld && spellUI.phase == 1);
 
-      if (activeSpellSlot >= 0 && spellUI.phase == 0) {
-        SpellEntry *spell = cinv.inv.getActiveSpell(activeSpellSlot);
-        std::string spellName =
-            (spell && !spell->empty()) ? spell->name : "fireball";
-        glm::vec3 aimPos = camera.position + camera.forward() * 20.f;
-        spellUI.onKeyDown(
-            kb.get((Action)((int)Action::SpellSlot1 + activeSpellSlot)),
-            spellName, aimPos.x, aimPos.y, aimPos.z, server);
+      if (castDown && spellUI.phase == 0) {
+        SpellEntry *spell = cinv.inv.getActiveSpell(cinv.activeSpellSlot);
+        std::string spellName = (spell && !spell->empty()) ? spell->name : "";
+        if (!spellName.empty()) {
+          glm::vec3 aimPos = camera.position + camera.forward() * 20.f;
+          spellUI.onKeyDown(0, spellName, aimPos.x, aimPos.y, aimPos.z, server);
+        }
       }
       if (spellReleased)
         spellUI.onKeyUp(server);
