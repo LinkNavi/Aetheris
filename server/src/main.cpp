@@ -141,18 +141,63 @@ int main(int argc, char **argv) {
         return Aether::Value::null();
       });
 
-  spellMgr.registerNative("projectile",
-    [&](Aether::NativeArgs args, Aether::NativeNamedArgs named) -> Aether::Value {
-        float damage  = named.count("damage")  ? (float)named["damage"].asNumber()  : 1.f;
-        float radius  = named.count("radius")  ? (float)named["radius"].asNumber()  : 1.f;
+  spellMgr.registerNative(
+      "projectile",
+      [&](Aether::NativeArgs args,
+          Aether::NativeNamedArgs named) -> Aether::Value {
+        float damage =
+            named.count("damage") ? (float)named["damage"].asNumber() : 1.f;
+        float radius =
+            named.count("radius") ? (float)named["radius"].asNumber() : 1.f;
         SpellElement el = SpellElement::None;
-        if (named.count("element")) {
-            // parse string like "fire"
-            std::string es = named["element"].asString();
-            // map string to enum
+        if (named.count("element"))
+          el = elementFromString(named["element"].asString());
+
+        float *budget = spellMgr.getFiringBudget();
+        if (!budget || *budget <= 0.f)
+          return Aether::Value::null();
+        float dmg = *budget * std::clamp(damage, 0.f, 1.f);
+        *budget -= dmg;
+
+        const CastState *cs = spellMgr.getCurrentFiringState();
+        ENetPeer *caster = spellMgr.getCurrentFiringPeer();
+        if (!cs || !caster)
+          return Aether::Value::null();
+
+        auto posIt = positions.find(caster);
+        if (posIt == positions.end())
+          return Aether::Value::null();
+        glm::vec3 casterPos = posIt->second;
+        glm::vec3 targetPos{cs->aimX, cs->aimY, cs->aimZ};
+
+        glm::vec3 dir{0, 0, 1};
+        float dlen = glm::length(targetPos - casterPos);
+        if (dlen > 0.001f)
+          dir = (targetPos - casterPos) / dlen;
+
+        static uint32_t nextProjId = 1;
+        ProjectileSpawnPacket proj;
+        proj.projectileId = nextProjId++;
+        proj.originX = casterPos.x;
+        proj.originY = casterPos.y + 1.5f;
+        proj.originZ = casterPos.z;
+        proj.dirX = dir.x;
+        proj.dirY = dir.y;
+        proj.dirZ = dir.z;
+        proj.speed = 20.f;
+        proj.radius = radius;
+        proj.lifetime = 5.f;
+        proj.element = el;
+        proj.spellName = cs->spellName;
+
+        auto projBytes = proj.serialize();
+        for (auto &[p, pos] : positions) {
+          if (glm::length(pos - casterPos) > 200.f)
+            continue;
+          Net::sendReliable(p, projBytes);
         }
-        // spawn projectile packet with element
-    });
+        return Aether::Value::null();
+      });
 
   spellMgr.registerNative(
       "get_aim",
@@ -409,7 +454,7 @@ int main(int argc, char **argv) {
 
           // ── Spell compile ──────────────────────────────────────────
         } else if (pid == (uint8_t)SpellBookPacketID::CompileReq) {
-		Log::info("got compile req");
+          Log::info("got compile req");
           auto pkt = SpellCompileReqPacket::deserialize(d, len);
           SpellCompileAckPacket ack;
           ack.spellName = pkt.spellName;
@@ -419,13 +464,12 @@ int main(int argc, char **argv) {
           if (ok) {
             auto meta = spellMgr.getSpellMeta(pkt.spellName);
 
-
-	  Log::info("appearantly the spell is ok");
+            Log::info("appearantly the spell is ok");
             ack.baseMana = meta.baseMana;
             ack.castTime = meta.castTime;
           } else {
 
-	  Log::err("appearantly the spell is not ok");
+            Log::err("appearantly the spell is not ok");
             ack.error =
                 "Compile failed"; // TODO: expose lastError from SpellManager
           }
@@ -499,19 +543,16 @@ int main(int argc, char **argv) {
       glm::vec3 casterPos = posIt->second;
       glm::vec3 targetPos{fe.aimX, fe.aimY, fe.aimZ};
 
-      Log::info("Spell fired: " + fe.spellName +
-                " potency=" + std::to_string(fe.potency) +
-                " mana=" + std::to_string(fe.manaSpent));
+      glm::vec3 dir{0, 0, 1};
+      float dlen = glm::length(targetPos - casterPos);
+      if (dlen > 0.001f)
+        dir = (targetPos - casterPos) / dlen;
 
       SpellCastAckPacket ack;
       ack.spellName = fe.spellName;
       ack.originX = casterPos.x;
       ack.originY = casterPos.y;
       ack.originZ = casterPos.z;
-      glm::vec3 dir{0, 0, 1};
-      float dlen = glm::length(targetPos - casterPos);
-      if (dlen > 0.001f)
-        dir = (targetPos - casterPos) / dlen;
       ack.dirX = dir.x;
       ack.dirY = dir.y;
       ack.dirZ = dir.z;
@@ -521,6 +562,8 @@ int main(int argc, char **argv) {
       SpellCastStatePacket statePkt{0, 0, 0, 0, 0};
       Net::sendReliable(fe.peer, statePkt.serialize());
     }
+    enet_host_flush(host.get());
+    enet_host_flush(host.get());
 
     spellStateAccum += dt;
     if (spellStateAccum >= 0.1f) {

@@ -1211,8 +1211,10 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
              int renderDistXZ, glm::vec3 camPos,
              const ViewModelRenderer *viewModel, const glm::mat4 &proj,
              const RemotePlayerRenderer *remotePlayers,
-             const DayNight *dayNight) {
-
+             const DayNight *dayNight, const ProjectileRenderer *projRenderer,
+             const ProjectileManager *projMgr) {
+  if (ctx.commandBuffers.empty() || ctx.inFlight.empty()) return;
+    if (!ctx.mega.vertexBuffer || !ctx.mega.indexBuffer) return;
   flushUploads(ctx);
 
   ctx.lastCamPos = camPos;
@@ -1222,8 +1224,11 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
   vkResetFences(ctx.device.device, 1, &ctx.inFlight[frame]);
 
   uint32_t imageIndex;
-  vkAcquireNextImageKHR(ctx.device.device, ctx.swapchain.swapchain, UINT64_MAX,
-                        ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
+ VkResult acquireResult = vkAcquireNextImageKHR(ctx.device.device, 
+    ctx.swapchain.swapchain, UINT64_MAX,
+    ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
+if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+    return;
 
   // ── Frustum planes ────────────────────────────────────────────────────────
   struct Plane {
@@ -1350,13 +1355,14 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
     viewModel->draw(cmd, proj, ctx.swapchain.extent);
   if (remotePlayers)
     remotePlayers->draw(cmd, viewProj);
- if (trees) {
-    float fogEnd   = (renderDistXZ * 2 - 1) * (float)ChunkData::SIZE * 0.85f;
+  if (trees) {
+    float fogEnd = (renderDistXZ * 2 - 1) * (float)ChunkData::SIZE * 0.85f;
     float fogStart = fogEnd * 0.70f;
-    trees->draw(cmd, viewProj, ctx.swapchain.extent,
-                camPos, sd, sunIntensity, fogStart, fogEnd);
-}
-
+    trees->draw(cmd, viewProj, ctx.swapchain.extent, camPos, sd, sunIntensity,
+                fogStart, fogEnd);
+  }
+  if (projRenderer)
+   projRenderer->draw(cmd, ctx.swapchain.extent, viewProj, camPos, *projMgr, *dayNight);
   vkCmdEndRenderPass(cmd);
 
   // ── Pass 2: godray post-process + ImGui → swapchain ───────────────────────

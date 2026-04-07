@@ -10,6 +10,7 @@
 #include "chunk.h"
 #include "tree_renderer.h"
 #include "sky_godray.h"
+#include "projectile_renderer.h"
 
 struct ViewModelRenderer;
 class RemotePlayerRenderer;
@@ -156,13 +157,16 @@ void vk_load_atlas(VkContext& ctx, const char* path);
 VkContext vk_init(GLFWwindow* window);
 void      vk_destroy(VkContext& ctx);
 void vk_resize(VkContext& ctx, GLFWwindow* window);
-void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const glm::mat4& view,const TreeRenderer* trees,
+void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const glm::mat4& view,
+             const TreeRenderer* trees,
              float sunIntensity, glm::vec3 skyColor,
              int renderDistXZ, glm::vec3 camPos,
              const ViewModelRenderer* viewModel,
              const glm::mat4& proj,
              const RemotePlayerRenderer* remotePlayers,
-             const DayNight* dayNight = nullptr);
+             const DayNight* dayNight,
+             const ProjectileRenderer* projRenderer,  // add
+             const ProjectileManager* projMgr);       // add
 
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
 void      vk_remove_chunk(VkContext& ctx, ChunkCoord coord);

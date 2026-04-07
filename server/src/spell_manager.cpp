@@ -85,6 +85,12 @@ bool SpellManager::loadSpellSource(const std::string &name,
     parseFloat("mana:", def.baseMana);
     parseFloat("cast_time:", def.baseTime);
     parseFloat("time_scale:", def.timeScale);
+if (l.rfind("element:", 0) == 0) {
+    std::string val = l.substr(8);
+    val.erase(0, val.find_first_not_of(" \t"));
+    val = val.substr(0, val.find_first_of(" \t\r\n"));
+    def.element = elementFromString(val);
+}
     if (l.rfind("requires_staff:", 0) == 0) {
       std::string val = l.substr(15);
       val.erase(0, val.find_first_not_of(" \t"));
@@ -303,6 +309,7 @@ if (def && def->script.hasFn(cs.spellName)) {
     def->script.call(cs.spellName, {});
 }
 
+ev.element   = def ? def->element : SpellElement::None; // add
 _isFiring    = false;
 _firingState = nullptr;
 _firingPeer  = nullptr;

@@ -26,6 +26,8 @@ foreach s : [
   ['sky_frag',         'shaders/sky.frag'],
   ['godray_vert',      'shaders/godray.vert'],
   ['godray_frag',      'shaders/godray.frag'],
+['projectile_vert', 'shaders/projectile.vert'],
+['projectile_frag', 'shaders/projectile.frag'],
 ]
   custom_target(s[0] + '_spv',
     input: s[1], output: s[0] + '.spv',
