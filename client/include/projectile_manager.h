@@ -6,20 +6,21 @@
 #include <vector>
 
 struct ClientProjectile {
-  uint32_t id;
-  glm::vec3 pos;
-  glm::vec3 dir;
-  float speed;
-  float radius;
-  float lifetime;
-  float age; // seconds since spawn
-  SpellElement element;
-  bool dead = false;
+    uint32_t id;
+    glm::vec3 pos;
+    glm::vec3 dir;
+    float speed;
+    float radius;
+    float lifetime;
+    float age;
+    SpellElement element;
+    std::string spellName;  // add this
+    bool dead = false;
 };
 
 class ProjectileManager {
 public:
-  void spawn(const ProjectileSpawnPacket &pkt) {
+ void spawn(const ProjectileSpawnPacket &pkt) {
     _projectiles.push_back({pkt.projectileId,
                             {pkt.originX, pkt.originY, pkt.originZ},
                             {pkt.dirX, pkt.dirY, pkt.dirZ},
@@ -27,8 +28,10 @@ public:
                             pkt.radius,
                             pkt.lifetime,
                             0.f,
-                            pkt.element});
-  }
+                            pkt.element,
+                            pkt.spellName,  // add this
+                            false});
+}
 
   void update(float dt) {
     for (auto &p : _projectiles) {

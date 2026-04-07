@@ -2,11 +2,11 @@
 
 layout(push_constant) uniform PC {
     mat4  viewProj;
-    vec4  sphereWorldPos; // xyz=pos, w=innerRadius
-    vec4  color;          // rgb=core, a=unused
-    vec4  glowColor;      // rgb=glow, a=age
+    vec4  sphereWorldPos;
+    vec4  color;
+    vec4  glowColor;
     vec4  camPos;
-    vec4  params;         // x=element, y=sunIntensity, z=outerRadius, w=unused
+    vec4  params;
 } pc;
 
 layout(location = 0) out vec3 fragRayOrig;
@@ -14,37 +14,42 @@ layout(location = 1) out vec3 fragRayDir;
 layout(location = 2) out vec2 fragUV;
 
 void main() {
-    // Fullscreen triangle
-    vec2 pos;
-    if      (gl_VertexIndex == 0) pos = vec2(-1.0, -1.0);
-    else if (gl_VertexIndex == 1) pos = vec2( 3.0, -1.0);
-    else                          pos = vec2(-1.0,  3.0);
-
-    fragUV = pos * 0.5 + 0.5;
-
-    // Reconstruct ray from camera through this pixel toward sphere
-    // We'll clip the quad to a billboard around the sphere in clip space
     vec3 spherePos = pc.sphereWorldPos.xyz;
     float outerR   = pc.params.z;
 
-    // Billboard: find sphere center in clip space, expand by outerR
+    // Project sphere center to clip space
     vec4 clip = pc.viewProj * vec4(spherePos, 1.0);
+
+    // Billboard quad corners in NDC, expanded to cover the sphere
+    vec2 corners[4];
+    corners[0] = vec2(-1.0, -1.0);
+    corners[1] = vec2( 1.0, -1.0);
+    corners[2] = vec2(-1.0,  1.0);
+    corners[3] = vec2( 1.0,  1.0);
+
+    // Triangle list: verts 0,1,2 and 0,2,3 — use index 0,1,2,0,2,3
+    int idx[6] = int[](0,1,2,0,2,3);
+    vec2 corner = corners[idx[gl_VertexIndex]];
+
+    // Scale billboard: project a point outerR to the side of the sphere
+    // to get the screen-space half-size
+    vec4 edgeClip = pc.viewProj * vec4(spherePos + vec3(outerR, 0.0, 0.0), 1.0);
     vec2 ndcCenter = clip.xy / clip.w;
-    float depth    = clip.z / clip.w;
+    vec2 ndcEdge   = edgeClip.xy / edgeClip.w;
+    float ndcRadius = length(ndcEdge - ndcCenter) * 1.5; // 1.5 = safety margin
 
-    // Scale billboard to cover sphere in screen space (conservative)
-    float screenScale = outerR / max(clip.w * 0.01, 0.001);
-    vec2 quadPos = ndcCenter + pos * screenScale * 1.5;
+    vec2 quadNDC = ndcCenter + corner * ndcRadius;
+    gl_Position  = vec4(quadNDC, clip.z / clip.w, 1.0);
+    fragUV       = corner * 0.5 + 0.5;
 
-    gl_Position = vec4(quadPos, depth, 1.0);
+    // Ray from camera through this NDC position
+    // Unproject using inverse viewProj
+    mat4 invVP = inverse(pc.viewProj);
+    vec4 nearW = invVP * vec4(quadNDC, -1.0, 1.0);
+    vec4 farW  = invVP * vec4(quadNDC,  1.0, 1.0);
+    nearW.xyz /= nearW.w;
+    farW.xyz  /= farW.w;
 
-    // Ray origin = camera position
     fragRayOrig = pc.camPos.xyz;
-
-    // Ray direction through this NDC position
-    // Unproject: use inverse of viewProj
-    // Approximate: use the quad position as NDC
-    vec4 worldFar = (pc.viewProj) * vec4(quadPos, 1.0, 1.0);
-    worldFar.xyz /= worldFar.w;
-    fragRayDir = normalize(worldFar.xyz - pc.camPos.xyz);
+    fragRayDir  = normalize(farW.xyz - nearW.xyz);
 }

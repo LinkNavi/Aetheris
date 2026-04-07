@@ -153,8 +153,8 @@ public:
                                VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                                0, sizeof(ProjectilePC), &pc);
 
-            // 3 verts = fullscreen triangle, clipped to billboard in vert shader
-            vkCmdDraw(cmd, 3, 1, 0, 0);
+
+            vkCmdDraw(cmd, 6, 1, 0, 0);
         }
     }
 

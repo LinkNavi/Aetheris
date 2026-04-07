@@ -11,7 +11,7 @@
 #include "tree_renderer.h"
 #include "sky_godray.h"
 #include "projectile_renderer.h"
-
+#include "decal_renderer.h"
 struct ViewModelRenderer;
 class RemotePlayerRenderer;
 
@@ -166,7 +166,7 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const glm::mat4& view,
              const RemotePlayerRenderer* remotePlayers,
              const DayNight* dayNight,
              const ProjectileRenderer* projRenderer,  // add
-             const ProjectileManager* projMgr);       // add
+             const ProjectileManager* projMgr,  const DecalRenderer *decalRenderer);       // add
 
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
 void      vk_remove_chunk(VkContext& ctx, ChunkCoord coord);

@@ -87,6 +87,8 @@ void GameSettings::load(const char *path) {
       f >> serverPort;
     else if (key == "auth_port")
       f >> authPort;
+    else if (key == "leaf_density")
+      f >> leafDensity;
   }
   fovF = (float)fov;
 }

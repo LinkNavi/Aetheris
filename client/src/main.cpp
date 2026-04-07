@@ -6,6 +6,7 @@
 #include "config.h"
 #include "day_night.h"
 #include "debug_menu.h"
+#include "decal_renderer.h"
 #include "gltf_loader.h"
 #include "hud.h"
 #include "input.h"
@@ -41,6 +42,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
+#include <string>
 #include <sys/types.h>
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -87,16 +89,22 @@ int main(int /*argc*/, char **argv) {
   viewModel.animEditor.open = false;
 
   ProjectileRenderer projRenderer;
-Log::info("ProjectilePC size: " + std::to_string(sizeof(ProjectilePC)));
+  Log::info("ProjectilePC size: " + std::to_string(sizeof(ProjectilePC)));
   projRenderer.init(ctx.device.device, ctx.allocator, ctx.offscreenPass,
                     ctx.swapchain.extent,
                     AssetPath::get("projectile_vert.spv").c_str(),
                     AssetPath::get("projectile_frag.spv").c_str());
-
+  DecalRenderer decalRenderer;
+  decalRenderer.init(ctx.device.device, ctx.allocator, ctx.commandPool,
+                     ctx.graphicsQueue, ctx.offscreenPass,
+                     AssetPath::get("decal_vert.spv").c_str(),
+                     AssetPath::get("decal_frag.spv").c_str());
   {
-VkPhysicalDeviceProperties props{};
-vkGetPhysicalDeviceProperties(ctx.device.physical_device.physical_device, &props);
-Log::info("Max push constant size: " + std::to_string(props.limits.maxPushConstantsSize));
+    VkPhysicalDeviceProperties props{};
+    vkGetPhysicalDeviceProperties(ctx.device.physical_device.physical_device,
+                                  &props);
+    Log::info("Max push constant size: " +
+              std::to_string(props.limits.maxPushConstantsSize));
     bool isIntelIntegrated =
         (props.vendorID == 0x8086) &&
         (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
@@ -288,7 +296,7 @@ Log::info("Max push constant size: " + std::to_string(props.limits.maxPushConsta
       ImGui::Render();
       vk_draw(ctx, glm::mat4(1.f), glm::mat4(1.f), nullptr, 0.f,
               {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr, glm::mat4(1.f),
-              nullptr, nullptr, nullptr, nullptr);
+              nullptr, nullptr, nullptr, nullptr, nullptr);
       continue;
     }
 
@@ -370,9 +378,41 @@ Log::info("Max push constant size: " + std::to_string(props.limits.maxPushConsta
             spellEditor.onCompileAck(
                 cinv, SpellCompileAckPacket::deserialize(d, len));
           } else if (pid == (uint8_t)SpellPacketID::ProjectileSpawn) {
-            projMgr.spawn(ProjectileSpawnPacket::deserialize(d, len));
+            auto pkt = ProjectileSpawnPacket::deserialize(d, len);
+            Log::info(
+                "ProjectileSpawn: id=" + std::to_string(pkt.projectileId) +
+                " pos=(" + std::to_string(pkt.originX) + "," +
+                std::to_string(pkt.originY) + "," +
+                std::to_string(pkt.originZ) + ")" + " spell=" + pkt.spellName);
+            projMgr.spawn(pkt);
           } else if (pid == (uint8_t)SpellPacketID::ProjectileHit) {
-            projMgr.onHit(ProjectileHitPacket::deserialize(d, len));
+            auto pkt = ProjectileHitPacket::deserialize(d, len);
+
+            // Get element and spell source from the projectile before killing
+            // it
+            std::string src;
+            SpellElement el = SpellElement::None;
+            float manaSpent = 50.f;
+
+            for (const auto &p : projMgr.all()) {
+              if (p.id == pkt.projectileId) {
+                el = p.element;
+                int idx = cinv.inv.findSpellInBook(p.spellName);
+                if (idx >= 0) {
+                  src = cinv.inv.spellBook[idx].source;
+                  manaSpent = cinv.inv.spellBook[idx].baseMana;
+                }
+                break;
+              }
+            }
+
+            // Spawn decal at server-authoritative hit position
+            decalRenderer.spawn({pkt.posX, pkt.posY, pkt.posZ},
+                                {pkt.normalX, pkt.normalY,
+                                 pkt.normalZ}, // actual surface normal now
+                                1.5f, el, manaSpent, src);
+
+            projMgr.onHit(pkt);
           }
         }
         enet_packet_destroy(ev.packet);
@@ -543,6 +583,7 @@ Log::info("Max push constant size: " + std::to_string(props.limits.maxPushConsta
     remotePlayers.update(dt);
     ctx.skyGodRay.update(dt);
 
+    decalRenderer.update(dt);
     // ── Network position send ─────────────────────────────────────────────
     netAccum += dt;
     if (netAccum >= 0.05f) {
@@ -581,7 +622,7 @@ Log::info("Max push constant size: " + std::to_string(props.limits.maxPushConsta
 
     vk_draw(ctx, vp, camera.view(), &treeRenderer, dayNight.sunIntensity(),
             dayNight.skyColor(), rdXZ, camera.position, &viewModel, proj,
-            &remotePlayers, &dayNight, &projRenderer, &projMgr);
+            &remotePlayers, &dayNight, &projRenderer, &projMgr, &decalRenderer);
   }
 
   // ── Shutdown ──────────────────────────────────────────────────────────────
@@ -599,7 +640,7 @@ Log::info("Max push constant size: " + std::to_string(props.limits.maxPushConsta
     }
     server = nullptr;
   }
-
+  decalRenderer.destroy(ctx.device.device, ctx.allocator);
   meshBuilder.cancelPending();
   ImGui_ImplVulkan_Shutdown();
   ImGui_ImplGlfw_Shutdown();

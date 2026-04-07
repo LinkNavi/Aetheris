@@ -186,20 +186,16 @@ void PlayerController::addChunkMesh(const ChunkMesh &mesh) {
 void PlayerController::removeChunk(ChunkCoord coord) { _triSoups.erase(coord); }
 
 void PlayerController::setSpawnPosition(glm::vec3 pos) {
-  _spawnWaitTime = 0.f; // add this
-  // If respawning near same location, keep existing tri-soups
-  bool keepSoups =
-      _spawned && glm::length(pos - _reg.get<CTransform>(_player).pos) < 64.f;
-
-  _pendingSpawn = pos;
-  _hasPendingSpawn = true;
-  _spawned = false;
-  _smoothVel = {0.f, 0.f, 0.f};
-
-  if (!keepSoups) {
-    _triSoups.clear();
-  }
-  buildRequiredChunks(pos);
+    _spawnWaitTime   = 0.f;
+    bool keepSoups   = _spawned &&
+                       glm::length(pos - _reg.get<CTransform>(_player).pos) < 64.f;
+    _pendingSpawn    = pos;
+    _pendingSpawn.y += 32.f;  // start search from well above the given Y
+    _hasPendingSpawn = true;
+    _spawned         = false;
+    _smoothVel       = {0.f, 0.f, 0.f};
+    if (!keepSoups) _triSoups.clear();
+    buildRequiredChunks(pos);
 }
 
 void PlayerController::buildRequiredChunks(glm::vec3 pos) {
@@ -216,23 +212,23 @@ void PlayerController::buildRequiredChunks(glm::vec3 pos) {
 
 bool PlayerController::spawnChunksReady() const {
     if (!_hasPendingSpawn) return false;
-    int N = ChunkData::SIZE;
+    int N  = ChunkData::SIZE;
     int cx = (int)std::floor(_pendingSpawn.x / N);
     int cz = (int)std::floor(_pendingSpawn.z / N);
 
-    // Check a wider vertical window — 5 chunks down instead of 3
-    float checkY = _pendingSpawn.y - Config::PLAYER_HEIGHT - 2.f;
-    for (int dy = 0; dy <= 5; dy++) {
-        int cy = (int)std::floor((checkY - dy * (float)N) / N);
-        if (_triSoups.count({cx, cy, cz}))
-            return true;
-        // Also check adjacent XZ in case saved pos is near chunk border
+    // Need chunks in a vertical column below spawn to do the ground raycast
+    int bottomY = (int)std::floor((_pendingSpawn.y - 64.f) / N);
+    int topY    = (int)std::floor(_pendingSpawn.y / N);
+
+    int have = 0;
+    for (int cy = bottomY; cy <= topY; cy++)
         for (int dx = -1; dx <= 1; dx++)
         for (int dz = -1; dz <= 1; dz++)
             if (_triSoups.count({cx+dx, cy, cz+dz}))
-                return true;
-    }
-    return false;
+                have++;
+
+    // Need at least a few chunks in the column before trying to land
+    return have >= 3;
 }
 
 float PlayerController::spawnProgress() const {
@@ -302,19 +298,41 @@ void PlayerController::resolveCollision(CTransform &tf, CVelocity &vel,
 void PlayerController::update(float dt, const Input &input,
                               CombatSystem *combat) {
   // ── Spawn gate ────────────────────────────────────────────────────────────
-  if (!_spawned) {
+if (!_spawned) {
     _spawnWaitTime += dt;
-    if (spawnChunksReady() || _spawnWaitTime > SPAWN_TIMEOUT) {
-      _reg.get<CTransform>(_player).pos = _pendingSpawn;
-      _reg.get<CVelocity>(_player).vel = {0.f, 0.f, 0.f};
-      _hasPendingSpawn = false;
-      _spawned = true;
-      _spawnWaitTime = 0.f;
+    if (_hasPendingSpawn && (spawnChunksReady() || _spawnWaitTime > SPAWN_TIMEOUT)) {
+        // Try to find actual ground via raycast before spawning
+        // Temporarily place at pending pos and search downward
+        CTransform testTF{_pendingSpawn};
+        CAABB testBox{};
+        float hitY = 0.f;
+        
+        // Search downward up to 64 units for ground
+        bool foundGround = false;
+        for (float drop = 0.f; drop <= 64.f && !foundGround; drop += 0.5f) {
+            testTF.pos.y = _pendingSpawn.y - drop;
+            if (raycastGround(testTF, testBox, hitY)) {
+                _pendingSpawn.y = hitY + testBox.half.y + 0.1f;
+                foundGround = true;
+            }
+        }
+        
+        // If no ground found and we haven't timed out, keep waiting
+        if (!foundGround && _spawnWaitTime < SPAWN_TIMEOUT) {
+            _cam.applyMouse(input.mouseDelta());
+            return;
+        }
+        
+        _reg.get<CTransform>(_player).pos = _pendingSpawn;
+        _reg.get<CVelocity>(_player).vel  = {0.f, 0.f, 0.f};
+        _hasPendingSpawn = false;
+        _spawned         = true;
+        _spawnWaitTime   = 0.f;
     } else {
-      _cam.applyMouse(input.mouseDelta());
-      return;
+        _cam.applyMouse(input.mouseDelta());
+        return;
     }
-  }
+}
 
   auto &tf = _reg.get<CTransform>(_player);
   auto &vel = _reg.get<CVelocity>(_player);
@@ -335,9 +353,12 @@ void PlayerController::update(float dt, const Input &input,
     int cz = (int)std::floor(tf.pos.z / ChunkData::SIZE);
     for (auto it = _triSoups.begin(); it != _triSoups.end();) {
       const auto &cc = it->first;
-      if (std::abs(cc.x - cx) > Config::CHUNK_RADIUS_XZ + 3 ||
-          std::abs(cc.y - cy) > Config::CHUNK_RADIUS_Y + 3 ||
-          std::abs(cc.z - cz) > Config::CHUNK_RADIUS_XZ + 3)
+      // Never evict the 3x3x3 block immediately around the player
+      bool isNear = (std::abs(cc.x - cx) <= 1 && std::abs(cc.y - cy) <= 1 &&
+                     std::abs(cc.z - cz) <= 1);
+      if (!isNear && (std::abs(cc.x - cx) > Config::CHUNK_RADIUS_XZ + 4 ||
+                      std::abs(cc.y - cy) > Config::CHUNK_RADIUS_Y + 4 ||
+                      std::abs(cc.z - cz) > Config::CHUNK_RADIUS_XZ + 4))
         it = _triSoups.erase(it);
       else
         ++it;

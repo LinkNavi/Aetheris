@@ -6,7 +6,9 @@ imgui_src = files(
   '../thirdparty/imgui/imgui_tables.cpp',
   '../thirdparty/imgui/imgui_widgets.cpp',
   '../thirdparty/imgui/backends/imgui_impl_glfw.cpp',
+
   '../thirdparty/imgui/backends/imgui_impl_vulkan.cpp',
+  '../thirdparty/imgui/TextEditor.cpp',
 )
 
 foreach s : [
@@ -23,6 +25,8 @@ foreach s : [
   ['water_vert',       'shaders/water.vert'],
   ['water_frag',       'shaders/water.frag'],
   ['sky_vert',         'shaders/sky.vert'],
+['decal_vert', 'shaders/decal.vert'],
+['decal_frag', 'shaders/decal.frag'],
   ['sky_frag',         'shaders/sky.frag'],
   ['godray_vert',      'shaders/godray.vert'],
   ['godray_frag',      'shaders/godray.frag'],

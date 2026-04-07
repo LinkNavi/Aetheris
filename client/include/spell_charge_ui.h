@@ -30,16 +30,18 @@ public:
     float interruptFlash = 0.f;
 
     void applyState(const SpellCastStatePacket& pkt) {
-        bool wasWinding = (phase == 2);
-        phase           = pkt.phase;
-        manaCommitted   = pkt.manaCommitted;
-        castTimeTotal   = pkt.castTimeTotal;
-        castTimeElapsed = pkt.castTimeElapsed;
-        interruptDC     = pkt.interruptDC;
+    bool wasWinding = (phase == 2);
+    phase = pkt.phase;
+    manaCommitted   = pkt.manaCommitted;
+    castTimeTotal   = pkt.castTimeTotal;
+    castTimeElapsed = pkt.castTimeElapsed;
+    interruptDC     = pkt.interruptDC;
 
-        // Flash if we transitioned from windup to idle (interrupted)
-        if (wasWinding && phase == 0) interruptFlash = 0.4f;
-    }
+    // Only flash if interrupted (phase 0), not if fired (phase 3)
+    if (wasWinding && phase == 0) interruptFlash = 0.4f;
+    // Reset to idle after successful fire
+    if (phase == 3) phase = 0;
+}
 
     void update(float dt) {
         if (interruptFlash > 0.f) interruptFlash -= dt;

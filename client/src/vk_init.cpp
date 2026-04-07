@@ -1,4 +1,5 @@
 #include "asset_path.h"
+#include "decal_renderer.h"
 #include "log.h"
 #include "view_model.h"
 #include "vk_context.h"
@@ -1212,7 +1213,7 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
              const ViewModelRenderer *viewModel, const glm::mat4 &proj,
              const RemotePlayerRenderer *remotePlayers,
              const DayNight *dayNight, const ProjectileRenderer *projRenderer,
-             const ProjectileManager *projMgr) {
+             const ProjectileManager *projMgr, const DecalRenderer *decalRenderer) {
   if (ctx.commandBuffers.empty() || ctx.inFlight.empty()) return;
     if (!ctx.mega.vertexBuffer || !ctx.mega.indexBuffer) return;
   flushUploads(ctx);
@@ -1363,6 +1364,9 @@ if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
   }
   if (projRenderer)
    projRenderer->draw(cmd, ctx.swapchain.extent, viewProj, camPos, *projMgr, *dayNight);
+
+if (decalRenderer)
+decalRenderer->draw(cmd, ctx.swapchain.extent, viewProj, *dayNight);
   vkCmdEndRenderPass(cmd);
 
   // ── Pass 2: godray post-process + ImGui → swapchain ───────────────────────

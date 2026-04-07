@@ -18,6 +18,8 @@
 #include <chrono>
 #include <enet/enet.h>
 #include <unordered_map>
+#include "projectile_system.h"
+
 
 static uint64_t peerToUID(ENetPeer *peer) { return (uint64_t)(uintptr_t)peer; }
 static constexpr int TREE_TEMPLATE_COUNT = 6;
@@ -43,6 +45,7 @@ int main(int argc, char **argv) {
   StatsManager statsMgr;
   MultiplayerManager mpMgr;
   SpellManager spellMgr;
+ProjectileSystem projSys;
 
   initTreeLibrary((int64_t)Config::WORLD_SEED);
   TreeSystem treeSys(getTreeLibrary());
@@ -141,63 +144,70 @@ int main(int argc, char **argv) {
         return Aether::Value::null();
       });
 
-  spellMgr.registerNative(
-      "projectile",
-      [&](Aether::NativeArgs args,
-          Aether::NativeNamedArgs named) -> Aether::Value {
+ spellMgr.registerNative(
+    "projectile",
+    [&](Aether::NativeArgs args,
+        Aether::NativeNamedArgs named) -> Aether::Value {
         float damage =
             named.count("damage") ? (float)named["damage"].asNumber() : 1.f;
         float radius =
             named.count("radius") ? (float)named["radius"].asNumber() : 1.f;
         SpellElement el = SpellElement::None;
         if (named.count("element"))
-          el = elementFromString(named["element"].asString());
+            el = elementFromString(named["element"].asString());
 
         float *budget = spellMgr.getFiringBudget();
         if (!budget || *budget <= 0.f)
-          return Aether::Value::null();
+            return Aether::Value::null();
         float dmg = *budget * std::clamp(damage, 0.f, 1.f);
         *budget -= dmg;
 
         const CastState *cs = spellMgr.getCurrentFiringState();
-        ENetPeer *caster = spellMgr.getCurrentFiringPeer();
+        ENetPeer *caster    = spellMgr.getCurrentFiringPeer();
         if (!cs || !caster)
-          return Aether::Value::null();
+            return Aether::Value::null();
 
         auto posIt = positions.find(caster);
         if (posIt == positions.end())
-          return Aether::Value::null();
+            return Aether::Value::null();
+
         glm::vec3 casterPos = posIt->second;
         glm::vec3 targetPos{cs->aimX, cs->aimY, cs->aimZ};
-
         glm::vec3 dir{0, 0, 1};
         float dlen = glm::length(targetPos - casterPos);
-        if (dlen > 0.001f)
-          dir = (targetPos - casterPos) / dlen;
+        if (dlen > 0.001f) dir = (targetPos - casterPos) / dlen;
 
         static uint32_t nextProjId = 1;
+        uint32_t pid = nextProjId++;
+
+        // Broadcast spawn to nearby clients
         ProjectileSpawnPacket proj;
-        proj.projectileId = nextProjId++;
+        proj.projectileId = pid;
         proj.originX = casterPos.x;
         proj.originY = casterPos.y + 1.5f;
         proj.originZ = casterPos.z;
-        proj.dirX = dir.x;
-        proj.dirY = dir.y;
-        proj.dirZ = dir.z;
-        proj.speed = 20.f;
-        proj.radius = radius;
+        proj.dirX    = dir.x;
+        proj.dirY    = dir.y;
+        proj.dirZ    = dir.z;
+        proj.speed   = 20.f;
+        proj.radius  = radius;
         proj.lifetime = 5.f;
-        proj.element = el;
+        proj.element  = el;
         proj.spellName = cs->spellName;
 
         auto projBytes = proj.serialize();
-        for (auto &[p, pos] : positions) {
-          if (glm::length(pos - casterPos) > 200.f)
-            continue;
-          Net::sendReliable(p, projBytes);
-        }
+        for (auto& [p, pos] : positions)
+            if (glm::length(pos - casterPos) < 200.f)
+                Net::sendReliable(p, projBytes);
+
+        // Register server-side for hit detection
+        projSys.spawn({pid, caster,
+                       {proj.originX, proj.originY, proj.originZ},
+                       dir, proj.speed, radius, proj.lifetime,
+                       0.f, dmg, el, false});
+
         return Aether::Value::null();
-      });
+    });
 
   spellMgr.registerNative(
       "get_aim",
@@ -491,6 +501,7 @@ int main(int argc, char **argv) {
 
       case ENET_EVENT_TYPE_DISCONNECT:
         Log::info("Peer disconnected");
+ projSys.onPlayerRemoved(ev.peer);
         mpMgr.onPeerDisconnect(ev.peer, host.get());
         chunks.removeClient(ev.peer);
         invMgr.onPlayerDisconnect(ev.peer);
@@ -559,12 +570,40 @@ int main(int argc, char **argv) {
       ack.hasProjectile = 1;
       Net::sendReliable(fe.peer, ack.serialize());
 
-      SpellCastStatePacket statePkt{0, 0, 0, 0, 0};
+      SpellCastStatePacket statePkt{3, 0, 0, 0, 0};
       Net::sendReliable(fe.peer, statePkt.serialize());
     }
     enet_host_flush(host.get());
     enet_host_flush(host.get());
+// ── Projectile hit detection ──────────────────────────────────────────────
+auto projHits = projSys.update(dt, positions);
+for (auto& hit : projHits) {
+    // Apply damage to victim
+    if (hit.victim) {
+        statsMgr.applyDamage(hit.victim, hit.damage);
+        statsMgr.markDirty(hit.victim);
+        Log::info("Projectile hit player, damage=" + std::to_string(hit.damage));
+    }
 
+    // Broadcast hit packet to nearby players so clients kill the visual
+    ProjectileHitPacket hitPkt{};
+    hitPkt.projectileId = hit.projectileId;
+    hitPkt.posX         = hit.pos.x;
+    hitPkt.posY         = hit.pos.y;
+    hitPkt.posZ         = hit.pos.z;
+    hitPkt.normalX      = hit.normal.x;
+    hitPkt.normalY      = hit.normal.y;
+    hitPkt.normalZ      = hit.normal.z;
+    hitPkt.aoeRadius    = 0.f;
+    hitPkt.damageType   = (uint8_t)hit.element;
+
+    auto hitBytes = hitPkt.serialize();
+    for (auto& [p, pos] : positions)
+        if (glm::length(pos - hit.pos) < 200.f)
+            Net::sendReliable(p, hitBytes);
+}
+if (!projHits.empty())
+    enet_host_flush(host.get());
     spellStateAccum += dt;
     if (spellStateAccum >= 0.1f) {
       spellStateAccum = 0.f;

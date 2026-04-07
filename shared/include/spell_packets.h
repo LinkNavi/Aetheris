@@ -228,33 +228,31 @@ struct ProjectileSpawnPacket {
 
 // Server -> all nearby clients: projectile hit something
 struct ProjectileHitPacket {
-  uint32_t projectileId;
-  float posX, posY, posZ;
-  float aoeRadius;    // 0 if no aoe
-  uint8_t damageType; // maps to DamageType enum
+    uint32_t projectileId;
+    float posX, posY, posZ;
+    float normalX, normalY, normalZ;  // add
+    float aoeRadius;
+    uint8_t damageType;
 
-  std::vector<uint8_t> serialize() const {
-    std::vector<uint8_t> b;
-    writeU8(b, (uint8_t)SpellPacketID::ProjectileHit);
-    writeU32(b, projectileId);
-    writeF32(b, posX);
-    writeF32(b, posY);
-    writeF32(b, posZ);
-    writeF32(b, aoeRadius);
-    writeU8(b, damageType);
-    return b;
-  }
-  static ProjectileHitPacket deserialize(const uint8_t *d, size_t) {
-    ProjectileHitPacket p;
-    size_t o = 1;
-    p.projectileId = readU32(d, o);
-    p.posX = readF32(d, o);
-    p.posY = readF32(d, o);
-    p.posZ = readF32(d, o);
-    p.aoeRadius = readF32(d, o);
-    p.damageType = readU8(d, o);
-    return p;
-  }
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> b;
+        writeU8(b, (uint8_t)SpellPacketID::ProjectileHit);
+        writeU32(b, projectileId);
+        writeF32(b, posX); writeF32(b, posY); writeF32(b, posZ);
+        writeF32(b, normalX); writeF32(b, normalY); writeF32(b, normalZ);
+        writeF32(b, aoeRadius);
+        writeU8(b, damageType);
+        return b;
+    }
+    static ProjectileHitPacket deserialize(const uint8_t* d, size_t) {
+        ProjectileHitPacket p; size_t o = 1;
+        p.projectileId = readU32(d, o);
+        p.posX = readF32(d, o); p.posY = readF32(d, o); p.posZ = readF32(d, o);
+        p.normalX = readF32(d, o); p.normalY = readF32(d, o); p.normalZ = readF32(d, o);
+        p.aoeRadius = readF32(d, o);
+        p.damageType = readU8(d, o);
+        return p;
+    }
 };
 
 // client -> server: "compile this script and add it to my spellbook"
