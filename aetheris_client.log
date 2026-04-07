@@ -1,24 +1,20 @@
-[11:38:27][INFO] Client starting
-[11:38:28][INFO] Vulkan 1.2 detected
-[11:38:28][INFO] Shaders loaded
-[11:38:28][INFO] Vulkan initialised
-[11:38:28][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
-[11:38:28][INFO] ViewModelRenderer initialised
-[11:38:28][INFO] ProjectilePC size: 144
-[11:38:28][INFO] Max push constant size: 256
-[11:38:28][INFO] Low-end Intel GPU detected — enabling performance mode
-[11:38:28][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
-[11:38:28][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
-[11:38:28][INFO] Registered item view model: id=6 meshIdx=1
-[11:38:28][INFO] Player model: 4364 verts, h=4.870493
-[11:38:28][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
-[11:38:28][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
-[11:38:28][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
-[11:38:28][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
-[11:38:28][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
-[11:38:28][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
-[11:38:30][INFO] Connected to 127.0.0.1
-[11:39:15][INFO] compile req: bal
-[11:39:20][INFO] ProjectileSpawn: id=1 pos=(244.422668,148.399994,131.663147) spell=bal
-[11:39:30][INFO] ProjectileSpawn: id=2 pos=(234.835617,148.399994,99.107254) spell=bal
-[11:39:38][INFO] Client shutdown
+[12:43:23][INFO] Client starting
+[12:43:23][INFO] Vulkan 1.2 detected
+[12:43:31][INFO] Shaders loaded
+[12:43:31][INFO] Vulkan initialised
+[12:43:32][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[12:43:32][INFO] ViewModelRenderer initialised
+[12:43:32][INFO] ProjectilePC size: 144
+[12:43:32][INFO] Max push constant size: 256
+[12:43:32][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[12:43:32][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
+[12:43:32][INFO] Registered item view model: id=6 meshIdx=1
+[12:43:33][INFO] Player model: 4364 verts, h=4.870493
+[12:43:33][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
+[12:43:33][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
+[12:43:33][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
+[12:43:33][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
+[12:43:33][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
+[12:43:33][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
+[12:43:40][INFO] Connected to 127.0.0.1
+[12:46:01][INFO] Client shutdown

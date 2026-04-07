@@ -8,7 +8,7 @@
 #include <cmath>
 #include <cstdint>
 #include "chunk.h"
-
+#include <algorithm>
 // ── Vertex formats ────────────────────────────────────────────────────────────
 
 struct TreeVertex {
@@ -79,11 +79,24 @@ float leafDensity = 1.0f;
               const char* leafVertSpv,  const char* leafFragSpv);
 
     void destroy(VkDevice device, VmaAllocator allocator);
-
+void forEachInstance(auto fn) const {
+    for (int i = 0; i < TREE_TEMPLATE_COUNT; i++)
+        for (const auto& inst : _instances[i])
+            fn(inst.pos, i);
+}
     void addTree(glm::vec3 pos, float yaw, float scale, int templateIdx);
     void clearTrees();
     void removeTreesInChunk(int chunkX, int chunkZ);
-
+void removeTree(float wx, float wz) {
+    for (auto& vec : _instances) {
+        vec.erase(std::remove_if(vec.begin(), vec.end(),
+            [&](const TreeRenderInstance& t) {
+                return std::abs(t.pos.x - wx) < 1.f &&
+                       std::abs(t.pos.z - wz) < 1.f;
+            }), vec.end());
+    }
+    _instDirty = true;
+}
 void rebuildMeshes();
     void update(float dt) { windTime += dt; }
 

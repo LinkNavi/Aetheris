@@ -89,6 +89,9 @@ enum class ItemID : uint16_t {
   TotEndure,
   TotStrike,
 
+// -- Materials --
+  WoodLog,
+
   COUNT
 };
 
@@ -184,6 +187,7 @@ inline constexpr std::array<ItemDef, ITEM_COUNT> ITEM_DEFS = {{
     {"Endure Totem", "Discipline heals restore more HP.", ItemType::Totem, 1},
     {"Strike Totem", "5 consecutive hits = attack speed buff.", ItemType::Totem,
      1},
+{"Wood Log", "Chopped from a tree. Used for building.", ItemType::Material, 64},
 }};
 
 inline const ItemDef &getItemDef(ItemID id) {

@@ -493,8 +493,41 @@ ProjectileSystem projSys;
           // ── Spell delete (no-op server side for now) ───────────────
         } else if (pid == (uint8_t)SpellBookPacketID::DeleteReq) {
           // spells stay loaded in VM until server restarts
-        }
+          } else if (pid == (uint8_t)PacketID::ChopTree) {
+            auto pkt = ChopTreePacket::deserialize(d, len);
 
+            int bestWX = (int)std::round(pkt.wx / 4.f) * 4;
+            int bestWZ = (int)std::round(pkt.wz / 4.f) * 4;
+            int foundWX = INT_MIN, foundWZ = INT_MIN;
+            float bestDist = 5.f;
+
+            for (int dx = -8; dx <= 8; dx += 4)
+            for (int dz = -8; dz <= 8; dz += 4) {
+                int tx = bestWX + dx, tz = bestWZ + dz;
+                auto* tree = treeSys.getTree(tx, tz);
+                if (!tree || tree->dead) continue;
+                float dist = std::hypot(pkt.wx - tx, pkt.wz - tz);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    foundWX = tx; foundWZ = tz;
+                }
+            }
+
+            if (foundWX != INT_MIN) {
+                bool fell = treeSys.hitTree(foundWX, foundWZ, 34.f, 0.f);
+                if (fell) {
+                    invMgr.giveItem(ev.peer, ItemID::WoodLog, 4);
+
+                    TreeFellPacket fellPkt{(float)foundWX, (float)foundWZ};
+                    auto fellBytes = fellPkt.serialize();
+                    auto& chopperPos = positions[ev.peer];
+                    for (auto& [p, pos] : positions)
+                        if (glm::length(pos - chopperPos) < 200.f)
+                            Net::sendReliable(p, fellBytes);
+                    enet_host_flush(host.get());
+                }
+            }
+        }
         enet_packet_destroy(ev.packet);
         break;
       } // end ENET_EVENT_TYPE_RECEIVE

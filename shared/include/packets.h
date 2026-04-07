@@ -18,6 +18,8 @@ enum class PacketID : uint8_t {
   WaterPlace     = 0x0A,
   SpawnTree      = 0x0B,
  WorldTime = 0x0C,
+ ChopTree    = 0x0D,
+    TreeFell    = 0x0E,  // server -> clients: tree is gone
 };
 
 inline void writeU8(std::vector<uint8_t> &b, uint8_t v) { b.push_back(v); }
@@ -232,6 +234,38 @@ struct WorldTimePacket {
     static WorldTimePacket deserialize(const uint8_t* d, size_t) {
         WorldTimePacket p; size_t o = 1;
         p.time = readF32(d, o);
+        return p;
+    }
+};
+
+struct ChopTreePacket {
+    float wx, wy, wz;  // approximate hit position, server finds nearest tree
+
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> b;
+        writeU8(b, (uint8_t)PacketID::ChopTree);
+        writeF32(b, wx); writeF32(b, wy); writeF32(b, wz);
+        return b;
+    }
+    static ChopTreePacket deserialize(const uint8_t* d, size_t) {
+        ChopTreePacket p; size_t o = 1;
+        p.wx = readF32(d, o); p.wy = readF32(d, o); p.wz = readF32(d, o);
+        return p;
+    }
+};
+
+struct TreeFellPacket {
+    float wx, wz;  // which tree (key)
+
+    std::vector<uint8_t> serialize() const {
+        std::vector<uint8_t> b;
+        writeU8(b, (uint8_t)PacketID::TreeFell);
+        writeF32(b, wx); writeF32(b, wz);
+        return b;
+    }
+    static TreeFellPacket deserialize(const uint8_t* d, size_t) {
+        TreeFellPacket p; size_t o = 1;
+        p.wx = readF32(d, o); p.wz = readF32(d, o);
         return p;
     }
 };
