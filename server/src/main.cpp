@@ -474,12 +474,12 @@ ProjectileSystem projSys;
           if (ok) {
             auto meta = spellMgr.getSpellMeta(pkt.spellName);
 
-            Log::info("appearantly the spell is ok");
+           // Log::info("appearantly the spell is ok");   --debug shi
             ack.baseMana = meta.baseMana;
             ack.castTime = meta.castTime;
           } else {
 
-            Log::err("appearantly the spell is not ok");
+//            Log::err("appearantly the spell is not ok"); --debug shi
             ack.error =
                 "Compile failed"; // TODO: expose lastError from SpellManager
           }
