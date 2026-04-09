@@ -1213,23 +1213,29 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
              const ViewModelRenderer *viewModel, const glm::mat4 &proj,
              const RemotePlayerRenderer *remotePlayers,
              const DayNight *dayNight, const ProjectileRenderer *projRenderer,
-             const ProjectileManager *projMgr, const DecalRenderer *decalRenderer) {
-  if (ctx.commandBuffers.empty() || ctx.inFlight.empty()) return;
-    if (!ctx.mega.vertexBuffer || !ctx.mega.indexBuffer) return;
+             const ProjectileManager *projMgr,
+             const DecalRenderer *decalRenderer) {
+  if (ctx.commandBuffers.empty() || ctx.inFlight.empty())
+    return;
+  if (!ctx.mega.vertexBuffer || !ctx.mega.indexBuffer)
+    return;
   flushUploads(ctx);
 
   ctx.lastCamPos = camPos;
   uint32_t frame = ctx.currentFrame;
   vkWaitForFences(ctx.device.device, 1, &ctx.inFlight[frame], VK_TRUE,
                   UINT64_MAX);
-  vkResetFences(ctx.device.device, 1, &ctx.inFlight[frame]);
 
   uint32_t imageIndex;
- VkResult acquireResult = vkAcquireNextImageKHR(ctx.device.device, 
-    ctx.swapchain.swapchain, UINT64_MAX,
-    ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
-if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+  VkResult acquireResult = vkAcquireNextImageKHR(
+      ctx.device.device, ctx.swapchain.swapchain, UINT64_MAX,
+      ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
+  if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR)
     return;
+  if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+    return;
+
+  vkResetFences(ctx.device.device, 1, &ctx.inFlight[frame]);
 
   // ── Frustum planes ────────────────────────────────────────────────────────
   struct Plane {
@@ -1363,10 +1369,11 @@ if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
                 fogStart, fogEnd);
   }
   if (projRenderer)
-   projRenderer->draw(cmd, ctx.swapchain.extent, viewProj, camPos, *projMgr, *dayNight);
+    projRenderer->draw(cmd, ctx.swapchain.extent, viewProj, camPos, *projMgr,
+                       *dayNight);
 
-if (decalRenderer)
-decalRenderer->draw(cmd, ctx.swapchain.extent, viewProj, *dayNight);
+  if (decalRenderer)
+    decalRenderer->draw(cmd, ctx.swapchain.extent, viewProj, *dayNight);
   vkCmdEndRenderPass(cmd);
 
   // ── Pass 2: godray post-process + ImGui → swapchain ───────────────────────

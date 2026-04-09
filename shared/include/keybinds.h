@@ -28,6 +28,7 @@ enum class Action : uint8_t {
   Interact,
   DebugMenu,
   Respawn,
+  Pause,
   COUNT
 };
 
@@ -35,7 +36,7 @@ static constexpr const char *ACTION_NAMES[] = {
     "Move Forward", "Move Back",   "Move Left",    "Move Right",   "Jump",
     "Sprint",       "Crouch",      "Light Attack", "Heavy Attack", "Parry",
     "Dodge",        "Cycle Spell", "Spell Editor", "Cast Spell","Inventory",    "Chat",
-    "Interact",     "Debug Menu",  "Respawn",
+    "Interact",     "Debug Menu",  "Respawn", "Pause",
 };
 
 struct Keybinds {
@@ -62,6 +63,7 @@ struct Keybinds {
     binds[Action::Interact] = GLFW_KEY_E;
     binds[Action::DebugMenu] = GLFW_KEY_F3;
     binds[Action::Respawn] = GLFW_KEY_P;
+    binds[Action::Pause] = GLFW_KEY_ESCAPE;
   }
 
   int get(Action a) const {

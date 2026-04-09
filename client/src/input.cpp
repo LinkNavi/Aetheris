@@ -28,10 +28,13 @@ void Input::beginFrame() {
 }
 
 void Input::captureCursor(bool capture) {
-  _captured = capture;
-  _firstMouse = true;
-  glfwSetInputMode(_win, GLFW_CURSOR,
-                   capture ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    _captured = capture;
+    _firstMouse = true;
+    glfwSetInputMode(_win, GLFW_CURSOR,
+                     capture ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    if (glfwRawMouseMotionSupported())
+        glfwSetInputMode(_win, GLFW_RAW_MOUSE_MOTION,
+                         capture ? GLFW_TRUE : GLFW_FALSE);
 }
 
 void Input::keyCallback(GLFWwindow *w, int key, int scancode, int action,

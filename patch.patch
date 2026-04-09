@@ -1,0 +1,100 @@
+--- Fix for client freeze/crash when joining a world ---
+--- File: client/src/vk_init.cpp ---
+--- Function: vk_draw() ---
+
+Find this block (around the start of vk_draw):
+
+```cpp
+  flushUploads(ctx);
+
+  ctx.lastCamPos = camPos;
+  uint32_t frame = ctx.currentFrame;
+  vkWaitForFences(ctx.device.device, 1, &ctx.inFlight[frame], VK_TRUE,
+                  UINT64_MAX);
+  vkResetFences(ctx.device.device, 1, &ctx.inFlight[frame]);
+
+  uint32_t imageIndex;
+ VkResult acquireResult = vkAcquireNextImageKHR(ctx.device.device, 
+    ctx.swapchain.swapchain, UINT64_MAX,
+    ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
+if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+    return;
+```
+
+Replace with:
+
+```cpp
+  flushUploads(ctx);
+
+  ctx.lastCamPos = camPos;
+  uint32_t frame = ctx.currentFrame;
+  vkWaitForFences(ctx.device.device, 1, &ctx.inFlight[frame], VK_TRUE,
+                  UINT64_MAX);
+
+  uint32_t imageIndex;
+  VkResult acquireResult = vkAcquireNextImageKHR(ctx.device.device,
+      ctx.swapchain.swapchain, UINT64_MAX,
+      ctx.imageAvailable[frame], VK_NULL_HANDLE, &imageIndex);
+  if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR) {
+      // Don't reset fence — no work was submitted. Just return and let
+      // the resize handler in the main loop recreate the swapchain.
+      return;
+  }
+  if (acquireResult != VK_SUCCESS && acquireResult != VK_SUBOPTIMAL_KHR)
+      return;
+
+  // Only reset fence AFTER successful acquire — guarantees we'll submit
+  // work this frame to re-signal it.
+  vkResetFences(ctx.device.device, 1, &ctx.inFlight[frame]);
+```
+
+--- Also fix: handle present result at the bottom of vk_draw ---
+
+Find this at the end of vk_draw:
+
+```cpp
+  VkPresentInfoKHR pI{};
+  pI.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  pI.waitSemaphoreCount = 1;
+  pI.pWaitSemaphores = &ctx.renderFinished[frame];
+  pI.swapchainCount = 1;
+  pI.pSwapchains = &ctx.swapchain.swapchain;
+  pI.pImageIndices = &imageIndex;
+  vkQueuePresentKHR(ctx.graphicsQueue, &pI);
+```
+
+Replace with:
+
+```cpp
+  VkPresentInfoKHR pI{};
+  pI.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+  pI.waitSemaphoreCount = 1;
+  pI.pWaitSemaphores = &ctx.renderFinished[frame];
+  pI.swapchainCount = 1;
+  pI.pSwapchains = &ctx.swapchain.swapchain;
+  pI.pImageIndices = &imageIndex;
+  VkResult presentResult = vkQueuePresentKHR(ctx.graphicsQueue, &pI);
+  (void)presentResult; // OUT_OF_DATE handled next frame by acquire
+```
+
+--- Also fix: skip rendering when window is minimized ---
+--- File: client/src/main.cpp ---
+
+Find this in the main loop (around the vk_draw call at the end):
+
+```cpp
+    window.getSize(w, h);
+    ImGui_ImplVulkan_NewFrame();
+```
+
+Add a minimized check before it:
+
+```cpp
+    window.getSize(w, h);
+    if (w == 0 || h == 0) {
+        // Window minimized — skip rendering entirely
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+        continue;
+    }
+    ImGui_ImplVulkan_NewFrame();
+```

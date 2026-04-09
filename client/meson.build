@@ -27,6 +27,8 @@ foreach s : [
   ['sky_vert',         'shaders/sky.vert'],
 ['decal_vert', 'shaders/decal.vert'],
 ['decal_frag', 'shaders/decal.frag'],
+['tree_trunk_fall_vert', 'shaders/tree_trunk_fall.vert'],
+['tree_leaf_fall_vert',  'shaders/tree_leaf_fall.vert'],
   ['sky_frag',         'shaders/sky.frag'],
   ['godray_vert',      'shaders/godray.vert'],
   ['godray_frag',      'shaders/godray.frag'],

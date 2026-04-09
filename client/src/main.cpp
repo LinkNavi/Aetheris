@@ -21,6 +21,7 @@
 #include "net_common.h"
 #include "noise_gen.h"
 #include "packets.h"
+#include "pause_menu.h"
 #include "player.h"
 #include "player_stats.h"
 #include "projectile_manager.h"
@@ -78,6 +79,7 @@ int main(int /*argc*/, char **argv) {
   ChatUI chat;
   SpellEditorUI spellEditor;
   ProjectileManager projMgr;
+  PauseMenu pauseMenu;
   float appTime = 0.f;
 
   ViewModelRenderer viewModel;
@@ -297,8 +299,8 @@ int main(int /*argc*/, char **argv) {
 
       ImGui::Render();
       vk_draw(ctx, glm::mat4(1.f), glm::mat4(1.f), nullptr, 0.f,
-              {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr,
-              glm::mat4(1.f), nullptr, nullptr, nullptr, nullptr, nullptr);
+              {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr, glm::mat4(1.f),
+              nullptr, nullptr, nullptr, nullptr, nullptr);
       continue;
     }
 
@@ -409,12 +411,14 @@ int main(int /*argc*/, char **argv) {
                 }
               }
               decalRenderer.spawn({pkt.posX, pkt.posY, pkt.posZ},
-                                  {pkt.normalX, pkt.normalY, pkt.normalZ},
-                                  1.5f, el, manaSpent, src);
+                                  {pkt.normalX, pkt.normalY, pkt.normalZ}, 1.5f,
+                                  el, manaSpent, src);
               projMgr.onHit(pkt);
             } else if (pid == (uint8_t)PacketID::TreeFell) {
               auto pkt = TreeFellPacket::deserialize(d, len);
-              treeRenderer.removeTree(pkt.wx, pkt.wz);
+              treeRenderer.startFall(pkt.wx, pkt.wz); // start animation
+              treeRenderer.removeTree(pkt.wx,
+                                      pkt.wz); // remove from normal draw
             }
             enet_packet_destroy(ev.packet);
           }
@@ -462,14 +466,14 @@ int main(int /*argc*/, char **argv) {
         cinv.activeSpellSlot = (cinv.activeSpellSlot + 1) % SPELL_SLOTS;
 
       // Spell editor toggle — requires grimoire
-      if (kb.isDown(Action::SpellEditor, input)) {
-        const ItemStack &offhand = cinv.inv.offhandSlot();
-        if (offhand.id == ItemID::WpnGrimoire) {
-          spellEditor.open = true;
-          input.captureCursor(false);
-        } else {
-          chat.pushSystem("Requires a Grimoire in your offhand.");
-        }
+      if (spellEditor.open && input.keyDown(GLFW_KEY_ESCAPE)) {
+        spellEditor.open = false;
+        input.captureCursor(true);
+      } else if (!chat.isOpen() && !spellEditor.open && !cinv.open &&
+                 input.keyDown(GLFW_KEY_ESCAPE) &&
+                 gameState == GameState::InGame) {
+        pauseMenu.visible = !pauseMenu.visible;
+        input.captureCursor(!pauseMenu.visible);
       }
 
       // Inventory
@@ -516,11 +520,13 @@ int main(int /*argc*/, char **argv) {
     // ── UI / cursor state ──────────────────────────────────────────────────
     bool uiOpen = cinv.open || chestMirror.open || viewModel.uiVisible ||
                   debugMenu.visible || chat.isOpen() || spellEditor.open;
-    bool canCast = !uiOpen && !clientStats.dead;
+    bool gameInputSuppressed = uiOpen || pauseMenu.visible;
+    bool canCast = !gameInputSuppressed && !clientStats.dead;
 
-    if (uiOpen && input.cursorCaptured())
+    bool wantCursor = uiOpen || pauseMenu.visible;
+    if (wantCursor && input.cursorCaptured())
       input.captureCursor(false);
-    else if (!uiOpen && !input.cursorCaptured())
+    else if (!wantCursor && !input.cursorCaptured())
       input.captureCursor(true);
 
     // ── Spell casting ──────────────────────────────────────────────────────
@@ -541,8 +547,7 @@ int main(int /*argc*/, char **argv) {
         std::string spellName = (spell && !spell->empty()) ? spell->name : "";
         if (!spellName.empty()) {
           glm::vec3 aimPos = camera.position + camera.forward() * 20.f;
-          spellUI.onKeyDown(0, spellName, aimPos.x, aimPos.y, aimPos.z,
-                            server);
+          spellUI.onKeyDown(0, spellName, aimPos.x, aimPos.y, aimPos.z, server);
         }
       }
       if (spellReleased)
@@ -563,7 +568,7 @@ int main(int /*argc*/, char **argv) {
     viewModel.syncEquipped(cinv.inv.weaponSlot().id, cinv.inv.offhandSlot().id);
 
     // ── Update ─────────────────────────────────────────────────────────────
-    if (uiOpen) {
+    if (gameInputSuppressed) {
       player.update(dt, input, nullptr);
     } else {
       bool lightAttack = kb.isDown(Action::LightAttack, input);
@@ -571,24 +576,44 @@ int main(int /*argc*/, char **argv) {
       player.update(dt, input, &combat);
       if (lightAttack)
         viewModel.triggerLightAttack();
-
+      bool hitTree = false;
       if (lightAttack && player.isSpawned()) {
         glm::vec3 origin = camera.position;
         glm::vec3 dir = camera.forward();
-        float range = 3.5f;
-        glm::vec3 hitPos = origin + dir * range;
-        bool hitTree = false;
+        float range = 4.5f;
+
         treeRenderer.forEachInstance([&](glm::vec3 tpos, int tidx) {
           if (hitTree)
             return;
-          float dx = tpos.x - hitPos.x;
-          float dz = tpos.z - hitPos.z;
+
+          // Check if the ray passes close to the trunk (XZ only, trunk is
+          // vertical) Project tree trunk position onto the ray in XZ
+          glm::vec2 ro2 = {origin.x, origin.z};
+          glm::vec2 rd2 = {dir.x, dir.z};
+          glm::vec2 tp2 = {tpos.x, tpos.z};
+
+          float rd2len = glm::length(rd2);
+          if (rd2len < 0.001f)
+            return;
+          rd2 /= rd2len;
+
+          float t = glm::dot(tp2 - ro2, rd2);
+          if (t < 0.f || t > range)
+            return; // behind or too far
+
+          glm::vec2 closest = ro2 + rd2 * t;
+          float distToTrunk = glm::length(closest - tp2);
+          if (distToTrunk > 1.2f)
+            return; // missed trunk
+
+          // Also check height — tree base should be within reach vertically
           float dy = tpos.y - origin.y;
-          if (dx * dx + dz * dz < 2.5f * 2.5f && dy < 8.f && dy > -1.f) {
-            ChopTreePacket pkt{tpos.x, tpos.y, tpos.z};
-            Net::sendReliable(server, pkt.serialize());
-            hitTree = true;
-          }
+          if (dy > 2.f || dy < -12.f)
+            return; // too high above or too deep below
+
+          ChopTreePacket pkt{tpos.x, tpos.y, tpos.z};
+          Net::sendReliable(server, pkt.serialize());
+          hitTree = true;
         });
       }
 
@@ -621,6 +646,11 @@ int main(int /*argc*/, char **argv) {
 
     // ── Render ─────────────────────────────────────────────────────────────
     window.getSize(w, h);
+
+    if (w == 0 || h == 0) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(16));
+      continue;
+    }
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
@@ -636,6 +666,22 @@ int main(int /*argc*/, char **argv) {
 
     spellUI.draw();
     spellEditor.draw(cinv, server);
+    PauseAction pa = pauseMenu.draw();
+    if (pa == PauseAction::Resume) {
+      pauseMenu.visible = false;
+      input.captureCursor(true);
+    } else if (pa == PauseAction::BackToMainMenu) {
+      pauseMenu.visible = false;
+      if (server) {
+        enet_peer_disconnect_now(server, 0);
+        server = nullptr;
+      }
+      gameState = GameState::MainMenu;
+      treeRenderer.clearTrees();
+      terrainCache.clear();
+    } else if (pa == PauseAction::QuitGame) {
+      break;
+    }
 
     ImGui::Render();
 

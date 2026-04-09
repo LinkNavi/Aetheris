@@ -7,6 +7,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include "asset_path.h"
+#include <vulkan/vulkan.h>
 #include <string>
 // ── Helpers
 // ───────────────────────────────────────────────────────────────────
@@ -83,11 +85,214 @@ static void addCylinder(std::vector<TreeVertex> &verts,
     uint32_t t1 = b0 + 3;
 
     inds.push_back(b0);
-    inds.push_back(t0);
-    inds.push_back(b1);
     inds.push_back(b1);
     inds.push_back(t0);
+    inds.push_back(b1);
     inds.push_back(t1);
+    inds.push_back(t0);
+  }
+}
+void TreeRenderer::createFallPipelines(VkDevice device, VkRenderPass rp,
+                                       const char *tvs, const char *lfs) {
+  // Push constant: viewProj + model + params + camPos + sunDir
+  VkPushConstantRange pcr{};
+  pcr.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+  pcr.size = sizeof(glm::mat4) * 2 + sizeof(glm::vec4) * 3;
+
+  VkPipelineLayoutCreateInfo li{};
+  li.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  li.pushConstantRangeCount = 1;
+  li.pPushConstantRanges = &pcr;
+  vkCreatePipelineLayout(device, &li, nullptr, &_fallTrunkLayout);
+  vkCreatePipelineLayout(device, &li, nullptr, &_fallLeafLayout);
+
+  VkDynamicState dynStates[] = {VK_DYNAMIC_STATE_VIEWPORT,
+                                VK_DYNAMIC_STATE_SCISSOR};
+  VkPipelineDynamicStateCreateInfo dyn{};
+  dyn.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+  dyn.dynamicStateCount = 2;
+  dyn.pDynamicStates = dynStates;
+
+  VkPipelineViewportStateCreateInfo vps{};
+  vps.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+  vps.viewportCount = 1;
+  vps.scissorCount = 1;
+
+  VkPipelineInputAssemblyStateCreateInfo ia{};
+  ia.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+  ia.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+  VkPipelineMultisampleStateCreateInfo ms{};
+  ms.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+  ms.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+  VkPipelineDepthStencilStateCreateInfo ds{};
+  ds.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  ds.depthTestEnable = VK_TRUE;
+  ds.depthWriteEnable = VK_TRUE;
+  ds.depthCompareOp = VK_COMPARE_OP_LESS;
+
+  // ── Trunk pipeline ────────────────────────────────────────────────────────
+  {
+    auto vc = loadSpv(tvs);
+    auto fc = loadSpv(AssetPath::get("tree_trunk_frag.spv").c_str());
+    VkShaderModule vm = makeMod(device, vc), fm = makeMod(device, fc);
+
+    VkPipelineShaderStageCreateInfo st[2]{};
+    st[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    st[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    st[0].module = vm;
+    st[0].pName = "main";
+    st[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    st[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    st[1].module = fm;
+    st[1].pName = "main";
+
+    // Non-instanced: only binding 0 (per-vertex TreeVertex)
+    VkVertexInputBindingDescription binding{};
+    binding.binding = 0;
+    binding.stride = sizeof(TreeVertex);
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    VkVertexInputAttributeDescription attrs[4]{};
+    attrs[0] = {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(TreeVertex, pos)};
+    attrs[1] = {1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(TreeVertex, normal)};
+    attrs[2] = {2, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(TreeVertex, uv)};
+    attrs[3] = {3, 0, VK_FORMAT_R32_SFLOAT, offsetof(TreeVertex, noiseVal)};
+
+    VkPipelineVertexInputStateCreateInfo vi{};
+    vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vi.vertexBindingDescriptionCount = 1;
+    vi.pVertexBindingDescriptions = &binding;
+    vi.vertexAttributeDescriptionCount = 4;
+    vi.pVertexAttributeDescriptions = attrs;
+
+    VkPipelineRasterizationStateCreateInfo raster{};
+    raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    raster.polygonMode = VK_POLYGON_MODE_FILL;
+    raster.cullMode = VK_CULL_MODE_BACK_BIT;
+    raster.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    raster.lineWidth = 1.f;
+
+    VkPipelineColorBlendAttachmentState ba{};
+    ba.colorWriteMask = 0xF;
+    VkPipelineColorBlendStateCreateInfo bl{};
+    bl.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    bl.attachmentCount = 1;
+    bl.pAttachments = &ba;
+
+    VkGraphicsPipelineCreateInfo pi{};
+    pi.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pi.stageCount = 2;
+    pi.pStages = st;
+    pi.pVertexInputState = &vi;
+    pi.pInputAssemblyState = &ia;
+    pi.pViewportState = &vps;
+    pi.pRasterizationState = &raster;
+    pi.pMultisampleState = &ms;
+    pi.pDepthStencilState = &ds;
+    pi.pColorBlendState = &bl;
+    pi.pDynamicState = &dyn;
+    pi.layout = _fallTrunkLayout;
+    pi.renderPass = rp;
+    vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pi, nullptr,
+                              &_fallTrunkPipeline);
+
+    vkDestroyShaderModule(device, vm, nullptr);
+    vkDestroyShaderModule(device, fm, nullptr);
+  }
+
+  // ── Leaf pipeline ─────────────────────────────────────────────────────────
+  {
+    auto vc = loadSpv(lfs);
+    auto fc = loadSpv(AssetPath::get("tree_leaf_frag.spv").c_str());
+    VkShaderModule vm = makeMod(device, vc), fm = makeMod(device, fc);
+
+    VkPipelineShaderStageCreateInfo st[2]{};
+    st[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    st[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
+    st[0].module = vm;
+    st[0].pName = "main";
+    st[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    st[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+    st[1].module = fm;
+    st[1].pName = "main";
+
+    VkVertexInputBindingDescription binding{};
+    binding.binding = 0;
+    binding.stride = sizeof(LeafVertex);
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+    VkVertexInputAttributeDescription attrs[4]{};
+    attrs[0] = {0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(LeafVertex, pos)};
+    attrs[1] = {1, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(LeafVertex, uv)};
+    attrs[2] = {2, 0, VK_FORMAT_R32_SFLOAT, offsetof(LeafVertex, noiseVal)};
+    attrs[3] = {3, 0, VK_FORMAT_R32_SFLOAT, offsetof(LeafVertex, flutter)};
+
+    VkPipelineVertexInputStateCreateInfo vi{};
+    vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vi.vertexBindingDescriptionCount = 1;
+    vi.pVertexBindingDescriptions = &binding;
+    vi.vertexAttributeDescriptionCount = 4;
+    vi.pVertexAttributeDescriptions = attrs;
+
+    VkPipelineRasterizationStateCreateInfo raster{};
+    raster.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    raster.polygonMode = VK_POLYGON_MODE_FILL;
+    raster.cullMode = VK_CULL_MODE_NONE;
+    raster.lineWidth = 1.f;
+
+    VkPipelineColorBlendAttachmentState ba{};
+    ba.colorWriteMask = 0xF;
+    ba.blendEnable = VK_TRUE;
+    ba.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    ba.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    ba.colorBlendOp = VK_BLEND_OP_ADD;
+    ba.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    ba.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    ba.alphaBlendOp = VK_BLEND_OP_ADD;
+
+    VkPipelineColorBlendStateCreateInfo bl{};
+    bl.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+    bl.attachmentCount = 1;
+    bl.pAttachments = &ba;
+
+    VkGraphicsPipelineCreateInfo pi{};
+    pi.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    pi.stageCount = 2;
+    pi.pStages = st;
+    pi.pVertexInputState = &vi;
+    pi.pInputAssemblyState = &ia;
+    pi.pViewportState = &vps;
+    pi.pRasterizationState = &raster;
+    pi.pMultisampleState = &ms;
+    pi.pDepthStencilState = &ds;
+    pi.pColorBlendState = &bl;
+    pi.pDynamicState = &dyn;
+    pi.layout = _fallLeafLayout;
+    pi.renderPass = rp;
+    vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pi, nullptr,
+                              &_fallLeafPipeline);
+
+    vkDestroyShaderModule(device, vm, nullptr);
+    vkDestroyShaderModule(device, fm, nullptr);
+  }
+}
+
+void TreeRenderer::startFall(float wx, float wz) {
+  for (int i = 0; i < TREE_TEMPLATE_COUNT; i++) {
+    for (auto &inst : _instances[i]) {
+      if (std::abs(inst.pos.x - wx) < 1.f && std::abs(inst.pos.z - wz) < 1.f) {
+        FallingTree ft;
+        ft.pos = inst.pos;
+        ft.yaw = inst.yaw;
+        ft.scale = inst.scale;
+        ft.templateIdx = i;
+        ft.fallDir = std::fmod(wx * 0.37f + wz * 0.53f + 1.5f, 6.2831f);
+        _fallingTrees.push_back(ft);
+        return;
+      }
+    }
   }
 }
 
@@ -366,7 +571,8 @@ void TreeRenderer::createPipelines(VkDevice device, VkRenderPass rp,
   // ── Shared push constant: mat4 viewProj + vec4(windTime,0,0,0) ──────────
   VkPushConstantRange pcr{};
   pcr.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-  pcr.size = sizeof(glm::mat4) + sizeof(glm::vec4) * 3; // viewProj + params + camPos + sunDir
+  pcr.size = sizeof(glm::mat4) +
+             sizeof(glm::vec4) * 3; // viewProj + params + camPos + sunDir
 
   VkPipelineLayoutCreateInfo li{};
   li.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -607,6 +813,9 @@ void TreeRenderer::init(VkDevice device, VmaAllocator allocator,
               std::to_string(_meshes[i].trunkIdxCount) + " trunk tris, " +
               std::to_string(_meshes[i].leafIdxCount) + " leaf tris");
   }
+createFallPipelines(device, renderPass,
+    AssetPath::get("tree_trunk_fall_vert.spv").c_str(),
+    AssetPath::get("tree_leaf_fall_vert.spv").c_str());
 }
 
 void TreeRenderer::destroy(VkDevice device, VmaAllocator allocator) {
@@ -631,6 +840,10 @@ void TreeRenderer::destroy(VkDevice device, VmaAllocator allocator) {
     vkDestroyPipeline(device, _leafPipeline, nullptr);
   if (_leafLayout)
     vkDestroyPipelineLayout(device, _leafLayout, nullptr);
+if (_fallTrunkPipeline) vkDestroyPipeline(device, _fallTrunkPipeline, nullptr);
+if (_fallTrunkLayout)   vkDestroyPipelineLayout(device, _fallTrunkLayout, nullptr);
+if (_fallLeafPipeline)  vkDestroyPipeline(device, _fallLeafPipeline, nullptr);
+if (_fallLeafLayout)    vkDestroyPipelineLayout(device, _fallLeafLayout, nullptr);
 }
 
 // ── Instance management
@@ -746,10 +959,10 @@ void TreeRenderer::draw(VkCommandBuffer cmd, const glm::mat4 &viewProj,
     glm::vec4 camPos;
     glm::vec4 sunDir;
   };
- PC pc{viewProj,
-      {windTime, sunIntensity, fogStart, fogEnd},
-      {camPos.x, camPos.y, camPos.z, 0.f},
-      {sunDir.x, sunDir.y, sunDir.z, 0.f}};
+  PC pc{viewProj,
+        {windTime, sunIntensity, fogStart, fogEnd},
+        {camPos.x, camPos.y, camPos.z, 0.f},
+        {sunDir.x, sunDir.y, sunDir.z, 0.f}};
 
   // ── Draw trunks ───────────────────────────────────────────────────────────
   vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, _trunkPipeline);
@@ -789,5 +1002,70 @@ void TreeRenderer::draw(VkCommandBuffer cmd, const glm::mat4 &viewProj,
     vkCmdBindVertexBuffers(cmd, 0, 2, bufs, offsets);
     vkCmdBindIndexBuffer(cmd, m.leafIBuf, 0, VK_INDEX_TYPE_UINT32);
     vkCmdDrawIndexed(cmd, m.leafIdxCount, _instCount[i], 0, 0, 0);
+  }
+  // ── Draw falling trees ────────────────────────────────────────────────────
+  if (!_fallingTrees.empty() && _fallTrunkPipeline) {
+   struct FallPC {
+    glm::mat4 viewProj;
+    glm::mat4 model;
+    glm::vec4 params;
+    glm::vec4 camPos;
+    glm::vec4 sunDir;
+    float     yaw;
+    float     pad[3];
+};
+
+    for (auto &ft : _fallingTrees) {
+      if (ft.templateIdx < 0 || ft.templateIdx >= TREE_TEMPLATE_COUNT)
+        continue;
+      auto &m = _meshes[ft.templateIdx];
+
+      // Build fall transform:
+      // Rotate around an axis at the tree base, perpendicular to fallDir
+      float fallRad = glm::radians(ft.fallAngle);
+      glm::vec3 fallAxis = {std::cos(ft.fallDir + glm::half_pi<float>()), 0.f,
+                            std::sin(ft.fallDir + glm::half_pi<float>())};
+
+      glm::mat4 model = glm::mat4(1.f);
+      model = glm::translate(model, ft.pos);
+      model = glm::rotate(model, fallRad, fallAxis);
+      model = glm::rotate(model, ft.yaw, glm::vec3(0, 1, 0));
+      model = glm::scale(model, glm::vec3(ft.scale));
+
+      FallPC pc{};
+      pc.viewProj = viewProj;
+      pc.model = model;
+      pc.params = {windTime, sunIntensity, fogStart, fogEnd};
+      pc.camPos = {camPos.x, camPos.y, camPos.z, 0.f};
+      pc.sunDir = {sunDir.x, sunDir.y, sunDir.z, 0.f};
+pc.yaw = ft.yaw;
+      // Trunk
+      if (m.trunkVBuf && m.trunkIBuf) {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          _fallTrunkPipeline);
+        vkCmdPushConstants(cmd, _fallTrunkLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT |
+                               VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0, sizeof(FallPC), &pc);
+        VkDeviceSize zero = 0;
+        vkCmdBindVertexBuffers(cmd, 0, 1, &m.trunkVBuf, &zero);
+        vkCmdBindIndexBuffer(cmd, m.trunkIBuf, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmd, m.trunkIdxCount, 1, 0, 0, 0);
+      }
+
+      // Leaves
+      if (m.leafVBuf && m.leafIBuf) {
+        vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          _fallLeafPipeline);
+        vkCmdPushConstants(cmd, _fallLeafLayout,
+                           VK_SHADER_STAGE_VERTEX_BIT |
+                               VK_SHADER_STAGE_FRAGMENT_BIT,
+                           0, sizeof(FallPC), &pc);
+        VkDeviceSize zero = 0;
+        vkCmdBindVertexBuffers(cmd, 0, 1, &m.leafVBuf, &zero);
+        vkCmdBindIndexBuffer(cmd, m.leafIBuf, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdDrawIndexed(cmd, m.leafIdxCount, 1, 0, 0, 0);
+      }
+    }
   }
 }

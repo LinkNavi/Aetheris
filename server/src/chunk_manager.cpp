@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include "packets.h"
+#include "log.h"
 
 static constexpr int   TREE_TEMPLATE_COUNT = 6;
 static constexpr float SEA_LEVEL           = 128.5f;
@@ -67,6 +68,18 @@ void ChunkManager::generateAndEnqueue(ENetPeer *peer, ChunkCoord coord) {
     e.yaw=fmodf(wx*0.37f+wz*0.53f,6.2831853f);
     e.scale=0.85f+fmodf(wx*0.11f+wz*0.17f,0.3f);
     e.templateIdx=(uint8_t)(tmpl%TREE_TEMPLATE_COUNT);
+if (_treeSys) {
+    for (auto& e : treePkt.trees) {
+        int tx = (int)std::round(e.wx);
+        int tz = (int)std::round(e.wz);
+        int ty = (int)std::round(e.wy);
+        _treeSys->registerTree(tx, ty, tz, e.templateIdx);
+        Log::info("Registered tree at (" + std::to_string(tx) + ", " +
+                  std::to_string(ty) + ", " + std::to_string(tz) + ")");
+    }
+} else {
+    Log::warn("_treeSys is null, trees not registered!");
+}
     treePkt.trees.push_back(e);
   }
 

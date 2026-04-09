@@ -10,6 +10,7 @@
 #include "noise_gen.h"
 #include "packets.h"
 #include "player_stats.h"
+#include "projectile_system.h"
 #include "spell_charge_packets.h"
 #include "spell_manager.h"
 #include "spell_packets.h"
@@ -17,9 +18,9 @@
 #include "tree_system.h"
 #include <chrono>
 #include <enet/enet.h>
+#include <glm/trigonometric.hpp>
+#include <glm/glm.hpp>
 #include <unordered_map>
-#include "projectile_system.h"
-
 
 static uint64_t peerToUID(ENetPeer *peer) { return (uint64_t)(uintptr_t)peer; }
 static constexpr int TREE_TEMPLATE_COUNT = 6;
@@ -45,14 +46,15 @@ int main(int argc, char **argv) {
   StatsManager statsMgr;
   MultiplayerManager mpMgr;
   SpellManager spellMgr;
-ProjectileSystem projSys;
+  ProjectileSystem projSys;
 
   initTreeLibrary((int64_t)Config::WORLD_SEED);
   TreeSystem treeSys(getTreeLibrary());
-
+chunks.setTreeSystem(&treeSys);
   ChatManager chatMgr(mpMgr, invMgr);
 
-  std::unordered_map<ENetPeer *, glm::vec3> positions;
+  std::unordered_map<ENetPeer*, glm::vec3> positions;
+std::unordered_map<ENetPeer*, std::pair<float,float>> playerAngles; // yaw, pitch
 
   for (int i = 1; i + 1 < argc; i++) {
     if (std::string(argv[i]) == "--auth-host")
@@ -144,38 +146,39 @@ ProjectileSystem projSys;
         return Aether::Value::null();
       });
 
- spellMgr.registerNative(
-    "projectile",
-    [&](Aether::NativeArgs args,
-        Aether::NativeNamedArgs named) -> Aether::Value {
+  spellMgr.registerNative(
+      "projectile",
+      [&](Aether::NativeArgs args,
+          Aether::NativeNamedArgs named) -> Aether::Value {
         float damage =
             named.count("damage") ? (float)named["damage"].asNumber() : 1.f;
         float radius =
             named.count("radius") ? (float)named["radius"].asNumber() : 1.f;
         SpellElement el = SpellElement::None;
         if (named.count("element"))
-            el = elementFromString(named["element"].asString());
+          el = elementFromString(named["element"].asString());
 
         float *budget = spellMgr.getFiringBudget();
         if (!budget || *budget <= 0.f)
-            return Aether::Value::null();
+          return Aether::Value::null();
         float dmg = *budget * std::clamp(damage, 0.f, 1.f);
         *budget -= dmg;
 
         const CastState *cs = spellMgr.getCurrentFiringState();
-        ENetPeer *caster    = spellMgr.getCurrentFiringPeer();
+        ENetPeer *caster = spellMgr.getCurrentFiringPeer();
         if (!cs || !caster)
-            return Aether::Value::null();
+          return Aether::Value::null();
 
         auto posIt = positions.find(caster);
         if (posIt == positions.end())
-            return Aether::Value::null();
+          return Aether::Value::null();
 
         glm::vec3 casterPos = posIt->second;
         glm::vec3 targetPos{cs->aimX, cs->aimY, cs->aimZ};
         glm::vec3 dir{0, 0, 1};
         float dlen = glm::length(targetPos - casterPos);
-        if (dlen > 0.001f) dir = (targetPos - casterPos) / dlen;
+        if (dlen > 0.001f)
+          dir = (targetPos - casterPos) / dlen;
 
         static uint32_t nextProjId = 1;
         uint32_t pid = nextProjId++;
@@ -186,28 +189,35 @@ ProjectileSystem projSys;
         proj.originX = casterPos.x;
         proj.originY = casterPos.y + 1.5f;
         proj.originZ = casterPos.z;
-        proj.dirX    = dir.x;
-        proj.dirY    = dir.y;
-        proj.dirZ    = dir.z;
-        proj.speed   = 20.f;
-        proj.radius  = radius;
+        proj.dirX = dir.x;
+        proj.dirY = dir.y;
+        proj.dirZ = dir.z;
+        proj.speed = 20.f;
+        proj.radius = radius;
         proj.lifetime = 5.f;
-        proj.element  = el;
+        proj.element = el;
         proj.spellName = cs->spellName;
 
         auto projBytes = proj.serialize();
-        for (auto& [p, pos] : positions)
-            if (glm::length(pos - casterPos) < 200.f)
-                Net::sendReliable(p, projBytes);
+        for (auto &[p, pos] : positions)
+          if (glm::length(pos - casterPos) < 200.f)
+            Net::sendReliable(p, projBytes);
 
         // Register server-side for hit detection
-        projSys.spawn({pid, caster,
+        projSys.spawn({pid,
+                       caster,
                        {proj.originX, proj.originY, proj.originZ},
-                       dir, proj.speed, radius, proj.lifetime,
-                       0.f, dmg, el, false});
+                       dir,
+                       proj.speed,
+                       radius,
+                       proj.lifetime,
+                       0.f,
+                       dmg,
+                       el,
+                       false});
 
         return Aether::Value::null();
-    });
+      });
 
   spellMgr.registerNative(
       "get_aim",
@@ -336,6 +346,7 @@ ProjectileSystem projSys;
           auto mv = PlayerMovePacket::deserialize(d, len);
           glm::vec3 pos{mv.x, mv.y, mv.z};
           positions[ev.peer] = pos;
+playerAngles[ev.peer] = {mv.yaw, mv.pitch};
           chunks.updateClient(ev.peer, mv.x, mv.y, mv.z);
           invMgr.onPlayerMove(ev.peer, pos);
           mpMgr.onPlayerMove(ev.peer, mv.x, mv.y, mv.z, mv.yaw, mv.pitch);
@@ -474,12 +485,13 @@ ProjectileSystem projSys;
           if (ok) {
             auto meta = spellMgr.getSpellMeta(pkt.spellName);
 
-           // Log::info("appearantly the spell is ok");   --debug shi
+            // Log::info("appearantly the spell is ok");   --debug shi
             ack.baseMana = meta.baseMana;
             ack.castTime = meta.castTime;
           } else {
 
-//            Log::err("appearantly the spell is not ok"); --debug shi
+            //            Log::err("appearantly the spell is not ok"); --debug
+            //            shi
             ack.error =
                 "Compile failed"; // TODO: expose lastError from SpellManager
           }
@@ -491,52 +503,124 @@ ProjectileSystem projSys;
           // spells already loaded by name at cast time
 
           // ── Spell delete (no-op server side for now) ───────────────
-        } else if (pid == (uint8_t)SpellBookPacketID::DeleteReq) {
-          // spells stay loaded in VM until server restarts
-          } else if (pid == (uint8_t)PacketID::ChopTree) {
-            auto pkt = ChopTreePacket::deserialize(d, len);
-
-            int bestWX = (int)std::round(pkt.wx / 4.f) * 4;
-            int bestWZ = (int)std::round(pkt.wz / 4.f) * 4;
-            int foundWX = INT_MIN, foundWZ = INT_MIN;
-            float bestDist = 5.f;
-
-            for (int dx = -8; dx <= 8; dx += 4)
-            for (int dz = -8; dz <= 8; dz += 4) {
-                int tx = bestWX + dx, tz = bestWZ + dz;
-                auto* tree = treeSys.getTree(tx, tz);
-                if (!tree || tree->dead) continue;
-                float dist = std::hypot(pkt.wx - tx, pkt.wz - tz);
-                if (dist < bestDist) {
-                    bestDist = dist;
-                    foundWX = tx; foundWZ = tz;
-                }
-            }
-
-            if (foundWX != INT_MIN) {
-                bool fell = treeSys.hitTree(foundWX, foundWZ, 34.f, 0.f);
-                if (fell) {
-                    invMgr.giveItem(ev.peer, ItemID::WoodLog, 4);
-
-                    TreeFellPacket fellPkt{(float)foundWX, (float)foundWZ};
-                    auto fellBytes = fellPkt.serialize();
-                    auto& chopperPos = positions[ev.peer];
-                    for (auto& [p, pos] : positions)
-                        if (glm::length(pos - chopperPos) < 200.f)
-                            Net::sendReliable(p, fellBytes);
-                    enet_host_flush(host.get());
-                }
-            }
+       } else if (pid == (uint8_t)PacketID::ChopTree) {
+    auto pkt = ChopTreePacket::deserialize(d, len);
+    
+    // Dump all registered trees near the player
+    Log::info("Registered trees near player:");
+    int count = 0;
+    treeSys.forEachTree([&](int tx, int tz, const TreeInstance& tree) {
+        float dist = std::hypot((float)tx - pkt.wx, (float)tz - pkt.wz);
+        if (dist < 30.f) {
+            Log::info("  tree at (" + std::to_string(tx) + ", " + 
+                      std::to_string((int)tree.wy) + ", " + std::to_string(tz) + 
+                      ") dead=" + std::to_string(tree.dead) +
+                      " dist=" + std::to_string(dist));
+            count++;
         }
+    });
+    Log::info("Total nearby: " + std::to_string(count));
+    
+    auto posIt = positions.find(ev.peer);
+    auto angIt = playerAngles.find(ev.peer);
+    if (posIt == positions.end() || angIt == playerAngles.end()) break;
+
+    glm::vec3 rayOrigin = posIt->second + glm::vec3(0.f, 1.6f, 0.f); // eye height
+    float yaw   = glm::radians(angIt->second.first);
+    float pitch = glm::radians(angIt->second.second);
+    glm::vec3 rayDir = glm::normalize(glm::vec3{
+        std::cos(yaw) * std::cos(pitch),
+        std::sin(pitch),
+        std::sin(yaw) * std::cos(pitch)
+    });
+
+    Log::info("ChopTree ray from (" +
+              std::to_string(rayOrigin.x) + ", " +
+              std::to_string(rayOrigin.y) + ", " +
+              std::to_string(rayOrigin.z) + ") dir (" +
+              std::to_string(rayDir.x) + ", " +
+              std::to_string(rayDir.z) + ")");
+
+    constexpr float REACH   = 5.f;
+    constexpr float TRUNK_R = 1.5f; // trunk radius in world units
+
+    int   bestWX = INT_MIN, bestWZ = INT_MIN;
+    float bestT  = REACH;
+
+    // Ray vs vertical cylinder for each registered tree
+    // Cylinder: infinite vertical axis at (tx, tz), radius TRUNK_R
+    // Ray-cylinder in XZ: solve |ro2 + t*rd2 - center|^2 = r^2
+    treeSys.forEachTree([&](int tx, int tz, const TreeInstance& tree) {
+    if (tree.dead) return;
+
+    glm::vec2 ro2 = {rayOrigin.x, rayOrigin.z};
+    glm::vec2 rd2 = {rayDir.x, rayDir.z};
+    glm::vec2 ce  = {(float)tx, (float)tz};
+
+    float rd2len = glm::length(rd2);
+    if (rd2len < 0.001f) return; // looking straight up/down
+    rd2 /= rd2len; // normalize the XZ projection
+
+    glm::vec2 oc = ro2 - ce;
+    // With normalized rd2, a=1 so simplify:
+    float b = 2.f * glm::dot(oc, rd2);
+    float c = glm::dot(oc, oc) - TRUNK_R * TRUNK_R;
+    float disc = b*b - 4.f*c;
+    if (disc < 0.f) return;
+
+    // t is now in XZ-projected ray space, convert back to 3D ray space
+    float t2d = (-b - std::sqrt(disc)) * 0.5f;
+    if (t2d < 0.f) return;
+
+    // Convert XZ t back to 3D t
+    float t = t2d / rd2len;
+    if (t > REACH) return;
+
+    float hitY = rayOrigin.y + rayDir.y * t;
+    float treeBase = tree.wy;
+    float treeTop  = treeBase + 12.f;
+
+    Log::info("  candidate (" + std::to_string(tx) + "," + std::to_string(tz) +
+              ") t=" + std::to_string(t) + " hitY=" + std::to_string(hitY) +
+              " treeBase=" + std::to_string(treeBase) + " treeTop=" + std::to_string(treeTop));
+
+    if (hitY < treeBase - 1.f || hitY > treeTop) return;
+
+    if (t < bestT) {
+        bestT  = t;
+        bestWX = tx;
+        bestWZ = tz;
+    }
+});
+
+    if (bestWX == INT_MIN) {
+        Log::warn("ChopTree: ray missed all trunks");
+    } else {
+        Log::info("Chopping tree at (" + std::to_string(bestWX) +
+                  ", " + std::to_string(bestWZ) + ")");
+        bool fell = treeSys.hitTree(bestWX, bestWZ, 34.f, 0.f);
+        if (fell) {
+            invMgr.giveItem(ev.peer, ItemID::WoodLog, 4);
+            TreeFellPacket fellPkt{(float)bestWX, (float)bestWZ};
+            auto fellBytes = fellPkt.serialize();
+            for (auto& [p, pos] : positions)
+                if (glm::length(pos - posIt->second) < 200.f)
+                    Net::sendReliable(p, fellBytes);
+            enet_host_flush(host.get());
+            Log::info("TreeFell broadcast sent");
+        }
+    }
+}
         enet_packet_destroy(ev.packet);
         break;
       } // end ENET_EVENT_TYPE_RECEIVE
 
       case ENET_EVENT_TYPE_DISCONNECT:
         Log::info("Peer disconnected");
- projSys.onPlayerRemoved(ev.peer);
+        projSys.onPlayerRemoved(ev.peer);
         mpMgr.onPeerDisconnect(ev.peer, host.get());
         chunks.removeClient(ev.peer);
+playerAngles.erase(ev.peer);
         invMgr.onPlayerDisconnect(ev.peer);
         statsMgr.onPlayerDisconnect(ev.peer);
         spellMgr.onPlayerRemoved(ev.peer);
@@ -608,35 +692,37 @@ ProjectileSystem projSys;
     }
     enet_host_flush(host.get());
     enet_host_flush(host.get());
-// ── Projectile hit detection ──────────────────────────────────────────────
-auto projHits = projSys.update(dt, positions);
-for (auto& hit : projHits) {
-    // Apply damage to victim
-    if (hit.victim) {
+    // ── Projectile hit detection
+    // ──────────────────────────────────────────────
+    auto projHits = projSys.update(dt, positions);
+    for (auto &hit : projHits) {
+      // Apply damage to victim
+      if (hit.victim) {
         statsMgr.applyDamage(hit.victim, hit.damage);
         statsMgr.markDirty(hit.victim);
-        Log::info("Projectile hit player, damage=" + std::to_string(hit.damage));
-    }
+        Log::info("Projectile hit player, damage=" +
+                  std::to_string(hit.damage));
+      }
 
-    // Broadcast hit packet to nearby players so clients kill the visual
-    ProjectileHitPacket hitPkt{};
-    hitPkt.projectileId = hit.projectileId;
-    hitPkt.posX         = hit.pos.x;
-    hitPkt.posY         = hit.pos.y;
-    hitPkt.posZ         = hit.pos.z;
-    hitPkt.normalX      = hit.normal.x;
-    hitPkt.normalY      = hit.normal.y;
-    hitPkt.normalZ      = hit.normal.z;
-    hitPkt.aoeRadius    = 0.f;
-    hitPkt.damageType   = (uint8_t)hit.element;
+      // Broadcast hit packet to nearby players so clients kill the visual
+      ProjectileHitPacket hitPkt{};
+      hitPkt.projectileId = hit.projectileId;
+      hitPkt.posX = hit.pos.x;
+      hitPkt.posY = hit.pos.y;
+      hitPkt.posZ = hit.pos.z;
+      hitPkt.normalX = hit.normal.x;
+      hitPkt.normalY = hit.normal.y;
+      hitPkt.normalZ = hit.normal.z;
+      hitPkt.aoeRadius = 0.f;
+      hitPkt.damageType = (uint8_t)hit.element;
 
-    auto hitBytes = hitPkt.serialize();
-    for (auto& [p, pos] : positions)
+      auto hitBytes = hitPkt.serialize();
+      for (auto &[p, pos] : positions)
         if (glm::length(pos - hit.pos) < 200.f)
-            Net::sendReliable(p, hitBytes);
-}
-if (!projHits.empty())
-    enet_host_flush(host.get());
+          Net::sendReliable(p, hitBytes);
+    }
+    if (!projHits.empty())
+      enet_host_flush(host.get());
     spellStateAccum += dt;
     if (spellStateAccum >= 0.1f) {
       spellStateAccum = 0.f;

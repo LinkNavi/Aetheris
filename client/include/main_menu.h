@@ -8,15 +8,7 @@
 #include "http_client.h"
 #include "input.h"
 #include "keybinds.h"
-enum class GameState {
-    MainMenu,
-    Settings,
-    WorldSelect,
-    Multiplayer,
-    Account,
-    Connecting,
-    InGame,
-};
+enum class GameState { MainMenu, Settings, WorldSelect, Multiplayer, Account, Connecting, InGame, Paused };
 
 struct GameSettings {
     float renderDistance = 2.f;

@@ -5,6 +5,7 @@
 #include <cmath>
 #include "tree_gen.h"
 #include "chunk.h"
+#include <functional>
 
 // Key for looking up trees by their base world position
 struct TreeKey {
@@ -42,7 +43,10 @@ public:
         inst.maxHealth = TREE_MAX_HEALTH;
         _trees[key] = inst;
     }
-
+void forEachTree(const std::function<void(int, int, const TreeInstance&)>& fn) const {
+    for (auto& [key, tree] : _trees)
+        fn(key.wx, key.wz, tree);
+}
     // Called when a player hits a tree (stub — no items yet)
     // Returns true if tree just died
     bool hitTree(int wx, int wz, float damage, float attackYaw) {

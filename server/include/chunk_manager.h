@@ -12,6 +12,7 @@
 #include "packets.h"
 #include "config.h"
 #include "thread_pool.h"
+#include "tree_system.h"
 
 struct ClientState {
     ENetPeer*  peer      = nullptr;
@@ -36,7 +37,7 @@ public:
     void addClient   (ENetPeer* peer);
     void removeClient(ENetPeer* peer);
     void resetClient (ENetPeer* peer);
-
+void setTreeSystem(TreeSystem* ts) { _treeSys = ts; }
     void updateClient(ENetPeer* peer, float wx, float wy, float wz);
 
     void flushReady(ENetHost* host);
@@ -57,7 +58,7 @@ private:
 
     mutable std::mutex _cacheMu;
     std::unordered_map<ChunkCoord, std::vector<uint8_t>, ChunkCoordHash> _cache;
-
+TreeSystem* _treeSys = nullptr;
     std::mutex _readyMu;
     std::queue<ReadyChunk> _ready;
 
