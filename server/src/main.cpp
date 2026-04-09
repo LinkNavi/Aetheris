@@ -18,8 +18,8 @@
 #include "tree_system.h"
 #include <chrono>
 #include <enet/enet.h>
-#include <glm/trigonometric.hpp>
 #include <glm/glm.hpp>
+#include <glm/trigonometric.hpp>
 #include <unordered_map>
 
 static uint64_t peerToUID(ENetPeer *peer) { return (uint64_t)(uintptr_t)peer; }
@@ -50,11 +50,12 @@ int main(int argc, char **argv) {
 
   initTreeLibrary((int64_t)Config::WORLD_SEED);
   TreeSystem treeSys(getTreeLibrary());
-chunks.setTreeSystem(&treeSys);
+  chunks.setTreeSystem(&treeSys);
   ChatManager chatMgr(mpMgr, invMgr);
 
-  std::unordered_map<ENetPeer*, glm::vec3> positions;
-std::unordered_map<ENetPeer*, std::pair<float,float>> playerAngles; // yaw, pitch
+  std::unordered_map<ENetPeer *, glm::vec3> positions;
+  std::unordered_map<ENetPeer *, std::pair<float, float>>
+      playerAngles; // yaw, pitch
 
   for (int i = 1; i + 1 < argc; i++) {
     if (std::string(argv[i]) == "--auth-host")
@@ -346,7 +347,7 @@ std::unordered_map<ENetPeer*, std::pair<float,float>> playerAngles; // yaw, pitc
           auto mv = PlayerMovePacket::deserialize(d, len);
           glm::vec3 pos{mv.x, mv.y, mv.z};
           positions[ev.peer] = pos;
-playerAngles[ev.peer] = {mv.yaw, mv.pitch};
+          playerAngles[ev.peer] = {mv.yaw, mv.pitch};
           chunks.updateClient(ev.peer, mv.x, mv.y, mv.z);
           invMgr.onPlayerMove(ev.peer, pos);
           mpMgr.onPlayerMove(ev.peer, mv.x, mv.y, mv.z, mv.yaw, mv.pitch);
@@ -503,114 +504,77 @@ playerAngles[ev.peer] = {mv.yaw, mv.pitch};
           // spells already loaded by name at cast time
 
           // ── Spell delete (no-op server side for now) ───────────────
-       } else if (pid == (uint8_t)PacketID::ChopTree) {
-    auto pkt = ChopTreePacket::deserialize(d, len);
-    
-    // Dump all registered trees near the player
-    Log::info("Registered trees near player:");
-    int count = 0;
-    treeSys.forEachTree([&](int tx, int tz, const TreeInstance& tree) {
-        float dist = std::hypot((float)tx - pkt.wx, (float)tz - pkt.wz);
-        if (dist < 30.f) {
-            Log::info("  tree at (" + std::to_string(tx) + ", " + 
-                      std::to_string((int)tree.wy) + ", " + std::to_string(tz) + 
-                      ") dead=" + std::to_string(tree.dead) +
-                      " dist=" + std::to_string(dist));
-            count++;
-        }
-    });
-    Log::info("Total nearby: " + std::to_string(count));
-    
-    auto posIt = positions.find(ev.peer);
-    auto angIt = playerAngles.find(ev.peer);
-    if (posIt == positions.end() || angIt == playerAngles.end()) break;
+        } else if (pid == (uint8_t)PacketID::ChopTree) {
+          auto pkt = ChopTreePacket::deserialize(d, len);
 
-    glm::vec3 rayOrigin = posIt->second + glm::vec3(0.f, 1.6f, 0.f); // eye height
-    float yaw   = glm::radians(angIt->second.first);
-    float pitch = glm::radians(angIt->second.second);
-    glm::vec3 rayDir = glm::normalize(glm::vec3{
-        std::cos(yaw) * std::cos(pitch),
-        std::sin(pitch),
-        std::sin(yaw) * std::cos(pitch)
-    });
+          auto posIt = positions.find(ev.peer);
+          auto angIt = playerAngles.find(ev.peer);
+          if (posIt == positions.end() || angIt == playerAngles.end())
+            break;
 
-    Log::info("ChopTree ray from (" +
-              std::to_string(rayOrigin.x) + ", " +
-              std::to_string(rayOrigin.y) + ", " +
-              std::to_string(rayOrigin.z) + ") dir (" +
-              std::to_string(rayDir.x) + ", " +
-              std::to_string(rayDir.z) + ")");
+          glm::vec3 rayOrigin = posIt->second + glm::vec3(0.f, 1.6f, 0.f);
+          float yaw = glm::radians(angIt->second.first);
+          float pitch = glm::radians(angIt->second.second);
+          glm::vec3 rayDir = glm::normalize(
+              glm::vec3{std::cos(yaw) * std::cos(pitch), std::sin(pitch),
+                        std::sin(yaw) * std::cos(pitch)});
 
-    constexpr float REACH   = 5.f;
-    constexpr float TRUNK_R = 1.5f; // trunk radius in world units
+          constexpr float REACH = 5.f;
+          constexpr float TRUNK_R = 0.8f;
 
-    int   bestWX = INT_MIN, bestWZ = INT_MIN;
-    float bestT  = REACH;
+          int bestWX = INT_MIN, bestWZ = INT_MIN;
+          float bestT = REACH;
 
-    // Ray vs vertical cylinder for each registered tree
-    // Cylinder: infinite vertical axis at (tx, tz), radius TRUNK_R
-    // Ray-cylinder in XZ: solve |ro2 + t*rd2 - center|^2 = r^2
-    treeSys.forEachTree([&](int tx, int tz, const TreeInstance& tree) {
-    if (tree.dead) return;
+          treeSys.forEachTree([&](int tx, int tz, const TreeInstance &tree) {
+            if (tree.dead)
+              return;
 
-    glm::vec2 ro2 = {rayOrigin.x, rayOrigin.z};
-    glm::vec2 rd2 = {rayDir.x, rayDir.z};
-    glm::vec2 ce  = {(float)tx, (float)tz};
+            glm::vec2 ro2 = {rayOrigin.x, rayOrigin.z};
+            glm::vec2 rd2 = {rayDir.x, rayDir.z};
+            glm::vec2 ce = {(float)tx, (float)tz};
 
-    float rd2len = glm::length(rd2);
-    if (rd2len < 0.001f) return; // looking straight up/down
-    rd2 /= rd2len; // normalize the XZ projection
+            glm::vec2 oc = ro2 - ce;
+            float a = glm::dot(rd2, rd2);
+            if (a < 0.0001f)
+              return; // looking straight up/down
+            float b = 2.f * glm::dot(oc, rd2);
+            float c = glm::dot(oc, oc) - TRUNK_R * TRUNK_R;
+            float disc = b * b - 4.f * a * c;
+            if (disc < 0.f)
+              return;
 
-    glm::vec2 oc = ro2 - ce;
-    // With normalized rd2, a=1 so simplify:
-    float b = 2.f * glm::dot(oc, rd2);
-    float c = glm::dot(oc, oc) - TRUNK_R * TRUNK_R;
-    float disc = b*b - 4.f*c;
-    if (disc < 0.f) return;
+            float t = (-b - std::sqrt(disc)) / (2.f * a);
+            if (t < 0.f || t > REACH)
+              return;
 
-    // t is now in XZ-projected ray space, convert back to 3D ray space
-    float t2d = (-b - std::sqrt(disc)) * 0.5f;
-    if (t2d < 0.f) return;
+            float hitY = rayOrigin.y + rayDir.y * t;
+            float treeBase = tree.wy;
+            float treeTop = treeBase + 12.f;
+            if (hitY < treeBase - 1.f || hitY > treeTop)
+              return;
 
-    // Convert XZ t back to 3D t
-    float t = t2d / rd2len;
-    if (t > REACH) return;
+            if (t < bestT) {
+              bestT = t;
+              bestWX = tx;
+              bestWZ = tz;
+            }
+          });
 
-    float hitY = rayOrigin.y + rayDir.y * t;
-    float treeBase = tree.wy;
-    float treeTop  = treeBase + 12.f;
-
-    Log::info("  candidate (" + std::to_string(tx) + "," + std::to_string(tz) +
-              ") t=" + std::to_string(t) + " hitY=" + std::to_string(hitY) +
-              " treeBase=" + std::to_string(treeBase) + " treeTop=" + std::to_string(treeTop));
-
-    if (hitY < treeBase - 1.f || hitY > treeTop) return;
-
-    if (t < bestT) {
-        bestT  = t;
-        bestWX = tx;
-        bestWZ = tz;
-    }
-});
-
-    if (bestWX == INT_MIN) {
-        Log::warn("ChopTree: ray missed all trunks");
-    } else {
-        Log::info("Chopping tree at (" + std::to_string(bestWX) +
-                  ", " + std::to_string(bestWZ) + ")");
-        bool fell = treeSys.hitTree(bestWX, bestWZ, 34.f, 0.f);
-        if (fell) {
-            invMgr.giveItem(ev.peer, ItemID::WoodLog, 4);
-            TreeFellPacket fellPkt{(float)bestWX, (float)bestWZ};
-            auto fellBytes = fellPkt.serialize();
-            for (auto& [p, pos] : positions)
+          if (bestWX != INT_MIN) {
+            Log::info("Chopping tree at (" + std::to_string(bestWX) + ", " +
+                      std::to_string(bestWZ) + ")");
+            bool fell = treeSys.hitTree(bestWX, bestWZ, 34.f, 0.f);
+            if (fell) {
+              invMgr.giveItem(ev.peer, ItemID::WoodLog, 4);
+              TreeFellPacket fellPkt{(float)bestWX, (float)bestWZ};
+              auto fellBytes = fellPkt.serialize();
+              for (auto &[p, pos] : positions)
                 if (glm::length(pos - posIt->second) < 200.f)
-                    Net::sendReliable(p, fellBytes);
-            enet_host_flush(host.get());
-            Log::info("TreeFell broadcast sent");
+                  Net::sendReliable(p, fellBytes);
+              enet_host_flush(host.get());
+            }
+          }
         }
-    }
-}
         enet_packet_destroy(ev.packet);
         break;
       } // end ENET_EVENT_TYPE_RECEIVE
@@ -620,7 +584,7 @@ playerAngles[ev.peer] = {mv.yaw, mv.pitch};
         projSys.onPlayerRemoved(ev.peer);
         mpMgr.onPeerDisconnect(ev.peer, host.get());
         chunks.removeClient(ev.peer);
-playerAngles.erase(ev.peer);
+        playerAngles.erase(ev.peer);
         invMgr.onPlayerDisconnect(ev.peer);
         statsMgr.onPlayerDisconnect(ev.peer);
         spellMgr.onPlayerRemoved(ev.peer);
