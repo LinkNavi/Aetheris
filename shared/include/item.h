@@ -104,6 +104,7 @@ struct ItemDef {
   std::string_view description;
   ItemType type;
   int maxStack; // 1 for weapons/totems, 64 for ores etc.
+  bool placeable = false; // can be placed in the world
 };
 
 // ── Static definition table
@@ -119,7 +120,7 @@ inline constexpr std::array<ItemDef, ITEM_COUNT> ITEM_DEFS = {{
     {"Bow", "Ranged. Consumes stamina to draw.", ItemType::Weapon, 1},
     {"Staff", "Magic catalyst.", ItemType::Weapon, 1},
     {"Grimoire", "A tome of bound spells. Held in the off-hand.",
-     ItemType::Magic, 1},
+     ItemType::Magic, 1, true},
 
     // Ores — Overworld
     {"Ashfen Ore", "High durability. Lifesteal trait.", ItemType::Ore, 64},
@@ -187,7 +188,7 @@ inline constexpr std::array<ItemDef, ITEM_COUNT> ITEM_DEFS = {{
     {"Endure Totem", "Discipline heals restore more HP.", ItemType::Totem, 1},
     {"Strike Totem", "5 consecutive hits = attack speed buff.", ItemType::Totem,
      1},
-{"Wood Log", "Chopped from a tree. Used for building.", ItemType::Material, 64},
+{"Wood Log", "Chopped from a tree. Used for building.", ItemType::Material, 64, true},
 }};
 
 inline const ItemDef &getItemDef(ItemID id) {

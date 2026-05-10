@@ -1,0 +1,31 @@
+task build() {
+    exec {
+        "meson compile -C build"
+    }
+}
+
+task runClient() {
+    depends(build)
+    exec {
+        "./build/client/client"
+    }
+}
+
+task runServer() {
+    depends(build)
+    exec {
+        "./build/server/server"
+    }
+}
+
+task run() {
+    depends(build)
+    parallel {
+        client: exec {
+            "./build/client/client"
+        },
+        server: exec {
+            "./build/server/server"
+        }
+    }
+}

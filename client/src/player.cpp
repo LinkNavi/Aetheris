@@ -306,7 +306,7 @@ if (!_spawned) {
         CTransform testTF{_pendingSpawn};
         CAABB testBox{};
         float hitY = 0.f;
-        
+
         // Search downward up to 64 units for ground
         bool foundGround = false;
         for (float drop = 0.f; drop <= 64.f && !foundGround; drop += 0.5f) {
@@ -316,13 +316,13 @@ if (!_spawned) {
                 foundGround = true;
             }
         }
-        
+
         // If no ground found and we haven't timed out, keep waiting
         if (!foundGround && _spawnWaitTime < SPAWN_TIMEOUT) {
             _cam.applyMouse(input.mouseDelta());
             return;
         }
-        
+
         _reg.get<CTransform>(_player).pos = _pendingSpawn;
         _reg.get<CVelocity>(_player).vel  = {0.f, 0.f, 0.f};
         _hasPendingSpawn = false;
@@ -524,4 +524,44 @@ if (!_spawned) {
   }
 
   _cam.position = tf.pos + glm::vec3{0.f, box.half.y * 0.85f, 0.f};
+}
+
+
+RayHit PlayerController::raycast(
+        glm::vec3 origin, glm::vec3 dir, float maxDist) const
+{
+    float     bestT  = maxDist;
+    bool      anyHit = false;
+    glm::vec3 bestA, bestB, bestC;
+
+    for (const auto& [coord, soup] : _triSoups) {
+        const auto& tris = soup.tris;
+        for (size_t i = 0; i + 2 < tris.size(); i += 3) {
+            const glm::vec3& a = tris[i];
+            const glm::vec3& b = tris[i + 1];
+            const glm::vec3& c = tris[i + 2];
+            float t = 0.f;
+            if (rayTriTest(origin, dir, bestT, a, b, c, t)) {
+                if (t < bestT) {
+                    bestT  = t;
+                    anyHit = true;
+                    bestA  = a;
+                    bestB  = b;
+                    bestC  = c;
+                }
+            }
+        }
+    }
+
+    if (!anyHit)
+        return RayHit{};
+
+    RayHit result;
+    result.hit    = true;
+    result.t      = bestT;
+    result.pos    = origin + dir * bestT;
+    result.normal = glm::normalize(glm::cross(bestB - bestA, bestC - bestA));
+    if (glm::dot(result.normal, dir) > 0.f)
+        result.normal = -result.normal;
+    return result;
 }

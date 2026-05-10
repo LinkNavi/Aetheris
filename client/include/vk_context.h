@@ -14,6 +14,7 @@
 #include "decal_renderer.h"
 struct ViewModelRenderer;
 class RemotePlayerRenderer;
+class WorldObjectRenderer;
 
 struct GpuChunk {
     uint32_t vertexOffset;
@@ -92,8 +93,7 @@ SkyGodRayRenderer skyGodRay;
     VmaAllocation stagingAlloc  = nullptr;
     void*         stagingMapped = nullptr;
   VkDeviceSize stagingSize = 256 * 1024 * 1024; // 256MB up from 64MB
-// in VkContext struct:
-glm::vec3 lastCamPos{0.f};
+  glm::vec3 lastCamPos{0.f};
     VkCommandBuffer uploadCmd   = VK_NULL_HANDLE;
     VkFence         uploadFence = VK_NULL_HANDLE;
 
@@ -165,8 +165,10 @@ void vk_draw(VkContext& ctx, const glm::mat4& viewProj, const glm::mat4& view,
              const glm::mat4& proj,
              const RemotePlayerRenderer* remotePlayers,
              const DayNight* dayNight,
-             const ProjectileRenderer* projRenderer,  // add
-             const ProjectileManager* projMgr,  const DecalRenderer *decalRenderer);       // add
+             const ProjectileRenderer* projRenderer,
+             const ProjectileManager* projMgr,
+             const DecalRenderer* decalRenderer,
+             const WorldObjectRenderer* worldObjects);
 
 void      vk_upload_chunk(VkContext& ctx, const ChunkMesh& mesh);
 void      vk_remove_chunk(VkContext& ctx, ChunkCoord coord);

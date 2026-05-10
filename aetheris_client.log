@@ -1,22 +1,26 @@
-[10:31:21][INFO] Client starting
-[10:31:21][INFO] Vulkan 1.2 detected
-[10:31:21][INFO] Shaders loaded
-[10:31:21][INFO] Vulkan initialised
-[10:31:22][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
-[10:31:22][INFO] ViewModelRenderer initialised
-[10:31:22][INFO] ProjectilePC size: 144
-[10:31:22][INFO] Max push constant size: 256
-[10:31:22][INFO] Low-end Intel GPU detected — enabling performance mode
-[10:31:22][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
-[10:31:22][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
-[10:31:22][INFO] Registered item view model: id=6 meshIdx=1
-[10:31:22][INFO] Player model: 4364 verts, h=4.870493
-[10:31:22][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
-[10:31:22][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
-[10:31:22][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
-[10:31:22][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
-[10:31:22][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
-[10:31:22][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
-[10:31:28][INFO] Connected to 127.0.0.1
-[10:37:01][INFO] Connected to 127.0.0.1
-[10:37:14][INFO] Client shutdown
+[10:06:25][INFO] Client starting
+[10:06:26][INFO] Vulkan 1.2 detected
+[10:06:28][INFO] Shaders loaded
+[10:06:28][INFO] Vulkan initialised
+[10:06:28][INFO] Atlas loaded: /home/link/Programming/Aetheris/build/client/atlas.png (256x256)
+[10:06:28][INFO] ViewModelRenderer initialised
+[10:06:28][INFO] ProjectilePC size: 144
+[10:06:28][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/hand.glb (1 meshes)
+[10:06:28][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
+[10:06:28][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/hand.glb (1 meshes)
+[10:06:28][INFO] Max push constant size: 256
+[10:06:28][INFO] Low-end Intel GPU detected — enabling performance mode
+[10:06:28][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/arm.glb (1 meshes)
+[10:06:28][INFO] Loaded GLB: /home/link/Programming/Aetheris/build/client/grimoire.glb (2 meshes)
+[10:06:28][INFO] Registered item view model: id=6 meshIdx=1
+[10:06:28][INFO] Player model: 4364 verts, h=4.870493
+[10:06:28][INFO] Tree template 0: 216 trunk tris, 3180 leaf tris
+[10:06:28][INFO] Tree template 1: 264 trunk tris, 3948 leaf tris
+[10:06:28][INFO] Tree template 2: 216 trunk tris, 2772 leaf tris
+[10:06:28][INFO] Tree template 3: 288 trunk tris, 3972 leaf tris
+[10:06:28][INFO] Tree template 4: 216 trunk tris, 3072 leaf tris
+[10:06:28][INFO] Tree template 5: 312 trunk tris, 4368 leaf tris
+[10:06:37][INFO] Connected to 127.0.0.1
+[10:06:59][INFO] Placed Wood Log at (243.588455, 145.100006, 127.434845)
+[10:07:05][INFO] Placed Wood Log at (238.580460, 144.100006, 127.353172)
+[10:07:25][INFO] Client shutdown

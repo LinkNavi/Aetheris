@@ -1,5 +1,6 @@
 #include "asset_path.h"
 #include "decal_renderer.h"
+#include "world_object_renderer.h"
 #include "log.h"
 #include "view_model.h"
 #include "vk_context.h"
@@ -1163,6 +1164,9 @@ static void flushUploads(VkContext &ctx) {
     VkDeviceSize vSize = vc * sizeof(Vertex);
     VkDeviceSize iSize = ic * sizeof(uint32_t);
 
+    if (cursor + vSize + iSize > ctx.stagingSize)
+      break;
+
     memcpy(staging + cursor, u.vertices.data(), vSize);
     memcpy(staging + cursor + vSize, u.indices.data(), iSize);
 
@@ -1214,7 +1218,8 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
              const RemotePlayerRenderer *remotePlayers,
              const DayNight *dayNight, const ProjectileRenderer *projRenderer,
              const ProjectileManager *projMgr,
-             const DecalRenderer *decalRenderer) {
+             const DecalRenderer *decalRenderer,
+             const WorldObjectRenderer *worldObjects) {
   if (ctx.commandBuffers.empty() || ctx.inFlight.empty())
     return;
   if (!ctx.mega.vertexBuffer || !ctx.mega.indexBuffer)
@@ -1374,6 +1379,8 @@ void vk_draw(VkContext &ctx, const glm::mat4 &viewProj, const glm::mat4 &view,
 
   if (decalRenderer)
     decalRenderer->draw(cmd, ctx.swapchain.extent, viewProj, *dayNight);
+  if (worldObjects)
+    worldObjects->draw(cmd, ctx.swapchain.extent, viewProj);
   vkCmdEndRenderPass(cmd);
 
   // ── Pass 2: godray post-process + ImGui → swapchain ───────────────────────

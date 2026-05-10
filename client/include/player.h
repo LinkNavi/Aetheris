@@ -27,6 +27,12 @@ struct CStamina {
 
 static constexpr float SPAWN_TIMEOUT = 15.f;
 struct ChunkTriSoup { std::vector<glm::vec3> tris; };
+struct RayHit {
+    bool      hit    = false;
+    glm::vec3 pos    = {0, 0, 0};
+    glm::vec3 normal = {0, 1, 0};
+    float     t      = 0.f;
+};
 
 // ── PlayerController ──────────────────────────────────────────────────────────
 
@@ -47,6 +53,7 @@ public:
     bool         isSpawned() const { return _spawned; }
 
     float spawnProgress() const;
+    RayHit raycast(glm::vec3 origin, glm::vec3 dir, float maxDist) const;
 
     const CStamina&   stamina()   const { return _reg.get<CStamina>  (_player); }
     const CHealth&    health()    const { return _reg.get<CHealth>   (_player); }

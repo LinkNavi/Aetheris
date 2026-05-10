@@ -7,6 +7,7 @@
 #include "day_night.h"
 #include "debug_menu.h"
 #include "decal_renderer.h"
+#include "world_object_renderer.h"
 #include "gltf_loader.h"
 #include "hud.h"
 #include "input.h"
@@ -101,6 +102,34 @@ int main(int /*argc*/, char **argv) {
                      ctx.graphicsQueue, ctx.offscreenPass,
                      AssetPath::get("decal_vert.spv").c_str(),
                      AssetPath::get("decal_frag.spv").c_str());
+
+  WorldObjectRenderer worldObjects;
+  worldObjects.init(ctx.device.device, ctx.allocator, ctx.commandPool,
+                    ctx.graphicsQueue, ctx.offscreenPass,
+                    AssetPath::get("worldobj_vert.spv").c_str(),
+                    AssetPath::get("worldobj_frag.spv").c_str());
+  {
+    GltfModel m = loadGlb(AssetPath::get("hand.glb").c_str());
+    if (m.valid) worldObjects.loadMesh(ctx.device.device, ctx.allocator,
+                                       ctx.commandPool, ctx.graphicsQueue, m, "hand");
+  }
+  {
+    GltfModel m = loadGlb(AssetPath::get("grimoire.glb").c_str());
+    if (m.valid) {
+      int idx = worldObjects.loadMesh(ctx.device.device, ctx.allocator,
+                                       ctx.commandPool, ctx.graphicsQueue, m, "grimoire");
+      worldObjects.registerItemMesh(ItemID::WpnGrimoire, idx);
+    }
+  }
+  {
+    // WoodLog — reuse the same glb as a placeholder until a dedicated asset exists
+    GltfModel m = loadGlb(AssetPath::get("hand.glb").c_str());
+    if (m.valid) {
+      int idx = worldObjects.loadMesh(ctx.device.device, ctx.allocator,
+                                      ctx.commandPool, ctx.graphicsQueue, m, "WoodLog");
+      worldObjects.registerItemMesh(ItemID::WoodLog, idx);
+    }
+  }
 
   {
     VkPhysicalDeviceProperties props{};
@@ -300,7 +329,7 @@ int main(int /*argc*/, char **argv) {
       ImGui::Render();
       vk_draw(ctx, glm::mat4(1.f), glm::mat4(1.f), nullptr, 0.f,
               {0.02f, 0.02f, 0.08f}, 2, glm::vec3(0.f), nullptr, glm::mat4(1.f),
-              nullptr, nullptr, nullptr, nullptr, nullptr);
+              nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
       continue;
     }
 
@@ -466,6 +495,14 @@ int main(int /*argc*/, char **argv) {
         cinv.activeSpellSlot = (cinv.activeSpellSlot + 1) % SPELL_SLOTS;
 
       // Spell editor toggle — requires grimoire
+      if (kb.isDown(Action::SpellEditor, input)) {
+        const ItemStack &offhand = cinv.inv.offhandSlot();
+        if (offhand.id == ItemID::WpnGrimoire) {
+          spellEditor.open = true;
+          input.captureCursor(false);
+        }
+      }
+
       if (spellEditor.open && input.keyDown(GLFW_KEY_ESCAPE)) {
         spellEditor.open = false;
         input.captureCursor(true);
@@ -487,8 +524,9 @@ int main(int /*argc*/, char **argv) {
         input.captureCursor(!cinv.open);
       }
 
-      // Interact
-      if (kb.isDown(Action::Interact, input) && !chestMirror.open) {
+      // Interact — skip if player is in Blocks mode (E is used for placement)
+      if (kb.isDown(Action::Interact, input) && !chestMirror.open
+          && cinv.hotbarMode != HotbarMode::Blocks) {
         Net::sendReliable(server, ChestOpenReqPacket{1}.serialize());
         enet_host_flush(host.get());
       }
@@ -619,8 +657,51 @@ int main(int /*argc*/, char **argv) {
 
       if (heavyAttack)
         viewModel.triggerHeavyAttack();
-    }
 
+      // Object placement with right-click (works with any placeable item in any hotbar mode)
+      static bool rightMouseWasPressed = false;
+      bool rightMousePressed = glfwGetMouseButton(window.handle(), GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+      bool rightMouseDown = rightMousePressed && !rightMouseWasPressed;
+      rightMouseWasPressed = rightMousePressed;
+
+      // Update placement preview while holding right mouse
+      if (player.isSpawned() && rightMousePressed) {
+        const ItemStack& held = cinv.inv.hotbarSlot(cinv.hotbarMode, cinv.hotbarActive);
+        if (!held.empty() && getItemDef(held.id).placeable) {
+          glm::vec3 origin = camera.position;
+          glm::vec3 dir    = camera.forward();
+          RayHit hit = player.raycast(origin, dir, 10.f);
+          if (hit.hit) {
+            int meshIdx = worldObjects.meshIndexForItem(held.id);
+            if (meshIdx >= 0) {
+              // Calculate placement position with height offset along surface normal
+              glm::vec3 previewPos = hit.pos + hit.normal * worldObjects.placementHeightOffset;
+              float previewYaw = worldObjects.placementYaw + camera.yaw;
+              worldObjects.setPlacementPreview(previewPos, previewYaw,
+                                               worldObjects.placementScale, meshIdx);
+              
+              // Place object on right-click press
+              if (rightMouseDown) {
+                worldObjects.place(previewPos, previewYaw,
+                                   worldObjects.placementScale, meshIdx);
+                Log::info("Placed " + std::string(getItemDef(held.id).name) + " at (" +
+                         std::to_string(previewPos.x) + ", " +
+                         std::to_string(previewPos.y) + ", " +
+                         std::to_string(previewPos.z) + ")");
+              }
+            } else {
+              worldObjects.clearPlacementPreview();
+            }
+          } else {
+            worldObjects.clearPlacementPreview();
+          }
+        } else {
+          worldObjects.clearPlacementPreview();
+        }
+      } else {
+        worldObjects.clearPlacementPreview();
+      }
+    }
     if (dt < 0.040f)
       treeRenderer.update(dt);
     else
@@ -661,6 +742,7 @@ int main(int /*argc*/, char **argv) {
     if (!spellEditor.open) {
       invUI.draw(cinv, chestMirror.open ? &chestMirror : nullptr, server);
       viewModel.drawDebugUI();
+      worldObjects.drawDebugUI();
       debugMenu.draw(player.position(), server, dayNight);
     }
 
@@ -692,7 +774,8 @@ int main(int /*argc*/, char **argv) {
 
     vk_draw(ctx, vp, camera.view(), &treeRenderer, dayNight.sunIntensity(),
             dayNight.skyColor(), rdXZ, camera.position, &viewModel, proj,
-            &remotePlayers, &dayNight, &projRenderer, &projMgr, &decalRenderer);
+            &remotePlayers, &dayNight, &projRenderer, &projMgr, &decalRenderer,
+            &worldObjects);
   } // ── end main loop ────────────────────────────────────────────────────────
 
   // ── Shutdown ───────────────────────────────────────────────────────────────
@@ -711,6 +794,7 @@ int main(int /*argc*/, char **argv) {
     server = nullptr;
   }
 
+  worldObjects.destroy(ctx.device.device, ctx.allocator);
   decalRenderer.destroy(ctx.device.device, ctx.allocator);
   meshBuilder.cancelPending();
   ImGui_ImplVulkan_Shutdown();

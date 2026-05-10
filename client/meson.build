@@ -34,6 +34,8 @@ foreach s : [
   ['godray_frag',      'shaders/godray.frag'],
 ['projectile_vert', 'shaders/projectile.vert'],
 ['projectile_frag', 'shaders/projectile.frag'],
+['worldobj_vert', 'shaders/worldobj.vert'],
+['worldobj_frag', 'shaders/worldobj.frag'],
 ]
   custom_target(s[0] + '_spv',
     input: s[1], output: s[0] + '.spv',
@@ -53,7 +55,7 @@ client_src = files(
   'src/view_model.cpp',
   '../thirdparty/vk-bootstrap/src/VkBootstrap.cpp',
 )
-foreach asset : ['atlas.png', 'arm.glb', 'player.glb', 'grimoire.glb']
+foreach asset : ['atlas.png', 'arm.glb', 'player.glb', 'grimoire.glb', 'hand.glb']
   configure_file(input : '../' + asset, output : asset, copy : true)
 endforeach
 executable('client', client_src + imgui_src,
